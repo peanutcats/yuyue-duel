@@ -45,7 +45,7 @@
         for (let k = 0; k < 10; k++, ang += 5) { // 抬高角度直到能安全过网
           v = YY.solveSpeed(x, y, -1, ang, dist + x);
           a = (ang * Math.PI) / 180;
-          if (YY.netClear(x, y, -Math.cos(a) * v, Math.sin(a) * v) > C.NET_H + 0.15) break;
+          if (YY.netClear(x, y, -Math.cos(a) * v, Math.sin(a) * v) > C.NET_CLEAR + 0.15) break;
         }
         x0 = x; y0 = y; vx = -Math.cos(a) * v; vy = Math.sin(a) * v;
       };
@@ -67,7 +67,7 @@
       if (this.drill === 'receive' && kind === 'smash') fire(2.8, 3.0, 21, rand(2.6, 4.2), -45, 5);
       this.lastKind = kind;
       s.x = x0; s.y = y0; s.vx = vx; s.vy = vy;
-      s.live = true; s.held = false; s.netHit = false; s.lastHitter = 1; s.shot = 'feed'; s.isServe = false;
+      s.live = true; s.held = false; s.netHit = false; s.crossedNet = false; s.lastHitter = 1; s.shot = 'feed'; s.isServe = false;
       s.speed = Math.hypot(vx, vy);
       m.phase = 'rally';
       m.hitCount++;
@@ -129,7 +129,7 @@
       }
       // 提示：落点、理想站位、起跳与挥拍时机
       const s = m.shuttle;
-      if (s.live && s.lastHitter !== 0) {
+      if (s.live && !s.netHit && s.lastHitter !== 0) {
         if (!this.hintLock && m.time >= this.hintAt) {
           this.hintAt = m.time + 0.08;
           const prefs = this.drill === 'smash' ? ['smash', 'over', 'low'] : this.drill === 'receive' ? ['over', 'low'] : ['over', 'low'];
@@ -140,7 +140,7 @@
             if (commit - m.time < 0.3) this.hintLock = true;
           }
         }
-      } else if (m.hint && (!s.live || s.lastHitter === 0)) {
+      } else if (m.hint && (!s.live || s.netHit || s.lastHitter === 0)) {
         m.hint = null;
       }
     }

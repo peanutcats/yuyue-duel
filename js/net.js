@@ -180,9 +180,14 @@
   YY.snapshot = function (m, events) {
     return {
       t: 'st', ht: r3(m.time), ph: m.phase, sc: m.score.slice(), sv: m.server, st: r3(m.serveT), sg: m.serving ? 1 : 0,
-      ry: m.rally, w: m.winner, names: m.names,
-      p: m.players.map((p) => [r3(p.x), r3(p.y), r3(p.vx), r3(p.vy), p.onGround ? 1 : 0, Math.round(p.stamina), p.swing ? [r3(p.swing.t), KIND.indexOf(p.swing.kind), p.swing.dur] : 0, r3(p.runPhase), r3(p.flash), r3(p.land)]),
-      s: [r3(m.shuttle.x), r3(m.shuttle.y), r3(m.shuttle.vx), r3(m.shuttle.vy), m.shuttle.live ? 1 : 0, m.shuttle.held ? 1 : 0, r3(m.shuttle.speed || 0), m.shuttle.lastHitter],
+      ry: m.rally, w: m.winner, names: m.names, hc: m.hitCount,
+      p: m.players.map((p) => [
+        r3(p.x), r3(p.y), r3(p.vx), r3(p.vy), p.onGround ? 1 : 0, Math.round(p.stamina),
+        p.swing ? [r3(p.swing.t), KIND.indexOf(p.swing.kind), p.swing.dur, p.swing.serve ? 1 : 0,
+          p.swing.contact ? [r3(p.swing.contact.x), r3(p.swing.contact.y), r3(p.swing.contact.t)] : null] : 0,
+        r3(p.runPhase), r3(p.flash), r3(p.land),
+      ]),
+      s: [r3(m.shuttle.x), r3(m.shuttle.y), r3(m.shuttle.vx), r3(m.shuttle.vy), m.shuttle.live ? 1 : 0, m.shuttle.held ? 1 : 0, r3(m.shuttle.speed || 0), m.shuttle.lastHitter, m.shuttle.netHit ? 1 : 0, m.shuttle.crossedNet ? 1 : 0],
       lm: m.landMark ? [r3(m.landMark.x), m.landMark.inB ? 1 : 0, r3(m.landMark.t)] : 0,
       pl: m.pred && m.shuttle.live ? r3(m.pred.landX) : null,
       ev: events,
@@ -195,11 +200,12 @@
   class GuestView {
     constructor() {
       this.players = [0, 1].map((i) => ({ idx: i, side: i ? 1 : -1, dir: i ? -1 : 1, x: i ? 2.8 : -2.3, y: 0, vx: 0, vy: 0, onGround: true, stamina: 100, swing: null, runPhase: 0, flash: 0, land: 0 }));
-      this.shuttle = { x: -1.9, y: 0.95, vx: 0, vy: 0, live: false, held: true, speed: 0, lastHitter: -1 };
+      this.shuttle = { x: -1.9, y: 0.95, vx: 0, vy: 0, live: false, held: true, netHit: false, crossedNet: false, speed: 0, lastHitter: -1 };
       this.score = [0, 0]; this.server = 0; this.phase = 'serve'; this.serveT = 0; this.serving = null; this.rally = 0;
       this.opt = { target: 7, cap: 11 }; this.names = ['房主', '你']; this.practice = false; this.time = 0;
       this.landMark = null; this.pred = null; this.hint = null; this.winner = -1;
       this.buf = []; this.clockOff = null; this.stats = null; this.longest = 0;
+      this.pendingEvents = []; this.events = [];
     }
     serveMeter() { const u = this.serveT * 1.15; return 1 - Math.abs((u % 2) - 1); }
     push(sn) {
@@ -207,13 +213,16 @@
       const off = sn.ht - now;
       if (this.clockOff === null || off > this.clockOff || Math.abs(off - this.clockOff) > 1) this.clockOff = off;
       else this.clockOff += (off - this.clockOff) * 0.02;
-      if (this.buf.length && sn.ht < this.buf[this.buf.length - 1].ht) this.buf = [];
+      if (this.buf.length && sn.ht < this.buf[this.buf.length - 1].ht) {
+        this.buf = []; this.pendingEvents = []; this.events = [];
+      }
       this.buf.push(sn);
+      if (sn.ev && sn.ev.length) this.pendingEvents.push({ t: sn.ht, events: sn.ev });
       if (this.buf.length > 30) this.buf.shift();
     }
-    update() {
+    update(now = performance.now() / 1000) {
       if (!this.buf.length) return;
-      const rt = performance.now() / 1000 + this.clockOff - 0.05;
+      const rt = now + this.clockOff - 0.05;
       let a = this.buf[0], b = a;
       for (let i = 0; i < this.buf.length; i++) {
         if (this.buf[i].ht <= rt) a = this.buf[i];
@@ -222,24 +231,39 @@
       }
       const u = b.ht > a.ht ? YY.clamp((rt - a.ht) / (b.ht - a.ht), 0, 1) : 1;
       const L = (x, y) => x + (y - x) * u;
+      // 离散状态取当前时刻已发生的快照，不能提前套用下一帧的击球/撞网结果。
+      const cur = u < 1 ? a : b;
+      const reset = a.ph !== b.ph && b.ph === 'serve';
       this.time = L(a.ht, b.ht);
-      this.phase = b.ph; this.score = b.sc; this.server = b.sv; this.serveT = L(a.st, b.st); this.serving = b.sg ? {} : null;
-      this.rally = b.ry; this.winner = b.w;
-      if (b.names) this.names = [b.names[0] === '你' ? '房主' : b.names[0], '你'];
+      this.phase = cur.ph; this.score = cur.sc; this.server = cur.sv;
+      this.serveT = a.ph === b.ph ? L(a.st, b.st) : cur.st; this.serving = cur.sg ? {} : null;
+      this.rally = cur.ry; this.winner = cur.w;
+      if (cur.names) this.names = [cur.names[0] === '你' ? '房主' : cur.names[0], '你'];
       for (let i = 0; i < 2; i++) {
-        const p = this.players[i], pa = a.p[i], pb = b.p[i];
-        p.x = L(pa[0], pb[0]); p.y = L(pa[1], pb[1]); p.vx = pb[2]; p.vy = pb[3]; p.onGround = !!pb[4];
-        p.stamina = pb[5];
-        const sw = pb[6] || pa[6];
-        p.swing = sw ? { t: pa[6] && pb[6] ? L(pa[6][0], pb[6][0]) : sw[0], kind: KIND[sw[1]] || 'over', dur: sw[2] } : null;
-        p.runPhase = L(pa[7], pb[7]); p.flash = pb[8]; p.land = pb[9];
+        const p = this.players[i], pa = a.p[i], pb = b.p[i], pc = cur.p[i];
+        p.x = reset ? pc[0] : L(pa[0], pb[0]); p.y = reset ? pc[1] : L(pa[1], pb[1]);
+        p.vx = pc[2]; p.vy = pc[3]; p.onGround = !!pc[4]; p.stamina = pc[5];
+        const sw = pc[6];
+        const sameSwing = pa[6] && pb[6] && pb[6][0] >= pa[6][0] && pa[6][1] === pb[6][1];
+        p.swing = sw ? {
+          t: sameSwing ? L(pa[6][0], pb[6][0]) : sw[0], kind: KIND[sw[1]] || 'over', dur: sw[2], serve: !!sw[3],
+          contact: sw[4] ? { x: sw[4][0], y: sw[4][1], t: sw[4][2] } : null,
+        } : null;
+        p.runPhase = reset ? pc[7] : L(pa[7], pb[7]); p.flash = pc[8]; p.land = pc[9];
       }
       const s = this.shuttle, sa = a.s, sb = b.s;
-      const jump = Math.abs(sa[0] - sb[0]) > 3; // 重置时不插值
-      s.x = jump ? sb[0] : L(sa[0], sb[0]); s.y = jump ? sb[1] : L(sa[1], sb[1]);
-      s.vx = sb[2]; s.vy = sb[3]; s.live = !!sb[4]; s.held = !!sb[5]; s.speed = sb[6]; s.lastHitter = sb[7];
-      this.landMark = b.lm ? { x: b.lm[0], inB: !!b.lm[1], t: b.lm[2] } : null;
-      this.pred = b.pl != null ? { landX: b.pl } : null;
+      const sc = cur.s;
+      const sameFlight = a.hc === b.hc && a.ph === b.ph && sa[4] === sb[4] && sa[5] === sb[5] &&
+        sa[7] === sb[7] && sa[8] === sb[8] && Math.abs(sa[0] - sb[0]) <= 3;
+      // 只在同一次飞行内插值，禁止跨发球、触拍、撞网或重置连出虚假的穿网轨迹。
+      s.x = sameFlight ? L(sa[0], sb[0]) : sc[0]; s.y = sameFlight ? L(sa[1], sb[1]) : sc[1];
+      s.vx = sc[2]; s.vy = sc[3]; s.live = !!sc[4]; s.held = !!sc[5]; s.speed = sc[6]; s.lastHitter = sc[7];
+      s.netHit = !!sc[8]; s.crossedNet = !!sc[9];
+      this.landMark = cur.lm ? { x: cur.lm[0], inB: !!cur.lm[1], t: cur.lm[2] } : null;
+      this.pred = cur.pl != null ? { landX: cur.pl } : null;
+      while (this.pendingEvents.length && this.pendingEvents[0].t <= this.time) {
+        this.events.push(...this.pendingEvents.shift().events);
+      }
     }
   }
   YY.GuestView = GuestView;

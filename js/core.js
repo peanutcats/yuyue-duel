@@ -8,9 +8,10 @@
   const C = (YY.C = {
     HALF: 6.7,          // 半场长度（底线到网）
     NET_H: 1.55,        // 网高
+    SHUTTLE_R: 0.065,   // 球头半径：碰撞与绘制共用（羽毛裙为装饰）
     SHORT_LINE: 1.98,   // 前发球线
     LONG_LINE: 5.94,    // 双打后发球线（仅装饰）
-    LINE_TOL: 0.05,     // 压线容差（羽毛球半径）
+    LINE_TOL: 0.05,     // 压线容差
 
     G: 9.8,
     DRAG: 0.08,         // 二次阻力系数，终端速度约 11 m/s
@@ -39,6 +40,7 @@
     SPEED_DISPLAY: 2.4, // 显示球速的夸张倍率（游戏内速度做了放慢）
     SERVE_AUTO: 8,      // 超时自动发球
   });
+  C.NET_CLEAR = C.NET_H + C.SHUTTLE_R; // 球头底部越过网带才算过网
 
   YY.clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
   YY.lerp = (a, b, t) => a + (b - a) * t;
@@ -61,6 +63,36 @@
     return Object.keys(weights)[0];
   };
 
+  // 连续检测圆形球头与球网：先裁剪包围范围，再精确求网带顶端的圆形接触。
+  function netContact(px, py, x, y) {
+    const dx = x - px, dy = y - py;
+    let lo = 0, hi = 1;
+    if (dx === 0) {
+      if (Math.abs(px) > C.SHUTTLE_R) return null;
+    } else {
+      const a = (-C.SHUTTLE_R - px) / dx, b = (C.SHUTTLE_R - px) / dx;
+      lo = Math.max(lo, Math.min(a, b));
+      hi = Math.min(hi, Math.max(a, b));
+    }
+    if (dy === 0) {
+      if (py > C.NET_CLEAR) return null;
+    } else {
+      const f = (C.NET_CLEAR - py) / dy;
+      if (dy < 0) lo = Math.max(lo, f);
+      else hi = Math.min(hi, f);
+    }
+    if (lo > hi) return null;
+    if (py + dy * lo <= C.NET_H) return lo; // 网面侧边
+    const a = dx * dx + dy * dy;
+    const b = 2 * (px * dx + (py - C.NET_H) * dy);
+    const c = px * px + (py - C.NET_H) ** 2 - C.SHUTTLE_R ** 2;
+    if (c <= 0) return 0;
+    const disc = b * b - 4 * a * c;
+    if (a === 0 || disc < 0) return null;
+    const f = (-b - Math.sqrt(disc)) / (2 * a);
+    return f >= 0 && f <= 1 ? f : null;
+  }
+
   /** 推进一步羽毛球物理；返回 'net' | 'floor' | null */
   YY.stepShuttle = function (s, dt) {
     const v = Math.hypot(s.vx, s.vy);
@@ -71,15 +103,21 @@
     s.x += s.vx * dt;
     s.y += s.vy * dt;
     let res = null;
-    if (!s.netHit && (px < 0) !== (s.x < 0)) {
-      const f = px / (px - s.x);
-      const yc = py + (s.y - py) * f;
-      if (yc < C.NET_H) {
-        s.x = px < 0 ? -0.04 : 0.04;
+    if (!s.netHit) {
+      const f = netContact(px, py, s.x, s.y);
+      if (f !== null) {
+        // 球头中心可能已略过 x=0，但尾部仍擦网；始终退回入射的一侧。
+        const side = s.vx > 0 ? -1 : s.vx < 0 ? 1 : px < 0 ? -1 : 1;
+        s.x = side * (C.SHUTTLE_R + 0.0001);
+        s.y = py + (s.y - py) * f;
         s.vx = -s.vx * 0.06;
         s.vy = Math.min(s.vy, 0) * 0.3 - 0.5;
         s.netHit = true;
+        s.crossedNet = false;
         res = 'net';
+      } else if ((px < C.SHUTTLE_R && s.x >= C.SHUTTLE_R) ||
+                 (px > -C.SHUTTLE_R && s.x <= -C.SHUTTLE_R)) {
+        s.crossedNet = true;
       }
     }
     if (s.y <= 0) {

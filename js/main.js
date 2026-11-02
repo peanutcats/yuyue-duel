@@ -313,7 +313,6 @@
       if (d.t === 'st') {
         this.peerSeen = performance.now();
         this.view.push(d);
-        if (d.ev) for (const e of d.ev) this.handleEvent(e, this.view);
         if (d.stats) this.view.stats = d.stats;
         if (d.longest != null) this.view.longest = d.longest;
         this.guestRtt = d.rtt;
@@ -525,6 +524,7 @@
       if (this.mode === 'guest') {
         const v = this.view;
         v.update();
+        for (const e of v.events.splice(0)) this.handleEvent(e, v);
         R.draw(v, {
           padLeft: 46,
           labels: [null, '你'],

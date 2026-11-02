@@ -40,7 +40,7 @@
       this.winner = -1;
       this.pred = null;
       this.landMark = null;
-      this.shuttle = { x: 0, y: 1, vx: 0, vy: 0, live: false, held: true, netHit: false, lastHitter: -1, shot: null, speed: 0 };
+      this.shuttle = { x: 0, y: 1, vx: 0, vy: 0, live: false, held: true, netHit: false, crossedNet: false, lastHitter: -1, shot: null, speed: 0 };
       this.practice = !!this.opt.practice;
       this.resetPoint(true);
     }
@@ -65,7 +65,7 @@
         p.stamina = C.STAM_MAX; p.stamDelay = 0;
       }
       const s = this.shuttle;
-      s.live = false; s.held = true; s.netHit = false; s.lastHitter = -1; s.shot = null;
+      s.live = false; s.held = true; s.netHit = false; s.crossedNet = false; s.lastHitter = -1; s.shot = null;
       s.vx = 0; s.vy = 0;
       this.placeHeld();
       this.emit({ type: 'serveReady', server: this.server, first: !!first });
@@ -221,13 +221,14 @@
       const sw = p.swing;
       const s = this.shuttle;
       if (!sw || sw.hit || sw.serve) return;
-      if (s.lastHitter === p.idx) return;
+      if (!s.live || s.held || s.lastHitter === p.idx) return;
       if (sw.t < C.SW_W0) return;
       if (sw.t > C.SW_W1) {
         if (!sw.judged) { sw.judged = true; this.judgeWhiff(p); }
         return;
       }
-      if (p.side * s.x < -0.3) { sw.prevE = 99; return; }
+      // 必须实际越过球网且球头完全进入己方半场；扑救容差不能越网或救回下网球。
+      if (s.netHit || !s.crossedNet || p.side * s.x <= C.SHUTTLE_R) { sw.prevE = 99; return; }
       const e = this.ringError(p, s);
       const reach = s.speed > 12 ? C.REACH_FAST : C.REACH; // 接快球时允许扑救
       if (e < reach && (e > sw.prevE + 1e-4 || e < 0.07 || sw.t + dt > C.SW_W1)) {
@@ -239,7 +240,7 @@
 
     judgeWhiff(p) {
       const s = this.shuttle;
-      if (!s.live || s.lastHitter === p.idx) return;
+      if (!s.live || s.netHit || s.lastHitter === p.idx) return;
       const dx = s.x - p.x, dy = s.y - (p.y + C.SHOULDER);
       const r = Math.hypot(dx, dy);
       if (r > 4.5) {
@@ -283,10 +284,13 @@
       const s = this.shuttle;
       s.lastHitter = p.idx;
       s.netHit = false;
+      s.crossedNet = false;
       s.shot = shot.type;
       s.isServe = !!ctx.serve;
       s.speed = Math.hypot(s.vx, s.vy);
       s.hitX = s.x;
+      // 绘制和联机快照使用实际接触点，发球也遵循同一条路径。
+      if (p.swing) p.swing.contact = { x: s.x, y: s.y, t: p.swing.t };
       p.lastShot = shot.type;
       p.flash = 0.15;
       this.hitCount++;
@@ -346,9 +350,9 @@
           v = YY.solveSpeed(s.x, s.y, dir, a, tgt + back);
           const rad = (a * Math.PI) / 180;
           const ny = YY.netClear(s.x, s.y, v * Math.cos(rad) * dir, v * Math.sin(rad));
-          if (ny >= C.NET_H + margin) break;
-          a += 6;
-          if (a > 72) break;
+          if (ny >= C.NET_CLEAR + margin) break;
+          if (a >= 72 || k === 9) break;
+          a = Math.min(72, a + 6);
         }
         return [a, v];
       };
@@ -395,7 +399,7 @@
           // 过网检查
           for (let k = 0; k < 12; k++) {
             const rad = (ang * Math.PI) / 180;
-            if (YY.netClear(s.x, s.y, speed * Math.cos(rad) * dir, speed * Math.sin(rad)) >= C.NET_H + 0.08) break;
+            if (YY.netClear(s.x, s.y, speed * Math.cos(rad) * dir, speed * Math.sin(rad)) >= C.NET_CLEAR + 0.08) break;
             ang += 2.5;
           }
           break;
@@ -406,7 +410,7 @@
           ang = YY.solveAngle(s.x, s.y, dir, speed, target + back, -20, 30);
           for (let k = 0; k < 12; k++) {
             const rad = (ang * Math.PI) / 180;
-            if (YY.netClear(s.x, s.y, speed * Math.cos(rad) * dir, speed * Math.sin(rad)) >= C.NET_H + 0.12) break;
+            if (YY.netClear(s.x, s.y, speed * Math.cos(rad) * dir, speed * Math.sin(rad)) >= C.NET_CLEAR + 0.12) break;
             ang += 3;
           }
           break;

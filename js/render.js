@@ -217,7 +217,9 @@
     drawNet(ctx) {
       const HW = 3.05;
       const w = Math.sin(this.time * 40) * this.netWob * 0.06;
-      const top = (z) => this.P(w * Math.cos(z), C.NET_H, z);
+      // 网带向下填充，上沿就是物理网高；晃动不移动 z=0 的实际过网位置。
+      const tape = 0.06;
+      const top = (z) => this.P(w * Math.sin(z), C.NET_H, z);
       const bot = (z) => this.P(0, 0.79, z);
       // 网面
       ctx.beginPath();
@@ -238,9 +240,13 @@
         ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
       }
       // 网带
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = Math.max(2.5, this.sc * 0.06);
-      ctx.beginPath(); ctx.moveTo(t0[0], t0[1]); ctx.lineTo(t1[0], t1[1]); ctx.stroke();
+      const tape0 = this.P(w * Math.sin(-HW), C.NET_H - tape, -HW);
+      const tape1 = this.P(w * Math.sin(HW), C.NET_H - tape, HW);
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.moveTo(t0[0], t0[1]); ctx.lineTo(t1[0], t1[1]);
+      ctx.lineTo(tape1[0], tape1[1]); ctx.lineTo(tape0[0], tape0[1]);
+      ctx.closePath(); ctx.fill();
       // 网柱
       for (const z of [-HW, HW]) {
         const a = this.P(0, 0, z), b = this.P(0, C.NET_H + 0.05, z);
@@ -256,6 +262,24 @@
       let keys = SWING_KEYS[sw.kind] || SWING_KEYS.over;
       if (sw.dur > 0.4) keys = SWING_KEYS.smash;
       return keyAngle(keys, sw.t);
+    }
+
+    racketPose(p) {
+      const a = this.racketAngle(p) * Math.PI / 180;
+      let x = Math.cos(a) * C.ARM, y = Math.sin(a) * C.ARM;
+      const sw = p.swing;
+      if (sw && sw.contact && sw.t >= sw.contact.t) {
+        // 在真实击球点短暂停留，再收拍；扑救容差体现为伸手接球。
+        let u = clamp((sw.t - sw.contact.t - 0.035) / 0.12, 0, 1);
+        u = u * u * (3 - 2 * u);
+        x = lerp((sw.contact.x - p.x) * p.dir, x, u);
+        y = lerp(sw.contact.y - p.y - C.SHOULDER, y, u);
+      } else if (sw && sw.serve) {
+        const u = clamp((sw.t - 0.04) / 0.06, 0, 1);
+        x = lerp(x, 0.42, u);
+        y = lerp(y, 0.9 - C.SHOULDER, u);
+      }
+      return { x, y };
     }
 
     drawPlayer(ctx, p, look, label) {
@@ -337,15 +361,20 @@
       ctx.lineTo(Math.cos(offA) * 0.3 * k, shY - Math.sin(offA) * 0.3 * k + 0.1 * k);
       ctx.lineTo(Math.cos(offA) * 0.5 * k, shY - Math.sin(offA) * 0.42 * k + 0.12 * k);
       ctx.stroke();
+      ctx.restore();
       // 持拍手 + 球拍
-      const ang = (this.racketAngle(p) * Math.PI) / 180 - lean;
+      // 回到选手坐标：肩高和拍面中心与物理甜区使用同一个坐标系。
+      const pose = this.racketPose(p);
+      const ang = Math.atan2(pose.y, pose.x);
       const ax = Math.cos(ang), ay = -Math.sin(ang);
-      const ex = ax * 0.3 * k, ey = shY + ay * 0.3 * k;
-      const hx2 = ax * 0.56 * k, hy2 = shY + ay * 0.56 * k;
+      const shoulderY = -C.SHOULDER * k;
+      const reach = Math.hypot(pose.x, pose.y);
+      const ex = pose.x * 0.34 * k, ey = shoulderY - pose.y * 0.34 * k;
+      const hx2 = pose.x * 0.62 * k, hy2 = shoulderY - pose.y * 0.62 * k;
       ctx.strokeStyle = look.skin;
       ctx.lineWidth = 0.085 * k;
-      ctx.beginPath(); ctx.moveTo(0, shY); ctx.lineTo(ex, ey); ctx.lineTo(hx2, hy2); ctx.stroke();
-      const rx = hx2 + ax * 0.32 * k, ry = hy2 + ay * 0.32 * k;
+      ctx.beginPath(); ctx.moveTo(0, shoulderY); ctx.lineTo(ex, ey); ctx.lineTo(hx2, hy2); ctx.stroke();
+      const rx = pose.x * k - ax * 0.15 * k, ry = shoulderY - pose.y * k - ay * 0.15 * k;
       ctx.strokeStyle = '#444';
       ctx.lineWidth = 0.035 * k;
       ctx.beginPath(); ctx.moveTo(hx2, hy2); ctx.lineTo(rx, ry); ctx.stroke();
@@ -364,15 +393,14 @@
       ctx.restore();
       // 挥拍残影
       if (p.swing && p.swing.t < 0.22 && p.swing.t > 0.03) {
-        const a0 = (this.racketAngle({ ...p, swing: { ...p.swing, t: p.swing.t - 0.05 } }) * Math.PI) / 180 - lean;
+        const prev = this.racketPose({ ...p, swing: { ...p.swing, t: p.swing.t - 0.05 } });
+        const a0 = Math.atan2(prev.y, prev.x);
         ctx.strokeStyle = p.swing.dur > 0.4 ? 'rgba(255,170,60,0.55)' : 'rgba(255,255,255,0.35)';
         ctx.lineWidth = 0.12 * k;
         ctx.beginPath();
-        const R = 1.0 * k;
-        ctx.arc(0, shY, R, -Math.max(a0, ang), -Math.min(a0, ang));
+        ctx.arc(0, shoulderY, reach * k, -Math.max(a0, ang), -Math.min(a0, ang));
         ctx.stroke();
       }
-      ctx.restore();
       ctx.restore();
 
       // 头顶体力条（未满时）
@@ -432,7 +460,7 @@
         ang = Math.atan2(-s.vy, vx); // 屏幕坐标中的运动方向
         ang = Math.atan2(Math.sin(ang), Math.cos(ang));
       }
-      const sz = Math.max(1, k / 55) * 1.25;
+      const sz = k * C.SHUTTLE_R / 2.8;
       ctx.save();
       ctx.translate(X, Y);
       ctx.rotate(s.held ? Math.PI / 2 : ang);

@@ -26,7 +26,7 @@
   YY.findContact = function (match, idx, prefs, extraErr) {
     const p = match.players[idx];
     const s = match.shuttle;
-    if (!s.live) return null;
+    if (!s.live || s.netHit) return null;
     const sim = YY.simulate(s.x, s.y, s.vx, s.vy, 5, true, s.netHit);
     const now = match.time;
     const side = p.side, dir = p.dir;
@@ -127,7 +127,7 @@
         } else this.setHome();
       }
 
-      const incoming = s.live && s.lastHitter !== this.i;
+      const incoming = s.live && !s.netHit && s.lastHitter !== this.i;
       if (!incoming) {
         if (m.time >= this.homeAt) this.moveTo(p.side * this.homeD, 0.12);
         else inp.move = 0;
