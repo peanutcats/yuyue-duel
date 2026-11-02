@@ -1,0 +1,4 @@
+# 部署到 Vercel 时不需要上传的开发文件
+tools/
+.claude/
+GAME_DEVELOPMENT_PROMPT.md
