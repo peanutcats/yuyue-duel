@@ -5,13 +5,24 @@
   const C = YY.C;
   const { clamp, gauss } = YY;
 
-  function makePlayer(idx, side) {
+  // 选手属性倍率（1 = 标准）。stamCost / handling / land / lunge 越小越好。
+  const BASE_STATS = {
+    move: 1, accel: 1, jump: 1, power: 1, control: 1, touch: 1, reach: 1, defense: 1,
+    stamCost: 1, regen: 1, handling: 1, land: 1, lunge: 1,
+  };
+  YY.BASE_STATS = BASE_STATS;
+  const SLOW_SCALE = 0.45; // 缓时技能下来球的速度倍率
+  const TOUCHY = { net: 1, drop: 1, slice: 1, block: 1, sserve: 1 }; // 受“网前手感”影响的球路
+
+  function makePlayer(idx, side, st, skill) {
     return {
       idx, side, dir: -side,
       x: side * 3, y: 0, vx: 0, vy: 0, onGround: true,
       stamina: C.STAM_MAX, stamDelay: 0,
       swing: null, cooldown: 0, slow: 0, land: 0,
       runPhase: 0, lastShot: null, flash: 0,
+      st: Object.assign({}, BASE_STATS, st || {}),
+      skill: skill || null, energy: 0, buff: {},
     };
   }
   function newStats() {
@@ -25,7 +36,12 @@
   class Match {
     constructor(opt) {
       this.opt = Object.assign({ target: 7, cap: 11, names: ['你', '对手'], firstServer: 0 }, opt || {});
-      this.players = [makePlayer(0, -1), makePlayer(1, 1)];
+      const o = this.opt;
+      this.players = [0, 1].map((i) => makePlayer(i, i ? 1 : -1, o.stats && o.stats[i], o.skills && o.skills[i]));
+      this.skillsOn = !!(o.skills && (o.skills[0] || o.skills[1]));
+      this.env = o.env || null;
+      this.slowT = 0; this.slowFor = -1;
+      this.looks = o.looks || null;
       this.inputs = [YY.blankInput(), YY.blankInput()];
       this.score = [0, 0];
       this.server = this.opt.firstServer;
@@ -66,7 +82,8 @@
       }
       const s = this.shuttle;
       s.live = false; s.held = true; s.netHit = false; s.crossedNet = false; s.lastHitter = -1; s.shot = null;
-      s.vx = 0; s.vy = 0;
+      s.vx = 0; s.vy = 0; s.fire = false; s.feint = 0;
+      this.slowT = 0;
       this.placeHeld();
       this.emit({ type: 'serveReady', server: this.server, first: !!first });
     }
@@ -81,6 +98,8 @@
       if (this.hitstop > 0) { this.hitstop -= dt; return; }
       this.time += dt;
       const s = this.shuttle;
+      if (this.slowT > 0) this.slowT -= dt;
+      if (s.feint > 0) s.feint -= dt;
 
       if (this.phase === 'serve') {
         this.serveT += dt;
@@ -98,7 +117,7 @@
           else this.placeHeld();
         } else this.placeHeld();
       } else if (s.live) {
-        const r = YY.stepShuttle(s, dt);
+        const r = YY.stepShuttle(s, dt * this.shuttleScale(), this.env);
         s.speed = Math.hypot(s.vx, s.vy);
         if (r === 'net') this.emit({ type: 'net', x: s.x, y: s.y });
         if (r === 'floor') this.onLand(s.x);
@@ -124,10 +143,12 @@
       const frozen = this.phase === 'over';
       let mv = lockedServer || frozen ? 0 : clamp(inp.move, -1, 1);
       if (p.land > 0) mv *= 0.3;
-      const maxV = C.MOVE * (p.slow > 0 ? 0.45 : 1);
+      const st = p.st, b = p.buff;
+      const dash = b.shanbu > 0, wall = b.tiebi > 0;
+      const maxV = C.MOVE * st.move * (dash ? 1.6 : 1) * (wall ? 1.08 : 1) * (p.slow > 0 ? 0.45 : 1);
       const targetV = mv * p.dir * maxV;
       if (p.onGround) {
-        const a = Math.abs(mv) > 0.05 ? C.ACCEL : C.DECEL;
+        const a = (Math.abs(mv) > 0.05 ? C.ACCEL : C.DECEL) * st.accel * (dash ? 2.2 : 1);
         const dv = targetV - p.vx;
         p.vx += clamp(dv, -a * dt, a * dt);
       } else {
@@ -143,7 +164,7 @@
         p.vy -= C.G * dt;
         p.y += p.vy * dt;
         if (p.y <= 0) {
-          p.y = 0; p.vy = 0; p.onGround = true; p.land = 0.08;
+          p.y = 0; p.vy = 0; p.onGround = true; p.land = 0.08 * st.land;
           this.emit({ type: 'land', p: p.idx });
         }
       }
@@ -154,17 +175,63 @@
       }
       p.cooldown -= dt; p.slow -= dt; p.land -= dt; p.flash -= dt;
       p.stamDelay -= dt;
-      if (p.stamDelay <= 0) p.stamina = Math.min(C.STAM_MAX, p.stamina + C.STAM_REGEN * dt);
+      for (const k in b) if (b[k] > 0) b[k] -= dt;
+      const regen = C.STAM_REGEN * st.regen * (b.chaoxi > 0 ? 3 : 1);
+      if (p.stamDelay <= 0 || b.chaoxi > 0) p.stamina = Math.min(C.STAM_MAX, p.stamina + regen * dt);
+    }
+
+    /** 体力消耗倍率（潮汐回气期间不耗体力；闪步期间起跳不耗体力） */
+    costMul(p, jump) {
+      if (p.buff.chaoxi > 0 || (jump && p.buff.shanbu > 0)) return 0;
+      return p.st.stamCost;
+    }
+
+    /** 当前来球的时间倍率（缓时技能只放慢飞向技能方的球） */
+    shuttleScale() {
+      const s = this.shuttle;
+      return this.slowT > 0 && s.lastHitter !== this.slowFor ? SLOW_SCALE : 1;
+    }
+    /** 把“模拟时间”换算成真实时间（缓时期间球飞得慢，AI 与提示据此修正时机） */
+    realT(tau) {
+      const ts = this.shuttleScale();
+      if (ts === 1) return tau;
+      const R = Math.max(0, this.slowT);
+      return tau <= R * ts ? tau / ts : R + (tau - R * ts);
+    }
+
+    gainEnergy(p, n) {
+      if (!this.skillsOn || !p.skill) return;
+      const was = p.energy;
+      p.energy = Math.min(100, p.energy + n);
+      if (was < 100 && p.energy >= 100) this.emit({ type: 'skillReady', p: p.idx });
+    }
+
+    /** 发动技能 */
+    useSkill(p) {
+      if (!this.skillsOn || !p.skill || p.energy < 100) return false;
+      if (this.phase === 'over' || this.phase === 'point') return false;
+      const def = YY.SKILLS ? YY.SKILLS[p.skill] : null;
+      p.energy = 0;
+      const dur = def ? def.dur : 5;
+      switch (p.skill) {
+        case 'chaoxi': p.stamina = C.STAM_MAX; p.buff.chaoxi = dur; break;
+        case 'huanshi': this.slowT = dur; this.slowFor = p.idx; p.buff.huanshi = dur; break;
+        default: p.buff[p.skill] = dur;
+      }
+      this.emit({ type: 'skill', p: p.idx, id: p.skill, name: def ? def.name : p.skill });
+      return true;
     }
 
     handlePress(p, pr) {
       if (this.phase === 'over' || this.phase === 'point') return;
+      if (pr.btn === 'skill') { this.useSkill(p); return; }
       if (pr.btn === 'jump') {
         if (!p.onGround || p.land > 0) return;
         if (this.phase === 'serve' && p.idx === this.server) return;
-        let v = C.JUMP_V;
-        if (p.stamina >= C.JUMP_COST) { p.stamina -= C.JUMP_COST; }
-        else { v = C.JUMP_V_LOW; this.emit({ type: 'tired', p: p.idx }); }
+        let v = C.JUMP_V * p.st.jump;
+        const cost = C.JUMP_COST * this.costMul(p, true);
+        if (p.stamina >= cost) { p.stamina -= cost; }
+        else { v = C.JUMP_V_LOW * p.st.jump; this.emit({ type: 'tired', p: p.idx }); }
         p.stamDelay = C.STAM_DELAY;
         p.vy = v; p.onGround = false;
         this.emit({ type: 'jump', p: p.idx });
@@ -179,7 +246,7 @@
       const vy = s.y - (p.y + C.SHOULDER);
       const kind = vy > 0.25 ? 'over' : vy < -0.4 ? 'under' : 'side';
       p.swing = {
-        t: clamp(pr.lead || 0, 0, 0.08), btn: pr.btn, kind, dur: C.SW_DUR,
+        t: clamp(pr.lead || 0, 0, 0.08), btn: pr.btn, kind, dur: C.SW_DUR * p.st.handling,
         hit: false, prevE: 99, judged: false, serve: false,
       };
       this.emit({ type: 'swing', p: p.idx, btn: pr.btn });
@@ -230,7 +297,10 @@
       // 必须实际越过球网且球头完全进入己方半场；扑救容差不能越网或救回下网球。
       if (s.netHit || !s.crossedNet || p.side * s.x <= C.SHUTTLE_R) { sw.prevE = 99; return; }
       const e = this.ringError(p, s);
-      const reach = s.speed > 12 ? C.REACH_FAST : C.REACH; // 接快球时允许扑救
+      const st = p.st, b = p.buff;
+      let reach = s.speed > 12 ? C.REACH_FAST * st.defense : C.REACH * st.reach; // 接快球时允许扑救
+      if (b.tiebi > 0) reach *= 1.5;
+      if (b.pokong > 0) reach *= 1.2;
       if (e < reach && (e > sw.prevE + 1e-4 || e < 0.07 || sw.t + dt > C.SW_W1)) {
         this.doHit(p, sw, e, reach);
         return;
@@ -262,18 +332,25 @@
       let q = clamp(0.55 * pq + 0.45 * tq, 0, 1);
       const inSpeed = s.speed;
       const ctx = { save: false, lowSave: false };
-      if (inSpeed > 15 && s.shot === 'smash') { q *= 0.75; ctx.save = true; }
-      if (s.y < 0.45) { q *= 0.85; ctx.lowSave = true; }
-      // 跑动中勉强击球：速度越快，回球质量越差
-      const lunge = clamp((Math.abs(p.vx) - 2.2) / 3, 0, 1);
-      if (lunge > 0) { q *= 1 - 0.3 * lunge; ctx.stretch = true; }
-      const shot = this.resolveShot(p, sw.btn, q, false);
+      const b = p.buff, wall = b.tiebi > 0;
+      if (inSpeed > 15 && s.shot === 'smash') { if (!wall) q *= 0.75; ctx.save = true; }
+      if (s.y < 0.45) { if (!wall) q *= 0.85; ctx.lowSave = true; }
+      // 跑动中勉强击球：速度越快，回球质量越差（防侧翻鞋可减轻）
+      const lunge = clamp((Math.abs(p.vx) - 2.2) / 3, 0, 1) * p.st.lunge;
+      if (lunge > 0) { q *= 1 - 0.3 * Math.min(1, lunge); ctx.stretch = true; }
+      if (s.fire) { q *= 0.55; ctx.burned = true; } // 烈焰重杀：接球质量大减
+      const pk = b.pokong > 0;
+      if (pk) { q = 1; ctx.skill = 'pokong'; b.pokong = 0; }
+      const shot = this.resolveShot(p, sw.btn, q, false, pk);
       s.vx = shot.vx; s.vy = shot.vy;
       sw.kind = s.y > p.y + C.SHOULDER + 0.25 ? 'over' : s.y < p.y + C.SHOULDER - 0.4 ? 'under' : 'side';
+      s.fire = !!shot.fire;
+      if (shot.fire) { b.lieyan = 0; ctx.skill = 'lieyan'; }
+      if (b.jinghua > 0) { b.jinghua = 0; s.feint = 0.55; s.feintHit = this.hitCount + 1; q = Math.max(q, 0.8); ctx.skill = 'jinghua'; }
       if (shot.type === 'smash') {
-        sw.dur = C.SW_SMASH_DUR;
+        sw.dur = C.SW_SMASH_DUR * p.st.handling;
         p.slow = 0.45;
-        p.stamina -= C.SMASH_COST;
+        p.stamina -= C.SMASH_COST * this.costMul(p, false);
         p.stamDelay = C.STAM_DELAY;
         this.hitstop = 0.065;
       }
@@ -295,6 +372,8 @@
       p.flash = 0.15;
       this.hitCount++;
       if (!ctx.serve) this.rally++;
+      if (ctx.serve) { s.fire = false; s.feint = 0; }
+      else this.gainEnergy(p, 3 + (q >= 0.85 ? 2 : 0) + (ctx.save || ctx.lowSave ? 3 : 0));
       const st = this.stats[p.idx];
       st.hits++;
       if (q >= 0.85) st.perfect++;
@@ -302,18 +381,20 @@
       if (ctx.save || ctx.lowSave) st.saves++;
       this.history[p.idx].push(YY.SHOT_CAT[shot.type] || shot.type);
       if (this.history[p.idx].length > 6) this.history[p.idx].shift();
-      this.pred = YY.simulate(s.x, s.y, s.vx, s.vy, 6, true);
+      this.pred = YY.simulate(s.x, s.y, s.vx, s.vy, 6, true, false, this.env);
       this.pred.t0 = this.time;
+      this.pred.hidden = s.feint > 0; // 假动作：不显示落点提示
       const label = q >= 0.85 ? '完美' : q >= 0.6 ? '好球' : q >= 0.35 ? '一般' : '勉强';
       this.emit({
         type: 'hit', p: p.idx, shot: shot.type, name: YY.SHOT_NAMES[shot.type], q, label,
         speed: s.speed, x: s.x, y: s.y, reason: shot.reason || null,
         save: ctx.save, lowSave: ctx.lowSave, serve: !!ctx.serve, weak: q < 0.35,
+        skill: ctx.skill || null, burned: !!ctx.burned, fire: !!s.fire,
       });
     }
 
     /** 根据按键、击球点与质量决定球路与初速度 */
-    resolveShot(p, btn, q, isServe) {
+    resolveShot(p, btn, q, isServe, boost) {
       const s = this.shuttle;
       const dir = p.dir;
       const d = Math.abs(s.x);
@@ -322,14 +403,16 @@
       const opp = this.players[1 - p.idx];
       const oppD = Math.abs(opp.x);
       const mod = clamp(this.inputs[p.idx].move, -1, 1); // +1 = 向网，-1 = 向后
+      const st = p.st, fire = !isServe && p.buff.lieyan > 0;
       let type, reason = null;
 
       if (isServe) type = btn;
       else if (btn === 'smash') {
         const air = !p.onGround;
-        if (air && h >= C.SMASH_MIN_Y && p.stamina >= C.SMASH_COST) type = 'smash';
+        const cost = C.SMASH_COST * this.costMul(p, false);
+        if (air && h >= C.SMASH_MIN_Y - (fire ? 0.3 : 0) && p.stamina >= cost) type = 'smash';
         else {
-          reason = p.stamina < C.SMASH_COST ? '体力不足' : !air ? '未起跳' : '击球点太低';
+          reason = p.stamina < cost ? '体力不足' : !air ? '未起跳' : '击球点太低';
           type = h >= 1.45 ? 'drive' : 'lift';
         }
       } else if (btn === 'clear') {
@@ -340,16 +423,22 @@
         else type = 'block';
       }
 
-      const miss = 1 - q;
+      // 控制 / 网前手感越好，同样的击球质量误差越小
+      const prec = TOUCHY[type] ? st.touch : st.control;
+      const miss = clamp((1 - q) / prec, 0, 1);
+      const deep = (st.power - 1) * 1.2; // 力量让高远球更深
+      // 选手按“平常的手感”出球：特殊环境（风、高原）只被部分适应
+      const E = this.env, ad = E ? (E.adapt != null ? E.adapt : 0.5) : 0;
+      const senv = E ? { drag: C.DRAG + ((E.drag != null ? E.drag : C.DRAG) - C.DRAG) * ad, wind: (E.wind || 0) * ad } : undefined;
       let ang, speed, target;
       const tNoise = gauss() * miss * 0.45;
       const solveUp = (a0, tgt, margin) => {
         // 固定角度求速度；若过网高度不足则抬高角度
         let a = a0, v = 0;
         for (let k = 0; k < 10; k++) {
-          v = YY.solveSpeed(s.x, s.y, dir, a, tgt + back);
+          v = YY.solveSpeed(s.x, s.y, dir, a, tgt + back, senv);
           const rad = (a * Math.PI) / 180;
-          const ny = YY.netClear(s.x, s.y, v * Math.cos(rad) * dir, v * Math.sin(rad));
+          const ny = YY.netClear(s.x, s.y, v * Math.cos(rad) * dir, v * Math.sin(rad), senv);
           if (ny >= C.NET_CLEAR + margin) break;
           if (a >= 72 || k === 9) break;
           a = Math.min(72, a + 6);
@@ -359,7 +448,7 @@
 
       switch (type) {
         case 'clear':
-          target = 5.95 - miss * 2.6 + tNoise;
+          target = Math.min(6.2, 5.95 - miss * 2.6 + tNoise + deep);
           [ang, speed] = solveUp(h > 2.6 ? 46 : 50, target, 1.6);
           break;
         case 'flatclear':
@@ -367,7 +456,7 @@
           [ang, speed] = solveUp(30, target, 0.7);
           break;
         case 'lift':
-          target = 5.7 - miss * 2.7 + tNoise;
+          target = Math.min(6.1, 5.7 - miss * 2.7 + tNoise + deep);
           [ang, speed] = solveUp(d < 1.5 ? 66 : 60, target, 1.6);
           break;
         case 'drop':
@@ -387,7 +476,9 @@
           [ang, speed] = solveUp(40, Math.max(0.6, target), 0.25);
           break;
         case 'smash': {
-          speed = (19.5 + 6 * q) * (d < 3.6 ? 1.1 : d > 5.2 ? 0.88 : 1); // 越靠近网扣杀越凶
+          speed = (19.5 + 6 * q) * (d < 3.6 ? 1.1 : d > 5.2 ? 0.88 : 1) * st.power; // 越靠近网扣杀越凶
+          if (fire) speed *= 1.22;
+          else if (boost) speed *= 1.1;
           // 自动瞄向对手站位的空当一侧；偏离距离取决于击球质量
           const off = 1.0 + 0.9 * q + (d < 3.6 ? 0.4 : 0);
           let deep = oppD < 3.4;
@@ -395,22 +486,22 @@
           else if (mod < -0.5) deep = true;
           target = clamp(oppD + (deep ? off : -off), 1.7, 5.7);
           target = Math.min(target + tNoise, 6.3);
-          ang = YY.solveAngle(s.x, s.y, dir, speed, target + back, -50, 8);
+          ang = YY.solveAngle(s.x, s.y, dir, speed, target + back, -50, 8, senv);
           // 过网检查
           for (let k = 0; k < 12; k++) {
             const rad = (ang * Math.PI) / 180;
-            if (YY.netClear(s.x, s.y, speed * Math.cos(rad) * dir, speed * Math.sin(rad)) >= C.NET_CLEAR + 0.08) break;
+            if (YY.netClear(s.x, s.y, speed * Math.cos(rad) * dir, speed * Math.sin(rad), senv) >= C.NET_CLEAR + 0.08) break;
             ang += 2.5;
           }
           break;
         }
         case 'drive':
-          speed = 14 + 4 * q;
+          speed = (14 + 4 * q) * st.power;
           target = (oppD < 3.3 ? 4.6 : 3.4) + tNoise;
-          ang = YY.solveAngle(s.x, s.y, dir, speed, target + back, -20, 30);
+          ang = YY.solveAngle(s.x, s.y, dir, speed, target + back, -20, 30, senv);
           for (let k = 0; k < 12; k++) {
             const rad = (ang * Math.PI) / 180;
-            if (YY.netClear(s.x, s.y, speed * Math.cos(rad) * dir, speed * Math.sin(rad)) >= C.NET_CLEAR + 0.12) break;
+            if (YY.netClear(s.x, s.y, speed * Math.cos(rad) * dir, speed * Math.sin(rad), senv) >= C.NET_CLEAR + 0.12) break;
             ang += 3;
           }
           break;
@@ -433,7 +524,7 @@
       speed *= 1 + gauss() * ss;
       if (q < 0.2) speed *= 0.86;
       const rad = (ang * Math.PI) / 180;
-      return { type, reason, vx: Math.cos(rad) * speed * dir, vy: Math.sin(rad) * speed };
+      return { type, reason, fire: fire && type === 'smash', vx: Math.cos(rad) * speed * dir, vy: Math.sin(rad) * speed };
     }
 
     onLand(x) {
@@ -471,6 +562,8 @@
       }
       const winner = 1 - loser;
       this.score[winner]++;
+      this.gainEnergy(this.players[loser], 12);
+      s.fire = false; s.feint = 0;
       this.server = winner;
       const [a, b] = this.score;
       const wins = (i) => {

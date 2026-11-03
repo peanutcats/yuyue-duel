@@ -93,11 +93,14 @@
     return f >= 0 && f <= 1 ? f : null;
   }
 
-  /** 推进一步羽毛球物理；返回 'net' | 'floor' | null */
-  YY.stepShuttle = function (s, dt) {
-    const v = Math.hypot(s.vx, s.vy);
-    const k = C.DRAG * v;
-    s.vx += -k * s.vx * dt;
+  /** 推进一步羽毛球物理；返回 'net' | 'floor' | null。
+   * env（可选）：{ drag: 阻力系数（高原空气稀薄更小）, wind: 水平风速 m/s（+x 吹向右场） } */
+  YY.stepShuttle = function (s, dt, env) {
+    const drag = env && env.drag != null ? env.drag : C.DRAG;
+    const rx = s.vx - ((env && env.wind) || 0); // 相对空气的速度
+    const v = Math.hypot(rx, s.vy);
+    const k = drag * v;
+    s.vx += -k * rx * dt;
     s.vy += (-C.G - k * s.vy) * dt;
     const px = s.x, py = s.y;
     s.x += s.vx * dt;
@@ -128,7 +131,7 @@
   };
 
   /** 从给定状态模拟到落地。record=true 时返回轨迹点（相对时间） */
-  YY.simulate = function (x, y, vx, vy, maxT, record, netHit) {
+  YY.simulate = function (x, y, vx, vy, maxT, record, netHit, env) {
     const s = { x, y, vx, vy, netHit: !!netHit };
     const dt = C.DT;
     let t = 0, netY = null, apex = y;
@@ -137,7 +140,7 @@
     let i = 0;
     while (t < maxT) {
       const px = s.x, py = s.y;
-      const r = YY.stepShuttle(s, dt);
+      const r = YY.stepShuttle(s, dt, env);
       t += dt;
       i++;
       if (netY === null && (px < 0) !== (s.x < 0) && r !== 'net') {
@@ -152,11 +155,11 @@
   };
 
   /** 固定角度，二分求初速度，使落点距离击球点 dist（沿 dir 方向） */
-  YY.solveSpeed = function (x0, y0, dir, angDeg, dist) {
+  YY.solveSpeed = function (x0, y0, dir, angDeg, dist, env) {
     const a = (angDeg * Math.PI) / 180;
     const ca = Math.cos(a) * dir, sa = Math.sin(a);
     let lo = 0.5, hi = 55;
-    const range = (v) => (YY.simulate(x0, y0, v * ca, v * sa, 6, false, true).landX - x0) * dir;
+    const range = (v) => (YY.simulate(x0, y0, v * ca, v * sa, 6, false, true, env).landX - x0) * dir;
     if (range(hi) < dist) return hi;
     for (let i = 0; i < 24; i++) {
       const m = (lo + hi) / 2;
@@ -167,10 +170,10 @@
   };
 
   /** 固定速度，在 [aLo,aHi] 内二分求角度（落点随角度增大而变远） */
-  YY.solveAngle = function (x0, y0, dir, speed, dist, aLo, aHi) {
+  YY.solveAngle = function (x0, y0, dir, speed, dist, aLo, aHi, env) {
     const range = (deg) => {
       const a = (deg * Math.PI) / 180;
-      return (YY.simulate(x0, y0, speed * Math.cos(a) * dir, speed * Math.sin(a), 6, false, true).landX - x0) * dir;
+      return (YY.simulate(x0, y0, speed * Math.cos(a) * dir, speed * Math.sin(a), 6, false, true, env).landX - x0) * dir;
     };
     let lo = aLo, hi = aHi;
     if (range(lo) >= dist) return lo;
@@ -184,8 +187,8 @@
   };
 
   /** 计算过网高度（不考虑撞网），未到达网返回 -Infinity */
-  YY.netClear = function (x0, y0, vx, vy) {
-    const r = YY.simulate(x0, y0, vx, vy, 6, false, true);
+  YY.netClear = function (x0, y0, vx, vy, env) {
+    const r = YY.simulate(x0, y0, vx, vy, 6, false, true, env);
     return r.netY === null ? -Infinity : r.netY;
   };
 

@@ -14,10 +14,13 @@
   YY.DRILLS = DRILLS;
 
   class Practice {
+    /** drill：练习名，或自定义定义 { name, tip, zone, judge:'receive'|'clear'|'drop'|'smash', feeds:{球路:权重}, goal:{need,total} } */
     constructor(match, drill) {
       this.m = match;
-      this.drill = drill;
-      this.def = DRILLS[drill];
+      this.def = typeof drill === 'string' ? DRILLS[drill] : Object.assign({}, DRILLS[drill.judge || 'receive'], drill);
+      this.drill = typeof drill === 'string' ? drill : drill.judge || 'receive';
+      this.goal = this.def.goal || null;
+      this.done = false;
       this.att = 0; this.ok = 0; this.streak = 0; this.best = 0;
       this.wait = 1.2;
       this.msg = this.def.tip;
@@ -37,7 +40,7 @@
     feed() {
       const m = this.m, s = m.shuttle;
       let kind = this.drill;
-      if (kind === 'receive') kind = YY.pick({ clear: 3, drop: 2, smash: 1.4, drive: 1.2, net: 1.5, lift: 1.5 });
+      if (kind === 'receive') kind = YY.pick(this.def.feeds || { clear: 3, drop: 2, smash: 1.4, drive: 1.2, net: 1.5, lift: 1.5 });
       if (this.drill === 'clear' || this.drill === 'drop') kind = 'high';
       let x0, y0, vx, vy;
       const shoot = (x, y, ang, dist) => {
@@ -119,11 +122,16 @@
       this.msg = msg; this.msgColor = col;
       this.wait = 1.3;
       this.m.emit({ type: 'pres', ok, msg });
+      const g = this.goal;
+      if (g && !this.done && (this.ok >= g.need || this.att >= g.total || g.total - this.att < g.need - this.ok)) {
+        this.done = true;
+        this.m.emit({ type: 'pdone', win: this.ok >= g.need, ok: this.ok, att: this.att, best: this.best });
+      }
     }
 
     update(dt) {
       const m = this.m;
-      if (m.phase === 'idle' || m.phase === 'serve') {
+      if ((m.phase === 'idle' || m.phase === 'serve') && !this.done) {
         this.wait -= dt;
         if (this.wait <= 0) this.feed();
       }

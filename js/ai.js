@@ -8,7 +8,7 @@
   const { clamp, gauss, rand } = YY;
 
   const JUMP_LEAD = 0.38; // 起跳到击球的时间
-  const jumpH = (t) => C.JUMP_V * t - 0.5 * C.G * t * t;
+  const jumpH = (t, k) => C.JUMP_V * (k || 1) * t - 0.5 * C.G * t * t;
 
   /** 在给定肩高下，使球处于甜区圆环上所需的站位（相对球的水平偏移） */
   function standFor(px, py, dir, shoulderY) {
@@ -16,7 +16,7 @@
     const h = Math.sqrt(Math.max(0, C.ARM * C.ARM - dy * dy));
     return px - dir * Math.max(h, 0.15);
   }
-  const travel = (dist) => (dist < 0.08 ? 0 : dist / C.MOVE + 0.12);
+  const travel = (dist, mv) => (dist < 0.08 ? 0 : dist / (C.MOVE * (mv || 1)) + 0.12);
 
   /**
    * 为选手 idx 寻找来球的可击球点。
@@ -27,11 +27,14 @@
     const p = match.players[idx];
     const s = match.shuttle;
     if (!s.live || s.netHit) return null;
-    const sim = YY.simulate(s.x, s.y, s.vx, s.vy, 5, true, s.netHit);
+    const sim = YY.simulate(s.x, s.y, s.vx, s.vy, 5, true, s.netHit, match.env);
     const now = match.time;
     const side = p.side, dir = p.dir;
+    const st = p.st || {};
+    const rt = (t) => (match.realT ? match.realT(t) : t); // 缓时技能：换算真实时间
+    const jh = jumpH(JUMP_LEAD, st.jump);
     const bands = {
-      smash: { lo: 2.85, hi: 3.3, ideal: 3.08, sh: C.SHOULDER + jumpH(JUMP_LEAD), lead: JUMP_LEAD },
+      smash: { lo: 2.85 + (jh - jumpH(JUMP_LEAD)), hi: 3.3 + (jh - jumpH(JUMP_LEAD)), ideal: 3.08 + (jh - jumpH(JUMP_LEAD)), sh: C.SHOULDER + jh, lead: JUMP_LEAD },
       over: { lo: 1.85, hi: 2.3, ideal: 2.15, sh: C.SHOULDER, lead: 0.04 },
       low: { lo: 0.32, hi: 1.85, ideal: 99, sh: C.SHOULDER, lead: 0.04 },
     };
@@ -46,27 +49,28 @@
         const sx = standFor(pt.x, pt.y, dir, b.sh);
         const sd = clamp(side * sx, C.X_NEAR, C.X_FAR);
         if (Math.abs(sd - side * sx) > 0.35) continue;
-        const need = travel(Math.abs(side * sd - p.x)) + b.lead;
-        if (need > pt.t) continue;
+        const need = travel(Math.abs(side * sd - p.x), st.move) + b.lead;
+        if (need > rt(pt.t)) continue;
         // 高段选最接近理想高度；低段选最早（最高）可达点
         const score = b.ideal < 50 ? Math.abs(pt.y - b.ideal) : pt.t;
         if (score < bestScore) { bestScore = score; best = { pt, sx: side * sd }; }
       }
       if (best) {
-        const tC = now + best.pt.t;
+        const tC = now + rt(best.pt.t);
         return {
           band: name, standX: best.sx + (extraErr || 0), tContact: tC,
           jumpAt: name === 'smash' ? tC - JUMP_LEAD : null, y: best.pt.y, x: best.pt.x,
-          landX: sim.landX, landT: now + sim.t,
+          landX: sim.landX, landT: now + rt(sim.t),
         };
       }
     }
-    return { band: 'none', standX: clamp(side * sim.landX, C.X_NEAR, C.X_FAR) * side, tContact: now + sim.t, jumpAt: null, landX: sim.landX, landT: now + sim.t };
+    return { band: 'none', standX: clamp(side * sim.landX, C.X_NEAR, C.X_FAR) * side, tContact: now + rt(sim.t), jumpAt: null, landX: sim.landX, landT: now + rt(sim.t) };
   };
 
   const LEVELS = {
     easy: { react: 0.36, err: 0.75, timing: 0.055, recover: 0.6, recDelay: 0.3, smash: 0.15, tactical: 0.3, read: 0, judgeOut: 0.45, serveQ: 0.5, longServe: 0.7, name: '简单' },
     normal: { react: 0.25, err: 0.5, timing: 0.036, recover: 0.85, recDelay: 0.16, smash: 0.62, tactical: 0.65, read: 0.45, judgeOut: 0.8, serveQ: 0.72, longServe: 0.55, name: '普通' },
+    boss: { react: 0.2, err: 0.36, timing: 0.027, recover: 0.93, recDelay: 0.1, smash: 0.75, tactical: 0.8, read: 0.65, judgeOut: 0.88, serveQ: 0.8, longServe: 0.5, name: '强敌' },
     hard: { react: 0.15, err: 0.24, timing: 0.018, recover: 1, recDelay: 0.05, smash: 0.88, tactical: 0.9, read: 0.85, judgeOut: 0.95, serveQ: 0.88, longServe: 0.45, name: '困难' },
   };
   YY.AI_LEVELS = LEVELS;
@@ -122,12 +126,14 @@
         if (s.lastHitter !== this.i) {
           this.reactAt = m.time + L.react * rand(0.8, 1.25);
           this.err = gauss() * L.err;
+          if (s.feint > 0) { this.reactAt += 0.38; this.err += gauss() * 0.9; } // 被假动作骗到
           this.resid = gauss() * L.err * (0.3 + Math.min(1, s.speed / 18) * 0.5);
           this.wantSmash = Math.random() < L.smash;
         } else this.setHome();
       }
 
       const incoming = s.live && !s.netHit && s.lastHitter !== this.i;
+      if (m.skillsOn && p.skill && p.energy >= 100) this.thinkSkill(incoming);
       if (!incoming) {
         if (m.time >= this.homeAt) this.moveTo(p.side * this.homeD, 0.12);
         else inp.move = 0;
@@ -211,6 +217,24 @@
         if (k && w[k]) w[k] *= 0.35;
       }
       return YY.pick(w);
+    }
+
+    /** 何时发动技能：进攻型在准备击球时，防守型在被压制时 */
+    thinkSkill(incoming) {
+      const m = this.m, p = this.p, s = m.shuttle, pl = this.plan;
+      if (this.skillWait == null) this.skillWait = m.time + rand(0.5, 2.5) / (0.5 + this.L.tactical);
+      if (m.time < this.skillWait) return;
+      let go = false;
+      const soon = pl && !pl.leave && pl.tContact - m.time < 0.7 && pl.tContact - m.time > 0.15;
+      switch (p.skill) {
+        case 'pokong': case 'jinghua': go = incoming && soon && pl.band !== 'none'; break;
+        case 'lieyan': go = incoming && soon && pl.band === 'smash'; break;
+        case 'chaoxi': go = p.stamina < 45; break;
+        case 'huanshi': go = incoming && (s.speed > 14 || (pl && pl.band === 'none')); break;
+        case 'tiebi': go = incoming && (s.speed > 14 || (pl && pl.band === 'none')); break;
+        case 'shanbu': go = incoming && pl && !pl.leave && Math.abs(pl.standX - p.x) > 1.6; break;
+      }
+      if (go) { this.press('skill'); this.skillWait = null; }
     }
 
     setHome() {

@@ -35,14 +35,16 @@
       this.lastWinner = -1;
       this.columns = [];
       this.frameAvg = 0.016;
-      this.portraits = YY.LOOKS.map((l) => YY.portrait(l, 96));
+      this.portraitCache = new Map();
+      this.cutin = null;
+      this.windLines = [];
       this.resize();
     }
 
     // ---------- 尺寸与缓存 ----------
     resize() {
       const vp = YY.viewport ? YY.viewport() : { W: window.innerWidth, H: window.innerHeight };
-      const W = vp.W, H = vp.H;
+      const W = Math.max(vp.W, 160), H = Math.max(vp.H, 120); // 隐藏 / 零尺寸窗口下也能初始化
       // 像素预算：渲染开销与画布像素数成正比（高分屏 / Windows 缩放下画布可达 800 万像素）
       const budget = this.quality ? 2.4e6 : 1.15e6;
       const dpr = Math.max(0.7, Math.min(window.devicePixelRatio || 1, 2, Math.sqrt(budget / (W * H))));
@@ -98,6 +100,18 @@
       }) : null;
       this.near = this.layer((g) => { v.paintNear(g, V); vignette(g, true); });
       this.nearTop = clamp(Math.floor(v.nearTop ? v.nearTop(V) : V.adTop - 0.8 * V.sc), 0, H);
+    }
+    /** 本场比赛中选手 i 的外观（故事模式、角色选择可替换） */
+    lookOf(m, i) { return (m && m.looks && m.looks[i]) || YY.LOOKS[i]; }
+    portraitOf(look) {
+      let c = this.portraitCache.get(look);
+      if (!c) { c = YY.portrait(look, 96); this.portraitCache.set(look, c); }
+      return c;
+    }
+    /** 技能发动：横幅切入 */
+    skillCutIn(look, skill, left) {
+      this.cutin = { t: 0, life: 1.25, look, name: skill.name, color: skill.color, left };
+      this.flash = 0.18; this.flashCol = '255,255,255';
     }
     venueEvent(type, d) { const v = this.venue; if (v.event) v.event(this.vst, type, d || {}); }
 
@@ -181,7 +195,7 @@
     }
     pointFx(winner, m, label) {
       this.lastWinner = winner;
-      const look = YY.LOOKS[winner];
+      const look = this.lookOf(m, winner);
       const p = m.players[winner];
       this.confetti(p.x, 2.6, 26, [look.shirt, look.trim, '#ffffff', look.racket]);
       this.venueEvent('point', { text: label || '得分！', color: look.shirt });
@@ -189,7 +203,7 @@
     }
     victoryFx(winner, m, text) {
       this.lastWinner = winner;
-      const look = YY.LOOKS[winner];
+      const look = this.lookOf(m, winner);
       for (let i = 0; i < 4; i++) this.confetti(-6 + i * 4, 6.5, 30, [look.shirt, look.trim, '#ffffff', '#ffd23f', look.racket]);
       this.venueEvent('over', { text: text || '胜利', color: look.shirt });
       this.flash = 0.3; this.flashCol = '255,255,255';
@@ -318,6 +332,29 @@
       ctx.fill();
     }
 
+    /** 技能生效中的光环 */
+    drawAura(ctx, p, color, dt) {
+      const k = this.sc, X = this.sx(p.x), Y = this.sy(0);
+      ctx.globalCompositeOperation = 'lighter';
+      const pulse = 1 + Math.sin(this.time * 10) * 0.1;
+      const g = ctx.createRadialGradient(X, Y, 0, X, Y, k * 0.7 * pulse);
+      g.addColorStop(0, color + 'aa'); g.addColorStop(1, color + '00');
+      ctx.fillStyle = g;
+      ctx.save(); ctx.translate(X, Y); ctx.scale(1, 0.3); ctx.translate(-X, -Y);
+      ctx.fillRect(X - k, Y - k, k * 2, k * 2);
+      ctx.restore();
+      const g2 = ctx.createLinearGradient(0, Y, 0, Y - k * 2.2);
+      g2.addColorStop(0, color + '55'); g2.addColorStop(1, color + '00');
+      ctx.fillStyle = g2; ctx.fillRect(X - k * 0.35, Y - k * 2.2, k * 0.7, k * 2.2);
+      ctx.globalCompositeOperation = 'source-over';
+      this.auraT = (this.auraT || 0) - dt;
+      if (this.auraT <= 0 && this.parts.length < 300) {
+        this.auraT = 0.05;
+        const rgb = [1, 3, 5].map((i) => parseInt(color.slice(i, i + 2), 16)).join(',');
+        this.add({ type: 'spark', x: p.x + (Math.random() - 0.5) * 0.6, y: p.y + Math.random() * 1.6, vx: 0, vy: 1.2, life: 0.5, t: 0, color: rgb, size: 0.035, g: -1, drag: 1 });
+      }
+    }
+
     drawSwoosh(ctx, p, look) {
       const sw = p.swing;
       if (!sw || sw.t < 0.02 || sw.t > 0.24) return;
@@ -336,7 +373,7 @@
       ctx.globalCompositeOperation = 'lighter';
       ctx.lineCap = 'round';
       const smash = sw.dur > 0.4;
-      const col = smash ? '255,170,70' : look.hair === 'spiky' ? '255,130,130' : '120,220,255';
+      const col = smash ? '255,170,70' : look.swoosh || (look.hair === 'spiky' ? '255,130,130' : '120,220,255');
       for (let i = 1; i < pts.length; i++) {
         const u = 1 - i / pts.length;
         ctx.strokeStyle = `rgba(${col},${0.55 * u})`;
@@ -402,9 +439,10 @@
       const tr = this.trail;
       if (tr.length < 3) return;
       const pts = tr.map((p) => [this.sx(p.x), this.sy(p.y), p.v]);
-      const fast = pts[pts.length - 1][2] > 15;
+      const fire = this.trailFire;
+      const fast = fire || pts[pts.length - 1][2] > 15;
       const n = pts.length;
-      const wMax = (fast ? 0.16 : 0.08) * this.sc;
+      const wMax = (fire ? 0.28 : fast ? 0.16 : 0.08) * this.sc;
       const left = [], right = [];
       for (let i = 0; i < n; i++) {
         const a = pts[Math.max(0, i - 1)], b = pts[Math.min(n - 1, i + 1)];
@@ -418,7 +456,8 @@
       ctx.globalCompositeOperation = 'lighter';
       const head = pts[n - 1], tail = pts[0];
       const gr = ctx.createLinearGradient(tail[0], tail[1], head[0], head[1]);
-      if (fast) { gr.addColorStop(0, 'rgba(255,60,40,0)'); gr.addColorStop(0.6, 'rgba(255,140,60,0.55)'); gr.addColorStop(1, 'rgba(255,240,200,0.95)'); }
+      if (fire) { gr.addColorStop(0, 'rgba(255,30,0,0)'); gr.addColorStop(0.5, 'rgba(255,90,20,0.75)'); gr.addColorStop(1, 'rgba(255,230,120,1)'); }
+      else if (fast) { gr.addColorStop(0, 'rgba(255,60,40,0)'); gr.addColorStop(0.6, 'rgba(255,140,60,0.55)'); gr.addColorStop(1, 'rgba(255,240,200,0.95)'); }
       else { gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(1, 'rgba(220,240,255,0.55)'); }
       ctx.fillStyle = gr;
       ctx.beginPath();
@@ -702,7 +741,7 @@
       ctx.save();
       rr(ctx, bx, by, bw, bh, bh * 0.28); ctx.clip();
       for (let j = 0; j < 2; j++) {
-        const i = order[j], look = YY.LOOKS[i], left = j === 0;
+        const i = order[j], look = this.lookOf(m, i), left = j === 0;
         const x0 = left ? bx : W / 2 + cw / 2 - bh * 0.3, x1 = left ? W / 2 - cw / 2 + bh * 0.3 : bx + bw;
         const g = ctx.createLinearGradient(left ? x0 : x1, 0, left ? x1 : x0, 0);
         g.addColorStop(0, YY.shade(look.shirt, 0.85)); g.addColorStop(0.7, YY.shade(look.shirt2, 0.6)); g.addColorStop(1, 'rgba(0,0,0,0)');
@@ -723,10 +762,11 @@
         const ax = left ? bx + bh * 0.55 : bx + bw - bh * 0.55, ay = by + bh / 2;
         ctx.save();
         ctx.beginPath(); ctx.arc(ax, ay, ar, 0, Math.PI * 2); ctx.clip();
-        ctx.drawImage(this.portraits[i], ax - ar, ay - ar, ar * 2, ar * 2);
+        ctx.drawImage(this.portraitOf(this.lookOf(m, i)), ax - ar, ay - ar, ar * 2, ar * 2);
         ctx.restore();
         ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.arc(ax, ay, ar, 0, Math.PI * 2); ctx.stroke();
+        if (m.skillsOn && p.skill) this.drawEnergy(ctx, p, ax, ay, ar);
         const nx = left ? ax + ar + 10 : ax - ar - 10;
         ctx.textAlign = left ? 'left' : 'right'; ctx.textBaseline = 'middle';
         ctx.font = `900 ${Math.round(u * 0.6)}px ${FONT}`;
@@ -793,6 +833,156 @@
         ctx.fillStyle = '#fff'; ctx.fillText(txt, W / 2, y2 + (fs + 10) / 2);
       }
     }
+    /** 头像外圈的技能能量环；充满后彩色流转 */
+    drawEnergy(ctx, p, ax, ay, ar) {
+      const sk = YY.SKILLS[p.skill] || { color: '#ffd23f' };
+      const e = clamp(p.energy / 100, 0, 1), full = e >= 1;
+      const R = ar + 4;
+      ctx.lineWidth = 4; ctx.lineCap = 'round';
+      ctx.strokeStyle = 'rgba(0,0,0,0.55)';
+      ctx.beginPath(); ctx.arc(ax, ay, R, 0, Math.PI * 2); ctx.stroke();
+      if (e > 0.01) {
+        ctx.strokeStyle = full ? `hsl(${(this.time * 260) % 360},100%,66%)` : sk.color;
+        ctx.beginPath(); ctx.arc(ax, ay, R, -Math.PI / 2, -Math.PI / 2 + e * Math.PI * 2); ctx.stroke();
+      }
+      const active = Object.keys(p.buff || {}).some((k) => p.buff[k] > 0);
+      if (full || active) {
+        ctx.globalCompositeOperation = 'lighter';
+        const a = full ? 0.45 + Math.sin(this.time * 8) * 0.25 : 0.35;
+        const g = ctx.createRadialGradient(ax, ay, ar * 0.8, ax, ay, ar * 1.9);
+        g.addColorStop(0, `rgba(255,255,255,${a * 0.5})`); g.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = g; ctx.fillRect(ax - ar * 2, ay - ar * 2, ar * 4, ar * 4);
+        ctx.globalCompositeOperation = 'source-over';
+      }
+      ctx.lineCap = 'butt';
+    }
+    /** 技能切入横幅 */
+    drawCutIn(ctx, dt) {
+      const c = this.cutin;
+      if (!c) return;
+      c.t += dt;
+      if (c.t > c.life) { this.cutin = null; return; }
+      const W = this.W, H = this.H;
+      const inK = Math.min(1, c.t / 0.18), outK = c.t > c.life - 0.25 ? (c.t - (c.life - 0.25)) / 0.25 : 0;
+      const e = 1 - (1 - inK) ** 3;
+      const h = clamp(H * 0.2, 70, 150), Y = H * 0.3;
+      const dir = c.left ? 1 : -1;
+      const off = (1 - e) * -dir * W + outK * dir * W;
+      ctx.save();
+      ctx.translate(off, 0);
+      ctx.globalAlpha = 1 - outK * 0.5;
+      ctx.fillStyle = 'rgba(5,6,18,0.82)';
+      ctx.beginPath(); ctx.moveTo(0, Y - h * 0.4); ctx.lineTo(W, Y - h * 0.6); ctx.lineTo(W, Y + h * 0.45); ctx.lineTo(0, Y + h * 0.6); ctx.closePath(); ctx.fill();
+      const g = ctx.createLinearGradient(0, 0, W, 0);
+      g.addColorStop(0, c.color); g.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = g; ctx.globalAlpha *= 0.55;
+      ctx.beginPath(); ctx.moveTo(0, Y - h * 0.4); ctx.lineTo(W, Y - h * 0.6); ctx.lineTo(W, Y - h * 0.5); ctx.lineTo(0, Y - h * 0.3); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(0, Y + h * 0.5); ctx.lineTo(W, Y + h * 0.35); ctx.lineTo(W, Y + h * 0.45); ctx.lineTo(0, Y + h * 0.6); ctx.closePath(); ctx.fill();
+      ctx.globalAlpha = 1 - outK * 0.5;
+      const ps = h * 1.05, px = c.left ? W * 0.12 : W * 0.88 - ps;
+      ctx.save();
+      ctx.beginPath(); ctx.arc(px + ps / 2, Y, ps / 2, 0, Math.PI * 2); ctx.clip();
+      ctx.drawImage(this.portraitOf(c.look), px, Y - ps / 2, ps, ps);
+      ctx.restore();
+      ctx.strokeStyle = c.color; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.arc(px + ps / 2, Y, ps / 2, 0, Math.PI * 2); ctx.stroke();
+      const fs = Math.round(h * 0.42);
+      ctx.font = `italic 900 ${fs}px ${FONT}`;
+      ctx.textAlign = c.left ? 'left' : 'right'; ctx.textBaseline = 'middle';
+      const tx = c.left ? px + ps + h * 0.3 : px - h * 0.3;
+      const sh = Math.sin(c.t * 30) * (1 - inK) * 6;
+      ctx.lineWidth = fs * 0.14; ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineJoin = 'round';
+      ctx.strokeText(c.name, tx + sh, Y - h * 0.05);
+      ctx.fillStyle = '#fff'; ctx.fillText(c.name, tx + sh, Y - h * 0.05);
+      ctx.font = `900 ${Math.round(fs * 0.36)}px ${FONT}`;
+      ctx.fillStyle = c.color;
+      ctx.fillText(c.look.name + ' · 技能发动', tx, Y + h * 0.32);
+      ctx.restore();
+    }
+    /** 风向标（右上角）与风的流线 */
+    drawWind(ctx, w, dt) {
+      const W = this.W, H = this.H;
+      const sw = this.mirror ? -w : w;
+      // 流线
+      const L = this.windLines;
+      while (L.length < 14) L.push({ x: Math.random() * W, y: H * (0.15 + Math.random() * 0.65), len: 30 + Math.random() * 60, a: 0.08 + Math.random() * 0.12 });
+      ctx.strokeStyle = 'rgba(255,255,255,1)'; ctx.lineWidth = 1.2;
+      for (const l of L) {
+        l.x += sw * (90 + l.len) * dt;
+        if (l.x > W + 80) l.x = -80; else if (l.x < -80) l.x = W + 80;
+        ctx.globalAlpha = l.a * Math.min(1, Math.abs(w) / 1.2);
+        ctx.beginPath(); ctx.moveTo(l.x, l.y); ctx.lineTo(l.x - Math.sign(sw) * l.len, l.y + Math.sin(this.time * 2 + l.y) * 3); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      // 风向牌
+      const fs = clamp(Math.round(H * 0.03), 12, 18);
+      ctx.font = `900 ${fs}px ${FONT}`;
+      const label = `${(Math.sign(sw) || 1) > 0 ? '向右' : '向左'}风 ${Math.abs(w).toFixed(1)} m/s`;
+      const bh = fs * 2, bw = bh * 1.5 + ctx.measureText(label).width + fs, bx = W - bw - 14, by = clamp(Math.round(H * 0.043), 15, 30) * 2.15 + 18;
+      ctx.fillStyle = 'rgba(8,10,28,0.78)'; rr(ctx, bx, by, bw, bh, bh / 2); ctx.fill();
+      ctx.strokeStyle = 'rgba(160,220,255,0.5)'; ctx.lineWidth = 1; rr(ctx, bx, by, bw, bh, bh / 2); ctx.stroke();
+      const ax = bx + bh * 0.75, ay = by + bh / 2, d = Math.sign(sw) || 1;
+      ctx.strokeStyle = '#9fdcff'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+      const wob = Math.sin(this.time * 9) * 2;
+      ctx.beginPath(); ctx.moveTo(ax - d * bh * 0.4, ay + wob * 0.3); ctx.lineTo(ax + d * bh * 0.4, ay - wob * 0.3);
+      ctx.moveTo(ax + d * bh * 0.4, ay); ctx.lineTo(ax + d * bh * 0.12, ay - bh * 0.25);
+      ctx.moveTo(ax + d * bh * 0.4, ay); ctx.lineTo(ax + d * bh * 0.12, ay + bh * 0.25); ctx.stroke();
+      ctx.lineCap = 'butt';
+      ctx.font = `900 ${fs}px ${FONT}`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#fff';
+      ctx.fillText(label, bx + bh * 1.5, ay);
+    }
+    /** 停电：低分辨率遮罩，只在球和选手周围留光 */
+    drawDark(ctx, m, dark) {
+      const W = this.W, H = this.H;
+      const sc = 6;
+      if (!this.darkCv) { this.darkCv = document.createElement('canvas'); }
+      const cv = this.darkCv, w = Math.ceil(W / sc), h = Math.ceil(H / sc);
+      if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+      const g = cv.getContext('2d');
+      const bolt = dark.flash > 0 ? dark.flash : 0;
+      g.globalCompositeOperation = 'source-over';
+      g.clearRect(0, 0, w, h);
+      g.fillStyle = `rgba(2,3,10,${0.93 * (1 - bolt)})`;
+      g.fillRect(0, 0, w, h);
+      g.globalCompositeOperation = 'destination-out';
+      const hole = (x, y, r0, r1, a) => {
+        const X = x / sc, Y = y / sc;
+        const gr = g.createRadialGradient(X, Y, r0 / sc, X, Y, r1 / sc);
+        gr.addColorStop(0, `rgba(0,0,0,${a})`); gr.addColorStop(1, 'rgba(0,0,0,0)');
+        g.fillStyle = gr; g.fillRect(X - r1 / sc, Y - r1 / sc, (r1 * 2) / sc, (r1 * 2) / sc);
+      };
+      const s = m.shuttle, k = this.sc;
+      hole(this.sx(s.x), this.sy(s.y), k * 0.25, k * (s.live ? 1.9 : 1.2), 1);
+      for (const p of m.players) hole(this.sx(p.x), this.sy(p.y + 1), k * 0.3, k * 1.25, 0.75);
+      g.globalCompositeOperation = 'source-over';
+      ctx.drawImage(cv, 0, 0, w, h, 0, 0, w * sc, h * sc);
+    }
+    /** 步法训练的地面标记 */
+    drawMarks(ctx, marks) {
+      const k = this.sc;
+      for (const mk of marks) {
+        const a = this.P(mk.x, 0, 0);
+        const u = clamp(mk.t / mk.life, 0, 1);
+        const col = mk.done ? '92,255,157' : mk.kind === 'jump' ? '255,210,63' : mk.kind === 'swing' ? '255,140,110' : '120,220,255';
+        const pulse = 1 + Math.sin(this.time * 9) * 0.08;
+        ctx.globalCompositeOperation = 'lighter';
+        const g = ctx.createLinearGradient(0, a[1], 0, a[1] - k * 1.3);
+        g.addColorStop(0, `rgba(${col},0.45)`); g.addColorStop(1, `rgba(${col},0)`);
+        ctx.fillStyle = g; ctx.fillRect(a[0] - k * 0.28, a[1] - k * 1.3, k * 0.56, k * 1.3);
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.lineWidth = 3; ctx.strokeStyle = `rgb(${col})`;
+        ctx.beginPath(); ctx.ellipse(a[0], a[1], 0.34 * k * pulse, 0.1 * k * pulse, 0, 0, Math.PI * 2); ctx.stroke();
+        if (!mk.done) {
+          ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 4;
+          ctx.beginPath(); ctx.ellipse(a[0], a[1], 0.44 * k, 0.13 * k, 0, -Math.PI / 2, -Math.PI / 2 + (1 - u) * Math.PI * 2); ctx.stroke();
+        }
+        const fs = Math.max(14, Math.round(0.3 * k));
+        ctx.font = `900 ${fs}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+        ctx.fillStyle = `rgb(${col})`;
+        ctx.fillText(mk.done ? '✓' : mk.label, a[0], a[1] - 0.18 * k);
+      }
+    }
     shuttleIcon(ctx, x, y, s) {
       ctx.save(); ctx.translate(x, y); ctx.rotate(-0.6);
       ctx.fillStyle = '#ffffff';
@@ -819,14 +1009,16 @@
       ctx.fillStyle = '#ffd23f';
       ctx.fillText(pr.def.name, bx + 16, by + bh * 0.33);
       ctx.textAlign = 'right';
-      const score = `${pr.ok} / ${pr.att}`;
+      const g = pr.goal;
+      const score = g ? `${pr.ok} / ${g.need}` : `${pr.ok} / ${pr.att}`;
       ctx.font = `900 ${Math.round(u * 0.85)}px ${NUMF}`;
-      ctx.fillStyle = '#fff';
+      ctx.fillStyle = g && pr.ok >= g.need ? '#7dffb0' : '#fff';
       ctx.fillText(score, bx + bw - 16, by + bh * 0.33);
       const tw = ctx.measureText(score).width;
       ctx.font = `bold ${Math.round(u * 0.48)}px ${FONT}`;
       ctx.fillStyle = 'rgba(255,255,255,0.6)';
-      ctx.fillText(`连续 ${pr.streak} · 最佳 ${pr.best} · 成功`, bx + bw - 24 - tw, by + bh * 0.34);
+      const sub = g ? `剩余 ${Math.max(0, g.total - pr.att)} ${g.unit || '球'} · 连续 ${pr.streak} · 目标` : `连续 ${pr.streak} · 最佳 ${pr.best} · 成功`;
+      ctx.fillText(sub, bx + bw - 24 - tw, by + bh * 0.34);
       ctx.textAlign = 'center';
       ctx.font = `${Math.round(u * 0.6)}px ${FONT}`;
       ctx.fillStyle = pr.msgColor;
@@ -925,16 +1117,18 @@
       if (v.drawNear) v.drawNear(ctx, this, this.time, this.vst, dt);
 
       if (o.zone) this.drawZone(ctx, o.zone, 1);
+      if (o.marks) this.drawMarks(ctx, o.marks);
       if (m.landMark && (m.phase === 'point' || m.phase === 'over' || m.phase === 'idle')) this.drawLandMark(ctx, m.landMark, m.time);
       if (o.hintIdx != null && m.hint) this.drawHint(ctx, m, o.hintIdx, m.hint, true);
-      else if (o.landHint && m.pred && m.shuttle.live) {
+      else if (o.landHint && m.pred && m.shuttle.live && !m.pred.hidden) {
         for (const i of o.landHint) if (m.shuttle.lastHitter !== i) this.drawHint(ctx, m, i, { landX: m.pred.landX }, false);
       }
 
       const humans = m.players.filter((p) => !(m.practice && p.idx === 1));
       for (const p of humans) {
         this.updateSpring(p, dt);
-        const fast = (p.swing && p.swing.dur > 0.4 && p.swing.t < 0.3) || (!p.onGround && Math.abs(p.vy) > 1.5);
+        const fast = (p.swing && p.swing.dur > 0.4 && p.swing.t < 0.3) || (!p.onGround && Math.abs(p.vy) > 1.5) ||
+          (p.buff && p.buff.shanbu > 0 && Math.abs(p.vx) > 1);
         this.ghostT[p.idx] -= dt;
         if (this.quality && fast && this.ghostT[p.idx] <= 0) {
           this.ghostT[p.idx] = 0.04;
@@ -949,7 +1143,7 @@
         ctx.beginPath(); ctx.rect(-50, this.gy, this.W + 100, this.H); ctx.clip();
         ctx.translate(0, 2 * this.gy); ctx.scale(1, -1);
         ctx.globalAlpha = v.glossy;
-        for (const p of humans) this.drawCharAt(ctx, p, YY.LOOKS[p.idx], this.charOpts(p, m));
+        for (const p of humans) this.drawCharAt(ctx, p, this.lookOf(m, p.idx), this.charOpts(p, m));
         ctx.globalAlpha = 1;
         ctx.restore();
       }
@@ -966,9 +1160,11 @@
       } else if (this.trail.length) this.trail.splice(0, 2);
 
       for (const p of m.players) {
-        if (m.practice && p.idx === 1) { this.drawMachine(ctx, p); continue; }
-        const look = YY.LOOKS[p.idx];
+        if (m.practice && p.idx === 1) { if (!m.hideOpp) this.drawMachine(ctx, p); continue; }
+        const look = this.lookOf(m, p.idx);
         const gs = this.ghosts[p.idx];
+        const bk = p.buff ? Object.keys(p.buff).find((k) => p.buff[k] > 0 && YY.SKILLS && YY.SKILLS[k]) : null;
+        if (bk) this.drawAura(ctx, p, YY.SKILLS[bk].color, dt);
         for (let i = gs.length - 1; i >= 0; i--) {
           const gh = gs[i];
           gh.t += dt;
@@ -990,7 +1186,18 @@
           ctx.fillText(o.labels[p.idx], X, Y - fs / 2 - 3);
         }
       }
+      this.trailFire = !!(s.live && s.fire);
       this.drawTrail(ctx);
+      if (s.live && s.feint > 0) {
+        // 假动作：两个幻影球向不同方向分叉
+        const e = 0.55 - s.feint, L = Math.hypot(s.vx, s.vy) || 1;
+        for (const sg of [-1, 1]) {
+          const off = e * 2.4 * sg;
+          ctx.globalAlpha = clamp(s.feint / 0.55, 0, 1) * 0.6;
+          this.drawShuttle(ctx, { x: s.x + (-s.vy / L) * off, y: Math.max(0.1, s.y + (s.vx / L) * off), vx: s.vx, vy: s.vy + sg * 4, live: true, speed: 0 });
+        }
+        ctx.globalAlpha = 1;
+      }
       this.drawShuttle(ctx, s);
       this.drawParts(ctx, dt);
       if (m.phase === 'serve' && !m.serving && o.meterFor && o.meterFor.includes(m.server)) this.drawServeMeter(ctx, m, o.serveLabel);
@@ -998,6 +1205,12 @@
 
       // 屏幕空间
       ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+      if (o.dark) this.drawDark(ctx, m, o.dark);
+      if (m.slowT > 0) {
+        const a = Math.min(1, m.slowT / 0.3) * 0.16;
+        ctx.fillStyle = `rgba(120,90,255,${a})`; ctx.fillRect(0, 0, this.W, this.H);
+      }
+      if (m.env && m.env.wind) this.drawWind(ctx, m.env.wind, dt);
       if (v.drawFront && this.quality) v.drawFront(ctx, this, this.time, this.vst, dt);
       this.drawSpeedLines(ctx, dt);
       if (s.live && this.sy(s.y) < 4) {
@@ -1012,6 +1225,7 @@
         else this.drawScoreboard(ctx, m);
       }
       this.drawBanner(ctx, dt);
+      this.drawCutIn(ctx, dt);
       if (o.waitText) {
         const fs = clamp(Math.round(this.H * 0.032), 14, 24);
         const Y = this.H * 0.5;

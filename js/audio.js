@@ -88,6 +88,16 @@
       src.start(t); src.stop(t + d + 0.05);
     },
     click() { if (this.ok()) this.tone(660, 0.06, 0.12, 'triangle', 880); },
+    /** 技能发动：上扬的扫频 + 和弦 */
+    skill() {
+      if (!this.ok()) return;
+      this.tone(220, 0.45, 0.25, 'sawtooth', 1320);
+      this.burst(3000, 0.7, 0.4, 0.18, 'highpass');
+      [784, 988, 1175].forEach((f, i) => setTimeout(() => this.tone(f, 0.3, 0.12, 'triangle'), 120 + i * 50));
+    },
+    ready() { if (this.ok()) { this.tone(988, 0.08, 0.1, 'triangle'); setTimeout(() => this.tone(1319, 0.12, 0.1, 'triangle'), 70); } },
+    /** 打字机：对话逐字显示 */
+    blip() { if (this.ok()) this.tone(1200 + Math.random() * 200, 0.025, 0.025, 'square'); },
     win() {
       if (!this.ok()) return;
       [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => this.tone(f, 0.25, 0.18, 'triangle'), i * 120));

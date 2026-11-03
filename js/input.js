@@ -2,12 +2,13 @@
 (function (G) {
   'use strict';
   const YY = G.YY;
-  const ACTS = ['jump', 'clear', 'drop', 'smash'];
+  const ACTS = ['jump', 'clear', 'drop', 'smash', 'skill'];
 
   const KEYMAPS = {
     solo: {
       left: ['KeyA', 'ArrowLeft'], right: ['KeyD', 'ArrowRight'],
       jump: ['KeyW', 'ArrowUp', 'Space'], clear: ['KeyJ', 'KeyZ'], drop: ['KeyK', 'KeyX'], smash: ['KeyL', 'KeyC'],
+      skill: ['KeyI', 'KeyV'],
     },
     p1: { left: ['KeyA'], right: ['KeyD'], jump: ['KeyW'], clear: ['KeyF'], drop: ['KeyG'], smash: ['KeyH'] },
     p2: {
@@ -33,9 +34,9 @@
       r = YY.clamp(r + this.touchDir, -1, 1);
       return this.netRight ? r : -r; // 转为“向网为正”
     }
-    push(act) { this.queue.push(act); this.counts[act]++; Input.changed(); }
+    push(act) { this.queue.push(act); if (act in this.counts) this.counts[act]++; Input.changed(); }
     onKey(code) {
-      for (const a of ACTS) if (this.map[a].includes(code)) { this.push(a); return true; }
+      for (const a of ACTS) if ((this.map[a] || []).includes(code)) { this.push(a); return true; }
       return this.map.left.includes(code) || this.map.right.includes(code);
     }
     drain() { const q = this.queue; this.queue = []; return q; }
@@ -104,13 +105,14 @@
   };
 
   // ---------- 触屏 ----------
-  const LABELS = { jump: '跳', clear: '高远', drop: '吊球', smash: '扣杀' };
-  const SUBS = { jump: 'JUMP', clear: '挑球', drop: '放网', smash: '强攻' };
+  const LABELS = { jump: '跳', clear: '高远', drop: '吊球', smash: '扣杀', skill: '技能' };
+  const SUBS = { jump: 'JUMP', clear: '挑球', drop: '放网', smash: '强攻', skill: 'SKILL' };
   const ICONS = {
     jump: '<path d="m6 12 6-6 6 6M6 18l6-6 6 6"/>',
     clear: '<path d="M4 19C6 5 14 2 20 7m-5-1 5 1-1 5"/>',
     drop: '<path d="M4 8c8-7 14-3 14 11m-4-4 4 4 4-4"/>',
     smash: '<path d="m14 3-8 11h6l-2 7L21 9h-7l2-6Z"/>',
+    skill: '<path d="M12 2.5l2.6 6 6.4.6-4.9 4.2 1.5 6.3L12 16.3 6.4 19.6l1.5-6.3L3 9.1l6.4-.6Z"/>',
   };
   const isTouch = () => 'ontouchstart' in G || navigator.maxTouchPoints > 0 || G.matchMedia('(pointer: coarse)').matches;
   YY.isTouch = isTouch;
@@ -193,12 +195,12 @@
     return pad;
   }
 
-  function makeBtn(ctrl, act, cls) {
+  function makeBtn(ctrl, act, cls, label) {
     const b = document.createElement('button');
     b.type = 'button';
-    b.setAttribute('aria-label', LABELS[act]);
+    b.setAttribute('aria-label', label || LABELS[act]);
     b.className = 'tbtn t-' + act + (cls ? ' ' + cls : '');
-    b.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[act]}</svg><b>${LABELS[act]}</b>` + (cls === 'mini' ? '' : `<small>${SUBS[act]}</small>`);
+    b.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[act]}</svg><b>${label || LABELS[act]}</b>` + (cls === 'mini' ? '' : `<small>${SUBS[act]}</small>`);
     const pointers = new Set();
     b.addEventListener('pointerdown', e => {
       e.preventDefault();
@@ -223,8 +225,9 @@
     return b;
   }
 
-  /** 构建触屏控制：layout 'solo' 一人（左方向键 + 右手弧形按键），'duo' 两人各一组 */
-  YY.buildTouch = function (root, ctrls, layout) {
+  /** 构建触屏控制：layout 'solo' 一人（左方向键 + 右手弧形按键），'duo' 两人各一组。
+   * opt.skill：技能短名（有则在扣杀键上方加技能键，能量用 --e 显示） */
+  YY.buildTouch = function (root, ctrls, layout, opt) {
     for (const reset of Input.touchResets) reset();
     Input.touchResets = [];
     root.innerHTML = '';
@@ -233,6 +236,11 @@
       const arc = document.createElement('div');
       arc.className = 'arc';
       for (const a of ['clear', 'drop', 'smash', 'jump']) arc.appendChild(makeBtn(ctrls[0], a));
+      if (opt && opt.skill) {
+        const sb = makeBtn(ctrls[0], 'skill', null, opt.skill);
+        sb.style.setProperty('--sk', opt.color || '#ffd23f');
+        arc.appendChild(sb);
+      }
       root.appendChild(arc);
     } else {
       ctrls.forEach((c, i) => {

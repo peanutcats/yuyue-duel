@@ -9,7 +9,7 @@
   <meta name="description" content="羽跃对决：打开网页即可游玩的侧视羽毛球对战游戏，支持 AI 对战、好友对战与自由练习。">
   <title>羽跃对决 · 网页羽毛球对战</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23ff4b55'/%3E%3Cpath d='M22 40 L46 14 L52 20 L28 46Z' fill='%23fff'/%3E%3Ccircle cx='22' cy='44' r='8' fill='%23ffd23f'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="css/style.css?v=10">
+  <link rel="stylesheet" href="css/style.css?v=12">
 </head>
 <body>
   <!-- 图标 -->
@@ -26,6 +26,10 @@
     <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2.5 L14.9 8.6 L21.5 9.3 L16.6 13.8 L18 20.4 L12 17 L6 20.4 L7.4 13.8 L2.5 9.3 L9.1 8.6 Z" fill="currentColor"/></symbol>
     <symbol id="i-full" viewBox="0 0 24 24"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
     <symbol id="i-unfull" viewBox="0 0 24 24"><path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+ <symbol id="i-story" viewBox="0 0 48 48"><path d="M10 6h20l8 8v28H10z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M30 6v8h8" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M24 20l2.4 5 5.4.5-4.1 3.6 1.2 5.3-4.9-2.9-4.9 2.9 1.2-5.3-4.1-3.6 5.4-.5z" fill="currentColor"/></symbol>
+    <symbol id="i-bag" viewBox="0 0 48 48"><rect x="6" y="14" width="36" height="26" rx="6" fill="none" stroke="currentColor" stroke-width="3"/><path d="M17 14v-4a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v4M6 24h36" fill="none" stroke="currentColor" stroke-width="3"/><rect x="20" y="21" width="8" height="6" rx="2" fill="currentColor"/></symbol>
+    <symbol id="i-cards" viewBox="0 0 48 48"><rect x="6" y="10" width="22" height="30" rx="4" transform="rotate(-10 17 25)" fill="none" stroke="currentColor" stroke-width="3"/><rect x="20" y="8" width="22" height="30" rx="4" transform="rotate(8 31 23)" fill="currentColor" opacity=".9"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="3" fill="currentColor"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.4"/></symbol>
     <symbol id="i-dice" viewBox="0 0 48 48"><rect x="7" y="7" width="34" height="34" rx="8" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="17" cy="17" r="3.2" fill="currentColor"/><circle cx="31" cy="31" r="3.2" fill="currentColor"/><circle cx="24" cy="24" r="3.2" fill="currentColor"/><circle cx="31" cy="17" r="3.2" fill="currentColor"/><circle cx="17" cy="31" r="3.2" fill="currentColor"/></symbol>
   </svg>
 
@@ -50,9 +54,14 @@
         </div>
         <p class="tagline">调动对手 · 制造空当 · 抓住机会</p>
         <nav class="main-nav">
-          <button class="nav-item hot" data-go="ai">
+          <button class="nav-item hot" data-go="story">
+            <span class="ni-icon"><svg><use href="#i-story"/></svg></span>
+            <span class="ni-text"><b>故事模式</b><small id="menuStoryNote">守护星光体育馆 · 解锁角色与装备</small></span>
+            <span class="ni-arrow">›</span>
+          </button>
+          <button class="nav-item" data-go="ai">
             <span class="ni-icon"><svg><use href="#i-racket"/></svg></span>
-            <span class="ni-text"><b>快速对战</b><small>挑战简单 / 普通 / 困难 AI</small></span>
+            <span class="ni-text"><b>快速对战</b><small>选好角色，挑战三档 AI</small></span>
             <span class="ni-arrow">›</span>
           </button>
           <button class="nav-item" data-go="friend">
@@ -65,12 +74,12 @@
             <span class="ni-text"><b>自由练习</b><small>发球机陪练 · 落点与时机提示</small></span>
             <span class="ni-arrow">›</span>
           </button>
-          <button class="nav-item slim" data-go="help">
-            <span class="ni-icon"><svg><use href="#i-book"/></svg></span>
-            <span class="ni-text"><b>操作与技巧</b></span>
-            <span class="ni-arrow">›</span>
-          </button>
         </nav>
+        <div class="sub-nav">
+          <button class="chip-btn" data-go="team"><svg><use href="#i-bag"/></svg><span>角色与装备</span></button>
+          <button class="chip-btn" data-go="codex"><svg><use href="#i-cards"/></svg><span>羽球图鉴</span><em id="codexBadge" class="badge hidden"></em></button>
+          <button class="chip-btn" data-go="help"><svg><use href="#i-book"/></svg><span>操作</span></button>
+        </div>
         <div class="settings">
           <label class="switch"><input type="checkbox" id="optSound" checked><span></span>音效</label>
           <label class="switch"><input type="checkbox" id="optHint" checked><span></span>落点提示</label>
@@ -86,6 +95,11 @@
     <section id="scr-ai" class="screen panel-screen hidden">
       <div class="panel wide">
         <header class="ph"><button class="icon-btn" data-go="menu" aria-label="返回"><svg><use href="#i-back"/></svg></button><div><h2>快速对战</h2><small>选择场馆与对手</small></div></header>
+        <div class="loadout-row">
+          <div class="lo-me" id="loMe"></div>
+          <label class="switch"><input type="checkbox" id="optSkill" checked><span></span>角色技能</label>
+          <button class="btn" id="btnLoEdit">更换角色 / 装备</button>
+        </div>
         <div class="sect-title">场馆</div>
         <div class="venue-pick"></div>
         <div class="sect-title">对手难度</div>
@@ -106,7 +120,7 @@
             <b>困难</b><span>预判快、回位及时，会针对你反复使用的球路提前站位。</span>
           </button>
         </div>
-        <p class="note">双方移动、跳跃、体力完全相同；难度只影响 AI 的反应、判断、回位与球路选择。</p>
+        <p class="note">对手从全部角色中随机抽取，使用标准装备；难度只影响 AI 的反应、判断、回位与球路选择。</p>
       </div>
     </section>
 
@@ -178,6 +192,7 @@
               <tr><td>高远球 / 挑球</td><td><kbd>J</kbd> 或 <kbd>Z</kbd></td></tr>
               <tr><td>吊球 / 网前轻放</td><td><kbd>K</kbd> 或 <kbd>X</kbd></td></tr>
               <tr><td>扣杀</td><td><kbd>L</kbd> 或 <kbd>C</kbd></td></tr>
+              <tr><td>角色技能</td><td><kbd>I</kbd> 或 <kbd>V</kbd>（能量环充满后）</td></tr>
               <tr><td>暂停</td><td><kbd>Esc</kbd> 或 <kbd>P</kbd></td></tr>
             </table>
             <h3>同屏双人</h3>
@@ -197,6 +212,10 @@
                <b>扣杀</b>：先起跳，在空中高点按扣杀。离网越近越凶。高度、起跳或体力不足时会变成普通平抽。</p>
             <h3>进阶</h3>
             <p>击球瞬间按住「向网」方向：高远变平高、吊球变劈吊、扣杀打近；按住「向后」：扣杀打深。扣杀自动瞄向对手站位的空当，击球质量越高越刁钻。</p>
+            <h3>角色技能</h3>
+            <p>击球、救球和失分都会给头像外圈的能量环充能，充满后按 <kbd>I</kbd>（手机点「技能」）发动。每个角色的技能都不同，可在「角色与装备」查看。故事模式、快速对战可用；联机与同屏对战不启用技能，保证公平。</p>
+            <h3>装备</h3>
+            <p>球拍、球线、磅数、球鞋会改变力量、控制、网前、甜区、移动与体力等数值。在故事模式中逐步解锁。</p>
             <h3>体力</h3>
             <p>起跳与扣杀消耗体力，移动和普通回球不消耗。停止高消耗动作一会儿后体力恢复，每分结束回满。体力条上的白线是一次跳杀所需体力。</p>
             <h3>规则</h3>
@@ -204,6 +223,108 @@
             <h3>战术</h3>
             <p>先高远把对手压后场 → 吊网前逼他上前 → 等他勉强挑起高球 → 起跳扣杀！连续打同一种球路，困难 AI 会提前站位针对你。</p>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 故事地图 -->
+    <section id="scr-story" class="screen panel-screen hidden">
+      <div class="panel wide story">
+        <header class="ph"><button class="icon-btn" data-go="menu" aria-label="返回"><svg><use href="#i-back"/></svg></button>
+          <div><h2>故事模式</h2><small>羽跃社的星光杯之旅</small></div>
+          <div class="ph-right"><span class="star-total" id="storyStars"></span></div>
+        </header>
+        <div class="story-wrap">
+          <div class="chap-list" id="chapList"></div>
+          <div class="chap-main">
+            <div class="chap-head"><b id="chapTitle"></b><span id="chapBlurb"></span></div>
+            <div class="stage-list" id="stageList"></div>
+          </div>
+        </div>
+        <div class="story-foot"><button class="btn ghost small" id="btnStoryReset">重置故事进度</button></div>
+      </div>
+    </section>
+
+    <!-- 剧情对话 -->
+    <section id="scr-dialog" class="screen dialog-screen hidden">
+      <button class="dlg-skip" id="btnDlgSkip">跳过 ››</button>
+      <div class="dlg-box" id="dlgBox">
+        <div class="dlg-av"><img id="dlgAv" alt=""></div>
+        <div class="dlg-body">
+          <div class="dlg-name" id="dlgName"></div>
+          <p id="dlgText"></p>
+          <span class="dlg-next">点击继续 ▼</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 问答 -->
+    <section id="scr-quiz" class="screen panel-screen hidden">
+      <div class="panel quiz">
+        <header class="ph"><div class="quiz-av"><img id="quizAv" alt=""></div><div><h2 id="quizTitle">毛毛的小测验</h2><small id="quizProg"></small></div></header>
+        <p class="quiz-q" id="quizQ"></p>
+        <div class="quiz-opts" id="quizOpts"></div>
+        <div class="quiz-exp hidden" id="quizExp"></div>
+        <div class="row"><button class="btn primary hidden" id="btnQuizNext">下一题</button></div>
+      </div>
+    </section>
+
+    <!-- 关卡步骤结算 -->
+    <section id="scr-step" class="screen panel-screen dim hidden">
+      <div class="panel narrow step">
+        <header class="ph center"><h2 id="stepTitle">挑战成功</h2></header>
+        <div class="step-stars" id="stepStars"></div>
+        <p class="step-main" id="stepMain"></p>
+        <ul class="goal-list" id="stepGoals"></ul>
+        <div class="stack">
+          <button class="btn primary big" id="btnStepNext">继续</button>
+          <button class="btn" id="btnStepRetry">再来一次</button>
+          <button class="btn ghost" id="btnStepQuit">返回故事地图</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 关卡通关 -->
+    <section id="scr-clear" class="screen panel-screen dim hidden">
+      <div class="panel clear">
+        <div class="res-ribbon"><span id="clearTitle">关卡完成</span></div>
+        <div class="step-stars big" id="clearStars"></div>
+        <div class="sect-title center">获得奖励</div>
+        <div class="reward-list" id="clearRewards"></div>
+        <div class="row">
+          <button class="btn primary big" id="btnClearNext">下一关</button>
+          <button class="btn" id="btnClearMap">故事地图</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 角色与装备 -->
+    <section id="scr-team" class="screen panel-screen hidden">
+      <div class="panel wide team">
+        <header class="ph"><button class="icon-btn" id="btnTeamBack" aria-label="返回"><svg><use href="#i-back"/></svg></button><div><h2>角色与装备</h2><small>角色决定技能，装备改变击球与移动</small></div></header>
+        <div class="team-wrap">
+          <div class="team-col">
+            <div class="sect-title">出战角色</div>
+            <div class="char-list" id="charList"></div>
+            <div class="char-detail" id="charDetail"></div>
+          </div>
+          <div class="team-col">
+            <div class="gear-tabs" id="gearTabs"></div>
+            <div class="gear-list" id="gearList"></div>
+            <div class="sect-title">综合能力 <small>（100 = 标准，绿色为装备加成）</small></div>
+            <div class="stat-box" id="statBox"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 图鉴 -->
+    <section id="scr-codex" class="screen panel-screen hidden">
+      <div class="panel wide codex">
+        <header class="ph"><button class="icon-btn" data-go="menu" aria-label="返回"><svg><use href="#i-back"/></svg></button><div><h2>羽球图鉴</h2><small id="codexProg">在故事中收集羽毛球知识</small></div></header>
+        <div class="codex-wrap">
+          <div class="codex-grid" id="codexGrid"></div>
+          <div class="codex-detail" id="codexDetail"></div>
         </div>
       </div>
     </section>
@@ -257,16 +378,18 @@
     <button class="btn ghost" id="btnRotateOk">继续竖屏</button>
   </div>
 
-  <script src="js/core.js?v=10"></script>
-  <script src="js/match.js?v=10"></script>
-  <script src="js/ai.js?v=10"></script>
-  <script src="js/practice.js?v=10"></script>
-  <script src="js/char.js?v=10"></script>
-  <script src="js/venues.js?v=10"></script>
-  <script src="js/render.js?v=10"></script>
-  <script src="js/audio.js?v=10"></script>
-  <script src="js/input.js?v=10"></script>
-  <script src="js/net.js?v=10"></script>
-  <script src="js/main.js?v=10"></script>
+  <script src="js/core.js?v=11"></script>
+  <script src="js/roster.js?v=11"></script>
+  <script src="js/match.js?v=11"></script>
+  <script src="js/ai.js?v=11"></script>
+  <script src="js/practice.js?v=11"></script>
+  <script src="js/char.js?v=11"></script>
+  <script src="js/venues.js?v=11"></script>
+  <script src="js/render.js?v=11"></script>
+  <script src="js/audio.js?v=11"></script>
+  <script src="js/input.js?v=11"></script>
+  <script src="js/net.js?v=11"></script>
+  <script src="js/story.js?v=11"></script>
+  <script src="js/main.js?v=11"></script>
 </body>
 </html>

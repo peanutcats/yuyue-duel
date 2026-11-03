@@ -302,6 +302,43 @@
   function hairBack(ctx, P, look, o, lw) {
     const hd = P.hd;
     const sp = o.spring || [0, 0];
+    const tail = (root, len, drop, w, col) => {
+      const tip = [root[0] - len + sp[0], root[1] - drop + sp[1]];
+      const mid = [(root[0] + tip[0]) / 2 - 0.02, (root[1] + tip[1]) / 2 + 0.05];
+      ctx.beginPath();
+      ctx.moveTo(root[0], root[1] + w);
+      ctx.quadraticCurveTo(mid[0], mid[1] + w * 1.5, tip[0], tip[1]);
+      ctx.quadraticCurveTo(mid[0] + 0.02, mid[1] - w * 1.2, root[0] + 0.02, root[1] - w);
+      ctx.closePath();
+      ctx.fillStyle = col || look.hairC; ctx.fill();
+      ctx.lineWidth = lw; ctx.strokeStyle = look.outline; ctx.stroke();
+    };
+    if (look.hair === 'twin') {
+      // 双马尾：两条长度不同的辫子，随弹簧摆动
+      tail([hd[0] - 0.05, hd[1] + 0.13], 0.16, 0.2, 0.035, YY.shade(look.hairC, 0.8));
+      tail([hd[0] - 0.11, hd[1] + 0.06], 0.2, 0.17, 0.04);
+      ctx.fillStyle = look.band;
+      for (const r of [[hd[0] - 0.05, hd[1] + 0.13], [hd[0] - 0.11, hd[1] + 0.06]]) { ctx.beginPath(); ctx.arc(r[0], r[1], 0.026, 0, Math.PI * 2); ctx.fill(); }
+      return;
+    }
+    if (look.hair === 'bun') {
+      // 丸子头 + 发簪
+      const bx = hd[0] - 0.08 + sp[0] * 0.15, by = hd[1] + 0.14 + sp[1] * 0.15;
+      ctx.strokeStyle = look.band; ctx.lineWidth = 0.014; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(bx - 0.08, by + 0.05); ctx.lineTo(bx + 0.07, by - 0.04); ctx.stroke();
+      ctx.beginPath(); ctx.arc(bx, by, 0.06, 0, Math.PI * 2);
+      ctx.fillStyle = look.hairC; ctx.fill();
+      ctx.lineWidth = lw; ctx.strokeStyle = look.outline; ctx.stroke();
+      ctx.strokeStyle = look.hairHi; ctx.lineWidth = 0.012;
+      ctx.beginPath(); ctx.arc(bx, by, 0.035, 2.2, 3.6); ctx.stroke();
+      return;
+    }
+    if (look.hair === 'bangs') {
+      // 后脑碎发
+      tail([hd[0] - 0.11, hd[1] + 0.02], 0.1, 0.12, 0.05);
+      return;
+    }
+    if (look.hair === 'buzz' || look.hair === 'bowl') return;
     if (look.hair === 'ponytail') {
       const root = [hd[0] - 0.1, hd[1] + 0.07];
       const tip = [root[0] - 0.2 + sp[0], root[1] - 0.12 + sp[1]];
@@ -371,6 +408,29 @@
       ctx.quadraticCurveTo(hx - R * 0.9, hy - R * 0.5, hx - R * 0.55, hy - R * 0.35);
       ctx.quadraticCurveTo(hx - R * 0.2, hy + R * 0.2, hx + R * 0.1, hy + R * 0.32);
       ctx.quadraticCurveTo(hx + R * 0.6, hy + R * 0.45, hx + R * 0.95, hy + 0.03);
+    } else if (look.hair === 'bowl') {
+      // 西瓜头：齐刘海
+      ctx.moveTo(hx + R * 1.06, hy + R * 0.32);
+      ctx.quadraticCurveTo(hx + R * 1.12, hy + R * 1.28, hx - R * 0.1, hy + R * 1.24);
+      ctx.quadraticCurveTo(hx - R * 1.22, hy + R * 1.12, hx - R * 1.14, hy - R * 0.28);
+      ctx.lineTo(hx - R * 0.62, hy - R * 0.32);
+      ctx.quadraticCurveTo(hx - R * 0.5, hy + R * 0.28, hx + R * 0.05, hy + R * 0.42);
+      ctx.lineTo(hx + R * 1.06, hy + R * 0.32);
+    } else if (look.hair === 'buzz') {
+      // 圆寸 + 一根呆毛
+      ctx.moveTo(hx + R * 0.86, hy + R * 0.55);
+      ctx.quadraticCurveTo(hx + R * 0.62, hy + R * 1.18, hx - R * 0.2, hy + R * 1.14);
+      ctx.quadraticCurveTo(hx - R * 1.1, hy + R * 1.0, hx - R * 1.06, hy + R * 0.1);
+      ctx.quadraticCurveTo(hx - R * 0.8, hy + R * 0.5, hx - R * 0.3, hy + R * 0.7);
+      ctx.quadraticCurveTo(hx + R * 0.3, hy + R * 0.8, hx + R * 0.86, hy + R * 0.55);
+    } else if (look.hair === 'bangs') {
+      // 侧分长刘海
+      ctx.moveTo(hx + R * 1.08, hy - R * 0.08);
+      ctx.quadraticCurveTo(hx + R * 1.18, hy + R * 1.22, hx - R * 0.1, hy + R * 1.26);
+      ctx.quadraticCurveTo(hx - R * 1.26, hy + R * 1.06, hx - R * 1.16, hy - R * 0.42);
+      ctx.lineTo(hx - R * 0.76, hy - R * 0.56);
+      ctx.quadraticCurveTo(hx - R * 0.42, hy + R * 0.1, hx + R * 0.2, hy + R * 0.58);
+      ctx.quadraticCurveTo(hx + R * 0.78, hy + R * 0.52, hx + R * 1.08, hy - R * 0.08);
     } else {
       ctx.moveTo(hx + R * 1.0, hy + 0.0);
       ctx.quadraticCurveTo(hx + R * 1.0, hy + R * 1.2, hx - R * 0.1, hy + R * 1.18);
@@ -392,6 +452,9 @@
     if (look.hair === 'spiky') {
       ctx.strokeStyle = look.band; ctx.lineWidth = 0.034;
       ctx.beginPath(); ctx.moveTo(hx - R * 1.05, hy + R * 0.25); ctx.quadraticCurveTo(hx, hy + R * 0.55, hx + R * 0.98, hy + R * 0.32); ctx.stroke();
+    } else if (look.hair === 'buzz') {
+      ctx.strokeStyle = look.hairC; ctx.lineWidth = 0.016;
+      ctx.beginPath(); ctx.moveTo(hx - R * 0.1, hy + R * 1.12); ctx.quadraticCurveTo(hx + R * 0.1, hy + R * 1.6, hx + R * 0.45, hy + R * 1.42); ctx.stroke();
     }
     // 眉眼
     const ex = hx + R * 0.58, ey = hy + R * 0.12;
@@ -425,8 +488,16 @@
       ctx.beginPath(); ctx.moveTo(mx - 0.018, my); ctx.lineTo(mx + 0.012, my + 0.002); ctx.stroke();
     }
     // 腮红
-    ctx.fillStyle = 'rgba(255,110,110,0.22)';
-    ctx.beginPath(); ctx.ellipse(hx + R * 0.45, hy - R * 0.25, 0.022, 0.012, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = look.chubby ? 'rgba(255,110,110,0.34)' : 'rgba(255,110,110,0.22)';
+    ctx.beginPath(); ctx.ellipse(hx + R * 0.45, hy - R * 0.25, look.chubby ? 0.03 : 0.022, look.chubby ? 0.018 : 0.012, 0, 0, Math.PI * 2); ctx.fill();
+    if (look.glasses) {
+      // 圆框眼镜：镜框 + 镜腿
+      ctx.strokeStyle = '#1b1b24'; ctx.lineWidth = 0.011;
+      ctx.beginPath(); ctx.arc(ex + 0.004, ey, 0.036, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(ex - 0.032, ey + 0.006); ctx.lineTo(hx - 0.01, hy + 0.01); ctx.stroke();
+      ctx.fillStyle = 'rgba(190,230,255,0.18)';
+      ctx.beginPath(); ctx.arc(ex + 0.004, ey, 0.032, 0, Math.PI * 2); ctx.fill();
+    }
   }
 
   function torso(ctx, P, look, lw, flat, f) {
