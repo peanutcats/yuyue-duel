@@ -170,8 +170,9 @@ test('确定性发球矩阵：双方、高远/网前、不同质量，预测与�
 
 function guestBetween(a, b) {
   const v = new YY.GuestView();
-  v.push(a); v.push(b); v.clockOff = 0;
-  v.update((a.ht + b.ht) / 2 + 0.05);
+  a.nt = a.ht; b.nt = b.ht; // 可控的网络时钟
+  v.push(a, a.nt); v.push(b, b.nt); v.clockOff = 0;
+  v.update((a.nt + b.nt) / 2 + v.delay);
   return v;
 }
 

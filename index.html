@@ -9,7 +9,7 @@
   <meta name="description" content="羽跃对决：打开网页即可游玩的侧视羽毛球对战游戏，支持 AI 对战、好友对战与自由练习。">
   <title>羽跃对决 · 网页羽毛球对战</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23ff4b55'/%3E%3Cpath d='M22 40 L46 14 L52 20 L28 46Z' fill='%23fff'/%3E%3Ccircle cx='22' cy='44' r='8' fill='%23ffd23f'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="css/style.css?v=6">
+  <link rel="stylesheet" href="css/style.css?v=8">
 </head>
 <body>
   <!-- 图标 -->
@@ -24,13 +24,18 @@
     <symbol id="i-device" viewBox="0 0 48 48"><rect x="4" y="12" width="40" height="24" rx="5" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="14" cy="24" r="4" fill="currentColor"/><circle cx="34" cy="24" r="4" fill="currentColor"/></symbol>
     <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2 L4 14 H11 L10 22 L20 9 H13 Z" fill="currentColor"/></symbol>
     <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2.5 L14.9 8.6 L21.5 9.3 L16.6 13.8 L18 20.4 L12 17 L6 20.4 L7.4 13.8 L2.5 9.3 L9.1 8.6 Z" fill="currentColor"/></symbol>
+    <symbol id="i-full" viewBox="0 0 24 24"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-unfull" viewBox="0 0 24 24"><path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
     <symbol id="i-dice" viewBox="0 0 48 48"><rect x="7" y="7" width="34" height="34" rx="8" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="17" cy="17" r="3.2" fill="currentColor"/><circle cx="31" cy="31" r="3.2" fill="currentColor"/><circle cx="24" cy="24" r="3.2" fill="currentColor"/><circle cx="31" cy="17" r="3.2" fill="currentColor"/><circle cx="17" cy="31" r="3.2" fill="currentColor"/></symbol>
   </svg>
 
+  <div id="app">
   <canvas id="game"></canvas>
   <div id="touch"></div>
   <button id="btnPause" class="hidden" aria-label="暂停"><i></i><i></i></button>
+  <button id="btnFull" class="hidden" aria-label="横屏全屏"><svg><use href="#i-full"/></svg></button>
   <div id="netInfo" class="hidden"></div>
+  <div id="landNotice" class="hidden" role="status"></div>
 
   <div id="ui">
     <!-- 主菜单 -->
@@ -69,6 +74,7 @@
         <div class="settings">
           <label class="switch"><input type="checkbox" id="optSound" checked><span></span>音效</label>
           <label class="switch"><input type="checkbox" id="optHint" checked><span></span>落点提示</label>
+          <button class="pill touch-only" id="btnLand"><svg><use href="#i-full"/></svg><span>横屏全屏</span></button>
         </div>
       </div>
       <div class="menu-right">
@@ -178,7 +184,7 @@
             <p>左方：<kbd>A</kbd><kbd>D</kbd> 移动、<kbd>W</kbd> 跳、<kbd>F</kbd> 高远、<kbd>G</kbd> 吊球、<kbd>H</kbd> 扣杀<br>
                右方：<kbd>←</kbd><kbd>→</kbd> 移动、<kbd>↑</kbd> 跳、<kbd>,</kbd>/<kbd>1</kbd> 高远、<kbd>.</kbd>/<kbd>2</kbd> 吊球、<kbd>/</kbd>/<kbd>3</kbd> 扣杀</p>
             <h3>手机触屏</h3>
-            <p>左下方滑动条控制前后移动，右下方四个按键：高远、吊球、扣杀、跳。建议横屏。</p>
+            <p>左手摇杆轻推左右移动，上滑起跳；右手双排按键，上排「跳／扣杀」，下排「吊球／高远」。可同时移动、起跳和击球。点左上角全屏键进入横屏；不支持原生全屏时自动适配横屏。</p>
             <h3>发球</h3>
             <p>发球方头顶出现力度条，白色指针在绿色区域时按「高远」发高远球，按「吊球」发网前球。指针越偏离中间，发球越不稳，可能下网或出界。</p>
           </div>
@@ -242,23 +248,25 @@
       </div>
     </section>
   </div>
+  </div>
 
   <div id="rotate" class="hidden">
     <div class="phone"></div>
     <p>横屏游玩体验更佳</p>
-    <button class="btn primary" id="btnRotateOk">继续</button>
+    <button class="btn primary big" id="btnRotateLand">一键横屏全屏</button>
+    <button class="btn ghost" id="btnRotateOk">继续竖屏</button>
   </div>
 
-  <script src="js/core.js?v=6"></script>
-  <script src="js/match.js?v=6"></script>
-  <script src="js/ai.js?v=6"></script>
-  <script src="js/practice.js?v=6"></script>
-  <script src="js/char.js?v=6"></script>
-  <script src="js/venues.js?v=6"></script>
-  <script src="js/render.js?v=6"></script>
-  <script src="js/audio.js?v=6"></script>
-  <script src="js/input.js?v=6"></script>
-  <script src="js/net.js?v=6"></script>
-  <script src="js/main.js?v=6"></script>
+  <script src="js/core.js?v=8"></script>
+  <script src="js/match.js?v=8"></script>
+  <script src="js/ai.js?v=8"></script>
+  <script src="js/practice.js?v=8"></script>
+  <script src="js/char.js?v=8"></script>
+  <script src="js/venues.js?v=8"></script>
+  <script src="js/render.js?v=8"></script>
+  <script src="js/audio.js?v=8"></script>
+  <script src="js/input.js?v=8"></script>
+  <script src="js/net.js?v=8"></script>
+  <script src="js/main.js?v=8"></script>
 </body>
 </html>

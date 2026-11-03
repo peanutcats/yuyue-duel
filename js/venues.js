@@ -233,17 +233,35 @@
       if (type === 'smash') st.cheer = Math.max(st.cheer, 0.45);
       if (type === 'over') { st.cheer = 1.4; st.led = { text: d.text, color: d.color, t: -1.5 }; }
     },
+    nearTop(V) { return Math.min(V.adTop - 6, V.P(0, 2.6, -4.6)[1]); },
+    bakeFar(g, V) {
+      // 聚光灯光柱（静态烘焙，省去每帧大面积叠加混合）
+      g.globalCompositeOperation = 'lighter';
+      for (const [lx, ly] of V.lamps || []) {
+        const fx = V.cx + (lx - V.cx) * 0.35, fy = V.gy;
+        const w0 = V.sc * 0.2, w1 = V.sc * 1.5;
+        const gr = g.createLinearGradient(lx, ly, fx, fy);
+        gr.addColorStop(0, 'rgba(255,240,205,0.16)'); gr.addColorStop(1, 'rgba(255,240,205,0.0)');
+        g.fillStyle = gr;
+        g.beginPath(); g.moveTo(lx - w0, ly); g.lineTo(lx + w0, ly); g.lineTo(fx + w1, fy); g.lineTo(fx - w1, fy); g.closePath(); g.fill();
+      }
+      g.globalCompositeOperation = 'source-over';
+    },
+    afterCrowd(g, V) {
+      // 看台暗部：让视觉焦点回到明亮的球场
+      const hz = g.createLinearGradient(0, V.standTop, 0, V.adTop);
+      hz.addColorStop(0, 'rgba(6,8,26,0.55)'); hz.addColorStop(1, 'rgba(6,8,26,0.12)');
+      g.fillStyle = hz; g.fillRect(0, V.standTop - V.sc * 0.4, V.W, V.adTop - V.standTop + V.sc * 0.4);
+    },
     drawFar(ctx, R, t, st, dt) {
       st.cheer = Math.max(0, st.cheer - dt * 0.45);
-      for (const s of st.strips) {
-        const bounce = Math.abs(Math.sin(t * 11 + s.row * 0.9)) * st.cheer * s.h * 0.16 + Math.sin(t * 1.3 + s.row) * 0.6;
-        ctx.drawImage(s.c, 0, s.y - bounce, R.W, s.h);
+      if (st.liveCrowd) {
+        for (const s of st.strips) {
+          const bounce = Math.abs(Math.sin(t * 11 + s.row * 0.9)) * st.cheer * s.h * 0.16;
+          ctx.drawImage(s.c, 0, s.y - bounce, R.W, s.h);
+        }
+        this.afterCrowd(ctx, R.V);
       }
-      // 看台暗部：让视觉焦点回到明亮的球场
-      const V0 = R.V;
-      const hz = ctx.createLinearGradient(0, V0.standTop, 0, V0.adTop);
-      hz.addColorStop(0, 'rgba(6,8,26,0.55)'); hz.addColorStop(1, 'rgba(6,8,26,0.12)');
-      ctx.fillStyle = hz; ctx.fillRect(0, V0.standTop - R.sc * 0.4, R.W, V0.adTop - V0.standTop + R.sc * 0.4);
       // 观众闪光灯
       const rate = 0.6 + st.cheer * 26;
       if (Math.random() < rate * dt) st.flashes.push({ x: Math.random() * R.W, y: R.V.standTop + Math.random() * (R.V.adTop - R.V.standTop), t: 0 });
@@ -255,18 +273,6 @@
         const a = 1 - f.t / 0.25, s = R.sc * 0.18 * a;
         ctx.fillStyle = `rgba(255,255,255,${a})`;
         ctx.fillRect(f.x - s, f.y - 1, s * 2, 2); ctx.fillRect(f.x - 1, f.y - s, 2, s * 2);
-      }
-      // 聚光灯光柱
-      const lamps = R.V.lamps || [];
-      for (let i = 0; i < lamps.length; i++) {
-        const [lx, ly] = lamps[i];
-        const sway = Math.sin(t * 0.35 + i * 1.7) * R.sc * 0.6;
-        const fx = R.cx + (lx - R.cx) * 0.35 + sway, fy = R.gy;
-        const w0 = R.sc * 0.2, w1 = R.sc * 1.5;
-        const gr = ctx.createLinearGradient(lx, ly, fx, fy);
-        gr.addColorStop(0, 'rgba(255,240,205,0.16)'); gr.addColorStop(1, 'rgba(255,240,205,0.0)');
-        ctx.fillStyle = gr;
-        ctx.beginPath(); ctx.moveTo(lx - w0, ly); ctx.lineTo(lx + w0, ly); ctx.lineTo(fx + w1, fy); ctx.lineTo(fx - w1, fy); ctx.closePath(); ctx.fill();
       }
       // 光柱中的浮尘
       for (const m of st.motes) {
@@ -416,11 +422,13 @@
       const ac = V.P(-7.3, 0, -7);
       g.fillStyle = '#6d6470'; g.fillRect(ac[0] - sc * 0.5, ac[1] - sc * 0.6, sc * 1.0, sc * 0.6);
       g.strokeStyle = '#4a424f'; g.beginPath(); g.arc(ac[0], ac[1] - sc * 0.3, sc * 0.2, 0, Math.PI * 2); g.stroke();
-      for (const x of [-8.6, 8.6]) {
-        const a = V.P(x, 0, -3.4), b = V.P(x, 5.6, -3.4);
-        g.strokeStyle = '#2a1d35'; g.lineWidth = Math.max(2, sc * 0.06);
-        g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke();
-      }
+    },
+    nearTop(V) { return V.adTop + V.adH * 0.3 - V.sc * 0.62; },
+    tint(g, V) {
+      // 夕阳暖光（烘焙进缓存层，不再逐帧全屏叠加）
+      const w = g.createLinearGradient(V.W, 0, V.W * 0.3, V.H);
+      w.addColorStop(0, 'rgba(255,150,80,0.12)'); w.addColorStop(1, 'rgba(255,150,80,0)');
+      g.save(); g.globalCompositeOperation = 'lighter'; g.fillStyle = w; g.fillRect(0, 0, V.W, V.H); g.restore();
     },
     init(V) {
       const st = { clouds: [], birds: [], flies: [], cheer: 0 };
@@ -455,6 +463,10 @@
       // 串灯（世界坐标，随风轻摆）
       const V = R.V;
       ctx.globalCompositeOperation = 'source-over';
+      ctx.strokeStyle = '#2a1d35'; ctx.lineWidth = Math.max(2, R.sc * 0.06);
+      ctx.beginPath();
+      for (const x of [-8.6, 8.6]) { const a = V.P(x, 0, -3.4), b = V.P(x, 5.6, -3.4); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); }
+      ctx.stroke();
       for (let line = 0; line < 2; line++) {
         const z = -3.4, h = 5.5 - line * 0.35, sag = 0.9 + line * 0.25;
         const pts = [];
@@ -494,9 +506,6 @@
       const s = R.V.sun;
       if (!s) return;
       ctx.globalCompositeOperation = 'lighter';
-      const g = ctx.createLinearGradient(R.W, 0, R.W * 0.3, R.H);
-      g.addColorStop(0, 'rgba(255,150,80,0.12)'); g.addColorStop(1, 'rgba(255,150,80,0)');
-      ctx.fillStyle = g; ctx.fillRect(0, 0, R.W, R.H);
       // 镜头光晕
       const vx = R.W / 2 - s[0], vy = R.H / 2 - s[1];
       [[0.4, 0.12, '255,200,140'], [0.75, 0.06, '255,140,180'], [1.2, 0.18, '180,200,255']].forEach(([k, r, col]) => {
@@ -545,6 +554,7 @@
         g.fillStyle = i % 2 ? 'rgba(0,240,255,0.35)' : 'rgba(255,0,170,0.35)'; g.fillRect(0, y1 - 1.5, W, 1.5);
       }
     },
+    nearTop(V) { return V.adTop - 4; },
     paintNear(g, V) {
       const { W, H, sc } = V;
       g.fillStyle = '#05020f'; g.fillRect(0, V.adTop - 3, W, V.adH + 6);
@@ -594,9 +604,11 @@
     drawFar(ctx, R, t, st, dt) {
       const V = R.V;
       st.cheer = Math.max(0, st.cheer - dt * 0.5);
-      for (const s of st.strips) {
-        const bounce = Math.abs(Math.sin(t * 11 + s.row)) * st.cheer * s.h * 0.15;
-        ctx.drawImage(s.c, 0, s.y - bounce, R.W, s.h);
+      if (st.liveCrowd) {
+        for (const s of st.strips) {
+          const bounce = Math.abs(Math.sin(t * 11 + s.row)) * st.cheer * s.h * 0.15;
+          ctx.drawImage(s.c, 0, s.y - bounce, R.W, s.h);
+        }
       }
       // 招牌
       const sg = st.sign;
@@ -670,10 +682,14 @@
     const V = YY.geometry(w, h, false);
     V.dpr = 1;
     v.paintFar(g, V);
+    if (v.bakeFar) v.bakeFar(g, V);
     const st = v.init(V);
+    if (st.strips) for (const s of st.strips) g.drawImage(s.c, 0, s.y, w, s.h);
+    if (v.afterCrowd) v.afterCrowd(g, V);
     const fakeR = { W: w, H: h, sc: V.sc, cx: V.cx, gy: V.gy, V };
     if (v.drawFar) v.drawFar(g, fakeR, 2, st, 0);
     v.paintNear(g, V);
+    if (v.tint) v.tint(g, V);
     if (v.drawNear) v.drawNear(g, fakeR, 2, st, 0);
     if (v.drawFront) v.drawFront(g, fakeR, 2, st);
     return c;

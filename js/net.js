@@ -63,6 +63,7 @@
     peer: null, conn: null, role: null, code: null, rtt: 0.1,
     onMsg: null, onOpen: null, onClose: null, onStatus: null,
     ice: null, iceExp: 0, turn: 'unknown', route: null,
+    pending: {}, flushTimer: null, queuedBytes: 0, iceRtt: null, protocol: null,
     /** 获取 ICE 服务器：优先向本站申请 TURN 临时凭证，失败则只用 STUN */
     async getIce() {
       if (this.ice && performance.now() < this.iceExp) return this.ice;
@@ -99,6 +100,8 @@
         if (!pair) return null;
         const loc = stats.get(pair.localCandidateId), rem = stats.get(pair.remoteCandidateId);
         const relay = (loc && loc.candidateType === 'relay') || (rem && rem.candidateType === 'relay');
+        this.iceRtt = pair.currentRoundTripTime ?? null;
+        this.protocol = loc && (loc.relayProtocol || loc.protocol);
         this.route = relay ? 'relay' : 'direct';
         return this.route;
       } catch (_) { return null; }
@@ -201,8 +204,39 @@
     /** 距离上次收到对方任何消息的秒数 */
     idle() { return this.conn ? (performance.now() - (this.lastRecv || 0)) / 1000 : 0; },
     ping() { this.send({ t: 'ping', ts: performance.now() }); },
-    send(o) { if (this.conn && this.conn.open) try { this.conn.send(o); } catch (_) {} },
+    statusText(rtt = this.rtt, delay) {
+      const route = this.route === 'relay' ? '中转' : this.route === 'direct' ? '直连' : '线路检测中';
+      const buffer = delay == null ? '' : ` · 缓冲 ${Math.round(delay * 1000)} ms`;
+      return `往返 ${Math.round((rtt || 0) * 1000)} ms · ${route}${buffer}` + (this.queuedBytes > 4096 ? ' · 发送拥塞' : '');
+    },
+    diagnostics() {
+      return `传输：${this.protocol || '检测中'}；底层网络往返：${this.iceRtt == null ? '未知' : Math.round(this.iceRtt * 1000) + ' ms'}；发送队列：${this.queuedBytes} 字节。应用往返明显高于底层往返时，检查设备掉帧或发送积压。`;
+    },
+    // 不让每一帧旧位置挤进可靠通道。只合并状态，击球/得分事件和累积按键计数保留。
+    send(o) {
+      if (!this.conn || !this.conn.open) return;
+      if (o.t !== 'st' && o.t !== 'in') { try { this.conn.send(o); } catch (_) {} return; }
+      const old = this.pending[o.t];
+      if (old && o.t === 'st') o = { ...o, ev: [...(old.ev || []), ...(o.ev || [])] };
+      this.pending[o.t] = o;
+      this.flush();
+    },
+    flush() {
+      if (!this.conn || !this.conn.open) return;
+      this.queuedBytes = this.conn.dataChannel?.bufferedAmount || 0;
+      if (this.queuedBytes <= 4096 && !(this.conn.bufferSize > 0)) {
+        for (const type of ['in', 'st']) {
+          if (!this.pending[type]) continue;
+          try { this.conn.send(this.pending[type]); delete this.pending[type]; } catch (_) { break; }
+        }
+      }
+      if (Object.keys(this.pending).length && !this.flushTimer) {
+        this.flushTimer = setTimeout(() => { this.flushTimer = null; this.flush(); }, 16);
+      }
+    },
     close() {
+      clearTimeout(this.flushTimer); this.flushTimer = null; this.pending = {}; this.queuedBytes = 0;
+      this.route = null; this.iceRtt = null; this.protocol = null; this.rtt = 0.1;
       const c = this.conn; this.conn = null;
       try { if (c) c.close(); } catch (_) {}
       try { if (this.peer) this.peer.destroy(); } catch (_) {}
@@ -244,7 +278,7 @@
   const KIND = ['over', 'side', 'under'];
   YY.snapshot = function (m, events) {
     return {
-      t: 'st', ht: r3(m.time), ph: m.phase, sc: m.score.slice(), sv: m.server, st: r3(m.serveT), sg: m.serving ? 1 : 0,
+      t: 'st', nt: performance.now() / 1000, ht: r3(m.time), ph: m.phase, sc: m.score.slice(), sv: m.server, st: r3(m.serveT), sg: m.serving ? 1 : 0,
       ry: m.rally, w: m.winner, names: m.names, hc: m.hitCount,
       p: m.players.map((p) => [
         r3(p.x), r3(p.y), r3(p.vx), r3(p.vy), p.onGround ? 1 : 0, Math.round(p.stamina),
@@ -262,6 +296,7 @@
   YY.applyStats = (m, st) => { if (st) m.stats = st; };
 
   /** 好友端的可渲染比赛视图（接口与 Match 一致） */
+  const stamp = (sn) => sn.nt ?? sn.ht;
   class GuestView {
     constructor() {
       this.players = [0, 1].map((i) => ({ idx: i, side: i ? 1 : -1, dir: i ? -1 : 1, x: i ? 2.8 : -2.3, y: 0, vx: 0, vy: 0, onGround: true, stamina: 100, swing: null, runPhase: 0, flash: 0, land: 0 }));
@@ -271,35 +306,47 @@
       this.landMark = null; this.pred = null; this.hint = null; this.winner = -1;
       this.buf = []; this.clockOff = null; this.stats = null; this.longest = 0;
       this.pendingEvents = []; this.events = [];
+      this.delay = 0.025; this.jitter = 0; this.lastArrival = null; this.lastStamp = null; this.renderStamp = -Infinity;
     }
     serveMeter() { const u = this.serveT * 1.15; return 1 - Math.abs((u % 2) - 1); }
-    push(sn) {
-      const now = performance.now() / 1000;
-      const off = sn.ht - now;
+    push(sn, now = performance.now() / 1000) {
+      const time = stamp(sn);
+      // 同一连接晚到的旧快照不能把画面倒回去。
+      if (sn.nt != null && this.buf.length && time < stamp(this.buf[this.buf.length - 1])) return;
+      if (this.lastArrival !== null && time > this.lastStamp) {
+        const gap = now - this.lastArrival;
+        const variation = Math.abs(gap - (time - this.lastStamp));
+        this.jitter += (variation - this.jitter) * 0.15;
+        const target = YY.clamp((time - this.lastStamp) + this.jitter * 2, 0.025, 0.08);
+        this.delay += (target - this.delay) * (target > this.delay ? 0.5 : 0.05);
+      }
+      this.lastArrival = now; this.lastStamp = time;
+      const off = time - now;
       if (this.clockOff === null || off > this.clockOff || Math.abs(off - this.clockOff) > 1) this.clockOff = off;
       else this.clockOff += (off - this.clockOff) * 0.02;
       if (this.buf.length && sn.ht < this.buf[this.buf.length - 1].ht) {
-        this.buf = []; this.pendingEvents = []; this.events = [];
+        this.buf = []; this.pendingEvents = []; this.events = []; this.renderStamp = -Infinity;
       }
       this.buf.push(sn);
-      if (sn.ev && sn.ev.length) this.pendingEvents.push({ t: sn.ht, events: sn.ev });
+      if (sn.ev && sn.ev.length) this.pendingEvents.push({ t: time, events: sn.ev });
       if (this.buf.length > 30) this.buf.shift();
     }
     update(now = performance.now() / 1000) {
       if (!this.buf.length) return;
-      const rt = now + this.clockOff - 0.05;
+      const rt = Math.max(this.renderStamp, now + this.clockOff - this.delay);
       let a = this.buf[0], b = a;
       for (let i = 0; i < this.buf.length; i++) {
-        if (this.buf[i].ht <= rt) a = this.buf[i];
-        if (this.buf[i].ht >= rt) { b = this.buf[i]; break; }
+        if (stamp(this.buf[i]) <= rt) a = this.buf[i];
+        if (stamp(this.buf[i]) >= rt) { b = this.buf[i]; break; }
         b = this.buf[i];
       }
-      const u = b.ht > a.ht ? YY.clamp((rt - a.ht) / (b.ht - a.ht), 0, 1) : 1;
+      const u = stamp(b) > stamp(a) ? YY.clamp((rt - stamp(a)) / (stamp(b) - stamp(a)), 0, 1) : 1;
       const L = (x, y) => x + (y - x) * u;
       // 离散状态取当前时刻已发生的快照，不能提前套用下一帧的击球/撞网结果。
       const cur = u < 1 ? a : b;
       const reset = a.ph !== b.ph && b.ph === 'serve';
       this.time = L(a.ht, b.ht);
+      this.renderStamp = L(stamp(a), stamp(b));
       this.phase = cur.ph; this.score = cur.sc; this.server = cur.sv;
       this.serveT = a.ph === b.ph ? L(a.st, b.st) : cur.st; this.serving = cur.sg ? {} : null;
       this.rally = cur.ry; this.winner = cur.w;
@@ -326,7 +373,7 @@
       s.netHit = !!sc[8]; s.crossedNet = !!sc[9];
       this.landMark = cur.lm ? { x: cur.lm[0], inB: !!cur.lm[1], t: cur.lm[2] } : null;
       this.pred = cur.pl != null ? { landX: cur.pl } : null;
-      while (this.pendingEvents.length && this.pendingEvents[0].t <= this.time) {
+      while (this.pendingEvents.length && this.pendingEvents[0].t <= this.renderStamp) {
         this.events.push(...this.pendingEvents.shift().events);
       }
     }

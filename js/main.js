@@ -40,10 +40,12 @@
 
     init() {
       this.cv = $('game');
+      document.body.classList.toggle('touch', YY.isTouch());
       this.R = new YY.Renderer(this.cv);
       this.R.touch = YY.isTouch();
-      this.R.resize();
+      this.applyViewport();
       YY.Input.init();
+      YY.Input.onChange = () => { if (this.mode === 'guest' && !this.paused) this.sendGuestInput(); };
       YY.Input.onAny = (e) => {
         if ((e.code === 'Escape' || e.code === 'KeyP') && this.inGame()) { this.togglePause(); return true; }
         return false;
@@ -51,7 +53,10 @@
       A.enabled = this.settings.sound;
       this.bindUI();
       this.buildMenuArt();
-      G.addEventListener('resize', () => { this.R.resize(); this.checkRotate(); });
+      G.addEventListener('resize', () => this.applyViewport());
+      G.addEventListener('orientationchange', () => setTimeout(() => this.applyViewport(), 250));
+      document.addEventListener('fullscreenchange', () => this.fullscreenChanged());
+      document.addEventListener('webkitfullscreenchange', () => this.fullscreenChanged());
       document.addEventListener('visibilitychange', () => {
         if (document.hidden && this.inGame() && !this.isOnline() && !this.paused) this.togglePause();
         if (document.hidden && this.isOnline()) YY.Net.send({ t: 'away' });
@@ -101,6 +106,9 @@
       $('btnResMenu').addEventListener('click', () => this.quit());
       $('btnMsgOk').addEventListener('click', () => { this.show(this.msgBack || 'menu'); });
       $('btnRotateOk').addEventListener('click', () => { this.rotateOk = true; $('rotate').classList.add('hidden'); });
+      $('btnRotateLand').addEventListener('click', () => this.goLandscape());
+      $('btnLand').addEventListener('click', () => this.toggleLandscape());
+      $('btnFull').addEventListener('click', () => this.toggleLandscape());
       $('optSound').checked = this.settings.sound;
       $('optHint').checked = this.settings.hint;
       $('optSound').addEventListener('change', (e) => { this.settings.sound = A.enabled = e.target.checked; store.set('sound', e.target.checked); });
@@ -114,7 +122,89 @@
     },
     checkRotate() {
       const portrait = G.innerHeight > G.innerWidth * 1.05;
-      $('rotate').classList.toggle('hidden', !(YY.isTouch() && portrait && !this.rotateOk));
+      $('rotate').classList.toggle('hidden', !(YY.isTouch() && portrait && !this.rotateOk && !YY.forceLand));
+    },
+    /** 应用视口：竖屏 + 强制横屏时整体旋转 90°，并按逻辑尺寸重建画布 */
+    applyViewport() {
+      const vp = YY.viewport();
+      const app = $('app');
+      if (YY.Input) YY.Input.releaseAll();
+      this.pausedDrawn = false;
+      app.classList.toggle('rot', vp.rot);
+      app.style.width = vp.W + 'px';
+      app.style.height = vp.H + 'px';
+      app.style.setProperty('--appW', vp.W + 'px');
+      app.style.setProperty('--appH', vp.H + 'px');
+      if (this.R) this.R.resize();
+      this.checkRotate();
+      this.updateLandUI();
+    },
+    isLandMode() { return !!(document.fullscreenElement || document.webkitFullscreenElement) || YY.forceLand; },
+    fullscreenChanged() {
+      const full = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      if (this.wasFullscreen && !full) {
+        this.landRequest = (this.landRequest || 0) + 1;
+        YY.forceLand = false;
+        try { screen.orientation?.unlock(); } catch (_) {}
+      }
+      this.wasFullscreen = full;
+      this.applyViewport();
+    },
+    /** 立即横屏；原生全屏和方向锁失败时保留 CSS 横屏。 */
+    async goLandscape() {
+      if (this.landBusy) return;
+      A.init();
+      const request = this.landRequest = (this.landRequest || 0) + 1;
+      this.landBusy = true;
+      YY.forceLand = true; this.rotateOk = true;
+      this.applyViewport();
+      const within = (p) => new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error('timeout')), 1200);
+        Promise.resolve(p).then(v => { clearTimeout(timer); resolve(v); }, e => { clearTimeout(timer); reject(e); });
+      });
+      const el = document.documentElement;
+      try {
+        if (!document.fullscreenElement && el.requestFullscreen) await within(el.requestFullscreen({ navigationUI: 'hide' }));
+        else if (!document.webkitFullscreenElement && el.webkitRequestFullscreen) await within(el.webkitRequestFullscreen());
+      } catch (_) { /* 保留横屏适配 */ }
+      if (request === this.landRequest) {
+        try { if (screen.orientation?.lock) await within(screen.orientation.lock('landscape')); } catch (_) {}
+      }
+      if (request !== this.landRequest) { try { screen.orientation?.unlock(); } catch (_) {} }
+      this.landBusy = false;
+      this.applyViewport();
+      const notice = $('landNotice');
+      if (request === this.landRequest && !document.fullscreenElement && !document.webkitFullscreenElement) {
+        notice.textContent = '已切换横屏 · 此浏览器未开启原生全屏';
+        notice.classList.remove('hidden');
+        clearTimeout(this.landNoticeTimer);
+        this.landNoticeTimer = setTimeout(() => notice.classList.add('hidden'), 3500);
+      }
+    },
+    async exitLandscape() {
+      clearTimeout(this.landNoticeTimer);
+      $('landNotice').classList.add('hidden');
+      this.landRequest = (this.landRequest || 0) + 1;
+      YY.forceLand = false;
+      try { screen.orientation?.unlock(); } catch (_) {}
+      this.applyViewport();
+      try {
+        if (document.fullscreenElement && document.exitFullscreen) await document.exitFullscreen();
+        else if (document.webkitFullscreenElement && document.webkitExitFullscreen) await document.webkitExitFullscreen();
+      } catch (_) {}
+      this.applyViewport();
+    },
+    toggleLandscape() { if (this.isLandMode()) this.exitLandscape(); else this.goLandscape(); },
+    updateLandUI() {
+      const on = this.isLandMode();
+      const full = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      const label = on ? (full ? '退出全屏' : '退出横屏') : '横屏全屏';
+      const use = document.querySelector('#btnFull use');
+      if (use) use.setAttribute('href', on ? '#i-unfull' : '#i-full');
+      const lb = document.querySelector('#btnLand span');
+      if (lb) lb.textContent = label;
+      $('btnFull').setAttribute('aria-label', label);
+      $('btnFull').setAttribute('aria-pressed', String(on));
     },
     inGame() { return this.mode !== 'attract'; },
     isOnline() { return this.mode === 'host' || this.mode === 'guest'; },
@@ -138,6 +228,7 @@
     enterGame() {
       this.show(null);
       $('btnPause').classList.remove('hidden');
+      $('btnFull').classList.toggle('hidden', !YY.isTouch());
       if (this.R.touch !== YY.isTouch()) { this.R.touch = YY.isTouch(); this.R.resize(); }
       if (this.mode !== 'guest') this.R.setVenue(this.pickVenue());
       this.started = performance.now();
@@ -151,6 +242,7 @@
       const mv = document.getElementById('menuVenue');
       if (mv) mv.textContent = YY.VENUES[this.R.venueId].name;
       $('btnPause').classList.add('hidden');
+      $('btnFull').classList.add('hidden');
     },
     soloCtrl(netRight) {
       const c = new YY.HumanCtrl(YY.KEYMAPS.solo, netRight);
@@ -212,6 +304,7 @@
         return;
       }
       $('btnRestart').classList.remove('hidden');
+      YY.Input.releaseAll();
       this.paused = !this.paused;
       this.show(this.paused ? 'pause' : null);
     },
@@ -352,10 +445,6 @@
       YY.Net.route = null;
       [1500, 6000].forEach((ms) => setTimeout(() => { if (this.isOnline()) YY.Net.detectRoute(); }, ms));
     },
-    routeLabel() {
-      const r = YY.Net.route;
-      return r === 'relay' ? ' · 中转' : r === 'direct' ? ' · 直连' : '';
-    },
     netLost(why) {
       if (!this.isOnline()) return;
       YY.Net.close();
@@ -381,26 +470,45 @@
       const dt = Math.min(0.05, this.rawDt);
       this.last = now;
       this.netWait = this.netWatch();
+      if (this.isOnline() && now - (this.lastRouteAt || 0) >= 5000) {
+        YY.Net.detectRoute(); this.lastRouteAt = now;
+      }
       if (!this.paused) {
         this.acc = (this.acc || 0) + dt;
         let n = 0;
         while (this.acc >= C.DT && n < 12) { this.tick(C.DT); this.acc -= C.DT; n++; }
         if (n >= 12) this.acc = 0;
       }
+      this.sendHostSnapshot();
       this.render(dt);
       requestAnimationFrame((t) => this.frame(t));
+    },
+    sendGuestInput() {
+      const c = this.ctrlFor[1];
+      if (!c || !this.guestCounts) return;
+      for (const a of c.drain()) this.guestCounts[['jump', 'clear', 'drop', 'smash'].indexOf(a)]++;
+      const mv = c.move();
+      if (this.sendT <= 0 || mv !== this.lastMv || this.guestCounts.join() !== this.lastCounts) {
+        YY.Net.send({ t: 'in', m: mv, c: this.guestCounts.slice() });
+        this.lastMv = mv; this.lastCounts = this.guestCounts.join(); this.sendT = 0.05;
+      }
+    },
+    sendHostSnapshot() {
+      if (this.mode !== 'host') return;
+      const now = performance.now();
+      if (now - (this.lastSnapshotAt || 0) < 1000 / 60 - 1) return;
+      this.lastSnapshotAt = now;
+      const m = this.match, sn = YY.snapshot(m, this.netEvents);
+      sn.vn = this.R.venueId;
+      if (m.phase === 'over') { sn.stats = m.stats; sn.longest = m.longest; }
+      YY.Net.send(sn); this.netEvents = [];
+      if (now - (this.lastPingAt || 0) >= 1000) { YY.Net.ping(); this.lastPingAt = now; }
     },
     tick(dt) {
       this.tickN++;
       if (this.mode === 'guest') {
-        const c = this.ctrlFor[1];
-        for (const a of c.drain()) this.guestCounts[['jump', 'clear', 'drop', 'smash'].indexOf(a)]++;
         this.sendT -= dt;
-        const mv = c.move();
-        if (this.sendT <= 0 || mv !== this.lastMv || this.guestCounts.join() !== this.lastCounts) {
-          YY.Net.send({ t: 'in', m: mv, c: this.guestCounts.slice() });
-          this.lastMv = mv; this.lastCounts = this.guestCounts.join(); this.sendT = 0.05;
-        }
+        if (this.sendT <= 0) this.sendGuestInput();
         return;
       }
       const m = this.match;
@@ -408,8 +516,6 @@
         // 好友无响应：冻结比赛，丢弃期间的按键，仅保持心跳与快照
         if (this.ctrlFor[0]) this.ctrlFor[0].drain();
         if (this.remote) this.remote.queue.length = 0;
-        if (this.tickN % 30 === 0) YY.Net.send(YY.snapshot(m, []));
-        if (this.tickN % 120 === 0) YY.Net.ping();
         return;
       }
       for (let i = 0; i < 2; i++) {
@@ -437,15 +543,6 @@
         }
       }
       if (this.mode === 'attract' && m.phase === 'over') this.startAttract();
-      if (this.mode === 'host' && this.tickN % 2 === 0) { // 60Hz 快照
-        const sn = YY.snapshot(m, this.netEvents);
-        sn.vn = this.R.venueId;
-        if (m.phase === 'over') { sn.stats = m.stats; sn.longest = m.longest; }
-        YY.Net.send(sn);
-        this.netEvents = [];
-        this.pingTimer -= dt * 2;
-        if (this.pingTimer <= 0) { YY.Net.ping(); this.pingTimer = 1; }
-      }
     },
     attractEvent(e, m) {
       // 背景演示：只保留视觉效果
@@ -613,7 +710,8 @@
           waitText: this.netWait,
         }, dt);
         if (v.phase === 'over' && !this.resultShown && v.stats) { this.resultShown = true; setTimeout(() => { this.resultShown = false; this.showResult(v); }, 900); }
-        $('netInfo').textContent = '延迟 ' + Math.round((this.guestRtt || 0) * 1000) + ' ms' + this.routeLabel();
+        $('netInfo').textContent = YY.Net.statusText(this.guestRtt, this.view.delay);
+        $('netInfo').title = YY.Net.diagnostics();
         return;
       }
       const m = this.match;
@@ -639,11 +737,14 @@
           o.serveLabel = solo;
           o.landHint = this.settings.hint ? [0] : null;
         }
-        if (this.mode === 'host') $('netInfo').textContent = '延迟 ' + Math.round(YY.Net.rtt * 1000) + ' ms' + this.routeLabel();
+        if (this.mode === 'host') { $('netInfo').textContent = YY.Net.statusText(); $('netInfo').title = YY.Net.diagnostics(); }
         if (!touch && m.score[0] + m.score[1] === 0 && m.phase !== 'over' && this.mode !== 'local') o.overlayText = 'A/D 移动 · W 跳 · J 高远 · K 吊球 · L 扣杀 · Esc 暂停';
       }
       if (this.mode === 'host') o.waitText = this.netWait;
       o.rawDt = this.rawDt;
+      // 暂停时画面不变：只重绘一次，省电也避免后台持续占用显卡
+      if (this.paused) { if (this.pausedDrawn) return; this.pausedDrawn = true; }
+      else this.pausedDrawn = false;
       R.draw(m, o, this.paused ? 0 : dt);
     },
   };

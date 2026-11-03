@@ -18,11 +18,11 @@ svg { width: 100%; height: 100%; display: block; }
 #ui { position: fixed; inset: 0; pointer-events: none; z-index: 6; }
 .screen {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: auto;
-  padding: max(14px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+  padding: max(14px, var(--safe-top, 0px)) max(18px, var(--safe-right, 0px)) max(14px, var(--safe-bottom, 0px)) max(18px, var(--safe-left, 0px));
   animation: scr-in .32s cubic-bezier(.2, .8, .2, 1);
 }
 @keyframes scr-in { from { opacity: 0; } to { opacity: 1; } }
-.panel-screen { background: radial-gradient(ellipse at 50% 40%, rgba(7, 10, 31, .55), rgba(7, 10, 31, .88)); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+.panel-screen { background: radial-gradient(ellipse at 50% 40%, rgba(7, 10, 31, .55), rgba(7, 10, 31, .88)); }
 .panel-screen.dim { background: rgba(5, 7, 22, .72); }
 
 /* ---------- 按钮 ---------- */
@@ -217,42 +217,77 @@ kbd {
 
 /* ---------- 游戏内 ---------- */
 #btnPause {
-  position: fixed; top: max(12px, env(safe-area-inset-top)); left: max(12px, env(safe-area-inset-left)); z-index: 5; width: 42px; height: 42px; border-radius: 14px;
-  background: rgba(8,10,28,.65); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; gap: 5px; backdrop-filter: blur(4px);
+  position: fixed; top: max(12px, var(--safe-top, 0px)); left: max(12px, var(--safe-left, 0px)); z-index: 5; width: 42px; height: 42px; border-radius: 14px;
+  background: rgba(8,10,28,.65); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; gap: 5px;
 }
 #btnPause i { display: block; width: 4px; height: 15px; border-radius: 2px; background: #fff; }
 #netInfo { position: fixed; bottom: 6px; left: 50%; transform: translateX(-50%); font-size: 12px; color: var(--txt2); pointer-events: none; font-family: var(--num); }
 
-/* 触屏控制 */
-#touch { position: fixed; inset: 0; pointer-events: none; z-index: 4; }
-.tcl { position: absolute; bottom: max(10px, env(safe-area-inset-bottom)); pointer-events: auto; display: flex; gap: 10px; align-items: flex-end; }
-.tcl.left { left: max(12px, env(safe-area-inset-left)); }
-.tcl.right { right: max(12px, env(safe-area-inset-right)); }
-.pad {
-  width: min(42vw, 260px); height: min(18vh, 92px); min-height: 62px; border-radius: 46px; position: relative; display: flex;
-  justify-content: space-between; align-items: center; padding: 0 24px; font-size: 24px; touch-action: none;
-  background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.04)); border: 1.5px solid rgba(255,255,255,.28);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 6px 18px rgba(0,0,0,.35); backdrop-filter: blur(3px);
+/* 触屏控制（移动端专门设计：浮动摇杆 + 右手拇指弧形按键） */
+#touch { position: fixed; inset: 0; pointer-events: none; z-index: 4; --b: clamp(52px, calc(var(--appH, 400px) * 0.16), 72px); --joy: clamp(96px, calc(var(--appH, 400px) * 0.28), 120px); }
+.joy-zone { position: absolute; bottom: 0; pointer-events: auto; touch-action: none; }
+.joy-zone.solo { left: 0; width: 38%; height: 58%; }
+.joy-zone.duo { width: 24%; height: 62%; --joy: clamp(84px, calc(var(--appH, 400px) * 0.26), 120px); }
+.joy-zone.duo.left { left: 0; } .joy-zone.duo.right { right: 0; }
+.joy {
+  position: absolute; left: max(18px, var(--safe-left, 0px)); bottom: max(14px, var(--safe-bottom, 0px)); width: var(--joy); height: var(--joy); border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,.04) 40%, rgba(255,255,255,.13) 72%, rgba(255,255,255,.05));
+  border: 2px solid rgba(255,255,255,.28); box-shadow: 0 6px 18px rgba(0,0,0,.3); opacity: .75; transition: opacity .15s;
 }
-.pad::after { content: ""; position: absolute; left: 50%; top: 22%; bottom: 22%; width: 1px; background: rgba(255,255,255,.2); }
-.pad span { opacity: .7; transition: transform .08s, opacity .08s, color .08s; }
-.pad.l .pl, .pad.r .pr { opacity: 1; transform: scale(1.35); color: var(--gold); text-shadow: 0 0 12px rgba(255,210,63,.8); }
-.acts { display: grid; grid-template-columns: repeat(2, auto); gap: 10px; }
+.joy-zone.duo.right .joy { left: auto; right: max(18px, var(--safe-right, 0px)); }
+.joy.on { bottom: auto; right: auto !important; opacity: 1; transition: none; }
+.joy .knob {
+  position: absolute; left: 29%; top: 29%; width: 42%; height: 42%; border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #fff, #c9d3ff 60%, #8c98d6); box-shadow: 0 4px 12px rgba(0,0,0,.45), 0 0 0 4px rgba(255,255,255,.12);
+}
+.joy .ja { position: absolute; font-style: normal; font-size: calc(var(--joy) * 0.15); color: rgba(255,255,255,.55); transition: color .08s, transform .08s; }
+.joy .ja.l { left: 8%; top: 50%; transform: translateY(-50%); }
+.joy .ja.r { right: 8%; top: 50%; transform: translateY(-50%); }
+.joy .ja.u { top: 5%; left: 50%; transform: translateX(-50%); font-size: calc(var(--joy) * 0.11); }
+.joy.l .ja.l, .joy.r .ja.r { color: var(--gold); text-shadow: 0 0 10px rgba(255,210,63,.9); }
+.joy.u .ja.u { color: var(--gold); text-shadow: 0 0 10px rgba(255,210,63,.9); }
+.joy-hint { position: absolute; left: max(18px, var(--safe-left, 0px)); bottom: calc(max(14px, var(--safe-bottom, 0px)) + var(--joy) + 8px); font-size: 12px; color: rgba(255,255,255,.6); white-space: nowrap; transition: opacity .3s; text-shadow: 0 1px 3px rgba(0,0,0,.8); }
+.joy-zone:has(.joy.on) .joy-hint { opacity: 0; }
+
+.arc {
+  position: absolute; right: max(18px, var(--safe-right)); bottom: max(14px, var(--safe-bottom));
+  display: grid; grid-template-columns: repeat(2, var(--b)); gap: 10px;
+  grid-template-areas: "jump smash" "drop clear"; pointer-events: none;
+}
 .tbtn {
-  width: min(16vh, 82px); height: min(16vh, 82px); min-width: 58px; min-height: 58px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 16px; touch-action: none; letter-spacing: .04em;
-  background: radial-gradient(circle at 50% 30%, rgba(255,255,255,.22), rgba(255,255,255,.04) 70%); border: 2px solid rgba(255,255,255,.3);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 6px 16px rgba(0,0,0,.35); transition: transform .06s; backdrop-filter: blur(3px);
+  position: relative; width: var(--b); height: var(--b); border-radius: 22px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  touch-action: none; pointer-events: auto; color: #fff;
+  border: 2px solid var(--key-color, #fff); background: rgba(10, 20, 39, .86);
+  box-shadow: inset 0 2px 0 rgba(255,255,255,.16), 0 5px 0 rgba(0,0,0,.32);
+  transition: transform .06s, background .06s;
 }
-.tbtn.down { transform: scale(.88); background: radial-gradient(circle at 50% 30%, rgba(255,255,255,.5), rgba(255,255,255,.12) 70%); }
-.t-clear { border-color: #6fbaff; color: #d6ebff; box-shadow: 0 0 14px rgba(111,186,255,.35), inset 0 1px 0 rgba(255,255,255,.25); }
-.t-drop { border-color: #7dffb0; color: #d8ffe8; box-shadow: 0 0 14px rgba(125,255,176,.3), inset 0 1px 0 rgba(255,255,255,.25); }
-.t-smash { border-color: #ff8a5c; color: #fff; background: radial-gradient(circle at 50% 30%, rgba(255,120,80,.6), rgba(255,60,40,.22) 70%); box-shadow: 0 0 18px rgba(255,100,60,.45); }
-.t-jump { border-color: var(--gold); color: #fff3c2; box-shadow: 0 0 14px rgba(255,210,63,.35), inset 0 1px 0 rgba(255,255,255,.25); }
-.tcl.duo { flex-direction: column; align-items: stretch; gap: 8px; }
-.tcl.duo .pad { width: min(34vw, 220px); height: 56px; min-height: 48px; }
-.tcl.duo .mini { display: flex; gap: 6px; justify-content: space-between; }
-.tcl.duo .tbtn { width: 48px; height: 48px; min-width: 44px; min-height: 44px; font-size: 13px; }
+.tbtn b { font-size: calc(var(--b) * .27); font-weight: 900; line-height: 1.15; }
+.tbtn small { font-size: 10px; color: rgba(255,255,255,.7); line-height: 1; }
+.tbtn.down { transform: translateY(3px); background: #365267; box-shadow: inset 0 0 0 2px var(--key-color); }
+.tbtn:focus-visible { outline: 3px solid white; outline-offset: 2px; }
+.t-clear { grid-area: clear; --key-color: #6fbaff; }
+.t-drop { grid-area: drop; --key-color: #7dffb0; }
+.t-smash { grid-area: smash; --key-color: #ff8a5c; }
+.t-jump { grid-area: jump; --key-color: #ffd23f; }
+.mini-arc { position: absolute; bottom: max(10px, var(--safe-bottom, 0px)); display: grid; grid-template-columns: repeat(2, 48px); grid-template-areas: "jump smash" "drop clear"; gap: 8px; pointer-events: none; }
+.mini-arc.left { left: 25%; } .mini-arc.right { right: 25%; }
+.mini-arc .tbtn { position: relative; width: 48px; height: 48px; --b: 48px; }
+.mini-arc .t-clear { border-color: #6fbaff; } .mini-arc .t-drop { border-color: #7dffb0; }
+.mini-arc .t-smash { border-color: #ff8a5c; background: radial-gradient(circle at 50% 30%, rgba(255,130,90,.6), rgba(230,50,40,.3) 70%); } .mini-arc .t-jump { border-color: var(--gold); }
+
+/* 横屏全屏 */
+#app { --safe-top: env(safe-area-inset-top, 0px); --safe-right: env(safe-area-inset-right, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px); --safe-left: env(safe-area-inset-left, 0px); position: fixed; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; }
+#app.rot { --safe-top: env(safe-area-inset-right, 0px); --safe-right: env(safe-area-inset-bottom, 0px); --safe-bottom: env(safe-area-inset-left, 0px); --safe-left: env(safe-area-inset-top, 0px); transform-origin: 0 0; transform: rotate(90deg) translateY(-100%); }
+.touch-only { display: none !important; }
+body.touch .touch-only { display: inline-flex !important; }
+#btnFull {
+  position: fixed; top: max(12px, var(--safe-top, 0px)); left: calc(max(12px, var(--safe-left, 0px)) + 50px); z-index: 5; width: 42px; height: 42px; padding: 10px; border-radius: 14px;
+  background: rgba(8,10,28,.65); border: 1px solid var(--line); color: #fff;
+}
+.pill { align-items: center; gap: 6px; padding: 5px 12px 5px 9px; border-radius: 16px; font-size: 13px; font-weight: 800; color: #fff; background: rgba(255,210,63,.16); border: 1px solid rgba(255,210,63,.5); }
+.pill svg { width: 16px; height: 16px; }
+#rotate .btn.big { margin-top: 6px; }
 
 #rotate { position: fixed; inset: 0; z-index: 20; background: rgba(5,7,22,.95); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; pointer-events: auto; }
 #rotate .phone { width: 46px; height: 80px; border: 4px solid #fff; border-radius: 10px; animation: rot 1.8s ease-in-out infinite; }
@@ -292,3 +327,7 @@ kbd {
   .stack { gap: 7px; }
   .panel.narrow .ph { margin-bottom: 6px; }
 }
+
+/* 网络状态放在双手之间；窄屏也不与操作键重叠。 */
+body.touch #netInfo { bottom: max(4px, var(--safe-bottom)); font-size: 10px; max-width: 42%; text-align: center; }
+#landNotice { position: fixed; top: 60px; left: 50%; transform: translateX(-50%); z-index: 7; max-width: 65%; padding: 8px 14px; border-radius: 12px; background: rgba(8,10,28,.9); font-size: 12px; text-align: center; pointer-events: none; }

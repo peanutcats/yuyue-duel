@@ -10,7 +10,7 @@
   class Renderer {
     constructor(canvas) {
       this.cv = canvas;
-      this.ctx = canvas.getContext('2d');
+      this.ctx = canvas.getContext('2d', { alpha: false }); // 不透明画布：合成时省去与页面的混合
       this.mirror = false;
       this.touch = false;
       this.time = 0;
@@ -41,8 +41,11 @@
 
     // ---------- 尺寸与缓存 ----------
     resize() {
-      const dpr = Math.min(window.devicePixelRatio || 1, this.quality ? 2 : 1.25);
-      const W = window.innerWidth, H = window.innerHeight;
+      const vp = YY.viewport ? YY.viewport() : { W: window.innerWidth, H: window.innerHeight };
+      const W = vp.W, H = vp.H;
+      // 像素预算：渲染开销与画布像素数成正比（高分屏 / Windows 缩放下画布可达 800 万像素）
+      const budget = this.quality ? 2.4e6 : 1.15e6;
+      const dpr = Math.max(0.7, Math.min(window.devicePixelRatio || 1, 2, Math.sqrt(budget / (W * H))));
       this.W = W; this.H = H; this.dpr = dpr;
       this.cv.width = Math.round(W * dpr);
       this.cv.height = Math.round(H * dpr);
@@ -70,16 +73,31 @@
       paint(g);
       return c;
     }
+    /** 静态内容全部预先烘焙进缓存层：每帧只需两次贴图，不再逐帧画光柱、暗角、整片观众 */
     buildLayers() {
-      const v = this.venue, V = this.V;
-      this.far = this.layer((g) => v.paintFar(g, V));
-      this.near = this.layer((g) => v.paintNear(g, V));
-      this.vst = v.init(V, this);
-      this.vignette = this.layer((g) => {
-        const gr = g.createRadialGradient(this.W / 2, this.H * 0.55, Math.min(this.W, this.H) * 0.35, this.W / 2, this.H * 0.55, Math.max(this.W, this.H) * 0.78);
+      const v = this.venue, V = this.V, W = this.W, H = this.H;
+      const vignette = (g, atop) => {
+        const gr = g.createRadialGradient(W / 2, H * 0.55, Math.min(W, H) * 0.35, W / 2, H * 0.55, Math.max(W, H) * 0.78);
         gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,10,0.55)');
-        g.fillStyle = gr; g.fillRect(0, 0, this.W, this.H);
-      });
+        g.save();
+        if (atop) g.globalCompositeOperation = 'source-atop';
+        if (v.tint) v.tint(g, V);
+        g.fillStyle = gr; g.fillRect(0, 0, W, H);
+        g.restore();
+      };
+      const base = this.layer((g) => { v.paintFar(g, V); if (v.bakeFar) v.bakeFar(g, V); });
+      this.vst = v.init(V, this);
+      const strips = this.vst.strips;
+      this.far = this.layer((g) => { g.drawImage(base, 0, 0, W, H); vignette(g); });
+      // 观众静止时直接用烘焙好的整片观众；只有欢呼时才逐排绘制做波浪
+      this.farCrowd = strips ? this.layer((g) => {
+        g.drawImage(base, 0, 0, W, H);
+        for (const st of strips) g.drawImage(st.c, 0, st.y, W, st.h);
+        if (v.afterCrowd) v.afterCrowd(g, V);
+        vignette(g);
+      }) : null;
+      this.near = this.layer((g) => { v.paintNear(g, V); vignette(g, true); });
+      this.nearTop = clamp(Math.floor(v.nearTop ? v.nearTop(V) : V.adTop - 0.8 * V.sc), 0, H);
     }
     venueEvent(type, d) { const v = this.venue; if (v.event) v.event(this.vst, type, d || {}); }
 
@@ -675,7 +693,7 @@
       if (!this.scoreSeen) this.scoreSeen = m.score.slice();
       for (let i = 0; i < 2; i++) if (m.score[i] !== this.scoreSeen[i]) { this.scoreSeen[i] = m.score[i]; this.scorePop[i] = this.time; }
       ctx.save();
-      ctx.shadowColor = 'rgba(0,0,0,0.45)'; ctx.shadowBlur = 16; ctx.shadowOffsetY = 4;
+      ctx.fillStyle = 'rgba(0,0,0,0.3)'; rr(ctx, bx + 2, by + 5, bw - 4, bh, bh * 0.28); ctx.fill(); // 廉价投影（不用 shadowBlur）
       const bg = ctx.createLinearGradient(0, by, 0, by + bh);
       bg.addColorStop(0, 'rgba(24,28,62,0.94)'); bg.addColorStop(1, 'rgba(8,10,28,0.94)');
       ctx.fillStyle = bg; rr(ctx, bx, by, bw, bh, bh * 0.28); ctx.fill();
@@ -789,7 +807,7 @@
       const bw = Math.min(W * 0.68, 620), bh = u * 2.7;
       const bx = W / 2 - bw / 2, by = 8;
       ctx.save();
-      ctx.shadowColor = 'rgba(0,0,0,0.45)'; ctx.shadowBlur = 14;
+      ctx.fillStyle = 'rgba(0,0,0,0.3)'; rr(ctx, bx + 2, by + 5, bw - 4, bh, 14); ctx.fill();
       const bg = ctx.createLinearGradient(0, by, 0, by + bh);
       bg.addColorStop(0, 'rgba(24,28,62,0.94)'); bg.addColorStop(1, 'rgba(8,10,28,0.94)');
       ctx.fillStyle = bg; rr(ctx, bx, by, bw, bh, 14); ctx.fill();
@@ -896,11 +914,14 @@
       this.updateCam(m, dt);
 
       this.applyCam(0.45);
-      ctx.drawImage(this.far, 0, 0, this.W, this.H);
+      const st = this.vst;
+      st.liveCrowd = !!(this.farCrowd && st.cheer > 0.02);
+      ctx.drawImage(st.liveCrowd || !this.farCrowd ? this.far : this.farCrowd, 0, 0, this.W, this.H);
       if (v.drawFar) v.drawFar(ctx, this, this.time, this.vst, dt);
 
       this.applyCam(1);
-      ctx.drawImage(this.near, 0, 0, this.W, this.H);
+      const nt = this.nearTop, d = this.dpr; // 近景层只贴有内容的下半部分
+      ctx.drawImage(this.near, 0, Math.round(nt * d), this.near.width, this.near.height - Math.round(nt * d), 0, Math.round(nt * d) / d, this.W, this.H - Math.round(nt * d) / d);
       if (v.drawNear) v.drawNear(ctx, this, this.time, this.vst, dt);
 
       if (o.zone) this.drawZone(ctx, o.zone, 1);
@@ -979,7 +1000,6 @@
       ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
       if (v.drawFront && this.quality) v.drawFront(ctx, this, this.time, this.vst, dt);
       this.drawSpeedLines(ctx, dt);
-      ctx.drawImage(this.vignette, 0, 0, this.W, this.H);
       if (s.live && this.sy(s.y) < 4) {
         const X = this.sx(s.x);
         ctx.fillStyle = '#ffd23f';
