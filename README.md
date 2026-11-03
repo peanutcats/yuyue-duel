@@ -2,6 +2,8 @@
 
 侧视 1v1 网页羽毛球对战游戏。纯 HTML5 Canvas + 原生 JS，无需构建、无外部素材，打开即玩，适配电脑与手机。
 
+`main` 是用于 Vercel 的 V9 版本，在线对战保留 PeerJS + Cloudflare TURN。服务器统一计算的 WebSocket 版本单独保存在 `codex/server-authority` 分支；两种版本的房间不互通。
+
 ## 运行
 
 - **直接打开**：双击 `index.html` 即可游玩（快速对战 / 同屏对战 / 自由练习）。
@@ -11,7 +13,7 @@
   ```
   然后访问 http://localhost:8765 （开发服务器禁用了缓存；任何静态服务器都可以）。
 - **局域网联机**：用电脑运行上面的服务器，手机访问 `http://电脑IP:8765` 即可与电脑上的玩家在线对战。
-- **更新版本**：修改 JS/CSS 后把 `index.html` 里的 `?v=8` 加一，避免玩家浏览器缓存旧代码。
+- **更新版本**：修改 JS/CSS 后把 `index.html` 里的 `?v=9` 加一，避免玩家浏览器缓存旧代码。
 - **部署**：整个目录是静态文件，可直接放到 GitHub Pages、Netlify、Vercel、任意 Nginx 等。
 
 ## 玩法要点
@@ -118,7 +120,7 @@ api/turn.js            Vercel 函数：向 Cloudflare 申请 TURN 临时凭证
 
 菜单、竖屏提示和对局左上角都提供横屏全屏入口。先立即适配横屏，再申请浏览器全屏与方向锁；不支持时保留 CSS 横屏并明确提示，不能强制隐藏浏览器系统工具栏。支持退出全屏、旋转坐标映射与安全区域。
 
-左手摇杆点箭头即可移动，约 25 像素短推达到全速，上滑起跳；右侧四键为「跳／扣杀、吊球／高远」双排，保留 10 像素间隔避免触区重叠。支持多指并行，松手、触摸取消、切后台与旋转时自动释放输入。
+左手摇杆仅控制左右移动，约 25 像素短推达到全速；上下拖动不会起跳。右下角金色起跳大键为主键，高远、吊球、扣杀沿左侧至上方环绕，独立圆形触区之间留出间隔。支持多指并行，松手、触摸取消、切后台与旋转时自动释放输入。操作区同时使用 touch-action 与非被动 touchend 事件拦截双击缩放，保留每次触摸对应的击球动作；菜单仍使用正常点击，帮助页可滚动。
 
 ## 延迟排查与本次修复
 
@@ -127,7 +129,7 @@ api/turn.js            Vercel 函数：向 Cloudflare 申请 TURN 临时凭证
 - 监测 DataChannel 积压并合并尚未发送的旧位置，保留全部击球/得分事件和累积按键计数。仍使用可靠通道；已经进入浏览器网络栈的丢包重传不能在应用层撤回。
 - 底部显示「往返 / 直连或中转 / 画面缓冲」，可区分网络本身与显示缓冲。往返是应用层 ping/pong，并不等于单向延迟。
 
-针对 Mac mini 与 Windows、线上域名 `yuyue.evencode.qzz.io` 约 800ms 的体感延迟，已核实线上仍加载 v6，TURN 接口返回 Cloudflare 的 UDP/TCP/TLS 中转地址，说明中转已配置；本地本次版本为 v8。尚未获取双方对局的真实 ICE 线路数据，不能断定 800ms 来自 Vercel 或某个中转节点。
+针对 Mac mini 与 Windows、线上域名 `yuyue.evencode.qzz.io` 约 800ms 的体感延迟，上一轮联机排查时，线上加载 v6，TURN 接口返回 Cloudflare 的 UDP/TCP/TLS 中转地址，说明中转已配置；网络同步优化自 v8 引入。尚未获取双方对局的真实 ICE 线路数据，不能断定 800ms 来自 Vercel 或某个中转节点。
 
 排查顺序：先两端使用最新版且保持前台，对照同一 Wi-Fi 与原网络的「往返」；若直连仍高，检查两端网络拥塞并交换房主（选择帧率稳定的设备）；若中转时高，应对比靠近双方、双方运营商均可达的 TURN 节点。自建 coturn 需服务器、UDP 连通性与临时凭证接口，不能只把静态网站换一个部署区域。网站与 PeerJS 信令负责加载/建连，游戏数据走实际选中的 WebRTC 线路。
 
@@ -135,3 +137,5 @@ api/turn.js            Vercel 函数：向 Cloudflare 申请 TURN 临时凭证
 
 验证：`node --test tools/serve_regression.test.js tools/net_latency.test.js tools/turn_api.test.js`。
 技术依据：[方向锁限制](https://developer.mozilla.org/en-US/docs/Web/API/ScreenOrientation/lock)、[DataChannel 发送队列](https://developer.mozilla.org/en-US/docs/Web/API/RTCDataChannel/bufferedAmount)、[PeerJS 通道与缓冲接口](https://peerjs.com/client/api/data-connection)。
+
+移动触控回归（需 Playwright CLI）：先启动本地服务器并打开游戏，再运行 `mkdir -p output/playwright`，将 `tools/touch_controls.browser.js` 的内容传给 CLI 的 `run-code`。覆盖快速连点防缩放、每次点击仅触发一次、摇杆上下拖动不起跳、左右切换、多指移动加起跳、横屏旋转与环形触区间距；可分别用 Chromium 与 WebKit 执行。

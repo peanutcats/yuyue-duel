@@ -55,6 +55,17 @@
       this.changed();
     },
     init() {
+      // Safari 等浏览器可能忽略 viewport 的缩放限制。游戏触控已由 Pointer Events
+      // 处理，取消 touchend 默认行为可阻止双击缩放/合成鼠标点击，不吞菜单 click。
+      const gameSurface = (target) => target && target.closest && target.closest('#touch, #game');
+      const preventGesture = (e) => { if (gameSurface(e.target) && e.cancelable) e.preventDefault(); };
+      document.addEventListener('touchend', preventGesture, { passive: false });
+      document.addEventListener('touchmove', preventGesture, { passive: false });
+      document.addEventListener('gesturestart', preventGesture, { passive: false });
+      document.addEventListener('gesturechange', preventGesture, { passive: false });
+      document.addEventListener('dblclick', (e) => {
+        if (!e.target.closest('input, textarea, [contenteditable="true"]') && e.cancelable) e.preventDefault();
+      }, { passive: false });
       G.addEventListener('keydown', (e) => {
         if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
         if (this.onAny && this.onAny(e)) return;
@@ -94,13 +105,19 @@
 
   // ---------- 触屏 ----------
   const LABELS = { jump: '跳', clear: '高远', drop: '吊球', smash: '扣杀' };
-  const SUBS = { jump: '上滑也可', clear: '挑球', drop: '放网', smash: '先起跳' };
+  const SUBS = { jump: 'JUMP', clear: '挑球', drop: '放网', smash: '强攻' };
+  const ICONS = {
+    jump: '<path d="m6 12 6-6 6 6M6 18l6-6 6 6"/>',
+    clear: '<path d="M4 19C6 5 14 2 20 7m-5-1 5 1-1 5"/>',
+    drop: '<path d="M4 8c8-7 14-3 14 11m-4-4 4 4 4-4"/>',
+    smash: '<path d="m14 3-8 11h6l-2 7L21 9h-7l2-6Z"/>',
+  };
   const isTouch = () => 'ontouchstart' in G || navigator.maxTouchPoints > 0 || G.matchMedia('(pointer: coarse)').matches;
   YY.isTouch = isTouch;
   const buzz = (ms) => { if (navigator.vibrate) try { navigator.vibrate(ms); } catch (_) {} };
 
   /**
-   * 浮动摇杆：在区域内任意位置按下即以该点为中心；左右拖动移动（模拟量），向上快速拖动起跳。
+   * 浮动摇杆：在区域内任意位置按下即以该点为中心；仅左右拖动移动（模拟量），垂直位移不触发任何动作。
    * 拇指不必对准固定按钮，左右切换只需几毫米位移。
    */
   function makeJoystick(ctrl, opts) {
@@ -108,7 +125,7 @@
     zone.className = 'joy-zone ' + (opts.cls || '');
     const base = document.createElement('div');
     base.className = 'joy';
-    base.innerHTML = '<i class="ja l">◀</i><i class="ja r">▶</i><i class="ja u">▲</i><b class="knob"></b>';
+    base.innerHTML = '<i class="ja l">◀</i><i class="ja r">▶</i><b class="knob"></b>';
     zone.appendChild(base);
     if (opts.hint) {
       const h = document.createElement('div');
@@ -117,7 +134,7 @@
       zone.appendChild(h);
     }
     const knob = base.querySelector('.knob');
-    let id = null, ox = 0, oy = 0, jumped = false;
+    let id = null, ox = 0, oy = 0;
     const R = () => base.offsetWidth / 2 || 50;
     const rest = () => { base.style.left = ''; base.style.top = ''; base.classList.remove('on'); knob.style.transform = ''; };
     const place = (x, y) => {
@@ -127,9 +144,8 @@
       base.style.left = lx - r + 'px'; base.style.top = ly - r + 'px';
       return { x: zr.left + lx, y: zr.top + ly };
     };
-    const update = (x, y) => {
+    const update = (x) => {
       let dx = x - ox;
-      const dy = y - oy;
       const r = R();
       // 拇指漂移过远时让中心跟随，永远保持一推即动
       if (Math.abs(dx) > r * 1.3) { ox += dx - Math.sign(dx) * r * 1.3; dx = x - ox; }
@@ -139,10 +155,8 @@
       Input.changed();
       base.classList.toggle('l', m < -0.2);
       base.classList.toggle('r', m > 0.2);
-      if (!jumped && -dy > r * 0.75) { jumped = true; ctrl.push('jump'); buzz(8); base.classList.add('u'); }
-      else if (jumped && -dy < r * 0.3) { jumped = false; base.classList.remove('u'); }
-      const kx = Math.max(-r * 0.6, Math.min(r * 0.6, dx)), ky = Math.max(-r * 0.6, Math.min(r * 0.35, dy));
-      knob.style.transform = `translate(${kx}px, ${ky}px)`;
+      const kx = Math.max(-r * 0.6, Math.min(r * 0.6, dx));
+      knob.style.transform = `translateX(${kx}px)`;
     };
     zone.addEventListener('pointerdown', (e) => {
       e.preventDefault();
@@ -155,15 +169,15 @@
       const onBase = Math.hypot(p.x - bx, p.y - by) <= R();
       // 点左右箭头即移动；区域空白处按下则启用浮动摇杆。
       ox = onBase ? bx : p.x; oy = onBase ? by : p.y;
-      place(ox, oy); jumped = false;
+      place(ox, oy);
       base.classList.add('on');
-      update(p.x, p.y);
+      update(p.x);
     });
-    zone.addEventListener('pointermove', (e) => { if (e.pointerId === id) { const p = YY.toApp(e.clientX, e.clientY); update(p.x, p.y); } });
+    zone.addEventListener('pointermove', (e) => { if (e.pointerId === id) { const p = YY.toApp(e.clientX, e.clientY); update(p.x); } });
     const end = (e) => {
       if (e.pointerId !== id) return;
-      id = null; ctrl.touchDir = 0; jumped = false;
-      base.classList.remove('l', 'r', 'u');
+      id = null; ctrl.touchDir = 0;
+      base.classList.remove('l', 'r');
       rest();
       Input.changed();
     };
@@ -179,7 +193,7 @@
     b.type = 'button';
     b.setAttribute('aria-label', LABELS[act]);
     b.className = 'tbtn t-' + act + (cls ? ' ' + cls : '');
-    b.innerHTML = `<b>${LABELS[act]}</b>` + (cls === 'mini' ? '' : `<small>${SUBS[act]}</small>`);
+    b.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[act]}</svg><b>${LABELS[act]}</b>` + (cls === 'mini' ? '' : `<small>${SUBS[act]}</small>`);
     let pointer = null;
     b.addEventListener('pointerdown', (e) => {
       e.preventDefault();
@@ -205,7 +219,7 @@
     Input.touchResets = [];
     root.innerHTML = '';
     if (layout === 'solo') {
-      root.appendChild(makeJoystick(ctrls[0], { cls: 'solo', hint: '左右滑动移动 · 上滑起跳' }));
+      root.appendChild(makeJoystick(ctrls[0], { cls: 'solo', hint: '左右移动' }));
       const arc = document.createElement('div');
       arc.className = 'arc';
       for (const a of ['clear', 'drop', 'smash', 'jump']) arc.appendChild(makeBtn(ctrls[0], a));
