@@ -1,0 +1,12 @@
+{
+  "name": "yuyue-duel",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Authoritative badminton match server",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "start": "node server/index.js",
+    "test": "node --test tools/*.test.js"
+  },
+  "dependencies": { "ws": "^8.18.3" }
+}

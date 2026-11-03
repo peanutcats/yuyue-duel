@@ -45,7 +45,7 @@
       this.R.touch = YY.isTouch();
       this.applyViewport();
       YY.Input.init();
-      YY.Input.onChange = () => { if (this.mode === 'guest' && !this.paused) this.sendGuestInput(); };
+      YY.Input.onChange = () => { if (this.isOnline() && !this.paused) this.sendGuestInput(); };
       YY.Input.onAny = (e) => {
         if ((e.code === 'Escape' || e.code === 'KeyP') && this.inGame()) { this.togglePause(); return true; }
         return false;
@@ -59,10 +59,10 @@
       document.addEventListener('webkitfullscreenchange', () => this.fullscreenChanged());
       document.addEventListener('visibilitychange', () => {
         if (document.hidden && this.inGame() && !this.isOnline() && !this.paused) this.togglePause();
-        if (document.hidden && this.isOnline()) YY.Net.send({ t: 'away' });
+        if (document.hidden && this.isOnline()) { YY.Input.releaseAll(); YY.Net.send({ t: 'away' }); }
       });
       // 在线模式切到后台时画面循环会停止：用定时心跳告诉对方“暂时离开”，避免被判掉线
-      setInterval(() => { if (document.hidden && this.isOnline()) YY.Net.send({ t: 'away' }); }, 1000);
+      setInterval(() => { if (document.hidden && this.isOnline()) { YY.Input.releaseAll(); YY.Net.send({ t: 'away' }); } }, 1000);
       const unlock = () => A.init();
       G.addEventListener('pointerdown', unlock, { passive: true });
       G.addEventListener('keydown', unlock);
@@ -207,7 +207,7 @@
       $('btnFull').setAttribute('aria-pressed', String(on));
     },
     inGame() { return this.mode !== 'attract'; },
-    isOnline() { return this.mode === 'host' || this.mode === 'guest'; },
+    isOnline() { return this.mode === 'online'; },
 
     // ---------- 模式 ----------
     reset() {
@@ -218,6 +218,8 @@
       this.remote = null;
       this.paused = false;
       this.resultShown = false;
+      this.resultPending = false;
+      this.sessionEpoch = (this.sessionEpoch || 0) + 1;
       this.netEvents = [];
       this.R.mirror = false;
       this.R.clearFx();
@@ -230,7 +232,7 @@
       $('btnPause').classList.remove('hidden');
       $('btnFull').classList.toggle('hidden', !YY.isTouch());
       if (this.R.touch !== YY.isTouch()) { this.R.touch = YY.isTouch(); this.R.resize(); }
-      if (this.mode !== 'guest') this.R.setVenue(this.pickVenue());
+      if (!this.isOnline()) this.R.setVenue(this.pickVenue());
       this.started = performance.now();
     },
     startAttract() {
@@ -286,8 +288,7 @@
       if (this.mode === 'ai') this.startAI(this.level);
       else if (this.mode === 'local') this.startLocal();
       else if (this.mode === 'practice') this.startPractice(this.drill);
-      else if (this.mode === 'host') this.hostRestart();
-      else if (this.mode === 'guest') { YY.Net.send({ t: 'rematch' }); this.show(null); }
+      else if (this.isOnline()) { YY.Net.send({ t: 'rematch' }); $('btnAgain').textContent = '已请求 · 等待好友'; }
     },
     again() { this.restart(); },
     quit() {
@@ -310,28 +311,30 @@
     },
 
     // ---------- 在线 ----------
+    bindServer() {
+      const N = YY.Net;
+      N.onClose = why => {
+        if (this.isOnline()) this.netLost(why);
+        else this.message('连接已结束', why, 'friend');
+      };
+      N.onStart = d => this.startOnline(d);
+      N.onWelcome = () => { if (this.isOnline()) this.predictor = new YY.PlayerPrediction(N.player); };
+      N.onMsg = d => this.serverMsg(d);
+      N.onStatus = text => { $('lobbyStatus').textContent = text; };
+    },
     async hostOnline() {
       this.show('lobby');
       $('lobbyTitle').textContent = '创建房间';
       $('lobbyCode').textContent = '····';
-      $('lobbyStatus').textContent = '正在连接联机服务器…';
+      $('lobbyStatus').textContent = '正在连接比赛服务器…';
       $('btnCopy').classList.add('hidden');
-      const N = YY.Net;
-      N.close();
-      N.onOpen = () => this.startHost();
-      N.onClose = () => this.netLost();
-      N.onMsg = (d) => this.hostMsg(d);
-      N.onStatus = (t) => { $('lobbyStatus').textContent = t; };
+      this.bindServer();
       try {
-        const code = await N.host();
+        const code = await YY.Net.connect({ t: 'create', venue: this.pickVenue() });
         $('lobbyCode').textContent = code;
-        $('lobbyStatus').textContent = '把房间码告诉好友，或复制邀请链接发送。等待好友加入…' +
-          (N.turn === 'ok' ? '' : '\n（未获取到中转服务器，部分网络组合可能无法连接）') +
-          '\n好友若在微信中打开链接，请让他点右上角选择「在浏览器打开」。';
+        $('lobbyStatus').textContent = '把房间码或邀请链接发给好友。双方加入后由服务器开始比赛。';
         $('btnCopy').classList.remove('hidden');
-      } catch (err) {
-        this.message('无法创建房间', err.message + '。在线对战需要联网；也可以选择「同屏对战」。', 'friend');
-      }
+      } catch (err) { this.message('无法创建房间', err.message, 'friend'); }
     },
     inviteLink() {
       const u = new URL(location.href);
@@ -345,105 +348,45 @@
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(link).then(ok, () => prompt('复制邀请链接：', link));
       else prompt('复制邀请链接：', link);
     },
-    startHost() {
-      this.reset();
-      this.mode = 'host';
-      this.match = new YY.Match({ names: ['你', '好友'], firstServer: 0 });
-      this.ctrlFor[0] = this.soloCtrl(true);
-      this.remote = { move: 0, counts: [0, 0, 0, 0], queue: [] };
-      this.enterGame();
-      this.R.showBanner('好友已加入', '你在左侧（红方）', '#ffd23f', 2);
-      $('netInfo').classList.remove('hidden');
-      this.pingTimer = 0;
-      this.watchRoute();
-      this.peerSeen = performance.now(); // 最近一次收到好友输入
-      this.peerAway = 0;
-    },
-    hostRestart() {
-      this.match = new YY.Match({ names: ['你', '好友'], firstServer: Math.random() < 0.5 ? 0 : 1 });
-      this.resultShown = false;
-      this.R.clearFx();
-      this.show(null);
-      YY.Net.send({ t: 'restart' });
-    },
-    hostMsg(d) {
-      if (!d || this.mode !== 'host') return;
-      if (d.t === 'away') { this.peerAway = performance.now(); return; }
-      if (d.t === 'in') {
-        this.peerSeen = performance.now();
-        const r = this.remote;
-        r.move = YY.clamp(+d.m || 0, -1, 1);
-        const acts = ['jump', 'clear', 'drop', 'smash'];
-        for (let i = 0; i < 4; i++) {
-          const n = d.c[i] - r.counts[i];
-          if (n > 0 && n < 5) for (let k = 0; k < n; k++) r.queue.push(acts[i]);
-          r.counts[i] = d.c[i];
-        }
-      } else if (d.t === 'rematch' && this.match.phase === 'over') this.hostRestart();
-    },
     async joinOnline(code) {
       code = (code || '').trim().toUpperCase();
-      if (code.length !== 4) { $('joinCode').focus(); return; }
+      if (!/^[A-Z2-9]{4}$/.test(code)) { $('joinCode').focus(); return; }
       this.show('lobby');
       $('lobbyTitle').textContent = '加入房间';
       $('lobbyCode').textContent = code;
-      $('lobbyStatus').textContent = '正在连接房主…' + (YY.inAppHint() ? '\n' + YY.inAppHint() : '');
+      $('lobbyStatus').textContent = '正在连接比赛服务器…';
       $('btnCopy').classList.add('hidden');
-      const N = YY.Net;
-      N.close();
-      N.onOpen = null;
-      N.onClose = () => this.netLost();
-      N.onMsg = (d) => this.guestMsg(d);
-      N.onStatus = (t) => { $('lobbyStatus').textContent = t; };
-      try {
-        await N.join(code);
-        this.startGuest();
-      } catch (err) {
-        N.close();
-        this.message('无法加入房间', err.message, 'friend');
-      }
+      this.bindServer();
+      try { await YY.Net.connect({ t: 'join', room: code }); }
+      catch (err) { this.message('无法加入房间', err.message, 'friend'); }
     },
-    startGuest() {
-      this.reset();
-      this.mode = 'guest';
-      this.view = new YY.GuestView();
-      this.match = null;
-      this.R.mirror = true; // 好友视角：自己显示在左侧
-      this.ctrlFor[1] = this.soloCtrl(true);
-      this.guestCounts = [0, 0, 0, 0];
-      this.enterGame();
-      this.R.showBanner('已加入房间', '你在左侧（蓝方）', '#6fbaff', 2);
+    startOnline(d) {
+      const resume = this.isOnline() && this.matchId === d.matchId;
+      const index = YY.Net.player;
+      if (!resume) {
+        this.reset(); this.mode = 'online'; this.match = null;
+        this.playerIndex = index; this.matchId = d.matchId;
+        this.ctrlFor[index] = this.soloCtrl(true);
+        this.R.mirror = index === 1;
+        this.enterGame();
+        this.R.showBanner('比赛开始', '你在左侧 · ' + (index ? '蓝方' : '红方'), index ? '#6fbaff' : '#ffd23f', 2);
+      }
+      this.view = new YY.GuestView(index);
+      this.predictor = new YY.PlayerPrediction(index);
+      this.lastEventId = 0; this.serverWait = null; this.peerSeen = performance.now();
+      this.sendT = 0; this.lastMv = null;
+      this.R.setVenue(d.venue);
       $('netInfo').classList.remove('hidden');
-      this.sendT = 0;
-      this.watchRoute();
-      this.peerSeen = performance.now(); // 最近一次收到房主快照
-      this.peerAway = 0;
+      this.sendGuestInput();
     },
-    guestMsg(d) {
-      if (!d || this.mode !== 'guest') return;
-      if (d.t === 'away') { this.peerAway = performance.now(); return; }
-      if (d.t === 'st') {
-        this.peerSeen = performance.now();
-        if (d.vn && d.vn !== this.R.venueId) this.R.setVenue(d.vn);
-        this.view.push(d);
-        if (d.stats) this.view.stats = d.stats;
-        if (d.longest != null) this.view.longest = d.longest;
-        this.guestRtt = d.rtt;
-      } else if (d.t === 'restart') {
-        this.view = new YY.GuestView();
-        this.resultShown = false;
-        this.R.clearFx();
-        this.show(null);
-      } else if (d.t === 'full') {
-        YY.Net.close();
-        this.message('房间已满', '该房间已经有两位选手。', 'friend');
-        this.startAttract();
-      }
-    },
-    /** 连接建立后查询线路（直连 / 中转），显示在延迟旁边 */
-    watchRoute() {
-      YY.Net.route = null;
-      [1500, 6000].forEach((ms) => setTimeout(() => { if (this.isOnline()) YY.Net.detectRoute(); }, ms));
+    serverMsg(d) {
+      if (d.t === 'notice') { if (this.screen === 'result') $('resTip').textContent = d.message; else this.R.showBanner(d.message, '', '#ffd23f', 3); return; }
+      if (!this.isOnline() || d.t !== 'st' || d.matchId !== this.matchId) return;
+      this.peerSeen = performance.now(); this.serverWait = d.wait;
+      d.ev = (d.ev || []).filter(e => e.id > this.lastEventId);
+      for (const e of d.ev) this.lastEventId = Math.max(this.lastEventId, e.id);
+      this.view.push(d); this.predictor.snapshot(d);
+      this.view.stats = d.stats; this.view.longest = d.longest;
     },
     netLost(why) {
       if (!this.isOnline()) return;
@@ -454,14 +397,9 @@
     /** 在线心跳检查：返回需要显示的等待提示（无则返回 null） */
     netWatch() {
       if (!this.isOnline()) return null;
-      const N = YY.Net;
-      if (N.idle() > 15) { this.netLost('超过 15 秒没有收到对方的数据，连接可能已中断。'); return null; }
-      const now = performance.now();
-      const who = this.mode === 'host' ? '好友' : '房主';
-      const quiet = (now - this.peerSeen) / 1000;
-      if (quiet < 1.2) return null;
-      if (now - this.peerAway < 2500) return `${who}暂时离开了游戏画面，比赛已暂停，等待返回…`;
-      return `${who}的网络不稳定，比赛已暂停，等待恢复…（${Math.ceil(15 - N.idle())} 秒后断开）`;
+      if (YY.Net.retryAt) return '连接中断，正在重连服务器…';
+      if (YY.Net.idle() > 1.2) return '正在等待服务器恢复响应…';
+      return this.serverWait;
     },
 
     // ---------- 循环 ----------
@@ -470,65 +408,40 @@
       const dt = Math.min(0.05, this.rawDt);
       this.last = now;
       this.netWait = this.netWatch();
-      if (this.isOnline() && now - (this.lastRouteAt || 0) >= 5000) {
-        YY.Net.detectRoute(); this.lastRouteAt = now;
-      }
       if (!this.paused) {
         this.acc = (this.acc || 0) + dt;
         let n = 0;
         while (this.acc >= C.DT && n < 12) { this.tick(C.DT); this.acc -= C.DT; n++; }
         if (n >= 12) this.acc = 0;
       }
-      this.sendHostSnapshot();
       this.render(dt);
       requestAnimationFrame((t) => this.frame(t));
     },
     sendGuestInput() {
-      const c = this.ctrlFor[1];
-      if (!c || !this.guestCounts) return;
-      for (const a of c.drain()) this.guestCounts[['jump', 'clear', 'drop', 'smash'].indexOf(a)]++;
-      const mv = c.move();
-      if (this.sendT <= 0 || mv !== this.lastMv || this.guestCounts.join() !== this.lastCounts) {
-        YY.Net.send({ t: 'in', m: mv, c: this.guestCounts.slice() });
-        this.lastMv = mv; this.lastCounts = this.guestCounts.join(); this.sendT = 0.05;
+      if (!this.isOnline() || !this.predictor || YY.Net.socket?.readyState !== 1 || document.hidden) return;
+      const c = this.ctrlFor[this.playerIndex];
+      if (!c) return;
+      const presses = c.drain().map(btn => ({ id: ++YY.Net.action, btn }));
+      const move = c.move();
+      if (this.sendT <= 0 || move !== this.lastMv || presses.length) {
+        const d = { t: 'in', matchId: this.matchId, seq: ++YY.Net.seq, move, presses };
+        if (YY.Net.send(d)) this.predictor.input(d);
+        this.lastMv = move; this.sendT = 0.05;
       }
-    },
-    sendHostSnapshot() {
-      if (this.mode !== 'host') return;
-      const now = performance.now();
-      if (now - (this.lastSnapshotAt || 0) < 1000 / 60 - 1) return;
-      this.lastSnapshotAt = now;
-      const m = this.match, sn = YY.snapshot(m, this.netEvents);
-      sn.vn = this.R.venueId;
-      if (m.phase === 'over') { sn.stats = m.stats; sn.longest = m.longest; }
-      YY.Net.send(sn); this.netEvents = [];
-      if (now - (this.lastPingAt || 0) >= 1000) { YY.Net.ping(); this.lastPingAt = now; }
     },
     tick(dt) {
       this.tickN++;
-      if (this.mode === 'guest') {
+      if (this.isOnline()) {
         this.sendT -= dt;
         if (this.sendT <= 0) this.sendGuestInput();
         return;
       }
       const m = this.match;
-      if (this.mode === 'host' && this.netWait) {
-        // 好友无响应：冻结比赛，丢弃期间的按键，仅保持心跳与快照
-        if (this.ctrlFor[0]) this.ctrlFor[0].drain();
-        if (this.remote) this.remote.queue.length = 0;
-        return;
-      }
       for (let i = 0; i < 2; i++) {
         const c = this.ctrlFor[i];
         if (!c) continue;
         m.inputs[i].move = c.move();
         for (const a of c.drain()) m.inputs[i].presses.push({ btn: a });
-      }
-      if (this.mode === 'host' && this.remote) {
-        m.inputs[1].move = this.remote.move;
-        const lead = Math.min(0.08, YY.Net.rtt / 2 + 0.03); // 补偿好友端延迟
-        for (const a of this.remote.queue) m.inputs[1].presses.push({ btn: a, lead });
-        this.remote.queue.length = 0;
       }
       for (const ai of this.ais) ai.update(dt);
       if (this.practice) this.practice.update(dt);
@@ -539,7 +452,6 @@
           if (this.practice) this.practice.onEvent(e);
           if (this.mode !== 'attract') this.handleEvent(e, m);
           else this.attractEvent(e, m);
-          if (this.mode === 'host') this.netEvents.push(e);
         }
       }
       if (this.mode === 'attract' && m.phase === 'over') this.startAttract();
@@ -554,12 +466,12 @@
     },
 
     playerName(i, m) {
-      if (this.mode === 'ai' || this.mode === 'host') return i === 0 ? '你' : m.names[i];
-      if (this.mode === 'guest') return i === 1 ? '你' : '房主';
+      if (this.mode === 'ai') return i === 0 ? '你' : m.names[i];
+      if (this.isOnline()) return i === this.playerIndex ? '你' : '好友';
       return m.names[i];
     },
     isMe(i) {
-      if (this.mode === 'guest') return i === 1;
+      if (this.isOnline()) return i === this.playerIndex;
       if (this.mode === 'local') return true;
       return i === 0;
     },
@@ -615,24 +527,35 @@
         case 'over': {
           const meWin = this.mode === 'local' || this.isMe(e.winner);
           R.victoryFx(e.winner, m, this.mode === 'local' ? this.playerName(e.winner, m) + ' 获胜' : meWin ? '胜利！' : this.playerName(e.winner, m) + ' 获胜');
-          setTimeout(() => this.showResult(m), 1200);
+          this.scheduleResult(m, 1200);
           break;
         }
       }
+    },
+
+    scheduleResult(m, delay) {
+      if (this.resultShown || this.resultPending) return;
+      this.resultPending = true;
+      const epoch = this.sessionEpoch;
+      setTimeout(() => {
+        if (epoch !== this.sessionEpoch) return;
+        this.resultPending = false;
+        this.showResult(m);
+      }, delay);
     },
 
     showResult(m) {
       if (this.resultShown || !this.inGame()) return;
       this.resultShown = true;
       const w = m.winner;
-      const me = this.mode === 'guest' ? 1 : 0;
+      const me = this.isOnline() ? this.playerIndex : 0;
       let title;
       if (this.mode === 'local') title = m.names[w] + ' 获胜！';
       else title = w === me ? '胜利！' : '惜败';
       if (w === me || this.mode === 'local') A.win(); else A.lose();
       $('resTitle').textContent = title;
       $('resTitle').parentElement.classList.toggle('lose', !(w === me || this.mode === 'local'));
-      const order = this.mode === 'guest' ? [1, 0] : [0, 1];
+      const order = this.isOnline() && this.playerIndex === 1 ? [1, 0] : [0, 1];
       $('resScore').textContent = m.score[order[0]] + ' : ' + m.score[order[1]];
       $('resAvA').src = this.portraitURL(order[0]); $('resAvB').src = this.portraitURL(order[1]);
       $('resNameA').textContent = this.playerName(order[0], m); $('resNameB').textContent = this.playerName(order[1], m);
@@ -653,7 +576,7 @@
       requestAnimationFrame(() => requestAnimationFrame(() => document.querySelectorAll('#resStats i').forEach((el) => { el.style.width = el.dataset.w + '%'; })));
       const secs = Math.round((performance.now() - this.started) / 1000);
       $('resTip').textContent = `比赛用时 ${Math.floor(secs / 60)} 分 ${secs % 60} 秒 · 最长回合 ${m.longest || 0} 拍\n` + this.tip(st[me], st[1 - me]);
-      $('btnAgain').textContent = this.mode === 'guest' ? '请求再来一局' : '再来一局';
+      $('btnAgain').textContent = this.isOnline() ? '请求再来一局' : '再来一局';
       this.show('result');
     },
     portraitURL(i) {
@@ -696,21 +619,22 @@
 
     render(dt) {
       const R = this.R;
-      if (this.mode === 'guest') {
+      if (this.isOnline()) {
         const v = this.view;
         v.update();
+        this.predictor.apply(v, dt);
         for (const e of v.events.splice(0)) this.handleEvent(e, v);
         R.draw(v, {
           rawDt: this.rawDt,
           padLeft: 46,
-          labels: [null, '你'],
-          meterFor: [1],
+          labels: this.playerIndex ? [null, '你'] : ['你', null],
+          meterFor: [this.playerIndex],
           serveLabel: YY.isTouch() ? '点「高远」或「吊球」发球' : 'J 发高远球 · K 发网前球',
-          landHint: this.settings.hint ? [1] : null,
+          landHint: this.settings.hint ? [this.playerIndex] : null,
           waitText: this.netWait,
         }, dt);
-        if (v.phase === 'over' && !this.resultShown && v.stats) { this.resultShown = true; setTimeout(() => { this.resultShown = false; this.showResult(v); }, 900); }
-        $('netInfo').textContent = YY.Net.statusText(this.guestRtt, this.view.delay);
+        if (v.phase === 'over' && v.stats) this.scheduleResult(v, 900);
+        $('netInfo').textContent = YY.Net.statusText(null, this.view.delay);
         $('netInfo').title = YY.Net.diagnostics();
         return;
       }
@@ -737,10 +661,8 @@
           o.serveLabel = solo;
           o.landHint = this.settings.hint ? [0] : null;
         }
-        if (this.mode === 'host') { $('netInfo').textContent = YY.Net.statusText(); $('netInfo').title = YY.Net.diagnostics(); }
         if (!touch && m.score[0] + m.score[1] === 0 && m.phase !== 'over' && this.mode !== 'local') o.overlayText = 'A/D 移动 · W 跳 · J 高远 · K 吊球 · L 扣杀 · Esc 暂停';
       }
-      if (this.mode === 'host') o.waitText = this.netWait;
       o.rawDt = this.rawDt;
       // 暂停时画面不变：只重绘一次，省电也避免后台持续占用显卡
       if (this.paused) { if (this.pausedDrawn) return; this.pausedDrawn = true; }

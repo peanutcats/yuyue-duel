@@ -11,7 +11,7 @@ html, body {
   margin: 0; height: 100%; overflow: hidden; background: var(--ink); color: #fff; font-family: var(--f);
   user-select: none; -webkit-user-select: none; touch-action: none; overscroll-behavior: none;
 }
-canvas#game { position: fixed; inset: 0; display: block; }
+canvas#game { touch-action: none; -webkit-touch-callout: none; position: fixed; inset: 0; display: block; }
 .hidden { display: none !important; }
 svg { width: 100%; height: 100%; display: block; }
 
@@ -26,7 +26,7 @@ svg { width: 100%; height: 100%; display: block; }
 .panel-screen.dim { background: rgba(5, 7, 22, .72); }
 
 /* ---------- 按钮 ---------- */
-button { font: inherit; color: #fff; cursor: pointer; border: 0; background: none; padding: 0; }
+button { touch-action: manipulation; -webkit-touch-callout: none; font: inherit; color: #fff; cursor: pointer; border: 0; background: none; padding: 0; }
 .btn {
   position: relative; overflow: hidden; padding: 11px 24px; border-radius: 12px; font-size: 15px; font-weight: 800; letter-spacing: .04em;
   background: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.05)); border: 1px solid var(--line);
@@ -224,7 +224,7 @@ kbd {
 #netInfo { position: fixed; bottom: 6px; left: 50%; transform: translateX(-50%); font-size: 12px; color: var(--txt2); pointer-events: none; font-family: var(--num); }
 
 /* 触屏控制（移动端专门设计：浮动摇杆 + 右手拇指弧形按键） */
-#touch { position: fixed; inset: 0; pointer-events: none; z-index: 4; --b: clamp(52px, calc(var(--appH, 400px) * 0.16), 72px); --joy: clamp(96px, calc(var(--appH, 400px) * 0.28), 120px); }
+#touch { touch-action: none; -webkit-touch-callout: none; position: fixed; inset: 0; pointer-events: none; z-index: 4; --b: clamp(50px, calc(var(--appH, 400px) * 0.14), 64px); --joy: clamp(96px, calc(var(--appH, 400px) * 0.28), 120px); }
 .joy-zone { position: absolute; bottom: 0; pointer-events: auto; touch-action: none; }
 .joy-zone.solo { left: 0; width: 38%; height: 58%; }
 .joy-zone.duo { width: 24%; height: 62%; --joy: clamp(84px, calc(var(--appH, 400px) * 0.26), 120px); }
@@ -243,38 +243,49 @@ kbd {
 .joy .ja { position: absolute; font-style: normal; font-size: calc(var(--joy) * 0.15); color: rgba(255,255,255,.55); transition: color .08s, transform .08s; }
 .joy .ja.l { left: 8%; top: 50%; transform: translateY(-50%); }
 .joy .ja.r { right: 8%; top: 50%; transform: translateY(-50%); }
-.joy .ja.u { top: 5%; left: 50%; transform: translateX(-50%); font-size: calc(var(--joy) * 0.11); }
 .joy.l .ja.l, .joy.r .ja.r { color: var(--gold); text-shadow: 0 0 10px rgba(255,210,63,.9); }
-.joy.u .ja.u { color: var(--gold); text-shadow: 0 0 10px rgba(255,210,63,.9); }
 .joy-hint { position: absolute; left: max(18px, var(--safe-left, 0px)); bottom: calc(max(14px, var(--safe-bottom, 0px)) + var(--joy) + 8px); font-size: 12px; color: rgba(255,255,255,.6); white-space: nowrap; transition: opacity .3s; text-shadow: 0 1px 3px rgba(0,0,0,.8); }
 .joy-zone:has(.joy.on) .joy-hint { opacity: 0; }
 
-.arc {
-  position: absolute; right: max(18px, var(--safe-right)); bottom: max(14px, var(--safe-bottom));
-  display: grid; grid-template-columns: repeat(2, var(--b)); gap: 10px;
-  grid-template-areas: "jump smash" "drop clear"; pointer-events: none;
+/* 拇指扇形：起跳为右下主键，三种球路沿其左上方环绕。 */
+.arc, .mini-arc {
+  position: absolute; width: calc(var(--b) * 2.8); height: calc(var(--b) * 2.8);
+  right: max(18px, var(--safe-right)); bottom: max(14px, var(--safe-bottom)); pointer-events: none;
+}
+.arc::before {
+  content: ""; position: absolute; right: calc(var(--b) * .48); bottom: calc(var(--b) * .48);
+  width: calc(var(--b) * 1.8); height: calc(var(--b) * 1.8); border-radius: 100% 0 0 0;
+  border-top: 1px solid rgba(255,225,160,.2); border-left: 1px solid rgba(255,225,160,.2);
+  background: radial-gradient(circle at 100% 100%, rgba(255,210,63,.08), transparent 70%);
 }
 .tbtn {
-  position: relative; width: var(--b); height: var(--b); border-radius: 22px;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
-  touch-action: none; pointer-events: auto; color: #fff;
-  border: 2px solid var(--key-color, #fff); background: rgba(10, 20, 39, .86);
-  box-shadow: inset 0 2px 0 rgba(255,255,255,.16), 0 5px 0 rgba(0,0,0,.32);
-  transition: transform .06s, background .06s;
+  position: absolute; width: var(--b); height: var(--b); border-radius: 50%; padding: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  touch-action: none; pointer-events: auto; color: #fff; -webkit-touch-callout: none;
+  border: 1.5px solid var(--key-color); background: linear-gradient(145deg, var(--key-shade), rgba(8,17,34,.94) 75%);
+  box-shadow: 0 3px 9px rgba(0,0,0,.5), inset 0 1px 1px rgba(255,255,255,.3), inset 0 0 0 4px rgba(5,10,22,.25);
+  transition: transform .07s, filter .07s;
 }
-.tbtn b { font-size: calc(var(--b) * .27); font-weight: 900; line-height: 1.15; }
-.tbtn small { font-size: 10px; color: rgba(255,255,255,.7); line-height: 1; }
-.tbtn.down { transform: translateY(3px); background: #365267; box-shadow: inset 0 0 0 2px var(--key-color); }
-.tbtn:focus-visible { outline: 3px solid white; outline-offset: 2px; }
-.t-clear { grid-area: clear; --key-color: #6fbaff; }
-.t-drop { grid-area: drop; --key-color: #7dffb0; }
-.t-smash { grid-area: smash; --key-color: #ff8a5c; }
-.t-jump { grid-area: jump; --key-color: #ffd23f; }
-.mini-arc { position: absolute; bottom: max(10px, var(--safe-bottom, 0px)); display: grid; grid-template-columns: repeat(2, 48px); grid-template-areas: "jump smash" "drop clear"; gap: 8px; pointer-events: none; }
-.mini-arc.left { left: 25%; } .mini-arc.right { right: 25%; }
-.mini-arc .tbtn { position: relative; width: 48px; height: 48px; --b: 48px; }
-.mini-arc .t-clear { border-color: #6fbaff; } .mini-arc .t-drop { border-color: #7dffb0; }
-.mini-arc .t-smash { border-color: #ff8a5c; background: radial-gradient(circle at 50% 30%, rgba(255,130,90,.6), rgba(230,50,40,.3) 70%); } .mini-arc .t-jump { border-color: var(--gold); }
+.tbtn::after { content: ""; position: absolute; inset: 4px; border: 1px solid rgba(255,255,255,.12); border-radius: inherit; pointer-events: none; }
+.tbtn > * { pointer-events: none; }
+.tbtn svg { width: calc(var(--b) * .29); height: calc(var(--b) * .29); flex: none; fill: none; stroke: var(--key-color); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.tbtn b { font-size: calc(var(--b) * .25); font-weight: 900; line-height: 1.15; letter-spacing: .03em; }
+.tbtn small { font-size: 9px; color: rgba(255,255,255,.6); line-height: 1; }
+.tbtn.down { transform: scale(.94); filter: brightness(1.5); }
+.tbtn:focus-visible { outline: 2px solid white; outline-offset: 3px; }
+.t-clear { right: calc(var(--b) * 1.76); bottom: calc(var(--b) * .16); --key-color: #8bd4ff; --key-shade: #234e70; }
+.t-drop { right: calc(var(--b) * 1.29); bottom: calc(var(--b) * 1.29); --key-color: #8af0c6; --key-shade: #245c51; }
+.t-smash { right: calc(var(--b) * .12); bottom: calc(var(--b) * 1.72); width: calc(var(--b) * 1.08); height: calc(var(--b) * 1.08); --key-color: #ffae89; --key-shade: #743e32; }
+.t-jump {
+  right: 0; bottom: 0; width: calc(var(--b) * 1.32); height: calc(var(--b) * 1.32);
+  --key-color: #ffe6a0; --key-shade: #80602c;
+  border-width: 2px; box-shadow: 0 4px 16px rgba(0,0,0,.5), 0 0 20px rgba(255,210,63,.12), inset 0 1px 3px rgba(255,240,185,.4), inset 0 0 0 5px rgba(0,0,0,.15);
+}
+.t-jump svg { width: calc(var(--b) * .42); height: calc(var(--b) * .42); }
+.t-jump b { font-size: calc(var(--b) * .36); color: #fff3cd; }
+.t-jump small { font-size: 8px; letter-spacing: .16em; color: #dfc78f; }
+.mini-arc { --b: 48px; right: auto; bottom: max(10px, var(--safe-bottom)); }
+.mini-arc.left { left: 25%; } .mini-arc.right { left: auto; right: 25%; }
 
 /* 横屏全屏 */
 #app { --safe-top: env(safe-area-inset-top, 0px); --safe-right: env(safe-area-inset-right, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px); --safe-left: env(safe-area-inset-left, 0px); position: fixed; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; }

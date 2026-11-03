@@ -1,0 +1,23 @@
+[Unit]
+Description=Yuyue authoritative badminton server
+After=network.target
+
+[Service]
+Type=simple
+User=yuyue
+Group=yuyue
+WorkingDirectory=/opt/yuyue/current
+EnvironmentFile=/etc/yuyue.env
+ExecStart=/usr/bin/node server/index.js
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=15
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+LimitNOFILE=4096
+MemoryMax=384M
+
+[Install]
+WantedBy=multi-user.target

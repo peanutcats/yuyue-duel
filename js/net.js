@@ -274,31 +274,15 @@
   }
 
   // ---------- 快照 ----------
-  const r3 = (v) => Math.round(v * 1000) / 1000;
+  if (!YY.snapshot && typeof require === 'function') require('./state.js');
   const KIND = ['over', 'side', 'under'];
-  YY.snapshot = function (m, events) {
-    return {
-      t: 'st', nt: performance.now() / 1000, ht: r3(m.time), ph: m.phase, sc: m.score.slice(), sv: m.server, st: r3(m.serveT), sg: m.serving ? 1 : 0,
-      ry: m.rally, w: m.winner, names: m.names, hc: m.hitCount,
-      p: m.players.map((p) => [
-        r3(p.x), r3(p.y), r3(p.vx), r3(p.vy), p.onGround ? 1 : 0, Math.round(p.stamina),
-        p.swing ? [r3(p.swing.t), KIND.indexOf(p.swing.kind), p.swing.dur, p.swing.serve ? 1 : 0,
-          p.swing.contact ? [r3(p.swing.contact.x), r3(p.swing.contact.y), r3(p.swing.contact.t)] : null] : 0,
-        r3(p.runPhase), r3(p.flash), r3(p.land),
-      ]),
-      s: [r3(m.shuttle.x), r3(m.shuttle.y), r3(m.shuttle.vx), r3(m.shuttle.vy), m.shuttle.live ? 1 : 0, m.shuttle.held ? 1 : 0, r3(m.shuttle.speed || 0), m.shuttle.lastHitter, m.shuttle.netHit ? 1 : 0, m.shuttle.crossedNet ? 1 : 0],
-      lm: m.landMark ? [r3(m.landMark.x), m.landMark.inB ? 1 : 0, r3(m.landMark.t)] : 0,
-      pl: m.pred && m.shuttle.live ? r3(m.pred.landX) : null,
-      ev: events,
-      rtt: r3(Net.rtt),
-    };
-  };
   YY.applyStats = (m, st) => { if (st) m.stats = st; };
 
   /** 好友端的可渲染比赛视图（接口与 Match 一致） */
   const stamp = (sn) => sn.nt ?? sn.ht;
   class GuestView {
-    constructor() {
+    constructor(localIndex = 1) {
+      this.localIndex = localIndex;
       this.players = [0, 1].map((i) => ({ idx: i, side: i ? 1 : -1, dir: i ? -1 : 1, x: i ? 2.8 : -2.3, y: 0, vx: 0, vy: 0, onGround: true, stamina: 100, swing: null, runPhase: 0, flash: 0, land: 0 }));
       this.shuttle = { x: -1.9, y: 0.95, vx: 0, vy: 0, live: false, held: true, netHit: false, crossedNet: false, speed: 0, lastHitter: -1 };
       this.score = [0, 0]; this.server = 0; this.phase = 'serve'; this.serveT = 0; this.serving = null; this.rally = 0;
@@ -350,7 +334,7 @@
       this.phase = cur.ph; this.score = cur.sc; this.server = cur.sv;
       this.serveT = a.ph === b.ph ? L(a.st, b.st) : cur.st; this.serving = cur.sg ? {} : null;
       this.rally = cur.ry; this.winner = cur.w;
-      if (cur.names) this.names = [cur.names[0] === '你' ? '房主' : cur.names[0], '你'];
+      if (cur.names) this.names = cur.names.map((n, i) => i === this.localIndex ? '你' : (n === '你' ? '好友' : n));
       for (let i = 0; i < 2; i++) {
         const p = this.players[i], pa = a.p[i], pb = b.p[i], pc = cur.p[i];
         p.x = reset ? pc[0] : L(pa[0], pb[0]); p.y = reset ? pc[1] : L(pa[1], pb[1]);

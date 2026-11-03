@@ -2,3 +2,8 @@
 tools/
 .claude/
 GAME_DEVELOPMENT_PROMPT.md
+
+server/
+deploy/
+output/
+.playwright-cli/
