@@ -11,18 +11,15 @@
       'https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js',
       'https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js',
     ],
-    // 自建信令示例：{ host: 'your.server', port: 9000, path: '/peer', secure: true, config: {...} }
-    peer: {
-      debug: 1,
-      config: {
-        iceServers: [
-          { urls: ['stun:stun.miwifi.com:3478', 'stun:stun.chat.bilibili.com:3478'] },
-          { urls: ['stun:stun.l.google.com:19302', 'stun:stun.cloudflare.com:3478'] },
-          { urls: ['turn:eu-0.turn.peerjs.com:3478', 'turn:us-0.turn.peerjs.com:3478'], username: 'peerjs', credential: 'peerjsp' },
-        ],
-        sdpSemantics: 'unified-plan',
-      },
-    },
+    // 自建信令示例：{ host: 'your.server', port: 9000, path: '/peer', secure: true }
+    peer: { debug: 1 },
+    // STUN：探测公网地址，用于直连
+    stun: [
+      { urls: ['stun:stun.miwifi.com:3478', 'stun:stun.chat.bilibili.com:3478'] },
+      { urls: ['stun:stun.cloudflare.com:3478', 'stun:stun.l.google.com:19302'] },
+    ],
+    // TURN：直连失败时中转。由本站 /api/turn（Vercel 函数 + Cloudflare）下发临时凭证
+    turnEndpoint: 'api/turn',
     // 开发调试：URL 加 ?loopback=1 时，用 BroadcastChannel 在同一浏览器的两个标签页之间联机
     loopback: /[?&]loopback=1/.test(location.search),
   };
@@ -65,6 +62,47 @@
   const Net = (YY.Net = {
     peer: null, conn: null, role: null, code: null, rtt: 0.1,
     onMsg: null, onOpen: null, onClose: null, onStatus: null,
+    ice: null, iceExp: 0, turn: 'unknown', route: null,
+    /** 获取 ICE 服务器：优先向本站申请 TURN 临时凭证，失败则只用 STUN */
+    async getIce() {
+      if (this.ice && performance.now() < this.iceExp) return this.ice;
+      let turn = [], ttl = 0;
+      if (/^https?:$/.test(location.protocol)) {
+        const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        const tm = setTimeout(() => ctl && ctl.abort(), 5000);
+        try {
+          const r = await fetch(new URL(YY.NET_CONFIG.turnEndpoint, location.href), { cache: 'no-store', signal: ctl ? ctl.signal : undefined });
+          if (r.ok) {
+            const d = await r.json();
+            if (Array.isArray(d.iceServers)) { turn = d.iceServers; ttl = d.ttl || 3600; }
+          }
+        } catch (_) { /* 本地打开或未配置：仅直连 */ }
+        clearTimeout(tm);
+      }
+      this.turn = turn.length ? 'ok' : 'none';
+      this.ice = turn.concat(YY.NET_CONFIG.stun);
+      this.iceExp = performance.now() + (turn.length ? Math.max(60, ttl - 600) : 30) * 1000;
+      return this.ice;
+    },
+    peerOpts() {
+      return Object.assign({}, YY.NET_CONFIG.peer, { config: { iceServers: this.ice || YY.NET_CONFIG.stun, sdpSemantics: 'unified-plan' } });
+    },
+    /** 连接建立后查询实际线路：'direct' 直连 / 'relay' 经 TURN 中转 */
+    async detectRoute() {
+      const pc = this.conn && this.conn.peerConnection;
+      if (!pc || !pc.getStats) return null;
+      try {
+        const stats = await pc.getStats();
+        let pair = null;
+        stats.forEach((r) => { if (r.type === 'transport' && r.selectedCandidatePairId) pair = stats.get(r.selectedCandidatePairId); });
+        if (!pair) stats.forEach((r) => { if (r.type === 'candidate-pair' && r.state === 'succeeded' && (r.nominated || r.selected)) pair = r; });
+        if (!pair) return null;
+        const loc = stats.get(pair.localCandidateId), rem = stats.get(pair.remoteCandidateId);
+        const relay = (loc && loc.candidateType === 'relay') || (rem && rem.candidateType === 'relay');
+        this.route = relay ? 'relay' : 'direct';
+        return this.route;
+      } catch (_) { return null; }
+    },
     async load() {
       if (G.Peer) return;
       for (const u of YY.NET_CONFIG.cdn) {
@@ -81,10 +119,13 @@
         return this.code;
       }
       await this.load();
+      this.status('正在获取中转服务器…');
+      await this.getIce();
+      this.status('正在连接联机服务器…');
       return new Promise((resolve, reject) => {
         const tryOpen = (n) => {
           const code = genCode();
-          const peer = new G.Peer(YY.NET_CONFIG.prefix + code, YY.NET_CONFIG.peer);
+          const peer = new G.Peer(YY.NET_CONFIG.prefix + code, this.peerOpts());
           this.peer = peer;
           peer.on('open', () => { this.code = code; resolve(code); });
           peer.on('error', (err) => {
@@ -111,16 +152,19 @@
         });
       }
       await this.load();
+      this.status('正在获取中转服务器…');
+      await this.getIce();
+      this.status('正在连接联机服务器…');
       return new Promise((resolve, reject) => {
-        const peer = new G.Peer(undefined, YY.NET_CONFIG.peer);
+        const peer = new G.Peer(undefined, this.peerOpts());
         this.peer = peer;
         let done = false;
         peer.on('open', () => {
           const conn = peer.connect(YY.NET_CONFIG.prefix + code, { reliable: true, serialization: 'json' });
           this.bind(conn, () => { done = true; resolve(); });
-          this.status('已找到联机服务器，正在与房主建立直连…');
+          this.status(this.turn === 'ok' ? '已找到房间，正在建立连接（直连失败会自动走中转）…' : '已找到房间，正在与房主建立直连…');
           const fail = (msg) => { if (!done) { done = true; reject(new Error(msg)); } };
-          const NAT = '找到了房间，但无法与房主建立点对点连接（双方网络 NAT 限制）。可尝试换用手机热点或同一 Wi-Fi，或按 README 配置 TURN 服务器';
+          const NAT = YY.netFailText(this.turn);
           // 监听 ICE 失败，给出明确原因
           const watchIce = setInterval(() => {
             const pc = conn.peerConnection;
@@ -165,6 +209,27 @@
       this.peer = null; this.role = null; this.code = null;
     },
   });
+
+  /** 是否在微信 / QQ 等应用内置浏览器中打开 */
+  YY.inAppBrowser = function () {
+    const ua = (typeof navigator !== 'undefined' && navigator.userAgent) || '';
+    if (/MicroMessenger/i.test(ua)) return '微信';
+    if (/\bQQ\//i.test(ua)) return 'QQ';
+    if (/DingTalk/i.test(ua)) return '钉钉';
+    return null;
+  };
+  YY.inAppHint = function () {
+    const app = YY.inAppBrowser();
+    return app ? `检测到在${app}内打开，若连接失败，请点右上角「…」选择「在浏览器打开」。` : '';
+  };
+  /** 找到房间但连接建立失败时的说明 */
+  YY.netFailText = function (turn) {
+    const base = turn === 'ok'
+      ? '找到了房间，但连接没有建立：直连和中转服务器都没有连通。请确认网络正常后重试，或两人连接同一个 Wi-Fi。'
+      : '找到了房间，但双方网络无法直连，且当前没有可用的中转服务器（TURN）。可让两人连接同一个 Wi-Fi，或由部署者按 README 配置 Cloudflare TURN。';
+    const hint = YY.inAppHint();
+    return hint ? base + '\n' + hint : base;
+  };
 
   function errText(err) {
     const m = {

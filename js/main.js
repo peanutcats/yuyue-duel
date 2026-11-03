@@ -232,7 +232,9 @@
       try {
         const code = await N.host();
         $('lobbyCode').textContent = code;
-        $('lobbyStatus').textContent = '把房间码告诉好友，或复制邀请链接发送。等待好友加入…';
+        $('lobbyStatus').textContent = '把房间码告诉好友，或复制邀请链接发送。等待好友加入…' +
+          (N.turn === 'ok' ? '' : '\n（未获取到中转服务器，部分网络组合可能无法连接）') +
+          '\n好友若在微信中打开链接，请让他点右上角选择「在浏览器打开」。';
         $('btnCopy').classList.remove('hidden');
       } catch (err) {
         this.message('无法创建房间', err.message + '。在线对战需要联网；也可以选择「同屏对战」。', 'friend');
@@ -260,6 +262,7 @@
       this.R.showBanner('好友已加入', '你在左侧（红方）', '#ffd23f', 2);
       $('netInfo').classList.remove('hidden');
       this.pingTimer = 0;
+      this.watchRoute();
       this.peerSeen = performance.now(); // 最近一次收到好友输入
       this.peerAway = 0;
     },
@@ -291,7 +294,7 @@
       this.show('lobby');
       $('lobbyTitle').textContent = '加入房间';
       $('lobbyCode').textContent = code;
-      $('lobbyStatus').textContent = '正在连接房主…';
+      $('lobbyStatus').textContent = '正在连接房主…' + (YY.inAppHint() ? '\n' + YY.inAppHint() : '');
       $('btnCopy').classList.add('hidden');
       const N = YY.Net;
       N.close();
@@ -319,6 +322,7 @@
       this.R.showBanner('已加入房间', '你在左侧（蓝方）', '#6fbaff', 2);
       $('netInfo').classList.remove('hidden');
       this.sendT = 0;
+      this.watchRoute();
       this.peerSeen = performance.now(); // 最近一次收到房主快照
       this.peerAway = 0;
     },
@@ -342,6 +346,15 @@
         this.message('房间已满', '该房间已经有两位选手。', 'friend');
         this.startAttract();
       }
+    },
+    /** 连接建立后查询线路（直连 / 中转），显示在延迟旁边 */
+    watchRoute() {
+      YY.Net.route = null;
+      [1500, 6000].forEach((ms) => setTimeout(() => { if (this.isOnline()) YY.Net.detectRoute(); }, ms));
+    },
+    routeLabel() {
+      const r = YY.Net.route;
+      return r === 'relay' ? ' · 中转' : r === 'direct' ? ' · 直连' : '';
     },
     netLost(why) {
       if (!this.isOnline()) return;
@@ -600,7 +613,7 @@
           waitText: this.netWait,
         }, dt);
         if (v.phase === 'over' && !this.resultShown && v.stats) { this.resultShown = true; setTimeout(() => { this.resultShown = false; this.showResult(v); }, 900); }
-        $('netInfo').textContent = '延迟 ' + Math.round((this.guestRtt || 0) * 1000) + ' ms';
+        $('netInfo').textContent = '延迟 ' + Math.round((this.guestRtt || 0) * 1000) + ' ms' + this.routeLabel();
         return;
       }
       const m = this.match;
@@ -626,7 +639,7 @@
           o.serveLabel = solo;
           o.landHint = this.settings.hint ? [0] : null;
         }
-        if (this.mode === 'host') $('netInfo').textContent = '延迟 ' + Math.round(YY.Net.rtt * 1000) + ' ms';
+        if (this.mode === 'host') $('netInfo').textContent = '延迟 ' + Math.round(YY.Net.rtt * 1000) + ' ms' + this.routeLabel();
         if (!touch && m.score[0] + m.score[1] === 0 && m.phase !== 'over' && this.mode !== 'local') o.overlayText = 'A/D 移动 · W 跳 · J 高远 · K 吊球 · L 扣杀 · Esc 暂停';
       }
       if (this.mode === 'host') o.waitText = this.netWait;

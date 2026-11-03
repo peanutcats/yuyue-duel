@@ -54,14 +54,36 @@
 
 ## 在线对战说明
 
-- 默认使用 PeerJS 公共信令服务器，组件从 jsDelivr / unpkg 按需加载，需要联网。
-- 已配置多组 STUN（含国内可达的 `stun.miwifi.com`、`stun.chat.bilibili.com`）以及 PeerJS 的公共 TURN。若所在网络无法访问公共信令服务，可自建：
+联机分两步：先通过 PeerJS 公共信令服务器"找到房间"，再在两台设备之间建立数据通道。数据通道优先**直连**（STUN 探测公网地址）；当一方处在对称型 NAT 后（国内手机 4G/5G、校园网、公司网很常见）时直连会失败，这时必须经 **TURN 中转**。
+
+### 配置 Cloudflare TURN（推荐，部署到 Vercel 后必做）
+
+游戏通过本站的 `/api/turn`（`api/turn.js`，Vercel 函数）向 Cloudflare 申请**临时** TURN 凭证。密钥只保存在 Vercel 服务器端，浏览器拿到的是 4 小时后失效的临时用户名/密码。
+
+1. 登录 [Cloudflare 控制台](https://dash.cloudflare.com)，进入 **Realtime（实时）→ TURN Server**（界面名称可能略有不同），点击创建，得到 **Turn Token ID** 与 **API Token**。Cloudflare TURN 有免费额度，超出部分按流量计费，详见其定价页。
+2. 打开 Vercel 项目 → **Settings → Environment Variables**，添加：
+   - `CF_TURN_KEY_ID` = Turn Token ID
+   - `CF_TURN_API_TOKEN` = API Token
+3. 在 **Deployments** 里对最新部署点 **Redeploy**（环境变量只对新部署生效）。
+4. 验证：浏览器打开 `https://你的域名/api/turn`，应返回包含 `iceServers` 的 JSON；进入对战后，延迟旁会显示 **直连** 或 **中转**。
+
+未配置时接口返回 503，游戏自动退回仅直连，并在房间页提示"未获取到中转服务器"。本地开发时可这样启用：
+
+```bash
+CF_TURN_KEY_ID=xxx CF_TURN_API_TOKEN=yyy python3 tools/serve.py
+```
+
+### 其他说明
+
+- 联机组件从 jsDelivr / unpkg 按需加载，需要联网。STUN 使用国内可达的 `stun.miwifi.com`、`stun.chat.bilibili.com` 及 Cloudflare、Google 的服务器。
+- 若所在网络无法访问 PeerJS 公共信令服务，可自建：
   ```bash
   npm install -g peer && peerjs --port 9000 --path /peer
   ```
   然后在 `js/net.js` 的 `YY.NET_CONFIG.peer` 中加入 `host / port / path / secure` 配置。
-- **掉线与离开**：任一方切到后台（或锁屏）时会发送“暂时离开”心跳，比赛自动暂停并提示对方等待；超过 1.2 秒收不到对方输入/画面也会暂停并显示倒计时，15 秒仍无数据则判定断线，双方回到菜单。
-- **加入失败的提示**：房间码不存在会立即提示；若找到了房间但双方网络（对称 NAT、部分校园网/公司网）无法直连，会明确提示“无法建立点对点连接”，可改用手机热点 / 同一 Wi-Fi，或在 `iceServers` 中配置自己的 TURN 服务器。
+- **微信 / QQ 内打开**：应用内置浏览器对 WebRTC 支持不完整，检测到时会提示好友点右上角「在浏览器打开」。
+- **掉线与离开**：任一方切到后台（或锁屏）时会发送"暂时离开"心跳，比赛自动暂停并提示对方等待；超过 1.2 秒收不到对方输入/画面也会暂停并显示倒计时，15 秒仍无数据则判定断线，双方回到菜单。
+- **加入失败的提示**：房间码不存在会立即提示；找到了房间但通道建立失败时，会区分"没有可用中转服务器"与"直连和中转都未连通"两种情况。
 - 调试：两个标签页的 URL 都加 `?loopback=1`，即可通过 BroadcastChannel 在同一浏览器内联机，验证联机逻辑而不依赖 WebRTC。
 
 ## 代码结构
@@ -83,7 +105,9 @@ js/main.js        模式管理、事件反馈、主循环
 tools/sim.js           开发用：无界面 AI 对 AI 平衡测试，如 node tools/sim.js normal hard 10
 tools/practice_sim.js  开发用：按提示操作的机器人验证各练习可完成
 tools/serve_regression.test.js  发球、球网碰撞、击球显示与联机时序回归测试
-tools/serve.py         开发用：禁用缓存的静态服务器
+tools/serve.py         开发用：禁用缓存的静态服务器（含本地 /api/turn）
+tools/turn_api.test.js TURN 凭证接口测试：node --test tools/turn_api.test.js
+api/turn.js            Vercel 函数：向 Cloudflare 申请 TURN 临时凭证
 ```
 
 物理以 120Hz 固定步长运行。羽毛球使用二次空气阻力（终端速度约 11 m/s），因此高远球先快后慢、几乎垂直下落，扣杀出手极快但迅速减速。
