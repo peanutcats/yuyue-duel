@@ -116,76 +116,81 @@
   YY.isTouch = isTouch;
   const buzz = (ms) => { if (navigator.vibrate) try { navigator.vibrate(ms); } catch (_) {} };
 
-  /**
-   * 浮动摇杆：在区域内任意位置按下即以该点为中心；仅左右拖动移动（模拟量），垂直位移不触发任何动作。
-   * 拇指不必对准固定按钮，左右切换只需几毫米位移。
-   */
-  function makeJoystick(ctrl, opts) {
-    const zone = document.createElement('div');
-    zone.className = 'joy-zone ' + (opts.cls || '');
-    const base = document.createElement('div');
-    base.className = 'joy';
-    base.innerHTML = '<i class="ja l">◀</i><i class="ja r">▶</i><b class="knob"></b>';
-    zone.appendChild(base);
-    if (opts.hint) {
-      const h = document.createElement('div');
-      h.className = 'joy-hint';
-      h.textContent = opts.hint;
-      zone.appendChild(h);
-    }
-    const knob = base.querySelector('.knob');
-    let id = null, ox = 0, oy = 0;
-    const R = () => base.offsetWidth / 2 || 50;
-    const rest = () => { base.style.left = ''; base.style.top = ''; base.classList.remove('on'); knob.style.transform = ''; };
-    const place = (x, y) => {
-      const zr = YY.appRect(zone), r = R();
-      const lx = Math.max(r, Math.min(zr.width - r, x - zr.left));
-      const ly = Math.max(r, Math.min(zr.height - r, y - zr.top));
-      base.style.left = lx - r + 'px'; base.style.top = ly - r + 'px';
-      return { x: zr.left + lx, y: zr.top + ly };
-    };
-    const update = (x) => {
-      let dx = x - ox;
-      const r = R();
-      // 拇指漂移过远时让中心跟随，永远保持一推即动
-      if (Math.abs(dx) > r * 1.3) { ox += dx - Math.sign(dx) * r * 1.3; dx = x - ox; }
-      const dead = 7, full = r * 0.45;
-      const m = Math.abs(dx) < dead ? 0 : Math.sign(dx) * Math.min(1, (Math.abs(dx) - dead) / (full - dead));
-      ctrl.touchDir = opts.flip ? -m : m;
-      Input.changed();
-      base.classList.toggle('l', m < -0.2);
-      base.classList.toggle('r', m > 0.2);
-      const kx = Math.max(-r * 0.6, Math.min(r * 0.6, dx));
-      knob.style.transform = `translateX(${kx}px)`;
-    };
-    zone.addEventListener('pointerdown', (e) => {
-      e.preventDefault();
-      if (id !== null) return;
-      id = e.pointerId;
-      try { zone.setPointerCapture(id); } catch (_) {}
-      const p = YY.toApp(e.clientX, e.clientY);
-      const br = YY.appRect(base);
-      const bx = br.left + br.width / 2, by = br.top + br.height / 2;
-      const onBase = Math.hypot(p.x - bx, p.y - by) <= R();
-      // 点左右箭头即移动；区域空白处按下则启用浮动摇杆。
-      ox = onBase ? bx : p.x; oy = onBase ? by : p.y;
-      place(ox, oy);
-      base.classList.add('on');
-      update(p.x);
+  /** 独立方向键：每根手指单独记录，后按方向优先；可以滑到另一箭头换向。 */
+  function makeMovePad(ctrl, cls) {
+    const pad = document.createElement('div');
+    pad.className = 'move-pad ' + cls;
+    pad.setAttribute('role', 'group');
+    pad.setAttribute('aria-label', '左右移动');
+    const buttons = [-1, 1].map(dir => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'move-btn move-' + (dir < 0 ? 'left' : 'right');
+      b.dataset.dir = dir;
+      b.setAttribute('aria-label', dir < 0 ? '向左移动' : '向右移动');
+      b.setAttribute('aria-pressed', 'false');
+      b.innerHTML = `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="${dir < 0 ? 'M20 7 11 16 20 25M11 16h15' : 'M12 7 21 16 12 25M21 16H6'}"/></svg>`;
+      pad.appendChild(b);
+      return b;
     });
-    zone.addEventListener('pointermove', (e) => { if (e.pointerId === id) { const p = YY.toApp(e.clientX, e.clientY); update(p.x); } });
-    const end = (e) => {
-      if (e.pointerId !== id) return;
-      id = null; ctrl.touchDir = 0;
-      base.classList.remove('l', 'r');
-      rest();
-      Input.changed();
+    const pointers = new Map(), keys = new Map();
+    let order = 0;
+    const update = (notify = true) => {
+      const active = [...pointers.values(), ...keys.values()].filter(p => p.dir);
+      const last = active.reduce((a, b) => !a || b.order > a.order ? b : a, null);
+      ctrl.touchDir = last ? last.dir : 0;
+      for (const b of buttons) {
+        const held = active.some(p => p.dir === +b.dataset.dir);
+        b.classList.toggle('down', held);
+        b.classList.toggle('active-dir', ctrl.touchDir === +b.dataset.dir);
+        b.setAttribute('aria-pressed', String(held));
+      }
+      if (notify) Input.changed();
     };
-    zone.addEventListener('pointerup', end);
-    zone.addEventListener('pointercancel', end);
-    zone.addEventListener('lostpointercapture', end);
-    Input.touchResets.push(() => end({ pointerId: id }));
-    return zone;
+    pad.addEventListener('pointerdown', e => {
+      const b = e.target.closest('.move-btn');
+      if (!b || !pad.contains(b) || e.button !== 0 || pointers.has(e.pointerId)) return;
+      e.preventDefault();
+      pointers.set(e.pointerId, { dir: +b.dataset.dir, order: ++order });
+      try { pad.setPointerCapture(e.pointerId); } catch (_) {}
+      update();
+    });
+    pad.addEventListener('pointermove', e => {
+      const pointer = pointers.get(e.pointerId);
+      if (!pointer) return;
+      e.preventDefault();
+      const pos = YY.toApp(e.clientX, e.clientY);
+      const b = buttons.find(b => {
+        const r = YY.appRect(b);
+        return pos.x >= r.left && pos.x <= r.left + r.width && pos.y >= r.top && pos.y <= r.top + r.height;
+      });
+      const dir = b ? +b.dataset.dir : 0;
+      if (dir !== pointer.dir) { pointer.dir = dir; pointer.order = ++order; update(); }
+    });
+    const end = e => {
+      if (!pointers.delete(e.pointerId)) return;
+      try { if (pad.hasPointerCapture(e.pointerId)) pad.releasePointerCapture(e.pointerId); } catch (_) {}
+      update();
+    };
+    for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) pad.addEventListener(name, end);
+    // Focused buttons also support keyboard activation, without Space triggering a jump.
+    for (const b of buttons) {
+      b.addEventListener('keydown', e => {
+        if (!['Space', 'Enter'].includes(e.code)) return;
+        e.preventDefault(); e.stopPropagation();
+        if (!keys.has(b)) { keys.set(b, { dir: +b.dataset.dir, order: ++order }); update(); }
+      });
+      b.addEventListener('keyup', e => {
+        if (!['Space', 'Enter'].includes(e.code)) return;
+        e.preventDefault(); e.stopPropagation(); keys.delete(b); update();
+      });
+      b.addEventListener('blur', () => { if (keys.delete(b)) update(); });
+    }
+    Input.touchResets.push(() => {
+      const ids = [...pointers.keys()]; pointers.clear(); keys.clear();
+      for (const id of ids) try { if (pad.hasPointerCapture(id)) pad.releasePointerCapture(id); } catch (_) {}
+      update(false);
+    });
+    return pad;
   }
 
   function makeBtn(ctrl, act, cls) {
@@ -194,32 +199,37 @@
     b.setAttribute('aria-label', LABELS[act]);
     b.className = 'tbtn t-' + act + (cls ? ' ' + cls : '');
     b.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[act]}</svg><b>${LABELS[act]}</b>` + (cls === 'mini' ? '' : `<small>${SUBS[act]}</small>`);
-    let pointer = null;
-    b.addEventListener('pointerdown', (e) => {
+    const pointers = new Set();
+    b.addEventListener('pointerdown', e => {
       e.preventDefault();
-      if (pointer !== null) return;
-      pointer = e.pointerId;
-      try { b.setPointerCapture(pointer); } catch (_) {}
+      if (e.button !== 0 || pointers.has(e.pointerId)) return;
+      pointers.add(e.pointerId);
+      try { b.setPointerCapture(e.pointerId); } catch (_) {}
       ctrl.push(act);
       b.classList.add('down');
       buzz(act === 'smash' ? 18 : 8);
     });
-    const up = (e) => { if (e && e.pointerId !== pointer) return; pointer = null; b.classList.remove('down'); };
-    b.addEventListener('pointerup', up);
-    b.addEventListener('pointercancel', up);
-    b.addEventListener('lostpointercapture', up);
-    b.addEventListener('click', (e) => { if (e.detail === 0) ctrl.push(act); });
-    Input.touchResets.push(() => up());
+    const up = e => {
+      if (!pointers.delete(e.pointerId)) return;
+      try { if (b.hasPointerCapture(e.pointerId)) b.releasePointerCapture(e.pointerId); } catch (_) {}
+      b.classList.toggle('down', pointers.size > 0);
+    };
+    for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) b.addEventListener(name, up);
+    b.addEventListener('click', e => { if (e.detail === 0 && !e.pointerType) ctrl.push(act); });
+    Input.touchResets.push(() => {
+      const ids = [...pointers]; pointers.clear(); b.classList.remove('down');
+      for (const id of ids) try { if (b.hasPointerCapture(id)) b.releasePointerCapture(id); } catch (_) {}
+    });
     return b;
   }
 
-  /** 构建触屏控制：layout 'solo' 一人（左摇杆 + 右手弧形按键），'duo' 两人各一组 */
+  /** 构建触屏控制：layout 'solo' 一人（左方向键 + 右手弧形按键），'duo' 两人各一组 */
   YY.buildTouch = function (root, ctrls, layout) {
     for (const reset of Input.touchResets) reset();
     Input.touchResets = [];
     root.innerHTML = '';
     if (layout === 'solo') {
-      root.appendChild(makeJoystick(ctrls[0], { cls: 'solo', hint: '左右移动' }));
+      root.appendChild(makeMovePad(ctrls[0], 'solo'));
       const arc = document.createElement('div');
       arc.className = 'arc';
       for (const a of ['clear', 'drop', 'smash', 'jump']) arc.appendChild(makeBtn(ctrls[0], a));
@@ -227,7 +237,7 @@
     } else {
       ctrls.forEach((c, i) => {
         const side = i === 0 ? 'left' : 'right';
-        root.appendChild(makeJoystick(c, { cls: 'duo ' + side }));
+        root.appendChild(makeMovePad(c, 'duo ' + side));
         const g = document.createElement('div');
         g.className = 'mini-arc ' + side;
         for (const a of ['clear', 'drop', 'smash', 'jump']) g.appendChild(makeBtn(c, a, 'mini'));

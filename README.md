@@ -2,7 +2,7 @@
 
 侧视 1v1 网页羽毛球对战游戏。纯 HTML5 Canvas + 原生 JS，无需构建、无外部素材，打开即玩，适配电脑与手机。
 
-`main` 是用于 Vercel 的 V9 版本，在线对战保留 PeerJS + Cloudflare TURN。服务器统一计算的 WebSocket 版本单独保存在 `codex/server-authority` 分支；两种版本的房间不互通。
+`main` 是用于 Vercel 的 V10 版本，在线对战保留 PeerJS + Cloudflare TURN。服务器统一计算的 WebSocket 版本单独保存在 `codex/server-authority` 分支；两种版本的房间不互通。
 
 ## 运行
 
@@ -13,14 +13,14 @@
   ```
   然后访问 http://localhost:8765 （开发服务器禁用了缓存；任何静态服务器都可以）。
 - **局域网联机**：用电脑运行上面的服务器，手机访问 `http://电脑IP:8765` 即可与电脑上的玩家在线对战。
-- **更新版本**：修改 JS/CSS 后把 `index.html` 里的 `?v=9` 加一，避免玩家浏览器缓存旧代码。
+- **更新版本**：修改 JS/CSS 后把 `index.html` 里的 `?v=10` 加一，避免玩家浏览器缓存旧代码。
 - **部署**：整个目录是静态文件，可直接放到 GitHub Pages、Netlify、Vercel、任意 Nginx 等。
 
 ## 玩法要点
 
 | 操作 | 键盘 | 触屏 |
 | --- | --- | --- |
-| 前后移动 | A / D 或 ← / → | 左下摇杆，短推即可移动 |
+| 前后移动 | A / D 或 ← / → | 左下 ← / → 箭头，按住移动 |
 | 起跳 | W / ↑ / 空格 | 跳 |
 | 高远球（低位时为挑球） | J 或 Z | 高远 |
 | 吊球（近网时为网前轻放） | K 或 X | 吊球 |
@@ -120,7 +120,7 @@ api/turn.js            Vercel 函数：向 Cloudflare 申请 TURN 临时凭证
 
 菜单、竖屏提示和对局左上角都提供横屏全屏入口。先立即适配横屏，再申请浏览器全屏与方向锁；不支持时保留 CSS 横屏并明确提示，不能强制隐藏浏览器系统工具栏。支持退出全屏、旋转坐标映射与安全区域。
 
-左手摇杆仅控制左右移动，约 25 像素短推达到全速；上下拖动不会起跳。右下角金色起跳大键为主键，高远、吊球、扣杀沿左侧至上方环绕，独立圆形触区之间留出间隔。支持多指并行，松手、触摸取消、切后台与旋转时自动释放输入。操作区同时使用 touch-action 与非被动 touchend 事件拦截双击缩放，保留每次触摸对应的击球动作；菜单仍使用正常点击，帮助页可滚动。
+左侧是独立的 ← / → 移动箭头，按住以全速移动、松开停止；可不抬手滑向另一箭头换向，滑出按键区域停止。两键同时按住时以后按方向为准，松开后恢复仍按住的方向。右下角金色起跳大键为主键，高远、吊球、扣杀沿左侧至上方环绕，独立圆形触区之间留出间隔。支持多指并行，松手、触摸取消、切后台与旋转时自动释放输入。操作区同时使用 touch-action 与非被动 touchend 事件拦截双击缩放，保留每次触摸对应的击球动作；菜单仍使用正常点击，帮助页可滚动。
 
 ## 延迟排查与本次修复
 
@@ -138,4 +138,4 @@ api/turn.js            Vercel 函数：向 Cloudflare 申请 TURN 临时凭证
 验证：`node --test tools/serve_regression.test.js tools/net_latency.test.js tools/turn_api.test.js`。
 技术依据：[方向锁限制](https://developer.mozilla.org/en-US/docs/Web/API/ScreenOrientation/lock)、[DataChannel 发送队列](https://developer.mozilla.org/en-US/docs/Web/API/RTCDataChannel/bufferedAmount)、[PeerJS 通道与缓冲接口](https://peerjs.com/client/api/data-connection)。
 
-移动触控回归（需 Playwright CLI）：先启动本地服务器并打开游戏，再运行 `mkdir -p output/playwright`，将 `tools/touch_controls.browser.js` 的内容传给 CLI 的 `run-code`。覆盖快速连点防缩放、每次点击仅触发一次、摇杆上下拖动不起跳、左右切换、多指移动加起跳、横屏旋转与环形触区间距；可分别用 Chromium 与 WebKit 执行。
+移动触控回归（需 Playwright CLI）：先启动本地服务器并打开游戏，再运行 `mkdir -p output/playwright`，将 `tools/touch_controls.browser.js` 的内容传给 CLI 的 `run-code`。覆盖快速连点防缩放、每次点击仅触发一次、左右按住与滑动换向、三指移动加起跳加击球、独立松手、触摸取消、同屏双方隔离、横屏旋转与触区间距；可分别用 Chromium 与 WebKit 执行。

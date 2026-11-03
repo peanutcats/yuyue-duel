@@ -223,29 +223,29 @@ kbd {
 #btnPause i { display: block; width: 4px; height: 15px; border-radius: 2px; background: #fff; }
 #netInfo { position: fixed; bottom: 6px; left: 50%; transform: translateX(-50%); font-size: 12px; color: var(--txt2); pointer-events: none; font-family: var(--num); }
 
-/* 触屏控制（移动端专门设计：浮动摇杆 + 右手拇指弧形按键） */
-#touch { touch-action: none; -webkit-touch-callout: none; position: fixed; inset: 0; pointer-events: none; z-index: 4; --b: clamp(50px, calc(var(--appH, 400px) * 0.14), 64px); --joy: clamp(96px, calc(var(--appH, 400px) * 0.28), 120px); }
-.joy-zone { position: absolute; bottom: 0; pointer-events: auto; touch-action: none; }
-.joy-zone.solo { left: 0; width: 38%; height: 58%; }
-.joy-zone.duo { width: 24%; height: 62%; --joy: clamp(84px, calc(var(--appH, 400px) * 0.26), 120px); }
-.joy-zone.duo.left { left: 0; } .joy-zone.duo.right { right: 0; }
-.joy {
-  position: absolute; left: max(18px, var(--safe-left, 0px)); bottom: max(14px, var(--safe-bottom, 0px)); width: var(--joy); height: var(--joy); border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,255,255,.04) 40%, rgba(255,255,255,.13) 72%, rgba(255,255,255,.05));
-  border: 2px solid rgba(255,255,255,.28); box-shadow: 0 6px 18px rgba(0,0,0,.3); opacity: .75; transition: opacity .15s;
+/* 触屏控制：左侧独立方向键 + 右手拇指弧形按键 */
+#touch { touch-action: none; -webkit-touch-callout: none; position: fixed; inset: 0; pointer-events: none; z-index: 4; --b: clamp(50px, calc(var(--appH, 400px) * 0.14), 64px); }
+.move-pad {
+  position: absolute; left: max(18px, var(--safe-left, 0px)); bottom: max(18px, var(--safe-bottom, 0px));
+  display: flex; gap: 12px; pointer-events: none; --move: clamp(62px, calc(var(--appH, 400px) * .18), 78px);
 }
-.joy-zone.duo.right .joy { left: auto; right: max(18px, var(--safe-right, 0px)); }
-.joy.on { bottom: auto; right: auto !important; opacity: 1; transition: none; }
-.joy .knob {
-  position: absolute; left: 29%; top: 29%; width: 42%; height: 42%; border-radius: 50%;
-  background: radial-gradient(circle at 40% 35%, #fff, #c9d3ff 60%, #8c98d6); box-shadow: 0 4px 12px rgba(0,0,0,.45), 0 0 0 4px rgba(255,255,255,.12);
+.move-btn {
+  position: relative; width: var(--move); height: var(--move); display: grid; place-items: center; flex: none;
+  border-radius: 20px; border: 2px solid rgba(192,217,255,.65); color: #ecf4ff;
+  background: linear-gradient(155deg, rgba(72,96,128,.8), rgba(8,17,34,.92) 75%);
+  box-shadow: 0 4px 12px rgba(0,0,0,.4), inset 0 1px 2px rgba(255,255,255,.22), inset 0 0 0 4px rgba(8,17,34,.3);
+  pointer-events: auto; touch-action: none; -webkit-touch-callout: none;
+  transition: background .06s, border-color .06s, box-shadow .06s;
 }
-.joy .ja { position: absolute; font-style: normal; font-size: calc(var(--joy) * 0.15); color: rgba(255,255,255,.55); transition: color .08s, transform .08s; }
-.joy .ja.l { left: 8%; top: 50%; transform: translateY(-50%); }
-.joy .ja.r { right: 8%; top: 50%; transform: translateY(-50%); }
-.joy.l .ja.l, .joy.r .ja.r { color: var(--gold); text-shadow: 0 0 10px rgba(255,210,63,.9); }
-.joy-hint { position: absolute; left: max(18px, var(--safe-left, 0px)); bottom: calc(max(14px, var(--safe-bottom, 0px)) + var(--joy) + 8px); font-size: 12px; color: rgba(255,255,255,.6); white-space: nowrap; transition: opacity .3s; text-shadow: 0 1px 3px rgba(0,0,0,.8); }
-.joy-zone:has(.joy.on) .joy-hint { opacity: 0; }
+.move-btn::after { content: ''; position: absolute; inset: 5px; border: 1px solid rgba(255,255,255,.1); border-radius: 14px; pointer-events: none; }
+.move-btn > * { pointer-events: none; }
+.move-btn svg { width: 52%; height: 52%; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.move-btn.down { background: linear-gradient(145deg, #3a6287, #152b44); }
+.move-btn.active-dir { color: #fff2c3; border-color: #ffe3a1; box-shadow: 0 0 16px rgba(255,210,63,.22), inset 0 0 0 4px rgba(255,210,63,.08); }
+.move-btn:focus-visible { outline: 2px solid white; outline-offset: 3px; }
+.move-pad.duo { --move: clamp(48px, calc(var(--appW, 844px) * .066), 56px); gap: 10px; bottom: max(14px, var(--safe-bottom, 0px)); }
+.move-pad.duo.right { left: auto; right: max(18px, var(--safe-right, 0px)); }
+.move-pad.duo .move-btn { border-radius: 15px; }
 
 /* 拇指扇形：起跳为右下主键，三种球路沿其左上方环绕。 */
 .arc, .mini-arc {
