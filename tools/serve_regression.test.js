@@ -8,6 +8,8 @@ require('../js/practice.js');
 global.window = globalThis;
 global.location = { search: '' };
 require('../js/net.js');
+require('../js/char.js');
+require('../js/venues.js');
 require('../js/render.js');
 const C = YY.C;
 
@@ -275,6 +277,7 @@ function racketRecorder() {
       m[2] = c * ca - aa * sa; m[3] = d * ca - b * sa;
     },
     createLinearGradient() { return { addColorStop() {} }; },
+    createRadialGradient() { return { addColorStop() {} }; },
     ellipse(x, y) {
       if (YY.LOOKS.some(look => look.racket === ctx.strokeStyle)) {
         faces.push([m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]]);
@@ -317,6 +320,8 @@ test('桌面/手机/镜像画面：网带上沿与物理网高重合，球头大
       lineTo(x, y) { path.push([x, y]); },
       fill() { if (ctx.fillStyle === '#ffffff') tape = path; },
       arc(x, y, r) { if (ctx.fillStyle === '#f7e9cf') radius = r; },
+      createLinearGradient() { return { addColorStop() {} }; },
+      createRadialGradient() { return { addColorStop() {} }; },
     }, { get(target, key) { return key in target ? target[key] : () => {}; } });
     r.drawNet(ctx);
     assert.equal(tape.length, 4);

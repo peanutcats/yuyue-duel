@@ -25,7 +25,18 @@
     netEvents: [],
     tickN: 0,
     resultShown: false,
-    settings: { sound: store.get('sound', true), hint: store.get('hint', true) },
+    settings: { sound: store.get('sound', true), hint: store.get('hint', true), venue: store.get('venue', 'random') },
+    pickVenue() {
+      const v = this.settings.venue;
+      if (YY.VENUES[v]) return v;
+      const ids = YY.VENUE_IDS.filter((id) => id !== this.R.venueId);
+      return ids[Math.floor(Math.random() * ids.length)];
+    },
+    setVenueSetting(v) {
+      this.settings.venue = v;
+      store.set('venue', v);
+      document.querySelectorAll('.venue-opt').forEach((el) => el.classList.toggle('on', el.dataset.venue === v));
+    },
 
     init() {
       this.cv = $('game');
@@ -39,6 +50,7 @@
       };
       A.enabled = this.settings.sound;
       this.bindUI();
+      this.buildMenuArt();
       G.addEventListener('resize', () => { this.R.resize(); this.checkRotate(); });
       document.addEventListener('visibilitychange', () => {
         if (document.hidden && this.inGame() && !this.isOnline() && !this.paused) this.togglePause();
@@ -126,15 +138,18 @@
     enterGame() {
       this.show(null);
       $('btnPause').classList.remove('hidden');
-      this.R.touch = YY.isTouch();
-      this.R.resize();
+      if (this.R.touch !== YY.isTouch()) { this.R.touch = YY.isTouch(); this.R.resize(); }
+      if (this.mode !== 'guest') this.R.setVenue(this.pickVenue());
       this.started = performance.now();
     },
     startAttract() {
       this.reset();
       this.mode = 'attract';
-      this.match = new YY.Match({ names: ['红方', '蓝方'], firstServer: Math.random() < 0.5 ? 0 : 1 });
+      this.match = new YY.Match({ names: YY.LOOKS.map((l) => l.name), firstServer: Math.random() < 0.5 ? 0 : 1 });
       this.ais = [new YY.AI(this.match, 0, 'hard'), new YY.AI(this.match, 1, 'normal')];
+      this.R.setVenue(YY.VENUE_IDS[(YY.VENUE_IDS.indexOf(this.R.venueId) + 1) % YY.VENUE_IDS.length]);
+      const mv = document.getElementById('menuVenue');
+      if (mv) mv.textContent = YY.VENUES[this.R.venueId].name;
       $('btnPause').classList.add('hidden');
     },
     soloCtrl(netRight) {
@@ -312,6 +327,7 @@
       if (d.t === 'away') { this.peerAway = performance.now(); return; }
       if (d.t === 'st') {
         this.peerSeen = performance.now();
+        if (d.vn && d.vn !== this.R.venueId) this.R.setVenue(d.vn);
         this.view.push(d);
         if (d.stats) this.view.stats = d.stats;
         if (d.longest != null) this.view.longest = d.longest;
@@ -348,7 +364,8 @@
 
     // ---------- 循环 ----------
     frame(now) {
-      const dt = Math.min(0.05, (now - this.last) / 1000);
+      this.rawDt = (now - this.last) / 1000;
+      const dt = Math.min(0.05, this.rawDt);
       this.last = now;
       this.netWait = this.netWatch();
       if (!this.paused) {
@@ -409,6 +426,7 @@
       if (this.mode === 'attract' && m.phase === 'over') this.startAttract();
       if (this.mode === 'host' && this.tickN % 2 === 0) { // 60Hz 快照
         const sn = YY.snapshot(m, this.netEvents);
+        sn.vn = this.R.venueId;
         if (m.phase === 'over') { sn.stats = m.stats; sn.longest = m.longest; }
         YY.Net.send(sn);
         this.netEvents = [];
@@ -418,8 +436,11 @@
     },
     attractEvent(e, m) {
       // 背景演示：只保留视觉效果
-      if (e.type === 'hit') this.R.burst(e.x, e.y, e.shot === 'smash' ? 16 : 6, e.shot === 'smash' ? '#ffb347' : '#fff', 3, 0.03);
-      if (e.type === 'net') this.R.netWob = 1;
+      const R = this.R;
+      if (e.type === 'hit') { R.hitFx(e); if (e.shot === 'smash') { R.shake = 0.4; R.flash = 0.08; } }
+      if (e.type === 'net') R.netFx(e);
+      if (e.type === 'point') { R.landFx(e.x, e.inB); R.pointFx(e.winner, m, '得分！'); }
+      if (e.type === 'jump') R.dust(m.players[e.p].x, 4);
     },
 
     playerName(i, m) {
@@ -441,10 +462,9 @@
           if (e.feed) { A.hit(0.5, false); break; }
           const smash = e.shot === 'smash';
           A.hit(e.q, smash);
-          R.burst(e.x, e.y, smash ? 26 : 9, smash ? '#ffb347' : '#ffffff', smash ? 6 : 3, smash ? 0.04 : 0.03);
+          R.hitFx(e);
           const p = P[e.p];
           if (smash) {
-            R.shake = 0.9; R.flash = 0.16;
             R.popText('扣杀 ' + Math.round(e.speed * 3.6 * C.SPEED_DISPLAY) + ' km/h', e.x, e.y + 0.3, '#ffb347', 1.35, 1.2);
           } else if (!e.serve || this.isMe(e.p)) {
             const col = e.q >= 0.85 ? '#7dffb0' : e.q >= 0.6 ? '#ffffff' : e.q >= 0.35 ? '#ffd23f' : '#ff9b7b';
@@ -458,15 +478,15 @@
         }
         case 'swing': A.swing(); break;
         case 'whiff': { const p = P[e.p]; if (this.isMe(e.p) || this.mode === 'practice') R.popText(e.label, p.x, p.y + 2.3, '#ff7b7b', 0.8, 1.1); break; }
-        case 'net': A.net(); R.netWob = 1; R.burst(e.x, e.y, 6, '#ddd', 1.5, 0.025); break;
+        case 'net': A.net(); R.netFx(e); break;
         case 'jump': A.jump(); R.dust(P[e.p].x, 5); break;
         case 'land': R.dust(P[e.p].x, 3); break;
         case 'tired': if (this.isMe(e.p)) R.popText('体力不足 · 跳不高', P[e.p].x, P[e.p].y + 2.3, '#ff9b7b', 0.75, 1.1); break;
         case 'read': R.popText('预判！', P[e.p].x, P[e.p].y + 2.3, '#ffd23f', 0.8, 1.0); break;
-        case 'serveReady': R.trail = []; break;
+        case 'serveReady': R.trail = []; R.lastWinner = -1; break;
         case 'point': {
           A.floor(); A.whistle();
-          R.dust(e.x, 10);
+          R.landFx(e.x, e.inB);
           const meWon = this.isMe(e.winner) && this.mode !== 'local';
           const name = this.playerName(e.winner, m);
           let title;
@@ -477,11 +497,17 @@
           if (e.rally >= 8) sub += ' · ' + e.rally + ' 拍回合';
           if (e.banner) sub += ' · ' + e.banner;
           R.showBanner(title, sub, YY.LOOKS[e.winner].shirt, 1.7);
+          R.pointFx(e.winner, m, this.mode === 'local' ? name + ' 得分' : meWon ? '漂亮！' : name + ' 得分');
           break;
         }
-        case 'pland': A.floor(); R.dust(e.x, 8); break;
+        case 'pland': A.floor(); R.landFx(e.x, e.inB); break;
         case 'pres': if (e.ok) A.cheer(false); break;
-        case 'over': setTimeout(() => this.showResult(m), 900); break;
+        case 'over': {
+          const meWin = this.mode === 'local' || this.isMe(e.winner);
+          R.victoryFx(e.winner, m, this.mode === 'local' ? this.playerName(e.winner, m) + ' 获胜' : meWin ? '胜利！' : this.playerName(e.winner, m) + ' 获胜');
+          setTimeout(() => this.showResult(m), 1200);
+          break;
+        }
       }
     },
 
@@ -495,19 +521,58 @@
       else title = w === me ? '胜利！' : '惜败';
       if (w === me || this.mode === 'local') A.win(); else A.lose();
       $('resTitle').textContent = title;
-      $('resTitle').style.color = w === me || this.mode === 'local' ? '#ffd23f' : '#9fb3ff';
+      $('resTitle').parentElement.classList.toggle('lose', !(w === me || this.mode === 'local'));
       const order = this.mode === 'guest' ? [1, 0] : [0, 1];
       $('resScore').textContent = m.score[order[0]] + ' : ' + m.score[order[1]];
+      $('resAvA').src = this.portraitURL(order[0]); $('resAvB').src = this.portraitURL(order[1]);
+      $('resNameA').textContent = this.playerName(order[0], m); $('resNameB').textContent = this.playerName(order[1], m);
+      $('resNameA').style.color = YY.LOOKS[order[0]].shirt; $('resNameB').style.color = YY.LOOKS[order[1]].shirt;
       const st = m.stats || [{}, {}];
       const rows = [['击球', 'hits'], ['完美击球', 'perfect'], ['扣杀', 'smash'], ['扣杀得分', 'smashWin'], ['致胜球', 'winners'], ['失误', 'errors'], ['救球', 'saves']];
-      const ca = `style="color:${YY.LOOKS[order[0]].shirt}"`, cb = `style="color:${YY.LOOKS[order[1]].shirt}"`;
-      let html = `<div class="a" ${ca}>${this.playerName(order[0], m)}</div><div class="h"></div><div class="b" ${cb}>${this.playerName(order[1], m)}</div>`;
-      for (const [label, k] of rows) html += `<div class="a" ${ca}>${st[order[0]][k] || 0}</div><div class="h">${label}</div><div class="b" ${cb}>${st[order[1]][k] || 0}</div>`;
+      const la = YY.LOOKS[order[0]], lb = YY.LOOKS[order[1]];
+      let html = '';
+      for (const [label, k] of rows) {
+        const va = st[order[0]][k] || 0, vb = st[order[1]][k] || 0, mx = Math.max(1, va, vb);
+        html += `<div class="sr"><span class="va" style="color:${la.shirt}">${va}</span>` +
+          `<div class="bar l"><i data-w="${(va / mx) * 100}" style="width:0;background:linear-gradient(90deg,${la.shirt2},${la.shirt})"></i></div>` +
+          `<label>${label}</label>` +
+          `<div class="bar"><i data-w="${(vb / mx) * 100}" style="width:0;background:linear-gradient(90deg,${lb.shirt},${lb.shirt2})"></i></div>` +
+          `<span class="vb" style="color:${lb.shirt}">${vb}</span></div>`;
+      }
       $('resStats').innerHTML = html;
+      requestAnimationFrame(() => requestAnimationFrame(() => document.querySelectorAll('#resStats i').forEach((el) => { el.style.width = el.dataset.w + '%'; })));
       const secs = Math.round((performance.now() - this.started) / 1000);
       $('resTip').textContent = `比赛用时 ${Math.floor(secs / 60)} 分 ${secs % 60} 秒 · 最长回合 ${m.longest || 0} 拍\n` + this.tip(st[me], st[1 - me]);
       $('btnAgain').textContent = this.mode === 'guest' ? '请求再来一局' : '再来一局';
       this.show('result');
+    },
+    portraitURL(i) {
+      this._pu = this._pu || [];
+      if (!this._pu[i]) this._pu[i] = YY.portrait(YY.LOOKS[i], 160).toDataURL();
+      return this._pu[i];
+    },
+    /** 场馆选择条与头像（菜单） */
+    buildMenuArt() {
+      const thumbs = {};
+      for (const id of YY.VENUE_IDS) thumbs[id] = YY.venueThumb(id, 320, 180).toDataURL('image/jpeg', 0.85);
+      document.querySelectorAll('.venue-pick').forEach((box) => {
+        box.innerHTML = '';
+        const opts = [['random', '随机场馆', null]].concat(YY.VENUE_IDS.map((id) => [id, YY.VENUES[id].name, thumbs[id]]));
+        for (const [id, name, img] of opts) {
+          const b = document.createElement('button');
+          b.className = 'venue-opt' + (id === 'random' ? ' random' : '');
+          b.dataset.venue = id;
+          if (img) b.style.backgroundImage = `url(${img})`;
+          else b.innerHTML = '<svg><use href="#i-dice"/></svg>';
+          const label = document.createElement('span');
+          label.textContent = name;
+          b.appendChild(label);
+          b.addEventListener('click', () => { A.click(); this.setVenueSetting(id); });
+          box.appendChild(b);
+        }
+      });
+      this.setVenueSetting(this.settings.venue);
+      document.querySelectorAll('.ai-face').forEach((el) => { el.style.backgroundImage = `url(${this.portraitURL(+el.dataset.look || 1)})`; });
     },
     tip(me, op) {
       if (!me) return '';
@@ -526,6 +591,7 @@
         v.update();
         for (const e of v.events.splice(0)) this.handleEvent(e, v);
         R.draw(v, {
+          rawDt: this.rawDt,
           padLeft: 46,
           labels: [null, '你'],
           meterFor: [1],
@@ -564,6 +630,7 @@
         if (!touch && m.score[0] + m.score[1] === 0 && m.phase !== 'over' && this.mode !== 'local') o.overlayText = 'A/D 移动 · W 跳 · J 高远 · K 吊球 · L 扣杀 · Esc 暂停';
       }
       if (this.mode === 'host') o.waitText = this.netWait;
+      o.rawDt = this.rawDt;
       R.draw(m, o, this.paused ? 0 : dt);
     },
   };

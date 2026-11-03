@@ -3,179 +3,262 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-  <meta name="theme-color" content="#0d1030">
+  <meta name="theme-color" content="#070a1f">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="description" content="羽跃对决：打开网页即可游玩的侧视羽毛球对战游戏，支持 AI 对战、好友对战与自由练习。">
   <title>羽跃对决 · 网页羽毛球对战</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='22' cy='42' r='10' fill='%23f7e9cf'/%3E%3Cpath d='M28 36 L54 10 L60 16 L34 42Z' fill='%23fff' stroke='%23999'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="css/style.css?v=4">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23ff4b55'/%3E%3Cpath d='M22 40 L46 14 L52 20 L28 46Z' fill='%23fff'/%3E%3Ccircle cx='22' cy='44' r='8' fill='%23ffd23f'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/style.css?v=5">
 </head>
 <body>
+  <!-- 图标 -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-shuttle" viewBox="0 0 48 48"><path d="M30 6 L44 20 L24 34 L14 24 Z" fill="currentColor" opacity=".25"/><path d="M30 6 L44 20 M36 8 L40 12 M24 34 L14 24 M30 6 L14 24 M44 20 L24 34 M34 14 L20 28" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" fill="none"/><circle cx="12" cy="36" r="7" fill="currentColor"/></symbol>
+    <symbol id="i-racket" viewBox="0 0 48 48"><ellipse cx="30" cy="16" rx="11" ry="13" transform="rotate(40 30 16)" fill="none" stroke="currentColor" stroke-width="3"/><path d="M23 24 L8 40" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M24 10 L36 22 M21 15 L33 27 M28 6 L40 18" stroke="currentColor" stroke-width="1.4" opacity=".7"/></symbol>
+    <symbol id="i-duo" viewBox="0 0 48 48"><circle cx="17" cy="15" r="6" fill="currentColor"/><circle cx="33" cy="17" r="5" fill="currentColor" opacity=".7"/><path d="M5 40 C5 28 29 28 29 40 Z" fill="currentColor"/><path d="M27 40 C27 31 45 30 45 40 Z" fill="currentColor" opacity=".7"/></symbol>
+    <symbol id="i-target" viewBox="0 0 48 48"><circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="24" cy="24" r="10" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="24" cy="24" r="3.5" fill="currentColor"/></symbol>
+    <symbol id="i-book" viewBox="0 0 48 48"><path d="M8 10 Q16 6 24 11 Q32 6 40 10 V38 Q32 34 24 39 Q16 34 8 38 Z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M24 11 V39" stroke="currentColor" stroke-width="2.5"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-wifi" viewBox="0 0 48 48"><path d="M6 18 Q24 2 42 18 M12 25 Q24 14 36 25 M18 32 Q24 27 30 32" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/><circle cx="24" cy="39" r="3.5" fill="currentColor"/></symbol>
+    <symbol id="i-device" viewBox="0 0 48 48"><rect x="4" y="12" width="40" height="24" rx="5" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="14" cy="24" r="4" fill="currentColor"/><circle cx="34" cy="24" r="4" fill="currentColor"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2 L4 14 H11 L10 22 L20 9 H13 Z" fill="currentColor"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2.5 L14.9 8.6 L21.5 9.3 L16.6 13.8 L18 20.4 L12 17 L6 20.4 L7.4 13.8 L2.5 9.3 L9.1 8.6 Z" fill="currentColor"/></symbol>
+    <symbol id="i-dice" viewBox="0 0 48 48"><rect x="7" y="7" width="34" height="34" rx="8" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="17" cy="17" r="3.2" fill="currentColor"/><circle cx="31" cy="31" r="3.2" fill="currentColor"/><circle cx="24" cy="24" r="3.2" fill="currentColor"/><circle cx="31" cy="17" r="3.2" fill="currentColor"/><circle cx="17" cy="31" r="3.2" fill="currentColor"/></symbol>
+  </svg>
+
   <canvas id="game"></canvas>
   <div id="touch"></div>
-  <button id="btnPause" class="hidden" aria-label="暂停">II</button>
+  <button id="btnPause" class="hidden" aria-label="暂停"><i></i><i></i></button>
   <div id="netInfo" class="hidden"></div>
 
   <div id="ui">
     <!-- 主菜单 -->
-    <section id="scr-menu" class="screen">
-      <div class="logo">
-        <h1>羽跃对决</h1>
-        <p>调动对手 · 制造空当 · 抓住机会</p>
+    <section id="scr-menu" class="screen menu-screen">
+      <div class="menu-left">
+        <div class="brand">
+          <div class="brand-mark"><svg><use href="#i-shuttle"/></svg></div>
+          <div>
+            <h1 class="logo">羽跃对决</h1>
+            <div class="logo-en">YUYUE&nbsp;DUEL</div>
+          </div>
+        </div>
+        <p class="tagline">调动对手 · 制造空当 · 抓住机会</p>
+        <nav class="main-nav">
+          <button class="nav-item hot" data-go="ai">
+            <span class="ni-icon"><svg><use href="#i-racket"/></svg></span>
+            <span class="ni-text"><b>快速对战</b><small>挑战简单 / 普通 / 困难 AI</small></span>
+            <span class="ni-arrow">›</span>
+          </button>
+          <button class="nav-item" data-go="friend">
+            <span class="ni-icon"><svg><use href="#i-duo"/></svg></span>
+            <span class="ni-text"><b>好友对战</b><small>在线房间 · 同屏双人</small></span>
+            <span class="ni-arrow">›</span>
+          </button>
+          <button class="nav-item" data-go="practice">
+            <span class="ni-icon"><svg><use href="#i-target"/></svg></span>
+            <span class="ni-text"><b>自由练习</b><small>发球机陪练 · 落点与时机提示</small></span>
+            <span class="ni-arrow">›</span>
+          </button>
+          <button class="nav-item slim" data-go="help">
+            <span class="ni-icon"><svg><use href="#i-book"/></svg></span>
+            <span class="ni-text"><b>操作与技巧</b></span>
+            <span class="ni-arrow">›</span>
+          </button>
+        </nav>
+        <div class="settings">
+          <label class="switch"><input type="checkbox" id="optSound" checked><span></span>音效</label>
+          <label class="switch"><input type="checkbox" id="optHint" checked><span></span>落点提示</label>
+        </div>
       </div>
-      <div class="menu">
-        <button class="big" data-go="ai">快速对战</button>
-        <button class="big" data-go="friend">好友对战</button>
-        <button class="big" data-go="practice">自由练习</button>
-        <button data-go="help">操作与技巧</button>
-      </div>
-      <div class="settings">
-        <label><input type="checkbox" id="optSound" checked> 音效</label>
-        <label><input type="checkbox" id="optHint" checked> 落点提示</label>
+      <div class="menu-right">
+        <div class="now-venue"><small>NOW PLAYING</small><b id="menuVenue">星光体育馆</b></div>
       </div>
     </section>
 
     <!-- 快速对战 -->
-    <section id="scr-ai" class="screen hidden">
-      <h2>快速对战 · 选择难度</h2>
-      <div class="cards">
-        <button class="card" data-level="easy"><b>简单</b><span>反应慢、回位慢，常打高远球。适合熟悉操作、练出连续回合。</span></button>
-        <button class="card" data-level="normal"><b>普通</b><span>会前后调动你，看到高球就起跳扣杀。</span></button>
-        <button class="card" data-level="hard"><b>困难</b><span>预判快、回位及时，会针对你反复使用的球路提前站位。</span></button>
+    <section id="scr-ai" class="screen panel-screen hidden">
+      <div class="panel wide">
+        <header class="ph"><button class="icon-btn" data-go="menu" aria-label="返回"><svg><use href="#i-back"/></svg></button><div><h2>快速对战</h2><small>选择场馆与对手</small></div></header>
+        <div class="sect-title">场馆</div>
+        <div class="venue-pick"></div>
+        <div class="sect-title">对手难度</div>
+        <div class="cards">
+          <button class="card diff" data-level="easy">
+            <span class="ai-face" data-look="1"></span>
+            <span class="stars"><svg><use href="#i-star"/></svg></span>
+            <b>简单</b><span>反应慢、回位慢，常打高远球。适合熟悉操作、练出连续回合。</span>
+          </button>
+          <button class="card diff" data-level="normal">
+            <span class="ai-face" data-look="1"></span>
+            <span class="stars"><svg><use href="#i-star"/></svg><svg><use href="#i-star"/></svg></span>
+            <b>普通</b><span>会前后调动你，看到高球就起跳扣杀。</span>
+          </button>
+          <button class="card diff" data-level="hard">
+            <span class="ai-face" data-look="1"></span>
+            <span class="stars"><svg><use href="#i-star"/></svg><svg><use href="#i-star"/></svg><svg><use href="#i-star"/></svg></span>
+            <b>困难</b><span>预判快、回位及时，会针对你反复使用的球路提前站位。</span>
+          </button>
+        </div>
+        <p class="note">双方移动、跳跃、体力完全相同；难度只影响 AI 的反应、判断、回位与球路选择。</p>
       </div>
-      <p class="note">双方移动、跳跃、体力完全相同；难度只影响 AI 的反应、判断、回位与球路选择。</p>
-      <button class="back" data-go="menu">返回</button>
     </section>
 
     <!-- 好友对战 -->
-    <section id="scr-friend" class="screen hidden">
-      <h2>好友对战</h2>
-      <div class="cards">
-        <div class="card static">
-          <b>在线对战</b>
-          <span>创建房间后把房间码或邀请链接发给好友，实时单打。</span>
-          <div class="row"><button id="btnHost">创建房间</button></div>
-          <div class="row join">
-            <input id="joinCode" maxlength="4" placeholder="输入房间码" autocomplete="off" autocapitalize="characters" spellcheck="false">
-            <button id="btnJoin">加入</button>
+    <section id="scr-friend" class="screen panel-screen hidden">
+      <div class="panel wide">
+        <header class="ph"><button class="icon-btn" data-go="menu" aria-label="返回"><svg><use href="#i-back"/></svg></button><div><h2>好友对战</h2><small>同样的规则与能力，一决高下</small></div></header>
+        <div class="sect-title">场馆</div>
+        <div class="venue-pick"></div>
+        <div class="cards">
+          <div class="card static">
+            <span class="card-icon"><svg><use href="#i-wifi"/></svg></span>
+            <b>在线对战</b>
+            <span>创建房间后把房间码或邀请链接发给好友，好友打开链接即可加入。</span>
+            <div class="row"><button class="btn primary" id="btnHost">创建房间</button></div>
+            <div class="row join">
+              <input id="joinCode" maxlength="4" placeholder="房间码" autocomplete="off" autocapitalize="characters" spellcheck="false">
+              <button class="btn" id="btnJoin">加入</button>
+            </div>
           </div>
+          <button class="card" id="btnLocal">
+            <span class="card-icon"><svg><use href="#i-device"/></svg></span>
+            <b>同屏对战</b><span>两人共用一台设备：键盘左右分区，或手机横屏两侧各一套按键。</span>
+          </button>
         </div>
-        <button class="card" id="btnLocal"><b>同屏对战</b><span>两人共用一台设备：键盘左右分区，或手机横屏两侧各一套按键。</span></button>
       </div>
-      <button class="back" data-go="menu">返回</button>
     </section>
 
     <!-- 在线大厅 -->
-    <section id="scr-lobby" class="screen hidden">
-      <h2 id="lobbyTitle">在线房间</h2>
-      <div id="lobbyCode" class="code">····</div>
-      <p id="lobbyStatus">正在连接…</p>
-      <div class="row"><button id="btnCopy" class="hidden">复制邀请链接</button></div>
-      <button class="back" id="btnLobbyBack">取消</button>
+    <section id="scr-lobby" class="screen panel-screen hidden">
+      <div class="panel">
+        <header class="ph center"><h2 id="lobbyTitle">在线房间</h2></header>
+        <div class="code-label">房间码</div>
+        <div id="lobbyCode" class="code">····</div>
+        <div class="spinner"></div>
+        <p id="lobbyStatus">正在连接…</p>
+        <div class="row"><button class="btn primary hidden" id="btnCopy">复制邀请链接</button><button class="btn" id="btnLobbyBack">取消</button></div>
+      </div>
     </section>
 
     <!-- 练习 -->
-    <section id="scr-practice" class="screen hidden">
-      <h2>自由练习</h2>
-      <div class="cards four">
-        <button class="card" data-drill="receive"><b>接球</b><span>发球机随机喂高远、吊球、扣杀和平抽，练判断与移动。</span></button>
-        <button class="card" data-drill="clear"><b>高远球</b><span>头顶高点击球，把球送进对方后场目标区。</span></button>
-        <button class="card" data-drill="drop"><b>吊球</b><span>后场轻吊，让球刚过网落在前场目标区。</span></button>
-        <button class="card" data-drill="smash"><b>跳杀</b><span>按提示起跳，在空中高点扣杀。</span></button>
+    <section id="scr-practice" class="screen panel-screen hidden">
+      <div class="panel wide">
+        <header class="ph"><button class="icon-btn" data-go="menu" aria-label="返回"><svg><use href="#i-back"/></svg></button><div><h2>自由练习</h2><small>发球机陪练 · 每一球都有提示与反馈</small></div></header>
+        <div class="cards four">
+          <button class="card drill" data-drill="receive"><span class="drill-no">01</span><b>接球</b><span>发球机随机喂高远、吊球、扣杀和平抽，练判断与移动。</span></button>
+          <button class="card drill" data-drill="clear"><span class="drill-no">02</span><b>高远球</b><span>头顶高点击球，把球送进对方后场目标区。</span></button>
+          <button class="card drill" data-drill="drop"><span class="drill-no">03</span><b>吊球</b><span>后场轻吊，让球刚过网落在前场目标区。</span></button>
+          <button class="card drill" data-drill="smash"><span class="drill-no">04</span><b>跳杀</b><span>按提示起跳，在空中高点扣杀。</span></button>
+        </div>
+        <div class="legend">
+          <span><i style="background:#ffd23f"></i>预计落点</span>
+          <span><i style="background:#50e6ff"></i>理想站位</span>
+          <span><i style="background:#5cff9d"></i>挥拍倒计时</span>
+        </div>
       </div>
-      <p class="note">黄色圈 = 预计落点 · 青色虚线 = 理想站位 · 绿色收缩圆环 = 挥拍倒计时</p>
-      <button class="back" data-go="menu">返回</button>
     </section>
 
     <!-- 帮助 -->
-    <section id="scr-help" class="screen hidden scroll">
-      <h2>操作与技巧</h2>
-      <div class="help">
-        <div class="col">
-          <h3>电脑键盘</h3>
-          <table>
-            <tr><td>前后移动</td><td><kbd>A</kbd><kbd>D</kbd> 或 <kbd>←</kbd><kbd>→</kbd></td></tr>
-            <tr><td>起跳</td><td><kbd>W</kbd> / <kbd>↑</kbd> / <kbd>空格</kbd></td></tr>
-            <tr><td>高远球 / 挑球</td><td><kbd>J</kbd> 或 <kbd>Z</kbd></td></tr>
-            <tr><td>吊球 / 网前轻放</td><td><kbd>K</kbd> 或 <kbd>X</kbd></td></tr>
-            <tr><td>扣杀</td><td><kbd>L</kbd> 或 <kbd>C</kbd></td></tr>
-            <tr><td>暂停</td><td><kbd>Esc</kbd> / <kbd>P</kbd></td></tr>
-          </table>
-          <h3>同屏双人</h3>
-          <p>左方：<kbd>A</kbd><kbd>D</kbd> 移动、<kbd>W</kbd> 跳、<kbd>F</kbd> 高远、<kbd>G</kbd> 吊球、<kbd>H</kbd> 扣杀<br>
-             右方：<kbd>←</kbd><kbd>→</kbd> 移动、<kbd>↑</kbd> 跳、<kbd>,</kbd>/<kbd>1</kbd> 高远、<kbd>.</kbd>/<kbd>2</kbd> 吊球、<kbd>/</kbd>/<kbd>3</kbd> 扣杀</p>
-          <h3>手机触屏</h3>
-          <p>左下方滑动条控制前后移动，右下方四个按键：高远、吊球、扣杀、跳。建议横屏。</p>
-          <h3>发球</h3>
-          <p>发球方头顶出现力度条，白色指针在绿色区域时按「高远」发高远球，按「吊球」发网前球。指针越偏离中间，发球越不稳，可能下网或出界。</p>
-        </div>
-        <div class="col">
-          <h3>击球时机</h3>
-          <p>按下击球键后约 0.1 秒是最佳击球瞬间。球需要进入球拍可触及的范围：太早会挥空，太晚球已经过身。站位合适、时机准确时回球又快又稳；勉强够到或跑动中击球，回球质量下降。</p>
-          <h3>三种球路</h3>
-          <p><b>高远球</b>：把对手压到后场，为自己争取回位时间。低位按高远键会变成<b>挑球</b>。<br>
-             <b>吊球</b>：轻放对方网前，惩罚站位靠后的对手。近网按吊球键是<b>网前轻放</b>。击球点太低容易下网。<br>
-             <b>扣杀</b>：先起跳，在空中高点按扣杀。离网越近越凶。高度、起跳或体力不足时会变成普通平抽。</p>
-          <h3>进阶</h3>
-          <p>击球瞬间按住「向网」方向：高远变平高、吊球变劈吊、扣杀打近；按住「向后」：扣杀打深。<br>
-             扣杀自动瞄向对手站位的空当，击球质量越高越刁钻。</p>
-          <h3>体力</h3>
-          <p>起跳与扣杀消耗体力，移动和普通回球不消耗。停止高消耗动作一会儿后体力恢复，每分结束回满。体力条上的白线是一次跳杀所需体力。</p>
-          <h3>规则</h3>
-          <p>球落在对方场内得分；出界、下网、未过网或发球失误时对方得分；压线算界内。得分方发下一球。7 分制，需领先 2 分；10:10 后先得 11 分者胜。</p>
-          <h3>战术</h3>
-          <p>先高远把对手压后场 → 吊网前逼他上前 → 等他勉强挑起高球 → 起跳扣杀！连续打同一种球路，困难 AI 会提前站位针对你。</p>
+    <section id="scr-help" class="screen panel-screen hidden">
+      <div class="panel wide scroll">
+        <header class="ph"><button class="icon-btn" data-go="menu" aria-label="返回"><svg><use href="#i-back"/></svg></button><div><h2>操作与技巧</h2><small>看懂球路，才能赢下每一分</small></div></header>
+        <div class="help">
+          <div class="col">
+            <h3>电脑键盘</h3>
+            <table>
+              <tr><td>前后移动</td><td><kbd>A</kbd><kbd>D</kbd> 或 <kbd>←</kbd><kbd>→</kbd></td></tr>
+              <tr><td>起跳</td><td><kbd>W</kbd> <kbd>↑</kbd> <kbd>空格</kbd></td></tr>
+              <tr><td>高远球 / 挑球</td><td><kbd>J</kbd> 或 <kbd>Z</kbd></td></tr>
+              <tr><td>吊球 / 网前轻放</td><td><kbd>K</kbd> 或 <kbd>X</kbd></td></tr>
+              <tr><td>扣杀</td><td><kbd>L</kbd> 或 <kbd>C</kbd></td></tr>
+              <tr><td>暂停</td><td><kbd>Esc</kbd> 或 <kbd>P</kbd></td></tr>
+            </table>
+            <h3>同屏双人</h3>
+            <p>左方：<kbd>A</kbd><kbd>D</kbd> 移动、<kbd>W</kbd> 跳、<kbd>F</kbd> 高远、<kbd>G</kbd> 吊球、<kbd>H</kbd> 扣杀<br>
+               右方：<kbd>←</kbd><kbd>→</kbd> 移动、<kbd>↑</kbd> 跳、<kbd>,</kbd>/<kbd>1</kbd> 高远、<kbd>.</kbd>/<kbd>2</kbd> 吊球、<kbd>/</kbd>/<kbd>3</kbd> 扣杀</p>
+            <h3>手机触屏</h3>
+            <p>左下方滑动条控制前后移动，右下方四个按键：高远、吊球、扣杀、跳。建议横屏。</p>
+            <h3>发球</h3>
+            <p>发球方头顶出现力度条，白色指针在绿色区域时按「高远」发高远球，按「吊球」发网前球。指针越偏离中间，发球越不稳，可能下网或出界。</p>
+          </div>
+          <div class="col">
+            <h3>击球时机</h3>
+            <p>按下击球键后约 0.1 秒是最佳击球瞬间。球需要进入球拍可触及的范围：太早会挥空，太晚球已经过身。站位合适、时机准确时回球又快又稳；勉强够到或跑动中击球，回球质量下降。</p>
+            <h3>三种球路</h3>
+            <p><b>高远球</b>：把对手压到后场，为自己争取回位时间。低位按高远键会变成<b>挑球</b>。<br>
+               <b>吊球</b>：轻放对方网前，惩罚站位靠后的对手。近网按吊球键是<b>网前轻放</b>。击球点太低容易下网。<br>
+               <b>扣杀</b>：先起跳，在空中高点按扣杀。离网越近越凶。高度、起跳或体力不足时会变成普通平抽。</p>
+            <h3>进阶</h3>
+            <p>击球瞬间按住「向网」方向：高远变平高、吊球变劈吊、扣杀打近；按住「向后」：扣杀打深。扣杀自动瞄向对手站位的空当，击球质量越高越刁钻。</p>
+            <h3>体力</h3>
+            <p>起跳与扣杀消耗体力，移动和普通回球不消耗。停止高消耗动作一会儿后体力恢复，每分结束回满。体力条上的白线是一次跳杀所需体力。</p>
+            <h3>规则</h3>
+            <p>球落在对方场内得分；出界、下网、未过网或发球失误时对方得分；压线算界内。得分方发下一球。7 分制，需领先 2 分；10:10 后先得 11 分者胜。</p>
+            <h3>战术</h3>
+            <p>先高远把对手压后场 → 吊网前逼他上前 → 等他勉强挑起高球 → 起跳扣杀！连续打同一种球路，困难 AI 会提前站位针对你。</p>
+          </div>
         </div>
       </div>
-      <button class="back" data-go="menu">返回</button>
     </section>
 
     <!-- 暂停 -->
-    <section id="scr-pause" class="screen hidden dim">
-      <h2>暂停</h2>
-      <div class="menu">
-        <button class="big" id="btnResume">继续</button>
-        <button id="btnRestart">重新开始</button>
-        <button id="btnHelp2">操作说明</button>
-        <button id="btnQuit">返回主菜单</button>
+    <section id="scr-pause" class="screen panel-screen dim hidden">
+      <div class="panel narrow">
+        <header class="ph center"><h2>暂停</h2></header>
+        <div class="stack">
+          <button class="btn primary big" id="btnResume">继续比赛</button>
+          <button class="btn" id="btnRestart">重新开始</button>
+          <button class="btn" id="btnHelp2">操作说明</button>
+          <button class="btn ghost" id="btnQuit">返回主菜单</button>
+        </div>
       </div>
     </section>
 
     <!-- 结算 -->
-    <section id="scr-result" class="screen hidden dim">
-      <h2 id="resTitle">胜利！</h2>
-      <div id="resScore" class="code">7 : 4</div>
-      <div id="resStats"></div>
-      <p id="resTip" class="note"></p>
-      <div class="menu row">
-        <button class="big" id="btnAgain">再来一局</button>
-        <button id="btnResMenu">返回菜单</button>
+    <section id="scr-result" class="screen panel-screen dim hidden">
+      <div class="panel result">
+        <div class="res-ribbon"><span id="resTitle">胜利！</span></div>
+        <div class="res-versus">
+          <div class="res-player"><img id="resAvA" alt=""><span id="resNameA"></span></div>
+          <div id="resScore" class="res-score">7 : 4</div>
+          <div class="res-player"><img id="resAvB" alt=""><span id="resNameB"></span></div>
+        </div>
+        <div id="resStats" class="res-stats"></div>
+        <p id="resTip" class="note"></p>
+        <div class="row">
+          <button class="btn primary big" id="btnAgain">再来一局</button>
+          <button class="btn" id="btnResMenu">返回菜单</button>
+        </div>
       </div>
     </section>
 
     <!-- 提示框 -->
-    <section id="scr-msg" class="screen hidden dim">
-      <h2 id="msgTitle">提示</h2>
-      <p id="msgText"></p>
-      <button class="big" id="btnMsgOk">确定</button>
+    <section id="scr-msg" class="screen panel-screen dim hidden">
+      <div class="panel narrow">
+        <header class="ph center"><h2 id="msgTitle">提示</h2></header>
+        <p id="msgText"></p>
+        <div class="row"><button class="btn primary big" id="btnMsgOk">确定</button></div>
+      </div>
     </section>
   </div>
 
   <div id="rotate" class="hidden">
     <div class="phone"></div>
     <p>横屏游玩体验更佳</p>
-    <button id="btnRotateOk">继续</button>
+    <button class="btn primary" id="btnRotateOk">继续</button>
   </div>
 
-  <script src="js/core.js?v=4"></script>
-  <script src="js/match.js?v=4"></script>
-  <script src="js/ai.js?v=4"></script>
-  <script src="js/practice.js?v=4"></script>
-  <script src="js/render.js?v=4"></script>
-  <script src="js/audio.js?v=4"></script>
-  <script src="js/input.js?v=4"></script>
-  <script src="js/net.js?v=4"></script>
-  <script src="js/main.js?v=4"></script>
+  <script src="js/core.js?v=5"></script>
+  <script src="js/match.js?v=5"></script>
+  <script src="js/ai.js?v=5"></script>
+  <script src="js/practice.js?v=5"></script>
+  <script src="js/char.js?v=5"></script>
+  <script src="js/venues.js?v=5"></script>
+  <script src="js/render.js?v=5"></script>
+  <script src="js/audio.js?v=5"></script>
+  <script src="js/input.js?v=5"></script>
+  <script src="js/net.js?v=5"></script>
+  <script src="js/main.js?v=5"></script>
 </body>
 </html>
