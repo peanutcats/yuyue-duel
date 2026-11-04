@@ -1,0 +1,25 @@
+'use strict';
+const config = require('./config');
+const createPlatform = require('./src/platform');
+const host = typeof GameGlobal !== 'undefined' ? GameGlobal : globalThis;
+// The first canvas is the sole visible canvas; subsequent canvases cache art.
+const canvas = wx.createCanvas();
+const platform = createPlatform(wx, config);
+host.YY = { platform };
+require('./shared/core');
+require('./shared/roster');
+require('./shared/match');
+require('./shared/ai');
+require('./shared/practice');
+require('./shared/char');
+require('./shared/venues');
+require('./shared/render');
+require('./shared/story');
+require('./shared/net-view');
+host.YY.Audio = require('./src/audio')(wx);
+require('./shared/gameplay');
+const createApp = require('./src/app');
+const app = createApp(host.YY, platform, canvas, config);
+// Exposed for WeChat Developer Tools debugging, never used for server authority.
+host.YuyueGame = app;
+app.init();

@@ -624,7 +624,7 @@
 
   /** 头像（用于记分牌与界面） */
   YY.portrait = function (look, size) {
-    const c = document.createElement('canvas');
+    const c = YY.platform.createCanvas();
     c.width = c.height = size;
     const g = c.getContext('2d');
     const bg = g.createRadialGradient(size * 0.5, size * 0.4, size * 0.1, size * 0.5, size * 0.5, size * 0.7);
@@ -640,4 +640,4 @@
     g.restore();
     return c;
   };
-})(window);
+})(typeof GameGlobal !== 'undefined' ? GameGlobal : typeof window !== 'undefined' ? window : globalThis);

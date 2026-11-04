@@ -561,4 +561,4 @@
     }
   }
   YY.ServeDrill = ServeDrill;
-})(window);
+})(typeof GameGlobal !== 'undefined' ? GameGlobal : typeof window !== 'undefined' ? window : globalThis);

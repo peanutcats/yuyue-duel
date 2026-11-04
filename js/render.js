@@ -13,6 +13,7 @@
       this.ctx = canvas.getContext('2d', { alpha: false }); // 不透明画布：合成时省去与页面的混合
       this.mirror = false;
       this.touch = false;
+      this.hudK = 1; // HUD 文字倍率：网页 1，微信小游戏手机横屏放大
       this.time = 0;
       this.quality = 1;
       this.venueId = 'arena';
@@ -43,16 +44,15 @@
 
     // ---------- 尺寸与缓存 ----------
     resize() {
-      const vp = YY.viewport ? YY.viewport() : { W: window.innerWidth, H: window.innerHeight };
+      const vp = YY.viewport ? YY.viewport() : YY.platform.viewport();
       const W = Math.max(vp.W, 160), H = Math.max(vp.H, 120); // 隐藏 / 零尺寸窗口下也能初始化
       // 像素预算：渲染开销与画布像素数成正比（高分屏 / Windows 缩放下画布可达 800 万像素）
       const budget = this.quality ? 2.4e6 : 1.15e6;
-      const dpr = Math.max(0.7, Math.min(window.devicePixelRatio || 1, 2, Math.sqrt(budget / (W * H))));
+      const dpr = Math.max(0.7, Math.min(YY.platform.viewport().dpr || 1, 2, Math.sqrt(budget / (W * H))));
       this.W = W; this.H = H; this.dpr = dpr;
       this.cv.width = Math.round(W * dpr);
       this.cv.height = Math.round(H * dpr);
-      this.cv.style.width = W + 'px';
-      this.cv.style.height = H + 'px';
+      if (this.cv.style) { this.cv.style.width = W + 'px'; this.cv.style.height = H + 'px'; }
       const V = YY.geometry(W, H, this.touch);
       V.dpr = dpr;
       this.V = V;
@@ -68,7 +68,7 @@
     }
     get venue() { return YY.VENUES[this.venueId]; }
     layer(paint) {
-      const c = document.createElement('canvas');
+      const c = YY.platform.createCanvas();
       c.width = Math.round(this.W * this.dpr); c.height = Math.round(this.H * this.dpr);
       const g = c.getContext('2d');
       g.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
@@ -498,7 +498,7 @@
       const r = 0.24 * this.sc;
       ctx.beginPath(); ctx.ellipse(a[0], a[1], r, r * 0.3, 0, 0, Math.PI * 2); ctx.stroke();
       ctx.beginPath(); ctx.ellipse(a[0], a[1], r * 0.45, r * 0.13, 0, 0, Math.PI * 2); ctx.fillStyle = col; ctx.fill();
-      const fs = Math.max(13, Math.round(0.26 * this.sc));
+      const fs = Math.round(Math.max(13, 0.26 * this.sc) * Math.min(this.hudK, 1.15));
       ctx.font = `900 ${fs}px ${FONT}`;
       ctx.textAlign = 'center'; ctx.textBaseline = 'top';
       const label = lm.inB ? '界内' : '出界';
@@ -527,7 +527,7 @@
         ctx.beginPath(); ctx.ellipse(a[0], a[1], 0.1 * k, 0.03 * k, 0, 0, Math.PI * 2); ctx.fill();
         if (out) {
           ctx.fillStyle = '#ff8b8b';
-          ctx.font = `900 ${Math.max(11, Math.round(0.2 * k))}px ${FONT}`;
+          ctx.font = `900 ${Math.round(Math.max(11, 0.2 * k) * this.hudK)}px ${FONT}`;
           ctx.textAlign = 'center'; ctx.textBaseline = 'top';
           ctx.fillText('会出界', a[0], a[1] + 0.1 * k);
         }
@@ -616,7 +616,7 @@
       ctx.globalCompositeOperation = 'source-over';
       ctx.fillStyle = '#fff'; rr(ctx, mx - 2.5, Y - h / 2 - 6, 5, h + 12, 2.5); ctx.fill();
       if (label) {
-        const fs = Math.max(11, Math.round(0.18 * k));
+        const fs = Math.round(Math.max(11, 0.18 * k) * this.hudK);
         ctx.font = `bold ${fs}px ${FONT}`;
         const tw = ctx.measureText(label).width;
         ctx.fillStyle = 'rgba(6,8,24,0.75)'; rr(ctx, X - tw / 2 - 10, Y - h / 2 - fs - 18, tw + 20, fs + 10, (fs + 10) / 2); ctx.fill();
@@ -726,7 +726,7 @@
     drawScoreboard(ctx, m) {
       const W = this.W;
       const order = this.mirror ? [1, 0] : [0, 1];
-      const u = clamp(Math.round(this.H * 0.043), 15, 30);
+      const u = clamp(Math.round(this.H * 0.043 * this.hudK), 15, 30);
       const bw = Math.min(W * 0.64, 660), bh = u * 2.15;
       const bx = W / 2 - bw / 2, by = 8;
       if (!this.scoreSeen) this.scoreSeen = m.score.slice();
@@ -816,7 +816,7 @@
         chip = m.score[0] === m.opt.cap - 1 && m.score[1] === m.opt.cap - 1 ? '决胜分' : '赛点';
         chipCol = '#1a1000'; chipBg = `rgba(255,${(200 + Math.sin(this.time * 6) * 30) | 0},60,0.95)`;
       }
-      const fs = Math.max(10, Math.round(u * 0.42));
+      const fs = Math.max(Math.round(10 * this.hudK), Math.round(u * 0.42));
       ctx.font = `900 ${fs}px ${FONT}`;
       const tw = ctx.measureText(chip).width;
       const cy = by + bh + 6;
@@ -915,10 +915,10 @@
       }
       ctx.globalAlpha = 1;
       // 风向牌
-      const fs = clamp(Math.round(H * 0.03), 12, 18);
+      const fs = clamp(Math.round(H * 0.03 * this.hudK), 12, 18);
       ctx.font = `900 ${fs}px ${FONT}`;
       const label = `${(Math.sign(sw) || 1) > 0 ? '向右' : '向左'}风 ${Math.abs(w).toFixed(1)} m/s`;
-      const bh = fs * 2, bw = bh * 1.5 + ctx.measureText(label).width + fs, bx = W - bw - 14, by = clamp(Math.round(H * 0.043), 15, 30) * 2.15 + 18;
+      const bh = fs * 2, bw = bh * 1.5 + ctx.measureText(label).width + fs, bx = W - bw - 14, by = clamp(Math.round(H * 0.043 * this.hudK), 15, 30) * 2.15 + 18;
       ctx.fillStyle = 'rgba(8,10,28,0.78)'; rr(ctx, bx, by, bw, bh, bh / 2); ctx.fill();
       ctx.strokeStyle = 'rgba(160,220,255,0.5)'; ctx.lineWidth = 1; rr(ctx, bx, by, bw, bh, bh / 2); ctx.stroke();
       const ax = bx + bh * 0.75, ay = by + bh / 2, d = Math.sign(sw) || 1;
@@ -936,7 +936,7 @@
     drawDark(ctx, m, dark) {
       const W = this.W, H = this.H;
       const sc = 6;
-      if (!this.darkCv) { this.darkCv = document.createElement('canvas'); }
+      if (!this.darkCv) { this.darkCv = YY.platform.createCanvas(); }
       const cv = this.darkCv, w = Math.ceil(W / sc), h = Math.ceil(H / sc);
       if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
       const g = cv.getContext('2d');
@@ -993,7 +993,7 @@
 
     drawPracticeHUD(ctx, pr) {
       const W = this.W;
-      const u = clamp(Math.round(this.H * 0.04), 14, 26);
+      const u = clamp(Math.round(this.H * 0.04 * this.hudK), 14, 26);
       const bw = Math.min(W * 0.68, 620), bh = u * 2.7;
       const bx = W / 2 - bw / 2, by = 8;
       ctx.save();
@@ -1094,7 +1094,7 @@
       this.time += dt;
       // 自动画质：只统计正常帧（后台节流 / 卡顿帧不算），持续偏慢才降级，恢复流畅后再升回
       const raw = o.rawDt != null ? o.rawDt : dt;
-      if (dt > 0 && raw < 0.12 && !document.hidden) {
+      if (dt > 0 && raw < 0.12 && !YY.platform.hidden()) {
         this.frameAvg = this.frameAvg * 0.98 + raw * 0.02;
         this.slowT = this.frameAvg > 0.028 ? (this.slowT || 0) + raw : 0;
         this.fastT = this.frameAvg < 0.019 ? (this.fastT || 0) + raw : 0;
@@ -1177,7 +1177,7 @@
         this.drawSwoosh(ctx, p, look);
         if (o.labels && o.labels[p.idx]) {
           const X = this.sx(p.x), Y = this.sy(p.y + 2.2);
-          const fs = Math.max(11, Math.round(0.19 * this.sc));
+          const fs = Math.round(Math.max(11, 0.19 * this.sc) * this.hudK);
           ctx.font = `900 ${fs}px ${FONT}`;
           const tw = ctx.measureText(o.labels[p.idx]).width;
           ctx.fillStyle = look.shirt; rr(ctx, X - tw / 2 - 7, Y - fs - 6, tw + 14, fs + 6, (fs + 6) / 2); ctx.fill();
@@ -1217,7 +1217,7 @@
         const X = this.sx(s.x);
         ctx.fillStyle = '#ffd23f';
         ctx.beginPath(); ctx.moveTo(X, 6); ctx.lineTo(X - 8, 20); ctx.lineTo(X + 8, 20); ctx.closePath(); ctx.fill();
-        ctx.font = `bold 12px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.font = `bold ${Math.round(12 * this.hudK)}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
         ctx.fillText(s.y.toFixed(1) + 'm', X, 22);
       }
       if (!o.noHud) {
@@ -1243,7 +1243,7 @@
         this.flash = Math.max(0, this.flash - dt * 3);
       }
       if (o.overlayText) {
-        const fs = Math.max(12, Math.round(this.H * 0.022));
+        const fs = Math.round(Math.max(12, this.H * 0.022) * this.hudK);
         ctx.font = `bold ${fs}px ${FONT}`;
         const tw = ctx.measureText(o.overlayText).width;
         const y = this.H - (this.touch ? this.H * 0.21 : 12) - fs - 10;
@@ -1256,4 +1256,4 @@
   }
 
   YY.Renderer = Renderer;
-})(window);
+})(typeof GameGlobal !== 'undefined' ? GameGlobal : typeof window !== 'undefined' ? window : globalThis);

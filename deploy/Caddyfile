@@ -1,0 +1,6 @@
+{$GAME_DOMAIN} {
+    encode zstd gzip
+    reverse_proxy server:8080 {
+        header_up X-Real-IP {remote_host}
+    }
+}

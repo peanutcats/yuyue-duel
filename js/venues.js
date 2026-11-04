@@ -85,7 +85,7 @@
     const rh = (bot - top) / rows;
     const strips = [];
     for (let row = 0; row < rows; row++) {
-      const c = document.createElement('canvas');
+      const c = YY.platform.createCanvas();
       const dpr = V.dpr || 1;
       const h = rh * 1.9;
       c.width = Math.max(1, Math.round(V.W * dpr)); c.height = Math.max(1, Math.round(h * dpr));
@@ -583,7 +583,7 @@
       // 霓虹招牌单独缓存，便于做闪烁
       const sc = V.sc, w = Math.round(sc * 9), h = Math.round(sc * 2.2);
       const dpr = V.dpr || 1;
-      const c = document.createElement('canvas');
+      const c = YY.platform.createCanvas();
       c.width = Math.max(1, w * dpr); c.height = Math.max(1, h * dpr);
       const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
       neonText(g, '羽跃', w * 0.3, h * 0.5, sc * 1.05, 'rgba(255,0,170,A)');
@@ -676,7 +676,7 @@
   /** 场馆缩略图（菜单用） */
   YY.venueThumb = function (id, w, h) {
     const v = YY.VENUES[id];
-    const c = document.createElement('canvas');
+    const c = YY.platform.createCanvas();
     c.width = w; c.height = h;
     const g = c.getContext('2d');
     const V = YY.geometry(w, h, false);
@@ -694,4 +694,4 @@
     if (v.drawFront) v.drawFront(g, fakeR, 2, st);
     return c;
   };
-})(window);
+})(typeof GameGlobal !== 'undefined' ? GameGlobal : typeof window !== 'undefined' ? window : globalThis);

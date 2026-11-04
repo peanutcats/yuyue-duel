@@ -1,0 +1,10 @@
+.git
+node_modules
+output
+.playwright-cli
+.agents
+.codex
+.aws
+.env
+**/.env
+project.private.config.json

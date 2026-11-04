@@ -5,6 +5,15 @@
   'use strict';
   const YY = (G.YY = G.YY || {});
 
+  // Host services are supplied by the browser or the WeChat entry point.
+  YY.platform = YY.platform || {
+    createCanvas: () => G.document.createElement('canvas'),
+    viewport: () => ({ W: G.innerWidth, H: G.innerHeight, dpr: G.devicePixelRatio || 1 }),
+    hidden: () => !!G.document?.hidden,
+    getStorage: key => G.localStorage?.getItem(key) ?? null,
+    setStorage: (key, value) => G.localStorage?.setItem(key, value),
+  };
+
   const C = (YY.C = {
     HALF: 6.7,          // 半场长度（底线到网）
     NET_H: 1.55,        // 网高
@@ -205,4 +214,4 @@
   };
 
   if (typeof module !== 'undefined') module.exports = YY;
-})(typeof window !== 'undefined' ? window : globalThis);
+})(typeof GameGlobal !== 'undefined' ? GameGlobal : typeof window !== 'undefined' ? window : globalThis);

@@ -1,0 +1,16 @@
+{
+  "name": "yuyue-duel",
+  "version": "1.0.0",
+  "private": true,
+  "description": "羽跃对决：Web 与微信小游戏共享核心、可部署的权威比赛服务器",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "build:wechat": "node tools/build-wechat.js",
+    "build:cloudrun": "node tools/build-cloudrun.js",
+    "check:cloudrun": "node tools/check-cloudrun.js",
+    "start": "node server/index.js",
+    "preview:wechat": "node tools/preview-wechat.js",
+    "test": "node --test tools/*.test.js"
+  },
+  "dependencies": { "ws": "^8.18.3" }
+}

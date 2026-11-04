@@ -199,15 +199,31 @@
     d: null,
     load() {
       let d = null;
-      try { d = JSON.parse(localStorage.getItem(KEY)); } catch (_) {}
+      try { d = JSON.parse(YY.platform.getStorage(KEY)); } catch (_) {}
       const def = DEFAULT();
-      if (!d || typeof d !== 'object') d = def;
-      for (const k in def) if (d[k] == null) d[k] = def[k];
-      d.sel = Object.assign(def.sel, d.sel);
+      if (!d || typeof d !== 'object' || Array.isArray(d)) d = def;
+      const clean = { ...def };
+      for (const key of ['chars', 'gear', 'cards', 'feats']) {
+        const values = Array.isArray(d[key]) ? d[key].filter(v => typeof v === 'string') : [];
+        clean[key] = [...new Set([...def[key], ...values])];
+      }
+      clean.chars = clean.chars.filter(id => CHAR_BY[id]);
+      clean.gear = clean.gear.filter(id => GEAR_BY[id]);
+      clean.stages = {};
+      for (const [id, stars] of Object.entries(d.stages && typeof d.stages === 'object' ? d.stages : {})) {
+        if (/^\d+-\d+$/.test(id) && Number.isInteger(stars) && stars >= 1 && stars <= 3) clean.stages[id] = stars;
+      }
+      clean.seen = {};
+      for (const [id, value] of Object.entries(d.seen && typeof d.seen === 'object' ? d.seen : {})) if (/^card:[\w-]+$/.test(id) && value) clean.seen[id] = true;
+      clean.sel = { ...def.sel, ...(d.sel && typeof d.sel === 'object' ? d.sel : {}) };
+      if (!clean.chars.includes(clean.sel.char)) clean.sel.char = def.sel.char;
+      for (const key of ['racket', 'string', 'shoe']) if (!clean.gear.includes(clean.sel[key]) || GEAR_BY[clean.sel[key]]?.cat !== key) clean.sel[key] = def.sel[key];
+      clean.sel.tension = Number.isFinite(clean.sel.tension) ? Math.max(20, Math.min(30, Math.round(clean.sel.tension))) : 24;
+      d = clean;
       this.d = d;
       return d;
     },
-    save() { try { localStorage.setItem(KEY, JSON.stringify(this.d)); } catch (_) {} },
+    save() { try { YY.platform.setStorage(KEY, JSON.stringify(this.d)); } catch (_) {} },
     get sel() { return this.d.sel; },
     has(kind, id) {
       const list = { char: this.d.chars, gear: this.d.gear, card: this.d.cards, feat: this.d.feats }[kind];
@@ -235,5 +251,5 @@
     },
     reset() { this.d = DEFAULT(); this.save(); },
   });
-  if (typeof localStorage !== 'undefined') Profile.load(); else Profile.d = DEFAULT();
-})(typeof window !== 'undefined' ? window : globalThis);
+  Profile.load();
+})(typeof GameGlobal !== 'undefined' ? GameGlobal : typeof window !== 'undefined' ? window : globalThis);

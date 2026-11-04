@@ -155,4 +155,4 @@
   }
 
   YY.Practice = Practice;
-})(typeof window !== 'undefined' ? window : globalThis);
+})(typeof GameGlobal !== 'undefined' ? GameGlobal : typeof window !== 'undefined' ? window : globalThis);

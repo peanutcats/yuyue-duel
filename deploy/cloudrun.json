@@ -1,0 +1,19 @@
+{
+  "appId": "wx4c24e883bac82367",
+  "environmentId": "prod-d9g91zv98490ac83f",
+  "serviceName": "express-gtlm",
+  "publicUrl": "https://express-gtlm-341234-6-1525027827.sh.run.tcloudbase.com",
+  "sdkOrigin": "https://express-gtlm-prod-d9g91zv98490ac83f-1525027827.ap-shanghai.run.wxcloudrun.com",
+  "containerPort": 8080,
+  "healthPath": "/healthz",
+  "websocketPath": "/ws",
+  "instances": 1,
+  "environmentVariables": {
+    "NODE_ENV": "production",
+    "HOST": "0.0.0.0",
+    "PORT": "8080",
+    "MAX_ROOMS": "10",
+    "TRUST_PROXY": "0",
+    "ALLOWED_ORIGINS": "https://servicewechat.com,https://express-gtlm-prod-d9g91zv98490ac83f-1525027827.ap-shanghai.run.wxcloudrun.com"
+  }
+}
