@@ -59,6 +59,10 @@
       this.buildMenuArt();
       G.addEventListener('resize', () => this.applyViewport());
       G.addEventListener('orientationchange', () => setTimeout(() => this.applyViewport(), 250));
+      // 微信等内置浏览器显示 / 隐藏底部工具栏时不一定触发 resize：再核对窗口尺寸
+      const recheck = () => { if (G.innerWidth + 'x' + G.innerHeight !== this.vpKey) this.applyViewport(); };
+      G.visualViewport?.addEventListener('resize', recheck);
+      setInterval(recheck, 600);
       document.addEventListener('fullscreenchange', () => this.fullscreenChanged());
       document.addEventListener('webkitfullscreenchange', () => this.fullscreenChanged());
       document.addEventListener('visibilitychange', () => {
@@ -144,6 +148,12 @@
       app.style.height = vp.H + 'px';
       app.style.setProperty('--appW', vp.W + 'px');
       app.style.setProperty('--appH', vp.H + 'px');
+      // 竖屏旋转时 CSS 媒体查询仍按竖屏尺寸判断，改由逻辑视口切换紧凑布局
+      const root = document.documentElement;
+      root.classList.toggle('sm', vp.W <= 760 || vp.H <= 520);
+      root.classList.toggle('xs', vp.W <= 640);
+      root.classList.toggle('short', vp.H <= 440);
+      this.vpKey = G.innerWidth + 'x' + G.innerHeight;
       if (this.R) this.R.resize();
       this.checkRotate();
       this.updateLandUI();
@@ -184,7 +194,9 @@
       this.applyViewport();
       const notice = $('landNotice');
       if (request === this.landRequest && !document.fullscreenElement && !document.webkitFullscreenElement) {
-        notice.textContent = '已切换横屏 · 此浏览器未开启原生全屏';
+        notice.textContent = /MicroMessenger|QQ\//i.test(navigator.userAgent)
+          ? '已切换横屏 · 点右上角「···」选「在浏览器打开」可全屏'
+          : '已切换横屏 · 此浏览器未开启原生全屏';
         notice.classList.remove('hidden');
         clearTimeout(this.landNoticeTimer);
         this.landNoticeTimer = setTimeout(() => notice.classList.add('hidden'), 3500);
