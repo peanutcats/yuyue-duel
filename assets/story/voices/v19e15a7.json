@@ -1,0 +1,16 @@
+{
+  "digest": "2220c63ff710b5d065a7d3d31f026b0f35fd6b7dcdb95728d35975abb3364b6a",
+  "request_id": "7fa1fed4-b1c4-92a4-8649-3a78f95c6d37",
+  "usage": {
+    "input_tokens": 19,
+    "output_tokens": 78,
+    "total_tokens": 97,
+    "characters": 35
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyhouzi-8b1303f4011a48d5a7de5234aa93c44f",
+  "text": "问题不大。场边也是战场，我负责喊加油。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "houzi"
+}

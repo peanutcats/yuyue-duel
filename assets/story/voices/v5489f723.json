@@ -1,0 +1,16 @@
+{
+  "digest": "767c18ca773fbcadeabfc7471633a7f62a8157fe289e4f346c6849c7218da3c1",
+  "request_id": "95beee18-6036-9a78-8555-f9ded8e3ed2a",
+  "usage": {
+    "input_tokens": 16,
+    "output_tokens": 46,
+    "total_tokens": 62,
+    "characters": 30
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yydingding-f5dc89dc6e3d4bbbb2d3395d7982e6ee",
+  "text": "这才是你。初中那个手最快的猴子。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "dingding"
+}

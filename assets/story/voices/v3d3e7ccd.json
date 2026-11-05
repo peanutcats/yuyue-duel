@@ -1,0 +1,16 @@
+{
+  "digest": "5170c396830abee0d7b8bcb779b264f6b31311fff401cfbedac46b6179f1074c",
+  "request_id": "f62cc18c-1c1f-904f-854c-b1f0fcd98633",
+  "usage": {
+    "input_tokens": 19,
+    "output_tokens": 48,
+    "total_tokens": 67,
+    "characters": 35
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyme-fe7bb10e54c34773bd5b8380c1b96481",
+  "text": "待多久，和要不要把地扫干净，是两回事。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "me"
+}

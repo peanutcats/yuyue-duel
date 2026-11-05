@@ -1,0 +1,20 @@
+{
+  "digest": "b2076b9776e86780fed47791fc6a52866ab78343e02aaa71a8662c477a919831",
+  "file": "houzi-v6dd7e80.wav",
+  "who": "houzi",
+  "name": "猴子",
+  "text": "……初三县赛，决胜局，十四平。我也站在网前，球就飘在眼前。",
+  "mood": "sad",
+  "delivery": "柔和",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：略感失落，声音放轻，保留完整吐字，不要哭腔。",
+  "request_id": "ac9b3b57-8ad6-9e25-90a8-da15190929aa",
+  "usage": {
+    "input_tokens": 28,
+    "output_tokens": 100,
+    "total_tokens": 128,
+    "characters": 51
+  },
+  "reused_audition": true,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyhouzi-8b1303f4011a48d5a7de5234aa93c44f"
+}

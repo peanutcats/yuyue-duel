@@ -4,6 +4,8 @@
   const YY = G.YY;
   const r3 = (v) => Math.round(v * 1000) / 1000;
   const KIND = ['over', 'side', 'under'];
+  // 当前生效的技能 / 状态（用于好友端绘制光环与特效）
+  const buffOf = (p) => { const b = p.buff || {}; const k = Object.keys(b).filter((x) => b[x] > 0); return [k.join(','), k.length ? r3(Math.max(...k.map((x) => b[x]))) : 0]; };
   YY.snapshot = function (m, events, now = performance.now() / 1000) {
     return {
       t: 'st', nt: now, ht: r3(m.time), ph: m.phase, sc: m.score.slice(), sv: m.server, st: r3(m.serveT), sg: m.serving ? 1 : 0,
@@ -17,6 +19,7 @@
       s: [r3(m.shuttle.x), r3(m.shuttle.y), r3(m.shuttle.vx), r3(m.shuttle.vy), m.shuttle.live ? 1 : 0, m.shuttle.held ? 1 : 0, r3(m.shuttle.speed || 0), m.shuttle.lastHitter, m.shuttle.netHit ? 1 : 0, m.shuttle.crossedNet ? 1 : 0],
       lm: m.landMark ? [r3(m.landMark.x), m.landMark.inB ? 1 : 0, r3(m.landMark.t)] : 0,
       pl: m.pred && m.shuttle.live ? r3(m.pred.landX) : null,
+      fx: [m.players.map(p => [Math.round(p.energy || 0), ...buffOf(p)]), r3(m.slowT || 0), m.slowFor ?? -1, m.shuttle.fire ? 1 : 0, r3(m.shuttle.feint || 0), m.shuttle.meteor ? 1 : 0, m.skillsOn ? 1 : 0],
       ev: events,
       // Full precision local-player state for visual prediction; never accepted from clients.
       pp: m.players.map(p => ({ ...p, swing: p.swing ? { ...p.swing } : null })),

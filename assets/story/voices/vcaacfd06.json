@@ -1,0 +1,16 @@
+{
+  "digest": "66eb68c5c97f9b146405e5db458d22b853d6239acb9e48f7a97d907c34bb9fdb",
+  "request_id": "7c8ebad8-77c0-9c3a-98c8-0405cb7116c0",
+  "usage": {
+    "input_tokens": 24,
+    "output_tokens": 74,
+    "total_tokens": 98,
+    "characters": 45
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yycanglan-a4eb561889b24f5985d096ce0c286c74",
+  "text": "谢谢你们。我刚才……一个人站在那里，脑子一片空白。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "canglan"
+}

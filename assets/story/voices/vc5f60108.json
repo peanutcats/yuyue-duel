@@ -1,0 +1,16 @@
+{
+  "digest": "de16d27e6701ce280270c41ea66339eda17164367c04a54037c30cd8f5f2c908",
+  "request_id": "dc2abf0a-8bc5-9833-b6a2-c05dac8e5735",
+  "usage": {
+    "input_tokens": 12,
+    "output_tokens": 39,
+    "total_tokens": 51,
+    "characters": 23
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyme-fe7bb10e54c34773bd5b8380c1b96481",
+  "text": "那就让真实的数字涨起来。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "me"
+}

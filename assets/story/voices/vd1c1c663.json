@@ -1,0 +1,16 @@
+{
+  "digest": "5400d8d5eef60f15e6249414b8b3be863d29a4ead58961ba2fe0e3f9c99c535f",
+  "request_id": "8968b8e5-5a4c-94e3-971c-edcea97969c6",
+  "usage": {
+    "input_tokens": 10,
+    "output_tokens": 19,
+    "total_tokens": 29,
+    "characters": 18
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yylaochen-7f836bbf53de430389176c261a0e42e5",
+  "text": "你别讲，我会笑软的。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "laochen"
+}

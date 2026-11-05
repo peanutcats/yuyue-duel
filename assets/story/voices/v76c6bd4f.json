@@ -1,0 +1,20 @@
+{
+  "digest": "83683a16dc1350a08fa7d6ab21e4c2611e0d36866942b12aee5b98a84c165b6b",
+  "file": "guoge-v76c6bd4f.wav",
+  "who": "guoge",
+  "name": "果哥",
+  "text": "老板，我那支最贵的拍子呢？我要拍健身房自拍，配色得跟我的毛巾一样。",
+  "mood": "talk",
+  "delivery": "日常",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "request_id": "39d10840-1e6b-9bfb-a015-e690243ef23f",
+  "usage": {
+    "input_tokens": 33,
+    "output_tokens": 94,
+    "total_tokens": 127,
+    "characters": 62
+  },
+  "reused_audition": true,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyguoge-9c9d4191af904024a507774c10119d97"
+}

@@ -1,0 +1,16 @@
+{
+  "digest": "9a4ae051ed3129feb05d08d7afbc555ccf3d55b0ca5b489a9e3d18bf658feaf5",
+  "request_id": "3ae74a4c-7ff0-93dc-b786-13326343afeb",
+  "usage": {
+    "input_tokens": 26,
+    "output_tokens": 81,
+    "total_tokens": 107,
+    "characters": 50
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yytianchu-2bb9df7a40db4ae7bafc77683d53adfb",
+  "text": "变化不是让对手完全看不见，而是推迟他确认信息的时间。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "tianchu"
+}

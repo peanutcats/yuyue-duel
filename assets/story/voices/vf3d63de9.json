@@ -1,0 +1,16 @@
+{
+  "digest": "d81e400f135d3c9b4bc215b3468254a596f96ede3e75f145e7c466c80af296cf",
+  "request_id": "c391e145-d909-9c85-bb26-8ff5416a847b",
+  "usage": {
+    "input_tokens": 25,
+    "output_tokens": 47,
+    "total_tokens": 72,
+    "characters": 47
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yylaochen-7f836bbf53de430389176c261a0e42e5",
+  "text": "开放日第一天，一百三十七人次。重复签名已经去掉了。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "laochen"
+}

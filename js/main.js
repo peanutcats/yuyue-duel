@@ -87,6 +87,7 @@
 
     // ---------- 界面 ----------
     show(name) {
+      if(name!=='dialog') A.stopVoice?.();
       if (name === 'story') this.renderStory();
       else if (name === 'team') this.renderTeam();
       else if (name === 'codex') this.renderCodex();
@@ -105,6 +106,7 @@
       }));
       document.querySelectorAll('[data-level]').forEach((b) => b.addEventListener('click', () => { A.click(); this.startAI(b.dataset.level); }));
       document.querySelectorAll('[data-drill]').forEach((b) => b.addEventListener('click', () => { A.click(); this.startPractice(b.dataset.drill); }));
+      document.querySelector('[data-tactics-back]').addEventListener('click', () => { this.startAttract(); this.show('practice'); });
       $('btnLocal').addEventListener('click', () => { A.click(); this.startLocal(); });
       $('btnHost').addEventListener('click', () => { A.click(); this.hostOnline(); });
       $('btnJoin').addEventListener('click', () => { A.click(); this.joinOnline($('joinCode').value); });
@@ -270,8 +272,10 @@
     soloCtrl(netRight, skill) {
       const c = new YY.HumanCtrl(YY.KEYMAPS.solo, netRight);
       YY.Input.setCtrls([c]);
-      const sk = skill && YY.SKILLS[skill];
-      if (YY.isTouch()) YY.buildTouch($('touch'), [c], 'solo', sk ? { skill: sk.short, color: sk.color } : null);
+      const ids = Array.isArray(skill) ? skill : skill && skill.act ? skill.act : skill ? [skill] : [];
+      const sk = YY.SKILLS[ids[0]], sk2 = YY.SKILLS[ids[1]];
+      this._kit = ids;
+      if (YY.isTouch()) YY.buildTouch($('touch'), [c], 'solo', sk ? { skill: sk.short, color: sk.color, skill2: sk2 && sk2.short, color2: sk2 && sk2.color } : null);
       return c;
     },
     /** 当前选择的角色 + 装备 */
@@ -720,7 +724,7 @@
       const ch = YY.STORY.find((c) => c.id === this.storyChap);
       $('chapTitle').textContent = ch.title;
       $('chapBlurb').textContent = ch.blurb;
-      const KIND = { drill: '练习', quiz: '问答', match: '比赛', footwork: '步法', serve: '发球' };
+      const KIND = { inspect:'调查', board:'战术板', lab:'实验', combo:'战术训练', pick:'选择', drill: '练习', quiz: '问答', match: '比赛', footwork: '步法', serve: '发球' };
       const sl = $('stageList');
       sl.innerHTML = '';
       for (const st of ch.stages) {
@@ -741,8 +745,8 @@
 
 
     // 对话
-    playDialog(lines, done) {
-      this.dlg = { lines, i: -1, done, typing: null };
+    playDialog(lines, done, step) {
+      this.dlg = { lines, i: Math.min(lines.length-1,this.story?.resume?.line||0)-1, done, typing: null, step };
       this.show('dialog');
       this.dlgAdvance();
     },
@@ -753,6 +757,7 @@
       d.i++;
       if (d.i >= d.lines.length) { this.dlgFinish(); return; }
       const [who, text] = d.lines[d.i];
+      this.storyLine();
       const box = $('dlgBox');
       const nar = who === 'nar';
       box.classList.toggle('nar', nar);
@@ -761,6 +766,7 @@
       if (who === 'mm') { name = '毛毛'; col = '#ffd23f'; }
       else if (who === 'me') { name = '凌风（你）'; col = YY.LOOKS[0].shirt; }
       else if (!nar) { const lk = YY.lookOf(who); name = lk.name; col = lk.shirt; }
+      box.classList.toggle('staged', !!(d.step && d.step.scene));
       $('dlgName').textContent = name;
       $('dlgName').style.color = col;
       box.style.setProperty('--dc', col);
@@ -772,7 +778,7 @@
       d.typing = setInterval(() => {
         n += 1;
         el.textContent = text.slice(0, n);
-        if (n % 3 === 0) A.blip();
+        if (n % 3 === 0 && this.settings.voice===false) A.blip();
         if (n >= text.length) { clearInterval(d.typing); d.typing = null; }
       }, 26);
     },
@@ -780,6 +786,7 @@
       const d = this.dlg;
       if (!d) return;
       if (d.typing) clearInterval(d.typing);
+      A.stopVoice?.();
       this.dlg = null;
       d.done();
     },
@@ -840,11 +847,12 @@
       $('quizTitle').textContent = this.story.st.title;
       this.show('quiz');
       this.quizShow();
-      $('quizProg').textContent = '你的选择会影响接下来的比赛';
+      $('quizProg').textContent = '队友会记住你的回应';
       [...$('quizOpts').children].forEach((b, k) => b.addEventListener('click', () => {
         const o = step.o[k];
         this.story.ctx.pickOk = !!o.ok;
         this.story.ctx.env = o.env ? Object.assign({}, o.env) : null;
+        this.rememberChoice(step,k);
         $('quizExp').innerHTML = `<b>${o.ok ? '选对了！' : o.note}</b>${o.ok ? o.note + ' ' : ''}${step.exp}${o.ok ? '' : '<br>（比赛中球会比平时飞得更远，小心出界！）'}`;
         $('btnQuizNext').textContent = '开始比赛';
       }));
@@ -873,7 +881,7 @@
 
     finishStage() {
       const S = this.story, P = YY.Profile;
-      const stars = S.stars.length ? Math.min(...S.stars) : 3;
+      const stars = this.storyStageStars(); this.completeStorySave();
       const first = !P.stars(S.st.id);
       P.setStars(S.st.id, Math.max(1, stars));
       const rw = S.st.rewards || {};
@@ -1007,6 +1015,8 @@
         P.d.seen['card:' + c.id] = 1; P.save();
         const cat = YY.CARD_CATS[c.cat];
         $('codexDetail').innerHTML = `<div class="cx-cat" style="--cc:${cat[1]}">${cat[0]}</div><h3>${c.title}</h3><p>${c.text}</p><div class="cx-mm"><img src="${this.maomaoURL()}" alt=""><span>毛毛说：知道得越多，打得越聪明！</span></div>`;
+        const source=YY.KNOWLEDGE_SOURCES[c.source];
+        if(source){const ref=document.createElement(source.url?'a':'p');ref.className='note';ref.textContent='知识来源：'+source.name;if(source.url){ref.href=source.url;ref.target='_blank';ref.rel='noopener noreferrer';}$('codexDetail').appendChild(ref);}
       } else $('codexDetail').innerHTML = '<p class="note">还没有知识卡。去故事模式里，和毛毛一起冒险吧！</p>';
     },
     updateSkillBtn(m) {
@@ -1015,12 +1025,20 @@
       const e = Math.round(m.players[0].energy || 0);
       if (e === this._skE) return;
       this._skE = e;
-      b.style.setProperty('--e', e + '%');
-      b.classList.toggle('ready', e >= 100);
+      const kit = this._kit || [];
+      document.querySelectorAll('#touch .t-skill, #touch .t-skill2').forEach((el, i) => {
+        const cost = (YY.SKILLS[kit[i]] || {}).cost || 100;
+        el.style.setProperty('--e', Math.min(100, e / cost * 100) + '%');
+        el.classList.toggle('ready', e >= cost);
+      });
     },
 
     render(dt) {
       const R = this.R;
+      if (this.screen === 'dialog' && this.dlg && this.dlg.i >= 0) {
+        const view = this.storyView(this.dlg, !!this.dlg.typing);
+        if (view) { R.drawStory(view, dt); return; }
+      }
       if (this.mode === 'guest') {
         const v = this.view;
         v.update();
@@ -1066,7 +1084,7 @@
         o.practice = this.practice;
         o.hintIdx = 0;
         o.zone = this.practice.def.zone;
-        o.labels = ['你', null];
+        o.labels = ['你', this.practice.tutorial ? '战术陪练' : null];
         o.overlayText = touch ? '' : 'A/D 移动 · W 跳 · J 高远 · K 吊球 · L 扣杀 · Esc 暂停';
       } else {
         const solo = touch ? '点「高远」或「吊球」发球' : 'J 发高远球 · K 发网前球';

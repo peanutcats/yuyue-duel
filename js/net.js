@@ -276,6 +276,8 @@
   // ---------- 快照 ----------
   const r3 = (v) => Math.round(v * 1000) / 1000;
   const KIND = ['over', 'side', 'under'];
+  // 当前生效的技能 / 状态（用于好友端绘制光环与特效）
+  const buffOf = (p) => { const b = p.buff || {}; const k = Object.keys(b).filter((x) => b[x] > 0); return [k.join(','), k.length ? r3(Math.max(...k.map((x) => b[x]))) : 0]; };
   YY.snapshot = function (m, events) {
     return {
       t: 'st', nt: performance.now() / 1000, ht: r3(m.time), ph: m.phase, sc: m.score.slice(), sv: m.server, st: r3(m.serveT), sg: m.serving ? 1 : 0,
@@ -289,6 +291,7 @@
       s: [r3(m.shuttle.x), r3(m.shuttle.y), r3(m.shuttle.vx), r3(m.shuttle.vy), m.shuttle.live ? 1 : 0, m.shuttle.held ? 1 : 0, r3(m.shuttle.speed || 0), m.shuttle.lastHitter, m.shuttle.netHit ? 1 : 0, m.shuttle.crossedNet ? 1 : 0],
       lm: m.landMark ? [r3(m.landMark.x), m.landMark.inB ? 1 : 0, r3(m.landMark.t)] : 0,
       pl: m.pred && m.shuttle.live ? r3(m.pred.landX) : null,
+      fx: [m.players.map(p => [Math.round(p.energy || 0), ...buffOf(p)]), r3(m.slowT || 0), m.slowFor ?? -1, m.shuttle.fire ? 1 : 0, r3(m.shuttle.feint || 0), m.shuttle.meteor ? 1 : 0, m.skillsOn ? 1 : 0],
       ev: events,
       rtt: r3(Net.rtt),
     };
@@ -373,6 +376,16 @@
       s.netHit = !!sc[8]; s.crossedNet = !!sc[9];
       this.landMark = cur.lm ? { x: cur.lm[0], inB: !!cur.lm[1], t: cur.lm[2] } : null;
       this.pred = cur.pl != null ? { landX: cur.pl } : null;
+      if (cur.fx) {
+        for (let i = 0; i < 2; i++) {
+          const f = cur.fx[0][i], p = this.players[i];
+          p.energy = f[0]; p.buff = {};
+          if (f[1]) for (const k of f[1].split(',')) p.buff[k] = f[2] || 0.1;
+        }
+        this.slowT = cur.fx[1]; this.slowFor = cur.fx[2];
+        s.fire = !!cur.fx[3]; s.feint = cur.fx[4]; s.meteor = !!cur.fx[5]; this.skillsOn = !!cur.fx[6];
+      }
+      if (cur.ch && YY.lookOf) { if (this.chars !== cur.ch.join()) { this.chars = cur.ch.join(); this.looks = cur.ch.map((id) => YY.lookOf(id)); this.charIds = cur.ch.slice(); } }
       while (this.pendingEvents.length && this.pendingEvents[0].t <= this.renderStamp) {
         this.events.push(...this.pendingEvents.shift().events);
       }

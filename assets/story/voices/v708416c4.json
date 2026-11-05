@@ -1,0 +1,16 @@
+{
+  "digest": "756137151add01fe7fff725d3e3209ce470ee4226230ef9fc0eb9c3a0d44ba9f",
+  "request_id": "5609cf9e-b9cb-91b9-8906-435099256009",
+  "usage": {
+    "input_tokens": 16,
+    "output_tokens": 46,
+    "total_tokens": 62,
+    "characters": 30
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyguoge-9c9d4191af904024a507774c10119d97",
+  "text": "我……我得先走一步，有个约必须去。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "guoge"
+}

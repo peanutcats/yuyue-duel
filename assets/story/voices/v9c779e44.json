@@ -1,0 +1,16 @@
+{
+  "digest": "393e60e3f5dee4e88f815291688a8a1876ca8a59affc74ac57f4f1411c212d9a",
+  "request_id": "580ccb3b-6928-9ca0-a4e7-7c02c5b90894",
+  "usage": {
+    "input_tokens": 18,
+    "output_tokens": 44,
+    "total_tokens": 62,
+    "characters": 34
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyguoge-9c9d4191af904024a507774c10119d97",
+  "text": "这种天就该在家躺着。我是来……看看的。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：稍显疲惫，语速放缓但清楚。",
+  "who": "guoge"
+}

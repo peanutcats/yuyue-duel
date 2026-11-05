@@ -1,0 +1,16 @@
+{
+  "digest": "ad8413ba31bd7856c55aff6714f33de3365c0d80998c36463d06c179024c015b",
+  "request_id": "9a0c5b41-afca-9462-8c8c-7c05c1021824",
+  "usage": {
+    "input_tokens": 19,
+    "output_tokens": 47,
+    "total_tokens": 66,
+    "characters": 35
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yycanglan-a4eb561889b24f5985d096ce0c286c74",
+  "text": "合影拼好了。外婆在最右边，笑得很好看。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "canglan"
+}

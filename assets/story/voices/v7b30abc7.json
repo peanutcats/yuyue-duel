@@ -1,0 +1,16 @@
+{
+  "digest": "ba12ae67aad6b14858e1015789dcc5c768a555f500bedbc3c9f99f8e79236370",
+  "request_id": "7d6b9a17-5d6b-9e51-81fc-707f301895ed",
+  "usage": {
+    "input_tokens": 27,
+    "output_tokens": 74,
+    "total_tokens": 101,
+    "characters": 51
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyguoge-9c9d4191af904024a507774c10119d97",
+  "text": "我那几个健身房的兄弟，打球全靠力气，十个高远九个出界。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：稍显疲惫，语速放缓但清楚。",
+  "who": "guoge"
+}

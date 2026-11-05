@@ -2,13 +2,13 @@
 (function (G) {
   'use strict';
   const YY = G.YY;
-  const ACTS = ['jump', 'clear', 'drop', 'smash', 'skill'];
+  const ACTS = ['jump', 'clear', 'drop', 'smash', 'skill', 'skill2'];
 
   const KEYMAPS = {
     solo: {
       left: ['KeyA', 'ArrowLeft'], right: ['KeyD', 'ArrowRight'],
       jump: ['KeyW', 'ArrowUp', 'Space'], clear: ['KeyJ', 'KeyZ'], drop: ['KeyK', 'KeyX'], smash: ['KeyL', 'KeyC'],
-      skill: ['KeyI', 'KeyV'],
+      skill: ['KeyI', 'KeyV'], skill2: ['KeyO', 'KeyB'],
     },
     p1: { left: ['KeyA'], right: ['KeyD'], jump: ['KeyW'], clear: ['KeyF'], drop: ['KeyG'], smash: ['KeyH'] },
     p2: {
@@ -105,8 +105,8 @@
   };
 
   // ---------- 触屏 ----------
-  const LABELS = { jump: '跳', clear: '高远', drop: '吊球', smash: '扣杀', skill: '技能' };
-  const SUBS = { jump: 'JUMP', clear: '挑球', drop: '放网', smash: '强攻', skill: 'SKILL' };
+  const LABELS = { jump: '跳', clear: '高远', drop: '吊球', smash: '扣杀', skill: '技能', skill2: '技能' };
+  const SUBS = { jump: 'JUMP', clear: '挑球', drop: '放网', smash: '强攻', skill: 'SKILL', skill2: 'SKILL 2' };
   const ICONS = {
     jump: '<path d="m6 12 6-6 6 6M6 18l6-6 6 6"/>',
     clear: '<path d="M4 19C6 5 14 2 20 7m-5-1 5 1-1 5"/>',
@@ -239,6 +239,11 @@
       if (opt && opt.skill) {
         const sb = makeBtn(ctrls[0], 'skill', null, opt.skill);
         sb.style.setProperty('--sk', opt.color || '#ffd23f');
+        arc.appendChild(sb);
+      }
+      if (opt && opt.skill2) {
+        const sb = makeBtn(ctrls[0], 'skill2', null, opt.skill2);
+        sb.style.setProperty('--sk', opt.color2 || '#ffd23f');
         arc.appendChild(sb);
       }
       root.appendChild(arc);

@@ -1,0 +1,16 @@
+{
+  "digest": "ee96a20dbea50717a1f19494c03f931ed0eaba7552d8c85dd3589f41cea91f44",
+  "request_id": "c1e32942-e643-9e5d-ab28-c3a441fb3fe8",
+  "usage": {
+    "input_tokens": 12,
+    "output_tokens": 35,
+    "total_tokens": 47,
+    "characters": 23
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yycanglan-a4eb561889b24f5985d096ce0c286c74",
+  "text": "那就先去找最好找的那个。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "canglan"
+}

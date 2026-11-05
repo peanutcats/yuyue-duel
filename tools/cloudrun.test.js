@@ -19,7 +19,7 @@ test('cloud upload ZIP contains only deployment files and runs a complete two-cl
   assert.deepEqual(files.sort(), [
     '.dockerignore', 'Dockerfile', 'README.md', 'deployment-info.json', 'manifest.json',
     'package.json', 'package-lock.json', 'server/index.js', 'server/rooms.js',
-    'js/core.js', 'js/match.js', 'js/state.js',
+    'js/core.js', 'js/roster.js', 'js/match.js', 'js/state.js',
   ].sort());
   const extracted = path.join(dir, 'extracted');
   execFileSync('unzip', ['-q', archive, '-d', extracted]);
@@ -48,4 +48,17 @@ test('cloud check refuses an Express template without opening any WebSocket or m
   t.after(() => new Promise(resolve => server.close(resolve)));
   await assert.rejects(checkCloudrun(`http://127.0.0.1:${server.address().port}`), /404/);
   assert.deepEqual(paths, [['GET', '/healthz']]); assert.equal(upgrades, 0);
+});
+
+test('cloud check identifies an older physics server before creating a test room', async t => {
+  let upgrades = 0;
+  const server = http.createServer((_req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({ ok: true, mode: 'authoritative', rooms: 0, physicsHz: 120, snapshotHz: 30 }));
+  });
+  server.on('upgrade', (_req, socket) => { upgrades++; socket.destroy(); });
+  server.listen(0, '127.0.0.1'); await once(server, 'listening');
+  t.after(() => new Promise(resolve => server.close(resolve)));
+  await assert.rejects(checkCloudrun(`http://127.0.0.1:${server.address().port}`), /物理版本尚未更新/);
+  assert.equal(upgrades, 0);
 });

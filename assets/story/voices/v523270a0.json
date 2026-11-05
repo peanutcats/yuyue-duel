@@ -1,0 +1,16 @@
+{
+  "digest": "60b416c0bf291c3688139f46887de6d307b33acd5b7f4c656bab9a1f6102a226",
+  "request_id": "6c983a28-e17c-9391-a5e3-359f9e77fc32",
+  "usage": {
+    "input_tokens": 24,
+    "output_tokens": 68,
+    "total_tokens": 92,
+    "characters": 45
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyranran-3608278c42c041e2add2c5da6d1d2979",
+  "text": "赛后握手，球用拍子轻轻送回对面。新朋友都在看着。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：清楚地提醒同伴，强调关键动作。",
+  "who": "ranran"
+}

@@ -1,0 +1,16 @@
+{
+  "digest": "b5146849a1b81efa09e03fc55c901dde233791297705b0fc9436201b8959a2fd",
+  "request_id": "e45064d5-995f-9dc3-ba50-5b65c410bf85",
+  "usage": {
+    "input_tokens": 17,
+    "output_tokens": 42,
+    "total_tokens": 59,
+    "characters": 32
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yylu-77a02af0575b449fadd3046da74d049f",
+  "text": "还有自动提醒，不过今天没人需要它。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：清楚地提醒同伴，强调关键动作。",
+  "who": "lu"
+}

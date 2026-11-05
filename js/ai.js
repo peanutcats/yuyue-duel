@@ -32,13 +32,16 @@
     const side = p.side, dir = p.dir;
     const st = p.st || {};
     const rt = (t) => (match.realT ? match.realT(t) : t); // 缓时技能：换算真实时间
-    const jh = jumpH(JUMP_LEAD, st.jump);
+    const jv = match.jumpVelocity ? match.jumpVelocity(p) : C.JUMP_V * (st.jump || 1);
+    const jh = jv * JUMP_LEAD - 0.5 * C.G * JUMP_LEAD * JUMP_LEAD;
     const bands = {
       smash: { lo: 2.85 + (jh - jumpH(JUMP_LEAD)), hi: 3.3 + (jh - jumpH(JUMP_LEAD)), ideal: 3.08 + (jh - jumpH(JUMP_LEAD)), sh: C.SHOULDER + jh, lead: JUMP_LEAD },
       over: { lo: 1.85, hi: 2.3, ideal: 2.15, sh: C.SHOULDER, lead: 0.04 },
       low: { lo: 0.32, hi: 1.85, ideal: 99, sh: C.SHOULDER, lead: 0.04 },
     };
     for (const name of prefs) {
+      if (name === 'smash' && match.costMul && p.stamina <
+          C.JUMP_COST * match.costMul(p, true) + C.SMASH_COST * match.costMul(p, false)) continue;
       const b = bands[name];
       let best = null, bestScore = 1e9;
       for (const pt of sim.pts) {
@@ -75,11 +78,31 @@
   };
   YY.AI_LEVELS = LEVELS;
 
+  // Personalities change choices and positioning, never the player's physics.
+  // Every strength leaves a readable opening; difficulty still controls execution.
+  const STYLES = YY.AI_STYLES = {
+    lingfeng: { name: '均衡变奏', tip: '高远与吊球交替，抓半场球进攻', weakness: '用连续变速打乱他的回位', clear: 1.1, drop: 1, smash: 1, jump: 1, home: 0, delay: 0, read: 1 },
+    canglan: { name: '耐心拉锯', tip: '深高远过渡，体力充足才进攻', weakness: '提前上网，抢他的保守过渡球', clear: 1.9, drop: .8, smash: .6, jump: .65, home: .35, delay: .04, read: .8, reserve: 55 },
+    xiaohong: { name: '抢点强攻', tip: '抢高点连杀，主动前压', weakness: '接杀挡网，利用他重杀后的回位空当', clear: .65, drop: .75, smash: 2.6, jump: 1.35, home: -.15, delay: .25, read: .55 },
+    ranran: { name: '网前牵制', tip: '偏爱轻吊与网前球，守在前场', weakness: '深高远压后场，再突然吊网前', clear: .7, drop: 2.8, smash: .35, jump: .35, home: -.65, delay: .07, read: .7 },
+    ruibao: { name: '稳守反击', tip: '接杀稳住，多打高远等待失误', weakness: '连续前后调动，别只用蛮力扣杀', clear: 2, drop: 1.1, smash: .45, jump: .4, home: .25, delay: .1, read: .7, reserve: 50 },
+    xingxing: { name: '追网抢攻', tip: '吊球后跟进，抢网前高球', weakness: '等她前压，再推挑到后场', clear: .8, drop: 2.1, smash: .85, jump: .65, home: -.45, delay: 0, read: .8 },
+    dingding: { name: '快节奏调动', tip: '前后交替，偏爱平快球路', weakness: '高远拉长节奏，等他提前前压', clear: 1.3, drop: 1.4, smash: .7, jump: .75, home: -.15, delay: 0, read: .9 },
+    lu: { name: '后场突袭', tip: '先高远稳住，再突然点杀', weakness: '贴网短球让他离开舒服的后场', clear: 1.5, drop: .65, smash: 1.5, jump: .8, home: .6, delay: .14, read: .65 },
+    tianchu: { name: '虚实变换', tip: '避免重复球路，抓站位变化', weakness: '用深球限制选择，保持回位耐心', clear: 1.1, drop: 1.5, smash: 1.2, jump: 1, home: 0, delay: .06, read: 1.05 },
+    houzi: { name: '闪现反打', tip: '守住中场，靠手快把快球挡回去', weakness: '多打深远高球，逼他挪动大肚子', clear: 1.2, drop: 1.2, smash: .7, jump: .45, home: .15, delay: .12, read: .9 },
+    laochen: { name: '数据控球', tip: '记录你的落点，球路稳定少失误', weakness: '突然加力：他的回球偏轻，压不住重杀', clear: 1.4, drop: 1.4, smash: .45, jump: .7, home: 0, delay: .02, read: 1.15 },
+    guoge: { name: '投机爆发', tip: '平时省力过渡，看到机会球就全力重扣', weakness: '多拉几个长回合，他的体能先撑不住', clear: 1.4, drop: .7, smash: 1.9, jump: 1.1, home: .3, delay: .2, read: .6, reserve: 45 },
+    zhu: { name: '读球控场', tip: '观察重复球路，提前守住落点', weakness: '打破连续同类球，突然改变前后节奏', clear: 1.5, drop: 1.6, smash: .45, jump: .35, home: 0, delay: .08, read: 1.25 },
+  };
+
   class AI {
-    constructor(match, idx, level) {
+    constructor(match, idx, level, character) {
       this.m = match;
       this.i = idx;
       this.L = LEVELS[level] || LEVELS.normal;
+      this.character = character || 'lingfeng';
+      this.style = STYLES[this.character] || STYLES.lingfeng;
       this.seenHit = -1;
       this.plan = null;
       this.homeD = 3.1;
@@ -112,7 +135,7 @@
           if (m.serveT < this.lastServeT) this.serveWait = rand(0.7, 1.4);
           this.lastServeT = m.serveT;
           if (m.serveT < this.serveWait) return;
-          if (!this.serveBtn) this.serveBtn = Math.random() < L.longServe ? 'clear' : 'drop';
+          if (!this.serveBtn) this.serveBtn = Math.random() < clamp(L.longServe + this.style.home * .3, .15, .85) ? 'clear' : 'drop';
           const q = 1 - Math.abs(m.serveMeter() - 0.5) * 2;
           if (q >= L.serveQ - Math.random() * 0.08) { this.press(this.serveBtn); this.serveBtn = null; }
         } else this.moveTo(p.side * 2.9);
@@ -126,14 +149,18 @@
         if (s.lastHitter !== this.i) {
           this.reactAt = m.time + L.react * rand(0.8, 1.25);
           this.err = gauss() * L.err;
-          if (s.feint > 0) { this.reactAt += 0.38; this.err += gauss() * 0.9; } // 被假动作骗到
+          if (s.feint > 0 && !(p.buff.shuju > 0)) { this.reactAt += 0.38; this.err += gauss() * 0.9; } // 被假动作骗到
+          else if (s.hide && !(p.buff.shuju > 0)) this.reactAt += 0.06; // 看不到落点：判断慢一点
+          if (s.veil > 0 && !(p.buff.shuju > 0)) this.reactAt += 0.03; // 同一引拍
+          if (s.meteor || s.crawl) this.reactAt += 0.16; // 流星坠 / 搓网：起动慢半拍
+          if (p.buff.laugh > 0) this.reactAt += 0.12;
           this.resid = gauss() * L.err * (0.3 + Math.min(1, s.speed / 18) * 0.5);
-          this.wantSmash = Math.random() < L.smash;
+          this.wantSmash = Math.random() < clamp(L.smash * this.style.jump, 0, .95) && p.stamina >= (this.style.reserve || 0);
         } else this.setHome();
       }
 
       const incoming = s.live && !s.netHit && s.lastHitter !== this.i;
-      if (m.skillsOn && p.skill && p.energy >= 100) this.thinkSkill(incoming);
+      if (m.skillsOn && p.kit && p.kit.act.length && p.energy >= m.minCost(p)) this.thinkSkill(incoming);
       if (!incoming) {
         if (m.time >= this.homeAt) this.moveTo(p.side * this.homeD, 0.12);
         else inp.move = 0;
@@ -143,6 +170,8 @@
         // 尚未判断出来球：维持惯性
         return;
       }
+      if (p.fooled) { p.fooled = false; this.plan = null; this.reactAt = Math.max(this.reactAt || 0, m.time + this.L.react * 0.6); } // 水中月：被晃了一下
+      if (p.replan) { p.replan = false; if (this.plan && !this.plan.swung) this.plan.replanAt = m.time; } // 闪现后按新位置重新规划
       const cur = this.plan;
       const commit = cur && !cur.leave ? (cur.band === 'smash' ? cur.jumpAt : cur.swingAt) : 1e9;
       if (!cur || (m.time >= cur.replanAt && m.time < commit - 0.22)) this.makePlan();
@@ -156,15 +185,19 @@
       }
       if (!pl.swung && m.time >= pl.swingAt) {
         pl.swung = true;
-        this.press(this.decideShot(pl));
+        const btn = this.decideShot(pl);
+        // Only bias a shot when already in position; do not abandon a chase.
+        if (Math.abs(pl.standX - p.x) < .12 && this.character === 'dingding' && btn === 'clear') pl.pressForwardUntil = m.time + C.SW_W1;
+        this.press(btn);
       }
+      if (pl.pressForwardUntil > m.time && Math.abs(pl.standX - p.x) < .5) inp.move = .6;
     }
 
     makePlan() {
       const m = this.m, p = this.p, L = this.L;
       const old = this.plan;
       if (old) this.err = this.err * 0.5 + this.resid * 0.5;
-      const canSmash = this.wantSmash && p.stamina >= C.JUMP_COST + C.SMASH_COST;
+      const canSmash = this.wantSmash && p.stamina >= C.JUMP_COST * m.costMul(p, true) + C.SMASH_COST * m.costMul(p, false);
       let prefs = canSmash ? ['smash', 'over', 'low'] : ['over', 'low'];
       if (old && old.band && old.band !== 'none') prefs = prefs.slice(Math.max(0, prefs.indexOf(old.band)));
       const c = YY.findContact(m, this.i, prefs, this.err);
@@ -196,7 +229,7 @@
       let w;
       const tactical = Math.random() < L.tactical;
       if (pl.band === 'smash') {
-        if (p.stamina >= C.SMASH_COST && !p.onGround) return 'smash';
+        if (p.stamina >= C.SMASH_COST * m.costMul(p, false) && !p.onGround) return 'smash';
         w = { clear: 1, drop: 1 };
       } else if (pl.band === 'over') {
         if (tactical) {
@@ -211,6 +244,19 @@
           else w = { clear: 3, drop: oppD > 4.3 ? 1.2 : 0.4 };
         } else w = { clear: 0.65, drop: 0.35 };
       }
+      const style = this.style;
+      for (const key of ['clear', 'drop', 'smash']) if (w[key]) w[key] *= style[key];
+      // A net specialist converts a loose high net ball instead of lifting it.
+      if (d < 1.9 && pl.y >= 1.78 && p.stamina >= C.SMASH_COST * m.costMul(p, false) * .35) {
+        w.smash = (w.smash || .2) + (this.character === 'xingxing' ? 4 : 1.2);
+      }
+      if (p.stamina < (style.reserve || 30)) { w.clear *= 2; w.smash = (w.smash || 0) * .2; }
+      // Movement specialists alternate depth; the feint player avoids repetition.
+      if (['dingding', 'tianchu'].includes(this.character) && myLast.length) {
+        const last = myLast[myLast.length - 1];
+        if (last === 'clear') w.drop *= 1.8;
+        if (last === 'drop') w.clear *= 1.8;
+      }
       // 高手会避免连续同一球路
       if (L.read > 0.5 && myLast.length === 2 && myLast[0] === myLast[1]) {
         const k = myLast[0] === 'clear' ? 'clear' : myLast[0] === 'drop' ? 'drop' : null;
@@ -219,34 +265,54 @@
       return YY.pick(w);
     }
 
-    /** 何时发动技能：进攻型在准备击球时，防守型在被压制时 */
+    /** 何时发动技能：按技能的 ai 分类判断时机；能量够时偶尔攒着放更贵的那个 */
     thinkSkill(incoming) {
-      const m = this.m, p = this.p, s = m.shuttle, pl = this.plan;
-      if (this.skillWait == null) this.skillWait = m.time + rand(0.5, 2.5) / (0.5 + this.L.tactical);
+      const m = this.m, p = this.p, s = m.shuttle, pl = this.plan, o = m.players[1 - this.i];
+      if (this.skillWait == null) this.skillWait = m.time + rand(0.4, 1.8) / (0.5 + this.L.tactical);
       if (m.time < this.skillWait) return;
-      let go = false;
       const soon = pl && !pl.leave && pl.tContact - m.time < 0.7 && pl.tContact - m.time > 0.15;
-      switch (p.skill) {
-        case 'pokong': case 'jinghua': go = incoming && soon && pl.band !== 'none'; break;
-        case 'lieyan': go = incoming && soon && pl.band === 'smash'; break;
-        case 'chaoxi': go = p.stamina < 45; break;
-        case 'huanshi': go = incoming && (s.speed > 14 || (pl && pl.band === 'none')); break;
-        case 'tiebi': go = incoming && (s.speed > 14 || (pl && pl.band === 'none')); break;
-        case 'shanbu': go = incoming && pl && !pl.leave && Math.abs(pl.standX - p.x) > 1.6; break;
-      }
-      if (go) { this.press('skill'); this.skillWait = null; }
+      const afterHit = !incoming && s.live && s.lastHitter === this.i;
+      const ready = (when) => {
+        switch (when) {
+          case 'attack': return incoming && soon && pl.band !== 'none';
+          case 'smash': return incoming && soon && pl.band === 'smash';
+          case 'net': return incoming && soon && pl.band !== 'none' && Math.abs(p.x) < 4.2;
+          case 'defend': return incoming && (s.speed > 13 || (pl && pl.band === 'none'));
+          case 'stamina': return p.stamina < 45;
+          case 'chase': return incoming && pl && !pl.leave && Math.abs(pl.standX - p.x) > 1.5;
+          case 'afterHit': return afterHit && Math.random() < 0.7;
+          case 'rally': return m.rally >= 3 && s.live;
+          case 'cleanse': return Object.keys(o.buff).some((k) => o.buff[k] > 0 && YY.SKILLS[k]) || o.energy >= 60;
+          case 'any': return s.live && Math.random() < 0.5;
+        }
+        return false;
+      };
+      const opts = [];
+      p.kit.act.forEach((id, slot) => {
+        const def = YY.SKILLS[id];
+        if (def && m.canUse(p, slot) && !(p.buff[id] > 0) && ready(def.ai)) opts.push({ slot, cost: def.cost || 100 });
+      });
+      if (!opts.length) return;
+      // 更贵的通常更强：有得选时偏向贵的
+      opts.sort((a, b) => b.cost - a.cost);
+      const pick = opts.length > 1 && Math.random() < 0.35 ? opts[1] : opts[0];
+      this.press(pick.slot ? 'skill2' : 'skill');
+      this.skillWait = null;
     }
 
     setHome() {
       const m = this.m, L = this.L, p = this.p;
       const shot = p.lastShot;
       let h = 3.1;
-      if (shot === 'clear' || shot === 'lift' || shot === 'lserve' || shot === 'flatclear') h = 3.35;
-      else if (shot === 'drop' || shot === 'net' || shot === 'slice' || shot === 'block' || shot === 'sserve') h = 2.6;
-      else if (shot === 'smash') h = 2.75;
+      const cat = YY.SHOT_CAT[shot];
+      if (cat === 'clear') h = 3.35;
+      else if (cat === 'drop') h = 2.6;
+      else if (cat === 'smash') h = shot === 'kill' ? 2.3 : 2.75;
+      h += this.style.home;
+      if (this.character === 'xingxing' && cat === 'drop') h -= .35;
       // 读取对手习惯：对手连续两次同类球路 → 提前站位
       const oh = m.history[1 - this.i].slice(-2);
-      if (oh.length === 2 && oh[0] === oh[1] && Math.random() < L.read) {
+      if (oh.length === 2 && oh[0] === oh[1] && Math.random() < Math.min(.95, L.read * this.style.read)) {
         const t = oh[0];
         if (t === 'drop') h = 2.15;
         else if (t === 'clear') h = 4.2;
@@ -255,7 +321,7 @@
       }
       h = YY.lerp(Math.abs(p.x), h, L.recover);
       this.homeD = clamp(h, 1.2, 5.5);
-      this.homeAt = m.time + L.recDelay + (shot === 'smash' ? 0.2 : 0);
+      this.homeAt = m.time + L.recDelay + (cat === 'smash' ? .2 + this.style.delay : this.style.delay * .3);
     }
   }
 

@@ -1,0 +1,16 @@
+{
+  "digest": "000e9a5d1e5ec89e249e609a834a475e2fc1cbe4ae2a3e4b6f7c14bf48889051",
+  "request_id": "04716d53-79b6-9922-8b79-a2a48bd13c5a",
+  "usage": {
+    "input_tokens": 27,
+    "output_tokens": 75,
+    "total_tokens": 102,
+    "characters": 50
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yycanglan-a4eb561889b24f5985d096ce0c286c74",
+  "text": "启动不是盲目跳高。身体轻轻准备，看清来球，再迈第一步。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：清楚地提醒同伴，强调关键动作。",
+  "who": "canglan"
+}

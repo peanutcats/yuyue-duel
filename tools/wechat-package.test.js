@@ -24,8 +24,28 @@ test('WeChat project binds the supplied AppID, packages only minigame, and gener
     }
     assert.ok(!/eval\s*\(|new Function\s*\(/.test(source), 'Runtime compilation in ' + file);
   }
-  assert.equal(files.filter(f => f.endsWith('.wav')).length, 15);
-  for (const file of files.filter(f => f.endsWith('.wav'))) assert.equal(fs.readFileSync(file).toString('ascii', 0, 4), 'RIFF');
+  const audioBank = require('../minigame/src/audio-bank');
+  assert.equal(files.filter(f => f.endsWith('.wav')).length, Object.keys(audioBank).length);
+  for (const name of Object.keys(audioBank)) {
+    const data = fs.readFileSync(path.join(root, 'minigame/assets/audio', name + '.wav'));
+    assert.equal(data.toString('ascii', 0, 4), 'RIFF');
+    assert.equal(data.readUInt32LE(24), manifest.audio.sampleRate);
+    assert.equal(crypto.createHash('sha256').update(data).digest('hex'), manifest.audio.files[name]);
+  }
+  const voices=require('../minigame/src/voice-bank'),script=require('../assets/story/voice-script.json');
+  const ids=new Set(script.map(row=>row.id));assert.equal(manifest.voices,script.length);assert.equal(Object.keys(voices).length,script.length);for(const id of Object.keys(voices))assert.ok(ids.has(id),'stale voice '+id);
+  const roots=new Set(game.subpackages.map(p=>p.root));
+  for(const row of script){
+    const clip=voices[row.id];assert.ok(clip,'Missing dialogue '+row.id);assert.ok(roots.has(clip.root));assert.equal(clip.speaker,row.who);
+    assert.equal(clip.engine,'qwen-audio-3.1-tts-plus');assert.ok(clip.duration>.1&&clip.duration<90);
+    const data=fs.readFileSync(path.join(root,'minigame',clip.root,clip.file));
+    assert.equal(crypto.createHash('sha256').update(data).digest('hex'),clip.sha256);
+    assert.ok(data.equals(fs.readFileSync(path.join(root,'assets/story/voices',clip.file))));
+  }
+  assert.equal(files.filter(f=>f.endsWith('.mp3')).length,Object.keys(voices).length,'No stale spoken lines in package');
+  let main=0,total=0;const sizes={};
+  for(const file of files){const size=fs.statSync(file).size,part=path.relative(path.join(root,'minigame'),file).split(path.sep)[0];total+=size;if(roots.has(part))sizes[part]=(sizes[part]||0)+size;else main+=size;}
+  assert.ok(main<4*1024*1024);assert.ok(total<30*1024*1024);assert.ok(Object.values(sizes).every(n=>n<4*1024*1024));
 });
 
 test('tablet and compact landscape layouts keep controls inside safe bounds and separate touch hit circles', () => {

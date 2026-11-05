@@ -1,0 +1,16 @@
+{
+  "digest": "97c1f98431c6500e849a4f8de6df8468e564f73b9d0032788d1b436e6c3a8283",
+  "request_id": "7cc98d43-692b-9f70-8328-2585d93d7ea9",
+  "usage": {
+    "input_tokens": 22,
+    "output_tokens": 49,
+    "total_tokens": 71,
+    "characters": 41
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yytianchu-2bb9df7a40db4ae7bafc77683d53adfb",
+  "text": "只有你、我和球。你可以挑自己喜欢的角色来打。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "tianchu"
+}

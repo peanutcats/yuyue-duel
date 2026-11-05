@@ -170,12 +170,26 @@
           <button class="card drill" data-drill="clear"><span class="drill-no">02</span><b>高远球</b><span>头顶高点击球，把球送进对方后场目标区。</span></button>
           <button class="card drill" data-drill="drop"><span class="drill-no">03</span><b>吊球</b><span>后场轻吊，让球刚过网落在前场目标区。</span></button>
           <button class="card drill" data-drill="smash"><span class="drill-no">04</span><b>跳杀</b><span>按提示起跳，在空中高点扣杀。</span></button>
+          <button class="card drill" data-drill="net"><span class="drill-no">05</span><b>网前</b><span>搓放、推挑与扑球，练会网前的不同选择。</span></button>
+          <button class="card drill" data-drill="tactics"><span class="drill-no">06</span><b>三拍战术教学</b><span>高远压后场 → 吊球调网前 → 抓高球跳杀。失误只重练当前一步。</span></button>
         </div>
         <div class="legend">
           <span><i style="background:#ffd23f"></i>预计落点</span>
           <span><i style="background:#50e6ff"></i>理想站位</span>
           <span><i style="background:#5cff9d"></i>挥拍倒计时</span>
         </div>
+      </div>
+    </section>
+
+    <section id="scr-tacticsComplete" class="screen panel-screen hidden">
+      <div class="panel wide">
+        <header class="ph"><div><h2>三拍战术 · 已掌握</h2><small>先调动对手，再抓住进攻机会</small></div></header>
+        <div class="cards three">
+          <div class="card"><b>01 高远压后场</b><p>把对手压到底线，为自己争取回位时间。</p></div>
+          <div class="card"><b>02 吊球调网前</b><p>趁对手还在后场，把球轻轻放到网前。</p></div>
+          <div class="card"><b>03 抓高球跳杀</b><p>对手被调动后回出半场高球，起跳终结；没有机会就重新组织。</p></div>
+        </div>
+        <div class="actions"><button class="btn" data-tactics-back>返回训练</button><button class="btn" data-drill="tactics">再练一遍</button><button class="btn primary" data-level="easy">实战试一试</button></div>
       </div>
     </section>
 
@@ -231,7 +245,7 @@
     <section id="scr-story" class="screen panel-screen hidden">
       <div class="panel wide story">
         <header class="ph"><button class="icon-btn" data-go="menu" aria-label="返回"><svg><use href="#i-back"/></svg></button>
-          <div><h2>故事模式</h2><small>羽跃社的星光杯之旅</small></div>
+          <div><h2>故事模式</h2><small>星光回响 · 找到让球馆继续亮灯的答案</small></div>
           <div class="ph-right"><span class="star-total" id="storyStars"></span></div>
         </header>
         <div class="story-wrap">
@@ -378,19 +392,25 @@
     <button class="btn ghost" id="btnRotateOk">继续竖屏</button>
   </div>
 
-  <script src="js/core.js?v=14"></script>
-  <script src="js/roster.js?v=14"></script>
-  <script src="js/match.js?v=14"></script>
-  <script src="js/ai.js?v=14"></script>
-  <script src="js/practice.js?v=14"></script>
-  <script src="js/char.js?v=14"></script>
-  <script src="js/venues.js?v=14"></script>
-  <script src="js/render.js?v=14"></script>
-  <script src="js/audio.js?v=14"></script>
-  <script src="js/input.js?v=14"></script>
-  <script src="js/net.js?v=14"></script>
-  <script src="js/story.js?v=14"></script>
-  <script src="js/gameplay.js?v=14"></script>
-  <script src="js/main.js?v=14"></script>
+  <script src="js/core.js?v=16"></script>
+  <script src="js/roster.js?v=16"></script>
+  <script src="js/match.js?v=16"></script>
+  <script src="js/ai.js?v=16"></script>
+  <script src="js/practice.js?v=16"></script>
+  <script src="js/char.js?v=16"></script>
+  <script src="js/venues.js?v=16"></script>
+  <script src="js/render.js?v=16"></script>
+  <script src="js/scenes.js?v=16"></script>
+  <script src="js/audio.js?v=16"></script>
+  <script src="js/input.js?v=16"></script>
+  <script src="js/net.js?v=16"></script>
+  <script src="js/campaign.js"></script>
+  <script src="js/knowledge.js"></script>
+  <script src="js/story.js?v=16"></script>
+  <script src="js/story-play.js"></script>
+  <script src="js/story-art.js"></script>
+  <script src="js/gameplay.js?v=16"></script>
+  <script src="js/main.js?v=16"></script>
+  <script src="js/story-web.js"></script>
 </body>
 </html>

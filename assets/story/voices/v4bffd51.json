@@ -1,0 +1,16 @@
+{
+  "digest": "5b2b4a1265ea378e7542ca7811fdae7ad9f64004ddaa949731e2f2b7a1a2907c",
+  "request_id": "afbef8f8-80d2-96c3-a1a6-55c9971daad9",
+  "usage": {
+    "input_tokens": 11,
+    "output_tokens": 37,
+    "total_tokens": 48,
+    "characters": 21
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyme-fe7bb10e54c34773bd5b8380c1b96481",
+  "text": "那就一起练怎么停下来。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "me"
+}

@@ -1,0 +1,16 @@
+{
+  "digest": "ebc3a4254075463d52a893350763068d893964974c30b88edd5a292306477b7f",
+  "request_id": "75501fe9-2852-986b-bee6-70b63c479209",
+  "usage": {
+    "input_tokens": 14,
+    "output_tokens": 38,
+    "total_tokens": 52,
+    "characters": 26
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yylu-77a02af0575b449fadd3046da74d049f",
+  "text": "从朋友模型看……你这次，满分。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：边想边说，停顿有分寸，不拖长。",
+  "who": "lu"
+}

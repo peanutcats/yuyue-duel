@@ -1,0 +1,16 @@
+{
+  "digest": "9d8eea1ce056d81642a120a3977884d4833dd1fcb89968a948545efdd4264acb",
+  "request_id": "f085c07a-ab59-9bc4-acbc-b4c7840a0c37",
+  "usage": {
+    "input_tokens": 24,
+    "output_tokens": 89,
+    "total_tokens": 113,
+    "characters": 44
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yytianchu-2bb9df7a40db4ae7bafc77683d53adfb",
+  "text": "他欠一句道歉，欠了三十年。信写好了，一直没敢寄。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "tianchu"
+}

@@ -1,0 +1,16 @@
+{
+  "digest": "56d358b759e7be6193a8faecd1d709c7949831008371af92209e734fc0adb270",
+  "request_id": "22ac94df-573b-9aba-ba2b-df638875ef44",
+  "usage": {
+    "input_tokens": 19,
+    "output_tokens": 49,
+    "total_tokens": 68,
+    "characters": 36
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyguoge-9c9d4191af904024a507774c10119d97",
+  "text": "呼……健身三年，第一次觉得这身肌肉有用。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：稍显疲惫，语速放缓但清楚。",
+  "who": "guoge"
+}

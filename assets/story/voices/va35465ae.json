@@ -1,0 +1,16 @@
+{
+  "digest": "4c2570f3e7ec9a7d5796cadfa63452da2ce2d6403e4a241f3e855a87ef58bd40",
+  "request_id": "255e77ab-fbc4-9c7e-b845-10252f8a4c6d",
+  "usage": {
+    "input_tokens": 17,
+    "output_tokens": 33,
+    "total_tokens": 50,
+    "characters": 32
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yylaochen-7f836bbf53de430389176c261a0e42e5",
+  "text": "你确定？我可是记得你所有的冷笑话。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "laochen"
+}

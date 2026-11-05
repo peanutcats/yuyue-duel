@@ -1,0 +1,20 @@
+{
+  "digest": "cd2b768db850275c9415aeaa72a39006c422b9bac1613db1cc8d7e2388d31800",
+  "file": "ranran-v9d977a45.wav",
+  "who": "ranran",
+  "name": "冉冉",
+  "text": "那我加入。条件是：训练表里必须有休息。",
+  "mood": "happy",
+  "delivery": "激动",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "request_id": "55eb7837-7b02-94d9-b6c8-338546734bf4",
+  "usage": {
+    "input_tokens": 19,
+    "output_tokens": 42,
+    "total_tokens": 61,
+    "characters": 35
+  },
+  "reused_audition": true,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyranran-3608278c42c041e2add2c5da6d1d2979"
+}

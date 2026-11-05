@@ -1,0 +1,16 @@
+{
+  "digest": "7e5bf3533dd1652953e18460adc8546b02fcb8919b448b8c9807352ce580fc2d",
+  "request_id": "5c9780fd-d4e7-949f-89de-ffade2951b04",
+  "usage": {
+    "input_tokens": 9,
+    "output_tokens": 24,
+    "total_tokens": 33,
+    "characters": 16
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyme-fe7bb10e54c34773bd5b8380c1b96481",
+  "text": "那训练呢？值日呢？",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "me"
+}

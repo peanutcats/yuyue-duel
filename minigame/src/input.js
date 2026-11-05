@@ -104,7 +104,7 @@ class Input {
     if (down && (code === 'Escape' || code === 'KeyP')) { this.callbacks.pause?.(); return; }
     if (!this.callbacks.playing()) return;
     const duo = this.layout === 'duo';
-    const map = { KeyA: [0, -1], KeyD: [0, 1], ArrowLeft: [duo ? 1 : 0, -1], ArrowRight: [duo ? 1 : 0, 1], KeyW: [0, 'jump'], Space: [0, 'jump'], ArrowUp: [duo ? 1 : 0, 'jump'], KeyJ: [0, 'clear'], KeyK: [0, 'drop'], KeyL: [0, 'smash'], KeyI: [0, 'skill'], KeyF: [0, 'clear'], KeyG: [0, 'drop'], KeyH: [0, 'smash'], Comma: [1, 'clear'], Period: [1, 'drop'], Slash: [1, 'smash'] };
+    const map = { KeyA: [0, -1], KeyD: [0, 1], ArrowLeft: [duo ? 1 : 0, -1], ArrowRight: [duo ? 1 : 0, 1], KeyW: [0, 'jump'], Space: [0, 'jump'], ArrowUp: [duo ? 1 : 0, 'jump'], KeyJ: [0, 'clear'], KeyK: [0, 'drop'], KeyL: [0, 'smash'], KeyI: [0, 'skill'], KeyO: [0, 'skill2'], KeyF: [0, 'clear'], KeyG: [0, 'drop'], KeyH: [0, 'smash'], KeyT: [0, 'skill'], KeyY: [0, 'skill2'], Comma: [1, 'clear'], Period: [1, 'drop'], Slash: [1, 'smash'], Quote: [1, 'skill'], Semicolon: [1, 'skill2'] };
     const action = map[code]; if (!action || !this.ctrls[action[0]]) return;
     if (down && !this.keys.has(code)) {
       this.keys.set(code, { hit: { player: action[0] }, dir: typeof action[1] === 'number' ? action[1] : 0, order: ++this.order });

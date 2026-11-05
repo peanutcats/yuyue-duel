@@ -1,0 +1,16 @@
+{
+  "digest": "e005001709c975f8cb63c7995221820dda42509b22b330d51f4ff0e44f764cf1",
+  "request_id": "0075c636-83cf-9773-802d-e4dd6053837a",
+  "usage": {
+    "input_tokens": 35,
+    "output_tokens": 145,
+    "total_tokens": 180,
+    "characters": 65
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyhouzi-8b1303f4011a48d5a7de5234aa93c44f",
+  "text": "我想“这球必须扑死”，手一抖，下网了。那年之后，我们四个就没再一起打过。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：略感失落，声音放轻，保留完整吐字，不要哭腔。",
+  "who": "houzi"
+}

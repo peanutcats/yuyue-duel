@@ -1,0 +1,16 @@
+{
+  "digest": "c6bd57631639eed3cefe4084f8865995bd0c07939bbd321a21226eb9e5f0b1fc",
+  "request_id": "d188c44d-e9c4-929f-8964-1f4a6138ffc4",
+  "usage": {
+    "input_tokens": 21,
+    "output_tokens": 71,
+    "total_tokens": 92,
+    "characters": 37
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyruibao-7c0dac9fd7f44dc39d4ce5e967f96cb0",
+  "text": "来，我教你。拍子放在身前，动作缩短，别抡。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "ruibao"
+}

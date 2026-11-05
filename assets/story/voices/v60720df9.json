@@ -1,0 +1,16 @@
+{
+  "digest": "50b2682ecb075536f430d93eb0cca00367d5b8717de3aba7b0a05d5c299801e0",
+  "request_id": "19477c3c-774f-95bd-b219-657b5b9e972a",
+  "usage": {
+    "input_tokens": 11,
+    "output_tokens": 25,
+    "total_tokens": 36,
+    "characters": 20
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyme-fe7bb10e54c34773bd5b8380c1b96481",
+  "text": "那以后，分我们一起数。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "me"
+}

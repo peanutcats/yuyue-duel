@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720"><title>羽跃社公告栏</title><rect x="0" y="0" width="1280" height="720" rx="0" fill="#142338"/>
+<rect x="0" y="0" width="1280" height="520" rx="0" fill="#253b4b"/>
+<rect x="0" y="520" width="1280" height="200" rx="0" fill="#59423b"/>
+<polyline points="304,520 -680,720" fill="none" stroke="#cfaa7540" stroke-width="2"/>
+<polyline points="346,520 -515,720" fill="none" stroke="#cfaa7540" stroke-width="2"/>
+<polyline points="388,520 -350,720" fill="none" stroke="#cfaa7540" stroke-width="2"/>
+<polyline points="430,520 -185,720" fill="none" stroke="#cfaa7540" stroke-width="2"/>
+<polyline points="472,520 -20,720" fill="none" stroke="#cfaa7540" stroke-width="2"/>
+<polyline points="514,520 145,720" fill="none" stroke="#cfaa7540" stroke-width="2"/>
+<polyline points="556,520 310,720" fill="none" stroke="#cfaa7540" stroke-width="2"/>
+<polyline points="598,520 475,720" fill="none" stroke="#cfaa7540" stroke-width="2"/>
+<polyline points="640,520 640,720" fill="none" stroke="#cfaa7540" stroke-width="2"/>
+<polyline points="682,520 805,720" fill="none" stroke="#cfaa7540" stroke-width="2"/>
+<polyline points="724,520 970,720" fill="none" stroke="#cfaa7540" stroke-width="2"/>
+<polyline points="766,520 1135,720" fill="none" stroke="#cfaa7540" stroke-width="2"/>
+<polyline points="808,520 1300,720" fill="none" stroke="#cfaa7540" stroke-width="2"/>
+<polyline points="850,520 1465,720" fill="none" stroke="#cfaa7540" stroke-width="2"/>
+<polyline points="892,520 1630,720" fill="none" stroke="#cfaa7540" stroke-width="2"/>
+<polyline points="934,520 1795,720" fill="none" stroke="#cfaa7540" stroke-width="2"/>
+<polyline points="0,560 1280,560" fill="none" stroke="#1b2a3440" stroke-width="2"/>
+<polyline points="0,610 1280,610" fill="none" stroke="#1b2a3440" stroke-width="2"/>
+<polyline points="0,675 1280,675" fill="none" stroke="#1b2a3440" stroke-width="2"/>
+<rect x="0" y="515" width="1280" height="8" rx="0" fill="#d1ad7760"/>
+<rect x="936" y="79" width="249" height="306" rx="7" fill="#102032"/>
+<rect x="944" y="87" width="233" height="290" rx="2" fill="#375b72"/>
+<rect x="1057.5" y="87" width="6" height="290" rx="0" fill="#192c3e"/>
+<rect x="944" y="246.5" width="233" height="6" rx="0" fill="#192c3e"/>
+<rect x="944" y="295.79999999999995" width="29.125" height="81.2" rx="0" fill="#263c55"/>
+<rect x="977.2857142857143" y="280.79999999999995" width="29.125" height="96.2" rx="0" fill="#263c55"/>
+<rect x="1010.5714285714286" y="265.79999999999995" width="29.125" height="111.2" rx="0" fill="#263c55"/>
+<rect x="1043.857142857143" y="295.79999999999995" width="29.125" height="81.2" rx="0" fill="#263c55"/>
+<rect x="1077.142857142857" y="280.79999999999995" width="29.125" height="96.2" rx="0" fill="#263c55"/>
+<rect x="1110.4285714285713" y="265.79999999999995" width="29.125" height="111.2" rx="0" fill="#263c55"/>
+<rect x="1143.7142857142858" y="295.79999999999995" width="29.125" height="81.2" rx="0" fill="#263c55"/>
+<polygon points="944,377 1177,377 1297,610 974,610" fill="#56748d20" stroke="none" stroke-width="0"/>
+<rect x="155" y="84" width="665" height="337" rx="8" fill="#443126"/>
+<rect x="164" y="93" width="647" height="319" rx="3" fill="#37534f"/>
+<text x="184" y="125" font-family="sans-serif" font-size="23" font-weight="600" fill="#f3cf86">羽跃社 · 每个人都有位置</text>
+<rect x="182" y="146" width="199.66666666666666" height="118" rx="2" fill="#eadabd"/>
+<ellipse cx="194" cy="153" rx="3" ry="3" fill="#ab5f58"/>
+<rect x="191" y="165" width="177.66666666666666" height="2" rx="0" fill="#87938e"/>
+<rect x="191" y="173" width="177.66666666666666" height="2" rx="0" fill="#87938e"/>
+<rect x="191" y="181" width="177.66666666666666" height="2" rx="0" fill="#87938e"/>
+<rect x="388.33333333333337" y="146" width="199.66666666666666" height="118" rx="2" fill="#d2c6aa"/>
+<ellipse cx="400.33333333333337" cy="153" rx="3" ry="3" fill="#ab5f58"/>
+<rect x="397.33333333333337" y="165" width="177.66666666666666" height="2" rx="0" fill="#87938e"/>
+<rect x="397.33333333333337" y="173" width="177.66666666666666" height="2" rx="0" fill="#87938e"/>
+<rect x="397.33333333333337" y="181" width="177.66666666666666" height="2" rx="0" fill="#87938e"/>
+<rect x="594.6666666666667" y="146" width="199.66666666666666" height="118" rx="2" fill="#eadabd"/>
+<ellipse cx="606.6666666666667" cy="153" rx="3" ry="3" fill="#ab5f58"/>
+<rect x="603.6666666666667" y="165" width="177.66666666666666" height="2" rx="0" fill="#87938e"/>
+<rect x="603.6666666666667" y="173" width="177.66666666666666" height="2" rx="0" fill="#87938e"/>
+<rect x="603.6666666666667" y="181" width="177.66666666666666" height="2" rx="0" fill="#87938e"/>
+<rect x="182" y="274.5" width="199.66666666666666" height="118" rx="2" fill="#d2c6aa"/>
+<ellipse cx="194" cy="281.5" rx="3" ry="3" fill="#ab5f58"/>
+<rect x="191" y="293.5" width="177.66666666666666" height="2" rx="0" fill="#87938e"/>
+<rect x="191" y="301.5" width="177.66666666666666" height="2" rx="0" fill="#87938e"/>
+<rect x="191" y="309.5" width="177.66666666666666" height="2" rx="0" fill="#87938e"/>
+<rect x="388.33333333333337" y="274.5" width="199.66666666666666" height="118" rx="2" fill="#eadabd"/>
+<ellipse cx="400.33333333333337" cy="281.5" rx="3" ry="3" fill="#ab5f58"/>
+<rect x="397.33333333333337" y="293.5" width="177.66666666666666" height="2" rx="0" fill="#87938e"/>
+<rect x="397.33333333333337" y="301.5" width="177.66666666666666" height="2" rx="0" fill="#87938e"/>
+<rect x="397.33333333333337" y="309.5" width="177.66666666666666" height="2" rx="0" fill="#87938e"/>
+<rect x="594.6666666666667" y="274.5" width="199.66666666666666" height="118" rx="2" fill="#d2c6aa"/>
+<ellipse cx="606.6666666666667" cy="281.5" rx="3" ry="3" fill="#ab5f58"/>
+<rect x="603.6666666666667" y="293.5" width="177.66666666666666" height="2" rx="0" fill="#87938e"/>
+<rect x="603.6666666666667" y="301.5" width="177.66666666666666" height="2" rx="0" fill="#87938e"/>
+<rect x="603.6666666666667" y="309.5" width="177.66666666666666" height="2" rx="0" fill="#87938e"/>
+<rect x="911" y="431" width="287" height="18" rx="4" fill="#ac8259"/>
+<rect x="930" y="447" width="15" height="98" rx="0" fill="#22323a"/>
+<rect x="1170" y="447" width="15" height="98" rx="0" fill="#22323a"/>
+<rect x="64" y="489" width="38" height="36" rx="4" fill="#a97052"/>
+<polyline points="82,493 48,437" fill="none" stroke="#3d6454" stroke-width="4"/>
+<ellipse cx="54" cy="441" rx="12" ry="22" fill="#427561"/>
+<polyline points="82,493 65,441" fill="none" stroke="#3d6454" stroke-width="4"/>
+<ellipse cx="68" cy="445" rx="12" ry="22" fill="#698c64"/>
+<polyline points="82,493 82,445" fill="none" stroke="#3d6454" stroke-width="4"/>
+<ellipse cx="82" cy="449" rx="12" ry="22" fill="#427561"/>
+<polyline points="82,493 99,441" fill="none" stroke="#3d6454" stroke-width="4"/>
+<ellipse cx="96" cy="445" rx="12" ry="22" fill="#698c64"/>
+<polyline points="82,493 116,437" fill="none" stroke="#3d6454" stroke-width="4"/>
+<ellipse cx="110" cy="441" rx="12" ry="22" fill="#427561"/>
+<rect x="838" y="441" width="46" height="63" rx="5" fill="#49717a"/>
+<rect x="835" y="500" width="52" height="9" rx="4" fill="#49717a"/>
+<polyline points="842,506 840,544" fill="none" stroke="#243543" stroke-width="5"/>
+<polyline points="880,506 883,544" fill="none" stroke="#243543" stroke-width="5"/>
+<text x="178" y="463" font-family="sans-serif" font-size="31" font-weight="600" fill="#ddcba2">下一球，我们一起。</text>
+<polyline points="0,706 40,706" fill="none" stroke="#d7bc8020" stroke-width="1"/>
+<polyline points="91,695 131,695" fill="none" stroke="#d7bc8020" stroke-width="1"/>
+<polyline points="182,684 222,684" fill="none" stroke="#d7bc8020" stroke-width="1"/>
+<polyline points="273,706 313,706" fill="none" stroke="#d7bc8020" stroke-width="1"/>
+<polyline points="364,695 404,695" fill="none" stroke="#d7bc8020" stroke-width="1"/>
+<polyline points="455,684 495,684" fill="none" stroke="#d7bc8020" stroke-width="1"/>
+<polyline points="546,706 586,706" fill="none" stroke="#d7bc8020" stroke-width="1"/>
+<polyline points="637,695 677,695" fill="none" stroke="#d7bc8020" stroke-width="1"/>
+<polyline points="728,684 768,684" fill="none" stroke="#d7bc8020" stroke-width="1"/>
+<polyline points="819,706 859,706" fill="none" stroke="#d7bc8020" stroke-width="1"/>
+<polyline points="910,695 950,695" fill="none" stroke="#d7bc8020" stroke-width="1"/>
+<polyline points="1001,684 1041,684" fill="none" stroke="#d7bc8020" stroke-width="1"/>
+<polyline points="1092,706 1132,706" fill="none" stroke="#d7bc8020" stroke-width="1"/>
+<polyline points="1183,695 1223,695" fill="none" stroke="#d7bc8020" stroke-width="1"/>
+<polyline points="1274,684 1314,684" fill="none" stroke="#d7bc8020" stroke-width="1"/></svg>

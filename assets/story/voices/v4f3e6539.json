@@ -1,0 +1,16 @@
+{
+  "digest": "91766c2bc013df56a730c539087a9c96d2681665936019dae67782ee86eb969c",
+  "request_id": "8ae72e03-46dd-9265-9351-36bb804470b8",
+  "usage": {
+    "input_tokens": 15,
+    "output_tokens": 28,
+    "total_tokens": 43,
+    "characters": 27
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyranran-3608278c42c041e2add2c5da6d1d2979",
+  "text": "老陈，光说别人。你也上来试试？",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：清楚地提醒同伴，强调关键动作。",
+  "who": "ranran"
+}

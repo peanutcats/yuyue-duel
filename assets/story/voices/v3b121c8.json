@@ -1,0 +1,16 @@
+{
+  "digest": "b672ffe5749a021f8369e3a3921fe2aa807ca6a8716d4a148c0bc693067b543a",
+  "request_id": "bb8d9117-2ec5-93d3-baed-1e164f5a6070",
+  "usage": {
+    "input_tokens": 23,
+    "output_tokens": 45,
+    "total_tokens": 68,
+    "characters": 42
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yylaochen-7f836bbf53de430389176c261a0e42e5",
+  "text": "……这个可以不用介绍。来，先看三张表，再谈预测。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：有点不好意思，停顿轻微，自然含蓄。",
+  "who": "laochen"
+}

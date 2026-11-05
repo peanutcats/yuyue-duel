@@ -1,0 +1,16 @@
+{
+  "digest": "0aa470c0d6031f0e37613cc28cf2028ecc79954933fb1f570f23018282256dcb",
+  "request_id": "470b92b1-7e9d-9221-a18e-3d2184edd657",
+  "usage": {
+    "input_tokens": 11,
+    "output_tokens": 25,
+    "total_tokens": 36,
+    "characters": 20
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yymm-13991994e40b44a7b5af603229af22b3",
+  "text": "十二盏灯，今晚都亮着。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "mm"
+}

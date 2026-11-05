@@ -1,0 +1,16 @@
+{
+  "digest": "63492062cea6f9c791caf10ed927b387a0869d87effa49e1b361eac6c21c617f",
+  "request_id": "5acc6b46-4fca-960c-b3ad-99e8373f2a9f",
+  "usage": {
+    "input_tokens": 8,
+    "output_tokens": 20,
+    "total_tokens": 28,
+    "characters": 15
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyxiaohong-50dc0caa82b447ae85e9bc8b63563bcd",
+  "text": "……那是科学安排。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：短暂惊讶，随后像向同伴确认。",
+  "who": "xiaohong"
+}

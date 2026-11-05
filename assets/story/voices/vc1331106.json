@@ -1,0 +1,16 @@
+{
+  "digest": "0f425fd58a8382189562ccb9cabb21a159cfc5c24f89b5c81be248be4d95f1df",
+  "request_id": "d6351f20-c0dd-9734-b599-4bf86c256731",
+  "usage": {
+    "input_tokens": 29,
+    "output_tokens": 74,
+    "total_tokens": 103,
+    "characters": 54
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyxiaohong-50dc0caa82b447ae85e9bc8b63563bcd",
+  "text": "果哥打得很好。不过，正式比赛的两个名额，我想留给凌风和我。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "xiaohong"
+}

@@ -1,0 +1,16 @@
+{
+  "digest": "b35202f345c7c36a801bc0396786065c4cbdce71bb18fb43277ba46b8fc3d9a5",
+  "request_id": "9b92345e-fb29-9820-8ec4-0b823dbf902c",
+  "usage": {
+    "input_tokens": 25,
+    "output_tokens": 50,
+    "total_tokens": 75,
+    "characters": 47
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yynar-9a6555ee9f6e43f0b167a59eec741be0",
+  "text": "灯熄了。黑暗里，毛毛小声说：“三十天，从今天开始数。”",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "nar"
+}

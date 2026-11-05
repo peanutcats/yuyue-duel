@@ -53,7 +53,12 @@
     const sw = p.swing;
     if (!sw) return null;
     const keys = sw.dur > 0.4 ? SWING_KEYS.smash : SWING_KEYS[sw.kind] || SWING_KEYS.over;
-    return keyAngle(keys, Math.min(sw.t, sw.dur));
+    const end = keys[keys.length - 1][0];
+    // Handling changes recovery time, not the active contact window. Finish
+    // the same follow-through pose even with a faster/slower racket.
+    const t = sw.t <= C.SW_W1 ? sw.t : C.SW_W1 +
+      (end - C.SW_W1) * clamp((sw.t - C.SW_W1) / Math.max(C.DT, sw.dur - C.SW_W1), 0, 1);
+    return keyAngle(keys, t);
   };
 
   // 两段 IK：给定根、目标与两段长度，返回中间关节（bend=+1 时关节朝 +x 弯）
@@ -68,6 +73,10 @@
     return [ax + Math.cos(a + off) * l1, ay + Math.sin(a + off) * l1];
   }
 
+  // 各种情绪下的身体前倾与歪头（剧情演出、得分庆祝共用）
+  const MOOD_LEAN = { sad: 0.28, happy: -0.06, cheer: -0.1, fist: 0.04, surprise: -0.16, shy: 0.16, think: 0.04, angry: 0.14, point: 0.05, tired: 0.34, wave: -0.04, smile: 0, talk: 0.02, rest: -0.02 };
+  const MOOD_HEAD = { sad: 0.45, happy: -0.15, cheer: -0.22, fist: -0.05, surprise: -0.12, shy: 0.38, think: -0.28, angry: 0.12, point: -0.04, tired: 0.4, wave: -0.08, smile: -0.06, talk: 0, rest: -0.04 };
+  YY.MOODS = Object.keys(MOOD_HEAD);
   /** 计算姿态 */
   function pose(p, t, o) {
     const sw = p.swing;
@@ -82,6 +91,8 @@
     const lunge = lowSwing ? 0.2 * Math.sin(Math.min(1, sw.t / 0.12) * Math.PI * 0.5) : 0;
     crouch += lunge * 0.5;
     if (mood === 'sad') crouch += 0.04;
+    if (mood === 'tired') crouch += 0.1;
+    if (mood === 'cheer') crouch -= 0.03;
     const breathe = Math.sin(t * 3.2 + p.idx) * 0.008 * (1 - run);
     let hipY = 0.93 - crouch + breathe;
 
@@ -108,12 +119,11 @@
     if (smash) lean += sw.t < 0.08 ? -0.28 : sw.t < 0.3 ? 0.32 : 0.12;
     else if (sw && sw.kind === 'over' && sw.t < 0.08) lean -= 0.12;
     if (air && !sw) lean -= 0.08;
-    if (mood === 'sad') lean += 0.28;
-    if (mood === 'happy') lean -= 0.06;
+    if (!sw) lean += MOOD_LEAN[mood] || 0;
     const ux = Math.sin(lean), uy = Math.cos(lean);
     const N = [H[0] + ux * 0.56, H[1] + uy * 0.56];
     const S = [H[0] + ux * 0.5 - uy * 0.0, H[1] + uy * 0.5];
-    const headTilt = mood === 'sad' ? 0.45 : mood === 'happy' ? -0.15 : clamp((o.gazeY || 0) * 0.12, -0.2, 0.35) * -1;
+    const headTilt = MOOD_HEAD[mood] != null ? MOOD_HEAD[mood] + Math.sin(t * 2.1 + p.idx) * 0.03 : clamp((o.gazeY || 0) * 0.12, -0.2, 0.35) * -1;
     const hd = [N[0] + Math.sin(lean + headTilt * 0.5) * 0.16, N[1] + Math.cos(lean + headTilt * 0.5) * 0.16];
 
     // 持拍手
@@ -122,6 +132,16 @@
     if (A == null) {
       if (mood === 'happy') { A = 118 + Math.sin(t * 9) * 12; bend = 0.25; }
       else if (mood === 'sad') { A = -70; bend = 0.15; }
+      else if (mood === 'cheer') { A = 100 + Math.sin(t * 10) * 10; bend = 0.1; }
+      else if (mood === 'fist') { A = 70 + Math.sin(t * 14) * 6; bend = 1.9; }
+      else if (mood === 'surprise') { A = 30; bend = 0.6; }
+      else if (mood === 'shy') { A = -95; bend = 0.35; }
+      else if (mood === 'think') { A = -60; bend = 0.4; }
+      else if (mood === 'angry') { A = 132 + Math.sin(t * 7) * 4; bend = 0.2; }
+      else if (mood === 'point') { A = 8 + Math.sin(t * 3) * 3; bend = 0.05; }
+      else if (mood === 'tired') { A = -78; bend = 0.1; }
+      else if (mood === 'rest') { A = -82 + Math.sin(t * 1.6 + p.idx) * 3; bend = 0.3; }
+      else if (mood === 'wave' || mood === 'smile' || mood === 'talk') { A = 40 + Math.sin(t * 3 + p.idx) * 4; bend = 1.05; }
       else if (air) { A = 125; bend = 0.9; }
       else { A = 52 + Math.sin(t * 3 + p.idx) * 4 - run * 18; bend = 1.05; }
     } else {
@@ -162,6 +182,17 @@
     else if (sw) O = -55;
     else if (mood === 'happy') { O = 60 + Math.sin(t * 9 + 1) * 15; ob = 1.4; }
     else if (mood === 'sad') O = -80;
+    else if (mood === 'cheer') { O = 105 + Math.sin(t * 10 + 1.5) * 10; ob = 0.15; }
+    else if (mood === 'fist') { O = -40; ob = 0.9; }
+    else if (mood === 'surprise') { O = 150; ob = 1.8; }
+    else if (mood === 'shy') { O = -100; ob = 0.5; }
+    else if (mood === 'think') { O = 70; ob = 2.75; }
+    else if (mood === 'angry') { O = -30; ob = 1.6; }
+    else if (mood === 'point') { O = -50; ob = 0.8; }
+    else if (mood === 'tired') { O = -84; ob = 0.05; }
+    else if (mood === 'rest') { O = -95; ob = 2.2; }
+    else if (mood === 'wave') { O = 125 + Math.sin(t * 8) * 22; ob = 0.35; }
+    else if (mood === 'talk') { O = 20 + Math.sin(t * 5) * 18; ob = 1.3; }
     else if (air) O = 80;
     else O = 22 + Math.sin(ph + Math.PI) * 40 * run;
     const S2 = [S[0] - uy * 0.04 - ux * 0.02, S[1] - 0.02];
@@ -338,7 +369,22 @@
       tail([hd[0] - 0.11, hd[1] + 0.02], 0.1, 0.12, 0.05);
       return;
     }
-    if (look.hair === 'buzz' || look.hair === 'bowl') return;
+    if (look.hair === 'long') {
+      // 披肩长发：头后垂下，发梢随弹簧摆动
+      const top = [hd[0] - 0.02, hd[1] + 0.1], sx = sp[0] * 0.6, sy = sp[1] * 0.4;
+      ctx.beginPath();
+      ctx.moveTo(top[0] + 0.1, top[1]);
+      ctx.quadraticCurveTo(hd[0] - 0.2, hd[1] + 0.18, hd[0] - 0.18 + sx, hd[1] - 0.12);
+      ctx.quadraticCurveTo(hd[0] - 0.2 + sx, hd[1] - 0.3 + sy, hd[0] - 0.08 + sx, hd[1] - 0.36 + sy);
+      ctx.quadraticCurveTo(hd[0] - 0.02 + sx * 0.5, hd[1] - 0.26, hd[0] + 0.03, hd[1] - 0.12);
+      ctx.closePath();
+      ctx.fillStyle = look.hairC; ctx.fill();
+      ctx.lineWidth = lw; ctx.strokeStyle = look.outline; ctx.stroke();
+      ctx.strokeStyle = look.hairHi; ctx.lineWidth = 0.01;
+      ctx.beginPath(); ctx.moveTo(hd[0] - 0.12, hd[1] + 0.06); ctx.quadraticCurveTo(hd[0] - 0.16 + sx, hd[1] - 0.14, hd[0] - 0.1 + sx, hd[1] - 0.3 + sy); ctx.stroke();
+      return;
+    }
+    if (['buzz', 'bowl', 'side', 'mess', 'gray', 'crew', 'part', 'quiff'].includes(look.hair)) return;
     if (look.hair === 'ponytail') {
       const root = [hd[0] - 0.1, hd[1] + 0.07];
       const tip = [root[0] - 0.2 + sp[0], root[1] - 0.12 + sp[1]];
@@ -389,7 +435,8 @@
     ctx.lineWidth = lw; ctx.strokeStyle = look.outline; ctx.stroke();
     // 耳朵
     ctx.fillStyle = look.skin2;
-    ctx.beginPath(); ctx.ellipse(hx - 0.02, hy - 0.005, 0.024, 0.034, 0, 0, Math.PI * 2); ctx.fill();
+    const ear = look.bigEars ? 1.45 : 1;
+    ctx.beginPath(); ctx.ellipse(hx - 0.02, hy - 0.005, 0.024 * ear, 0.034 * ear, 0, 0, Math.PI * 2); ctx.fill();
     ctx.lineWidth = lw * 0.7; ctx.stroke();
     // 头发
     ctx.fillStyle = look.hairC;
@@ -431,6 +478,71 @@
       ctx.lineTo(hx - R * 0.76, hy - R * 0.56);
       ctx.quadraticCurveTo(hx - R * 0.42, hy + R * 0.1, hx + R * 0.2, hy + R * 0.58);
       ctx.quadraticCurveTo(hx + R * 0.78, hy + R * 0.52, hx + R * 1.08, hy - R * 0.08);
+    } else if (look.hair === 'side') {
+      // 三七分短发：额前一缕斜刘海，干净利落
+      ctx.moveTo(hx + R * 1.02, hy + R * 0.3);
+      ctx.quadraticCurveTo(hx + R * 1.08, hy + R * 1.22, hx - R * 0.08, hy + R * 1.24);
+      ctx.quadraticCurveTo(hx - R * 1.16, hy + R * 1.1, hx - R * 1.1, hy + R * 0.0);
+      ctx.lineTo(hx - R * 0.85, hy - R * 0.12);
+      ctx.quadraticCurveTo(hx - R * 0.7, hy + R * 0.5, hx - R * 0.3, hy + R * 0.66);
+      ctx.quadraticCurveTo(hx + R * 0.35, hy + R * 0.85, hx + R * 0.72, hy + R * 0.42);
+      ctx.quadraticCurveTo(hx + R * 0.9, hy + R * 0.25, hx + R * 1.02, hy + R * 0.3);
+    } else if (look.hair === 'long') {
+      // 长发的前额：空气刘海
+      ctx.moveTo(hx + R * 1.06, hy + R * 0.12);
+      ctx.quadraticCurveTo(hx + R * 1.16, hy + R * 1.24, hx - R * 0.1, hy + R * 1.26);
+      ctx.quadraticCurveTo(hx - R * 1.24, hy + R * 1.12, hx - R * 1.18, hy - R * 0.5);
+      ctx.lineTo(hx - R * 0.82, hy - R * 0.62);
+      ctx.quadraticCurveTo(hx - R * 0.66, hy + R * 0.3, hx - R * 0.2, hy + R * 0.5);
+      ctx.lineTo(hx + R * 0.1, hy + R * 0.3);
+      ctx.lineTo(hx + R * 0.32, hy + R * 0.5);
+      ctx.lineTo(hx + R * 0.6, hy + R * 0.28);
+      ctx.quadraticCurveTo(hx + R * 0.85, hy + R * 0.35, hx + R * 1.06, hy + R * 0.12);
+    } else if (look.hair === 'mess') {
+      // 程序员的乱发：几撮翘毛
+      ctx.moveTo(hx + R * 0.98, hy + R * 0.3);
+      ctx.quadraticCurveTo(hx + R * 1.05, hy + R * 1.0, hx + R * 0.45, hy + R * 1.18);
+      ctx.lineTo(hx + R * 0.5, hy + R * 1.42);
+      ctx.lineTo(hx + R * 0.1, hy + R * 1.22);
+      ctx.lineTo(hx - R * 0.05, hy + R * 1.5);
+      ctx.lineTo(hx - R * 0.35, hy + R * 1.2);
+      ctx.lineTo(hx - R * 0.75, hy + R * 1.36);
+      ctx.lineTo(hx - R * 0.85, hy + R * 1.02);
+      ctx.quadraticCurveTo(hx - R * 1.2, hy + R * 0.7, hx - R * 1.1, hy - R * 0.05);
+      ctx.quadraticCurveTo(hx - R * 0.8, hy + R * 0.45, hx - R * 0.3, hy + R * 0.62);
+      ctx.quadraticCurveTo(hx + R * 0.4, hy + R * 0.7, hx + R * 0.98, hy + R * 0.3);
+    } else if (look.hair === 'crew') {
+      // 板寸 + 额前美人尖（猴子）
+      ctx.moveTo(hx + R * 0.9, hy + R * 0.5);
+      ctx.quadraticCurveTo(hx + R * 0.75, hy + R * 1.15, hx - R * 0.15, hy + R * 1.12);
+      ctx.quadraticCurveTo(hx - R * 1.1, hy + R * 1.0, hx - R * 1.05, hy + R * 0.05);
+      ctx.quadraticCurveTo(hx - R * 0.75, hy + R * 0.45, hx - R * 0.25, hy + R * 0.62);
+      ctx.lineTo(hx + R * 0.35, hy + R * 0.48);
+      ctx.lineTo(hx + R * 0.55, hy + R * 0.68);
+      ctx.quadraticCurveTo(hx + R * 0.75, hy + R * 0.6, hx + R * 0.9, hy + R * 0.5);
+    } else if (look.hair === 'part') {
+      // 中分刘海（老陈）
+      ctx.moveTo(hx + R * 1.04, hy + R * 0.05);
+      ctx.quadraticCurveTo(hx + R * 1.12, hy + R * 1.2, hx - R * 0.1, hy + R * 1.22);
+      ctx.quadraticCurveTo(hx - R * 1.2, hy + R * 1.08, hx - R * 1.12, hy - R * 0.1);
+      ctx.lineTo(hx - R * 0.82, hy - R * 0.2);
+      ctx.quadraticCurveTo(hx - R * 0.6, hy + R * 0.6, hx + R * 0.2, hy + R * 0.62);
+      ctx.quadraticCurveTo(hx + R * 0.75, hy + R * 0.55, hx + R * 1.04, hy + R * 0.05);
+    } else if (look.hair === 'quiff') {
+      // 健身房油头：前额高高翘起，两侧推短（果哥）
+      ctx.moveTo(hx + R * 0.95, hy + R * 0.6);
+      ctx.quadraticCurveTo(hx + R * 1.2, hy + R * 1.5, hx + R * 0.3, hy + R * 1.42);
+      ctx.quadraticCurveTo(hx - R * 0.6, hy + R * 1.32, hx - R * 1.0, hy + R * 0.78);
+      ctx.quadraticCurveTo(hx - R * 1.06, hy + R * 0.55, hx - R * 0.9, hy + R * 0.5);
+      ctx.quadraticCurveTo(hx - R * 0.2, hy + R * 0.86, hx + R * 0.95, hy + R * 0.6);
+    } else if (look.hair === 'gray') {
+      // 花白短发，发际线后移
+      ctx.moveTo(hx + R * 0.8, hy + R * 0.72);
+      ctx.quadraticCurveTo(hx + R * 0.6, hy + R * 1.2, hx - R * 0.2, hy + R * 1.16);
+      ctx.quadraticCurveTo(hx - R * 1.14, hy + R * 1.04, hx - R * 1.1, hy - R * 0.02);
+      ctx.lineTo(hx - R * 0.86, hy - R * 0.1);
+      ctx.quadraticCurveTo(hx - R * 0.78, hy + R * 0.62, hx - R * 0.3, hy + R * 0.86);
+      ctx.quadraticCurveTo(hx + R * 0.3, hy + R * 1.0, hx + R * 0.8, hy + R * 0.72);
     } else {
       ctx.moveTo(hx + R * 1.0, hy + 0.0);
       ctx.quadraticCurveTo(hx + R * 1.0, hy + R * 1.2, hx - R * 0.1, hy + R * 1.18);
@@ -448,6 +560,10 @@
     ctx.beginPath();
     ctx.moveTo(hx - R * 0.55, hy + R * 0.85); ctx.quadraticCurveTo(hx - R * 0.1, hy + R * 1.05, hx + R * 0.4, hy + R * 0.85);
     ctx.stroke();
+    if (look.headband) {
+      ctx.strokeStyle = look.band; ctx.lineWidth = 0.03;
+      ctx.beginPath(); ctx.moveTo(hx - R * 1.02, hy + R * 0.42); ctx.quadraticCurveTo(hx, hy + R * 0.72, hx + R * 0.96, hy + R * 0.5); ctx.stroke();
+    }
     // 头带
     if (look.hair === 'spiky') {
       ctx.strokeStyle = look.band; ctx.lineWidth = 0.034;
@@ -459,51 +575,120 @@
     // 眉眼
     const ex = hx + R * 0.58, ey = hy + R * 0.12;
     const mood = P.mood;
-    const gx = clamp((o.gazeX || 1) * 0.012, -0.012, 0.014), gyy = clamp((o.gazeY || 0) * 0.01, -0.012, 0.014);
-    if (mood === 'happy') {
+    const gx = clamp((o.gazeX || 1) * 0.012, -0.012, 0.014), gyy = clamp((o.gazeY || 0) * 0.01, -0.012, 0.014) + (mood === 'think' ? 0.01 : 0);
+    const blink = o.blink ? 1 : 0;
+    const arcEyes = mood === 'happy' || mood === 'shy' || mood === 'cheer' || mood === 'smile' || blink;
+    if (arcEyes) {
       ctx.strokeStyle = look.eye; ctx.lineWidth = 0.014;
-      ctx.beginPath(); ctx.arc(ex, ey - 0.008, 0.02, 0.2, Math.PI - 0.2); ctx.stroke();
+      ctx.beginPath();
+      if (blink && !(mood === 'happy' || mood === 'shy' || mood === 'cheer' || mood === 'smile')) { ctx.moveTo(ex - 0.022, ey); ctx.lineTo(ex + 0.022, ey); }
+      else ctx.arc(ex, ey - 0.008, 0.02, 0.2, Math.PI - 0.2);
+      ctx.stroke();
     } else {
+      const big = mood === 'surprise' ? 1.25 : 1;
+      const eh = mood === 'sad' || mood === 'tired' ? 0.014 : mood === 'angry' ? 0.02 : 0.028 * big;
       ctx.fillStyle = '#ffffff';
-      ctx.beginPath(); ctx.ellipse(ex, ey, 0.024, mood === 'sad' ? 0.014 : 0.028, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(ex, ey, 0.024 * big, eh, 0, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = look.eye;
-      ctx.beginPath(); ctx.ellipse(ex + gx, ey + gyy, 0.014, 0.019, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(ex + gx, ey + gyy, 0.014 * (mood === 'surprise' ? 0.8 : 1), Math.min(0.019, eh * 0.9), 0, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#ffffff';
       ctx.beginPath(); ctx.arc(ex + gx + 0.005, ey + gyy + 0.007, 0.005, 0, Math.PI * 2); ctx.fill();
+      if (look.blush) { // 长睫毛
+        ctx.strokeStyle = look.eye; ctx.lineWidth = 0.008;
+        ctx.beginPath(); ctx.moveTo(ex + 0.016, ey + eh * 0.8); ctx.lineTo(ex + 0.032, ey + eh * 0.8 + 0.012); ctx.stroke();
+      }
     }
-    ctx.strokeStyle = look.hairC; ctx.lineWidth = 0.014; ctx.lineCap = 'round';
+    ctx.strokeStyle = look.age ? shade(look.hairC, 0.7) : look.hairC; ctx.lineWidth = look.age ? 0.018 : 0.014; ctx.lineCap = 'round';
     ctx.beginPath();
-    const browTilt = mood === 'sad' ? 0.018 : P.smash || mood === 'focus' ? -0.016 : 0;
-    ctx.moveTo(ex - 0.03, ey + 0.045 + browTilt); ctx.lineTo(ex + 0.03, ey + 0.045 - browTilt);
+    const browTilt = mood === 'sad' || mood === 'tired' || mood === 'shy' ? 0.018 : mood === 'angry' ? -0.026 : P.smash || mood === 'focus' || mood === 'fist' ? -0.016 : 0;
+    const browUp = mood === 'surprise' ? 0.02 : 0;
+    if (mood === 'think') { ctx.moveTo(ex - 0.03, ey + 0.05); ctx.quadraticCurveTo(ex, ey + 0.07, ex + 0.03, ey + 0.058); }
+    else { ctx.moveTo(ex - 0.03, ey + 0.045 + browTilt + browUp); ctx.lineTo(ex + 0.03, ey + 0.045 - browTilt + browUp); }
     ctx.stroke();
+    if (look.brow) {
+      // 粗眉骨：外号“猿人”的来源
+      ctx.strokeStyle = shade(look.skin2, 0.78); ctx.lineWidth = 0.024;
+      ctx.beginPath(); ctx.moveTo(hx + R * 0.25, hy + R * 0.42); ctx.quadraticCurveTo(hx + R * 0.62, hy + R * 0.62, hx + R * 1.0, hy + R * 0.38); ctx.stroke();
+    }
+    if (look.muzzle) {
+      ctx.fillStyle = shade(look.skin, 1.1);
+      ctx.beginPath(); ctx.ellipse(hx + R * 0.74, hy - R * 0.42, R * 0.36, R * 0.3, -0.15, 0, Math.PI * 2); ctx.fill();
+    }
     // 嘴
     const mx = hx + R * 0.72, my = hy - R * 0.5;
+    const talk = o.talk ? Math.abs(Math.sin((o.time || 0) * 16)) : 0;
     ctx.strokeStyle = shade(look.skin2, 0.6); ctx.lineWidth = 0.011;
-    if (P.smash || mood === 'happy') {
+    if (P.smash || mood === 'happy' || mood === 'cheer' || mood === 'fist') {
       ctx.fillStyle = '#6b1f2a';
-      ctx.beginPath(); ctx.ellipse(mx, my + 0.005, 0.02, mood === 'happy' ? 0.016 : 0.022, 0, 0, Math.PI * 2); ctx.fill();
-    } else if (mood === 'sad') {
+      ctx.beginPath(); ctx.ellipse(mx, my + 0.005, 0.02, mood === 'happy' || mood === 'cheer' ? 0.016 : 0.022, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ff8a8a'; ctx.beginPath(); ctx.ellipse(mx, my - 0.006, 0.011, 0.006, 0, 0, Math.PI * 2); ctx.fill();
+    } else if (mood === 'surprise') {
+      ctx.fillStyle = '#6b1f2a';
+      ctx.beginPath(); ctx.ellipse(mx, my, 0.012, 0.018, 0, 0, Math.PI * 2); ctx.fill();
+    } else if (mood === 'sad' || mood === 'tired') {
       ctx.beginPath(); ctx.arc(mx, my - 0.02, 0.022, 0.4 * Math.PI, 0.6 * Math.PI + 0.2); ctx.stroke();
+    } else if (mood === 'angry') {
+      ctx.fillStyle = '#6b1f2a';
+      ctx.beginPath(); ctx.moveTo(mx - 0.02, my - 0.004); ctx.lineTo(mx + 0.018, my + 0.006); ctx.lineTo(mx + 0.012, my - 0.012); ctx.closePath(); ctx.fill();
+    } else if (talk > 0.15) {
+      ctx.fillStyle = '#6b1f2a';
+      ctx.beginPath(); ctx.ellipse(mx, my, 0.016, 0.004 + talk * 0.012, 0, 0, Math.PI * 2); ctx.fill();
+    } else if (mood === 'smile' || mood === 'shy' || mood === 'wave' || mood === 'point' || mood === 'talk' || mood === 'rest') {
+      ctx.beginPath(); ctx.arc(mx - 0.002, my + 0.014, 0.02, 1.25 * Math.PI, 1.85 * Math.PI, false); ctx.stroke();
+    } else if (mood === 'think') {
+      ctx.beginPath(); ctx.moveTo(mx - 0.016, my - 0.004); ctx.lineTo(mx + 0.012, my + 0.004); ctx.stroke();
     } else {
       ctx.beginPath(); ctx.moveTo(mx - 0.018, my); ctx.lineTo(mx + 0.012, my + 0.002); ctx.stroke();
     }
-    // 腮红
-    ctx.fillStyle = look.chubby ? 'rgba(255,110,110,0.34)' : 'rgba(255,110,110,0.22)';
-    ctx.beginPath(); ctx.ellipse(hx + R * 0.45, hy - R * 0.25, look.chubby ? 0.03 : 0.022, look.chubby ? 0.018 : 0.012, 0, 0, Math.PI * 2); ctx.fill();
+    // 腮红（害羞时更红）
+    const blushA = (look.chubby ? 0.34 : 0.22) + (look.blush || 0) * 0.3 + (mood === 'shy' ? 0.35 : mood === 'cheer' || mood === 'happy' ? 0.08 : 0);
+    ctx.fillStyle = `rgba(255,110,120,${Math.min(0.75, blushA)})`;
+    const bw = (look.chubby ? 0.03 : 0.022) * (mood === 'shy' ? 1.3 : 1);
+    ctx.beginPath(); ctx.ellipse(hx + R * 0.45, hy - R * 0.25, bw, look.chubby ? 0.018 : 0.012, 0, 0, Math.PI * 2); ctx.fill();
+    if (mood === 'shy') {
+      ctx.strokeStyle = 'rgba(230,70,90,0.6)'; ctx.lineWidth = 0.006;
+      ctx.beginPath();
+      for (let i = 0; i < 3; i++) { ctx.moveTo(hx + R * 0.32 + i * 0.016, hy - R * 0.16); ctx.lineTo(hx + R * 0.28 + i * 0.016, hy - R * 0.34); }
+      ctx.stroke();
+    }
+    if (look.age) {
+      // 眼角纹与法令纹
+      ctx.strokeStyle = shade(look.skin2, 0.78); ctx.lineWidth = 0.006;
+      ctx.beginPath();
+      ctx.moveTo(ex - 0.034, ey + 0.004); ctx.lineTo(ex - 0.05, ey + 0.014);
+      ctx.moveTo(ex - 0.034, ey - 0.006); ctx.lineTo(ex - 0.05, ey - 0.014);
+      ctx.moveTo(hx + R * 0.62, hy - R * 0.2); ctx.quadraticCurveTo(hx + R * 0.52, hy - R * 0.4, hx + R * 0.58, hy - R * 0.58);
+      ctx.stroke();
+    }
+    if (mood === 'tired' || mood === 'surprise') {
+      // 汗珠
+      const dy = ((o.time || 0) * 0.08) % 0.05;
+      ctx.fillStyle = 'rgba(140,210,255,0.9)';
+      ctx.beginPath(); ctx.moveTo(hx - R * 0.15, hy + R * 0.95 - dy); ctx.quadraticCurveTo(hx - R * 0.32, hy + R * 0.62 - dy, hx - R * 0.15, hy + R * 0.58 - dy);
+      ctx.quadraticCurveTo(hx + R * 0.02, hy + R * 0.62 - dy, hx - R * 0.15, hy + R * 0.95 - dy); ctx.fill();
+    }
     if (look.glasses) {
-      // 圆框眼镜：镜框 + 镜腿
-      ctx.strokeStyle = '#1b1b24'; ctx.lineWidth = 0.011;
-      ctx.beginPath(); ctx.arc(ex + 0.004, ey, 0.036, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = look.age ? '#6b5236' : '#1b1b24'; ctx.lineWidth = 0.011;
+      ctx.beginPath();
+      if (look.glasses === 'rect') YY.rr(ctx, ex - 0.03, ey - 0.026, 0.066, 0.05, 0.012);
+      else ctx.arc(ex + 0.004, ey, 0.036, 0, Math.PI * 2);
+      ctx.stroke();
       ctx.beginPath(); ctx.moveTo(ex - 0.032, ey + 0.006); ctx.lineTo(hx - 0.01, hy + 0.01); ctx.stroke();
       ctx.fillStyle = 'rgba(190,230,255,0.18)';
-      ctx.beginPath(); ctx.arc(ex + 0.004, ey, 0.032, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath();
+      if (look.glasses === 'rect') YY.rr(ctx, ex - 0.028, ey - 0.024, 0.062, 0.046, 0.01); else ctx.arc(ex + 0.004, ey, 0.032, 0, Math.PI * 2);
+      ctx.fill();
+      // 镜片反光
+      ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 0.006;
+      ctx.beginPath(); ctx.moveTo(ex + 0.012, ey + 0.016); ctx.lineTo(ex + 0.024, ey + 0.004); ctx.stroke();
     }
   }
 
   function torso(ctx, P, look, lw, flat, f) {
     const { H, ux, uy } = P;
     const rx = uy, ry = -ux; // 指向前方的法向量
-    const pt = (u, r) => [H[0] + ux * u + rx * r, H[1] + uy * u + ry * r];
+    const tw = look.slim ? 0.78 : look.buff ? 1.2 : 1;
+    const pt = (u, r) => [H[0] + ux * u + rx * r * tw, H[1] + uy * u + ry * r * tw];
     const wl = pt(-0.03, -0.115), wr = pt(-0.03, 0.12);
     const cl = pt(0.3, -0.215), cr = pt(0.3, 0.215);
     const sl = pt(0.5, -0.135), sr = pt(0.5, 0.14);
@@ -529,22 +714,50 @@
     const a = pt(-0.05, -0.2), b = pt(0.55, -0.2), c2 = pt(0.48, -0.08), d = pt(-0.05, -0.1);
     ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(c2[0], c2[1]); ctx.lineTo(d[0], d[1]); ctx.closePath();
     ctx.fill();
+    if (look.plaid) {
+      // 格子衫
+      const ga = ctx.globalAlpha;
+      ctx.strokeStyle = look.plaid; ctx.lineWidth = 0.016; ctx.globalAlpha = ga * 0.55;
+      ctx.beginPath();
+      for (let i = -3; i <= 3; i++) { const a = pt(-0.1, i * 0.07), b = pt(0.65, i * 0.07); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); }
+      for (let j = 0; j < 7; j++) { const a = pt(j * 0.09, -0.25), b = pt(j * 0.09, 0.25); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); }
+      ctx.stroke(); ctx.globalAlpha = ga;
+    }
     // 腰部饰条
     ctx.fillStyle = look.trim;
     const t1 = pt(0.07, -0.2), t2 = pt(0.07, 0.2), t3 = pt(0.1, 0.2), t4 = pt(0.1, -0.2);
     ctx.beginPath(); ctx.moveTo(t1[0], t1[1]); ctx.lineTo(t2[0], t2[1]); ctx.lineTo(t3[0], t3[1]); ctx.lineTo(t4[0], t4[1]); ctx.closePath(); ctx.fill();
     ctx.restore();
+    if (look.belly) {
+      // 圆滚滚的肚子：向前鼓出的一团
+      const bc = pt(0.2, 0.15 / tw), ang = Math.atan2(uy, ux);
+      const bg = ctx.createRadialGradient(bc[0] + rx * 0.04, bc[1] + ry * 0.04, 0.02, bc[0], bc[1], 0.2);
+      bg.addColorStop(0, shade(look.shirt, 1.18)); bg.addColorStop(1, look.shirt);
+      ctx.beginPath(); ctx.ellipse(bc[0], bc[1], 0.2, 0.15 * look.belly, ang, 0, Math.PI * 2);
+      ctx.fillStyle = bg; ctx.fill(); ctx.lineWidth = lw; ctx.strokeStyle = look.outline; ctx.stroke();
+      ctx.strokeStyle = look.trim; ctx.lineWidth = 0.02;
+      const b1 = pt(0.07, 0.04 / tw), b2 = pt(0.07, (0.15 + 0.15 * look.belly) / tw);
+      ctx.beginPath(); ctx.moveTo(b1[0], b1[1]); ctx.lineTo(b2[0], b2[1]); ctx.stroke();
+    }
     // V 领
     const v0 = pt(0.55, -0.05), v1 = pt(0.47, 0.06), v2 = pt(0.56, 0.11);
     ctx.strokeStyle = look.trim; ctx.lineWidth = 0.018; ctx.lineJoin = 'round';
     ctx.beginPath(); ctx.moveTo(v0[0], v0[1]); ctx.lineTo(v1[0], v1[1]); ctx.lineTo(v2[0], v2[1]); ctx.stroke();
+    if (look.whistle) {
+      // 挂在胸前的口哨
+      const n0 = pt(0.56, -0.04), n1 = pt(0.38, 0.08), n2 = pt(0.56, 0.1);
+      ctx.strokeStyle = '#ff5b3d'; ctx.lineWidth = 0.008;
+      ctx.beginPath(); ctx.moveTo(n0[0], n0[1]); ctx.lineTo(n1[0], n1[1]); ctx.lineTo(n2[0], n2[1]); ctx.stroke();
+      ctx.fillStyle = '#d8dde6'; ctx.beginPath(); ctx.arc(n1[0], n1[1] - 0.012, 0.024, 0, Math.PI * 2); ctx.fill();
+      ctx.lineWidth = 0.008; ctx.strokeStyle = look.outline; ctx.stroke();
+    }
     // 号码
     const c = pt(0.3, 0.05);
     ctx.save();
     ctx.translate(c[0], c[1]);
     ctx.scale(f || 1, -1);
     ctx.rotate(P.lean * (f || 1));
-    ctx.font = 'italic 900 0.17px "DIN Alternate","Bahnschrift","Arial Black",sans-serif';
+    ctx.font = `italic 900 ${look.num.length > 2 ? 0.12 : 0.17}px "DIN Alternate","Bahnschrift","Arial Black",sans-serif`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillStyle = 'rgba(255,255,255,0.92)';
     ctx.fillText(look.num, 0, 0);
@@ -559,34 +772,36 @@
     const P = pose(p, o.time || 0, o);
     const lw = 0.018;
     const flat = o.flat || null;
+    const bw = look.slim ? 0.72 : look.buff ? 1.22 : 1, hs = look.headScale || 1;
     const dark = (c) => (flat ? flat : shade(c, 0.78));
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
     // 后腿
-    limb(ctx, P.H, P.K2, 0.075, 0.062, dark(look.skin), null, lw, flat ? null : look.outline);
-    limb(ctx, P.K2, P.F2, 0.06, 0.045, dark(look.skin), null, lw, flat ? null : look.outline);
+    limb(ctx, P.H, P.K2, 0.075 * bw, 0.062 * bw, dark(look.skin), null, lw, flat ? null : look.outline);
+    limb(ctx, P.K2, P.F2, 0.06 * bw, 0.045 * bw, dark(look.skin), null, lw, flat ? null : look.outline);
     if (!flat) limb(ctx, [lerp(P.K2[0], P.F2[0], 0.72), lerp(P.K2[1], P.F2[1], 0.72)], P.F2, 0.05, 0.047, shade(look.sock, 0.85), null, lw, look.outline);
     shoe(ctx, P.F2, P.K2, look, lw, flat ? flat : null);
     // 后手（在身体后）
-    limb(ctx, P.S2, P.E2, 0.05, 0.043, dark(look.skin), null, lw, flat ? null : look.outline);
-    limb(ctx, P.E2, P.W2, 0.043, 0.036, dark(look.skin), null, lw, flat ? null : look.outline);
+    limb(ctx, P.S2, P.E2, 0.05 * bw, 0.043 * bw, dark(look.skin), null, lw, flat ? null : look.outline);
+    limb(ctx, P.E2, P.W2, 0.043 * bw, 0.036 * bw, dark(look.skin), null, lw, flat ? null : look.outline);
     if (!flat) {
-      limb(ctx, P.S2, [lerp(P.S2[0], P.E2[0], 0.38), lerp(P.S2[1], P.E2[1], 0.38)], 0.066, 0.056, look.shirt2, null, lw, look.outline);
+      if (!look.tank) limb(ctx, P.S2, [lerp(P.S2[0], P.E2[0], 0.38), lerp(P.S2[1], P.E2[1], 0.38)], 0.066 * bw, 0.056 * bw, look.shirt2, null, lw, look.outline);
       ctx.fillStyle = dark(look.skin);
       ctx.beginPath(); ctx.arc(P.W2[0], P.W2[1], 0.042, 0, Math.PI * 2); ctx.fill();
       ctx.lineWidth = lw; ctx.strokeStyle = look.outline; ctx.stroke();
     }
     // 发尾（在头后）
-    if (!flat) hairBack(ctx, P, look, o, lw);
+    const scaleHead = (fn) => { if (hs === 1) return fn(); ctx.save(); ctx.translate(P.hd[0], P.hd[1] - 0.06); ctx.scale(hs, hs); ctx.translate(-P.hd[0], -(P.hd[1] - 0.06)); fn(); ctx.restore(); };
+    if (!flat) scaleHead(() => hairBack(ctx, P, look, o, lw));
     // 短裤
     const thigh = (K) => [lerp(P.H[0], K[0], 0.48), lerp(P.H[1], K[1], 0.48)];
     limb(ctx, P.H, thigh(P.K2), 0.11, 0.092, flat || shade(look.shorts, 0.85), null, lw, flat ? null : look.outline);
     // 躯干
     torso(ctx, P, look, lw, flat, o.f);
     // 前腿
-    limb(ctx, P.H, P.K1, 0.078, 0.064, flat || look.skin, flat ? null : 'rgba(255,255,255,0.22)', lw, flat ? null : look.outline);
-    limb(ctx, P.K1, P.F1, 0.062, 0.046, flat || look.skin, flat ? null : 'rgba(255,255,255,0.2)', lw, flat ? null : look.outline);
+    limb(ctx, P.H, P.K1, 0.078 * bw, 0.064 * bw, flat || look.skin, flat ? null : 'rgba(255,255,255,0.22)', lw, flat ? null : look.outline);
+    limb(ctx, P.K1, P.F1, 0.062 * bw, 0.046 * bw, flat || look.skin, flat ? null : 'rgba(255,255,255,0.2)', lw, flat ? null : look.outline);
     if (!flat) limb(ctx, [lerp(P.K1[0], P.F1[0], 0.72), lerp(P.K1[1], P.F1[1], 0.72)], P.F1, 0.051, 0.048, look.sock, null, lw, look.outline);
     shoe(ctx, P.F1, P.K1, look, lw, flat ? flat : null);
     limb(ctx, [P.H[0] + 0.02, P.H[1] + 0.02], thigh(P.K1), 0.115, 0.095, flat || look.shorts, null, lw, flat ? null : look.outline);
@@ -600,18 +815,18 @@
     if (flat) {
       ctx.fillStyle = flat;
       ctx.beginPath(); ctx.arc(P.hd[0], P.hd[1], 0.14, 0, Math.PI * 2); ctx.fill();
-    } else head(ctx, P, look, o, lw);
+    } else scaleHead(() => head(ctx, P, look, o, lw));
     // 持拍手（最前）
-    limb(ctx, P.S, P.E, 0.056, 0.047, flat || look.skin, flat ? null : 'rgba(255,255,255,0.22)', lw, flat ? null : look.outline);
-    limb(ctx, P.E, P.W, 0.047, 0.04, flat || look.skin, flat ? null : 'rgba(255,255,255,0.2)', lw, flat ? null : look.outline);
+    limb(ctx, P.S, P.E, 0.056 * bw, 0.047 * bw, flat || look.skin, flat ? null : 'rgba(255,255,255,0.22)', lw, flat ? null : look.outline);
+    limb(ctx, P.E, P.W, 0.047 * bw, 0.04 * bw, flat || look.skin, flat ? null : 'rgba(255,255,255,0.2)', lw, flat ? null : look.outline);
     if (!flat) {
       // 护腕
       const wb = [lerp(P.E[0], P.W[0], 0.78), lerp(P.E[1], P.W[1], 0.78)];
       limb(ctx, wb, [lerp(P.E[0], P.W[0], 0.92), lerp(P.E[1], P.W[1], 0.92)], 0.047, 0.045, look.wrist, null, lw, look.outline);
       // 袖口
-      limb(ctx, P.S, [lerp(P.S[0], P.E[0], 0.35), lerp(P.S[1], P.E[1], 0.35)], 0.07, 0.06, look.shirt, null, lw, look.outline);
+      if (!look.tank) limb(ctx, P.S, [lerp(P.S[0], P.E[0], 0.35), lerp(P.S[1], P.E[1], 0.35)], 0.07 * bw, 0.06 * bw, look.shirt, null, lw, look.outline);
     }
-    racket(ctx, P, look, lw, flat, o.glow || 0);
+    if (!o.hideRacket) racket(ctx, P, look, lw, flat, o.glow || 0);
     // 手
     ctx.fillStyle = flat || look.skin;
     ctx.beginPath(); ctx.arc(P.W[0], P.W[1], 0.045, 0, Math.PI * 2); ctx.fill();

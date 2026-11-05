@@ -1,0 +1,16 @@
+{
+  "digest": "90fa58a870b4eaed9dbd315f74a8c82ad9444c55b0b0e63ae7a5722fd6a17442",
+  "request_id": "3556027b-b3b0-9d04-86af-c4e00804ed6f",
+  "usage": {
+    "input_tokens": 30,
+    "output_tokens": 77,
+    "total_tokens": 107,
+    "characters": 57
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyxiaohong-50dc0caa82b447ae85e9bc8b63563bcd",
+  "text": "准备位置也不是钉死的，要看自己的回球再决定站哪。……人也一样。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：边想边说，停顿有分寸，不拖长。",
+  "who": "xiaohong"
+}

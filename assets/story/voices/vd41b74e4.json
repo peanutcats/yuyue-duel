@@ -1,0 +1,16 @@
+{
+  "digest": "8e947f36b0c15f4d6b6a3d5c7957807db37650bec8917be530ac6e77b9b1f6a8",
+  "request_id": "28331539-27cc-92ab-babb-c4aae178a195",
+  "usage": {
+    "input_tokens": 24,
+    "output_tokens": 47,
+    "total_tokens": 71,
+    "characters": 45
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yynar-9a6555ee9f6e43f0b167a59eec741be0",
+  "text": "最后一球落在白线附近。看台上，两边同时喊了出来。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "nar"
+}

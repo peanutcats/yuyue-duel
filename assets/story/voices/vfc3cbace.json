@@ -1,0 +1,16 @@
+{
+  "digest": "252dd274767f66f069af89afb2049ce35952983b7640bd046d6629b456fa3980",
+  "request_id": "6fc828ea-31a7-9232-91dc-08c1eb15246b",
+  "usage": {
+    "input_tokens": 27,
+    "output_tokens": 94,
+    "total_tokens": 121,
+    "characters": 50
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyruibao-7c0dac9fd7f44dc39d4ce5e967f96cb0",
+  "text": "道歉收下，包子还是不分。……猴子那边，你去说还是我去说？",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "ruibao"
+}

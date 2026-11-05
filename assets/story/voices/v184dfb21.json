@@ -1,0 +1,16 @@
+{
+  "digest": "28fb818e5c1e7688b1be3f8cacbb0e2f583adb2e929c40f73361faee97eed1e9",
+  "request_id": "843dfae0-e46a-990a-bbc8-62e9393d1042",
+  "usage": {
+    "input_tokens": 39,
+    "output_tokens": 88,
+    "total_tokens": 127,
+    "characters": 74
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yycanglan-a4eb561889b24f5985d096ce0c286c74",
+  "text": "我以为只要我一直守着，门就不会关。可是今天，我差点让外婆的门变成了一条“隐患”。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：稍显疲惫，语速放缓但清楚。",
+  "who": "canglan"
+}

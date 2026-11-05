@@ -1,0 +1,16 @@
+{
+  "digest": "b4a02f31a0ce9ff5b07f9111da75a2e737606152a8b30c2ca7c7389b1f10df33",
+  "request_id": "7ad5762b-0762-929e-b9d4-7be36d7cda26",
+  "usage": {
+    "input_tokens": 15,
+    "output_tokens": 52,
+    "total_tokens": 67,
+    "characters": 28
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyhouzi-8b1303f4011a48d5a7de5234aa93c44f",
+  "text": "复查前一晚，我想再练一次网前。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：边想边说，停顿有分寸，不拖长。",
+  "who": "houzi"
+}

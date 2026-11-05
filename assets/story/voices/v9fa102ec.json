@@ -1,0 +1,16 @@
+{
+  "digest": "cc51a979b31b97f7112e98e4d3b51ba8f5405c7f649db321f3eaf7f6de77d814",
+  "request_id": "4ba7f191-d611-918e-a565-ce3b7dfc59d1",
+  "usage": {
+    "input_tokens": 16,
+    "output_tokens": 45,
+    "total_tokens": 61,
+    "characters": 30
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyme-fe7bb10e54c34773bd5b8380c1b96481",
+  "text": "入社吗？我们缺一个能修录像的人。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "me"
+}

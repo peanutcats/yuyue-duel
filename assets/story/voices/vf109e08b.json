@@ -1,0 +1,16 @@
+{
+  "digest": "60312c0a703c153ca81f9959f01ce876c2e3100174b0ea78056a42d50d84d90a",
+  "request_id": "97c9d737-3dd0-9447-be32-4f5ae227e480",
+  "usage": {
+    "input_tokens": 24,
+    "output_tokens": 82,
+    "total_tokens": 106,
+    "characters": 46
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yylu-77a02af0575b449fadd3046da74d049f",
+  "text": "我们关系好到上厕所都一起去。这叫高可用双机热备。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "lu"
+}

@@ -1,0 +1,16 @@
+{
+  "digest": "34b651a4b1fdce745035a250daa365d83c910f830d0437173f01c039aa7554a0",
+  "request_id": "46b956cf-a78b-95b3-82e5-a26bd1bbaf91",
+  "usage": {
+    "input_tokens": 19,
+    "output_tokens": 80,
+    "total_tokens": 99,
+    "characters": 39
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyhouzi-8b1303f4011a48d5a7de5234aa93c44f",
+  "text": "开黑群改名了：“羽毛球天下第一 · 扩展包”。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "houzi"
+}

@@ -1,0 +1,16 @@
+{
+  "digest": "ed57683e482810e7c6d9cdba63eb14aaa1e4047de0d1f348b5eef6bf1ede4c44",
+  "request_id": "335ff0f2-22d1-973f-8c76-2159b930f2ed",
+  "usage": {
+    "input_tokens": 22,
+    "output_tokens": 45,
+    "total_tokens": 67,
+    "characters": 41
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyxiaohong-50dc0caa82b447ae85e9bc8b63563bcd",
+  "text": "“羽毛球天下第一”。最后一条消息，停在两年前。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：略感失落，声音放轻，保留完整吐字，不要哭腔。",
+  "who": "xiaohong"
+}

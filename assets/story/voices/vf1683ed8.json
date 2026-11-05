@@ -1,0 +1,16 @@
+{
+  "digest": "d3593435b9e5f39c7bc4650621fe8f2d06a083332f633eabf980896f8931b898",
+  "request_id": "72224ed8-26d0-9b5a-b9e6-93a8a86466eb",
+  "usage": {
+    "input_tokens": 30,
+    "output_tokens": 74,
+    "total_tokens": 104,
+    "characters": 54
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yymm-13991994e40b44a7b5af603229af22b3",
+  "text": "笑声会打乱节奏。专注下一拍：站位、来球、体力，一样一样确认。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：清楚地提醒同伴，强调关键动作。",
+  "who": "mm"
+}

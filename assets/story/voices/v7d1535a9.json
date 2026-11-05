@@ -1,0 +1,16 @@
+{
+  "digest": "5d1d18ec71afb23922c6111164a57e8e0c901e7b25f7fc31770b4c89a5ad1f82",
+  "request_id": "c16aad8c-3792-9ec7-a615-4c9b132a256c",
+  "usage": {
+    "input_tokens": 10,
+    "output_tokens": 34,
+    "total_tokens": 44,
+    "characters": 18
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yytianchu-2bb9df7a40db4ae7bafc77683d53adfb",
+  "text": "下次先比赛，再交换。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：亲切地招呼同伴。",
+  "who": "tianchu"
+}

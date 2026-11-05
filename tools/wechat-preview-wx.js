@@ -8,8 +8,11 @@
   window.wx = {
     createCanvas() { const c = document.createElement('canvas'); if (!screen) { screen = c; c.id = 'game'; document.body.prepend(c); } return c; },
     getWindowInfo() {
-      const safe = new URLSearchParams(location.search).has('safe');
-      return { windowWidth: innerWidth, windowHeight: innerHeight, pixelRatio: devicePixelRatio, safeArea: { left: safe ? 34 : 0, top: 0, right: innerWidth - (safe ? 22 : 0), bottom: innerHeight - (safe ? 14 : 0) } };
+      const mode = new URLSearchParams(location.search).get('safe'), safe = mode != null;
+      const safeArea = mode === 'portrait' && innerWidth > innerHeight ?
+        { left: 0, top: 59, right: innerHeight, bottom: innerWidth - 34 } :
+        { left: safe ? 34 : 0, top: 0, right: innerWidth - (safe ? 22 : 0), bottom: innerHeight - (safe ? 14 : 0) };
+      return { windowWidth: innerWidth, windowHeight: innerHeight, pixelRatio: devicePixelRatio, safeArea };
     },
     getSystemInfoSync() { return this.getWindowInfo(); },
     getMenuButtonBoundingClientRect: () => ({ left: innerWidth - 94, right: innerWidth - 12, top: 12, bottom: 39, width: 82, height: 27 }),
@@ -23,7 +26,7 @@
     shareAppMessage(data) { window.__lastShare = data; console.info('分享预览', data); },
     showToast({ title }) { console.info('提示：' + title); },
     showModal({ title, content, success }) { success?.({ confirm: confirm(title + '\n\n' + content), cancel: false }); },
-    vibrateShort() {}, setInnerAudioOption() {},
+    vibrateShort() {}, setInnerAudioOption() {}, loadSubpackage({success}) { queueMicrotask(()=>success?.()); return {}; },
     createInnerAudioContext() {
       const audio = new Audio();
       return { set src(value) { audio.src = '/minigame/' + value; }, set volume(value) { audio.volume = value; }, set obeyMuteSwitch(_) {}, play() { audio.play().catch(() => {}); }, stop() { audio.pause(); audio.currentTime = 0; }, seek(t) { if (audio.readyState) audio.currentTime = t; }, onEnded: fn => audio.addEventListener('ended', fn), onStop() {}, onError: fn => audio.addEventListener('error', fn), destroy() { audio.pause(); audio.src = ''; } };

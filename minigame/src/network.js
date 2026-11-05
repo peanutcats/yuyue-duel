@@ -9,7 +9,7 @@ class Network {
     this.code = null; this.token = null; this.queue = []; this.inFlight = false;
   }
   connect(request) {
-    this.close(); this.request = request; this.manual = false;
+    this.close(); this.request = request; this.manual = false; this.active = true;
     return new Promise((resolve, reject) => { this.resolve = resolve; this.reject = reject; this.open(); });
   }
   configured() {
@@ -22,6 +22,7 @@ class Network {
     if (!this.configured()) return this.fail('比赛服务器尚未配置');
     const generation = ++this.generation; this.queue = []; this.inFlight = false;
     this.opening = true;
+    this.awaitingWelcome = true;
     this.status = this.token ? 'reconnecting' : 'connecting'; this.openedAt = this.P.now(); this.lastReceived = this.openedAt;
     const failed = e => { if (generation === this.generation && !this.manual) this.disconnected(e?.errMsg || e?.message || '网络连接失败'); };
     if (this.config.networkTransport === 'cloud') {
@@ -57,7 +58,7 @@ class Network {
     socket.onOpen(() => {
       if (!current()) return;
       this.status = 'connected'; this.lastReceived = this.P.now();
-      this.send(this.token ? { t: 'resume', room: this.code, token: this.token } : this.request);
+      this.send({ ...(this.token ? { t: 'resume', room: this.code, token: this.token } : this.request), roomProtocol: 2 });
       this.ping();
     });
     socket.onMessage(event => {
@@ -67,6 +68,8 @@ class Network {
       if (d.t === 'welcome') {
         this.code = d.room; this.player = d.player; this.token = d.token; this.matchId = d.matchId;
         this.seq = d.seq; this.action = d.action; this.retrySince = null;
+        this.features = Array.isArray(d.features) ? d.features : [];
+        this.awaitingWelcome = false;
         this.resolve?.(d.room); this.resolve = this.reject = null;
       } else if (d.t === 'start') { this.matchId = d.matchId; this.onStart?.(d); }
       else if (d.t === 'pong') {
@@ -100,7 +103,14 @@ class Network {
       this.inFlight = false; this.flush();
     }, fail: () => { if (generation === this.generation && socket === this.socket) this.disconnected('发送失败'); } });
   }
-  ping() { this.lastPing = this.P.now(); this.send({ t: 'ping', ts: this.lastPing }); }
+  ping() { this.lastPing = this.P.now(); this.send({ t: 'ping', ts: this.lastPing, active: this.active && !this.P.hidden() }); }
+  reconnectRemaining() { return this.retrySince == null ? null : Math.max(0, Math.ceil((20000 - (this.P.now() - this.retrySince)) / 1000)); }
+  connectionText() {
+    const remaining = this.reconnectRemaining();
+    if (remaining != null) return `正在重连 · 剩余 ${remaining} 秒`;
+    if (this.status !== 'connected' || this.awaitingWelcome) return this.status === 'closed' ? '未连接' : '正在连接…';
+    return `已连接 · 延迟 ${Math.round(this.rtt * 1000)} ms`;
+  }
   serverTime() { return this.P.now() / 1000 + (this.clockOffset || 0); }
   disconnected(message) {
     if (this.manual || (!this.socket && !this.opening)) return;
@@ -113,9 +123,9 @@ class Network {
   update() {
     if (this.manual || this.P.hidden()) return;
     const now = this.P.now();
-    if (this.status === 'reconnecting' && now - this.retrySince > 20000) return this.fail('重连超时，请重新创建房间');
+    if (this.retrySince != null && now - this.retrySince >= 20000) return this.fail('重连超时，请重新创建房间');
     if (!this.socket && !this.opening && this.status === 'reconnecting' && now >= this.retryAt) return this.open();
-    if ((this.status === 'connecting' || this.status === 'reconnecting') && (this.socket || this.opening) && now - this.openedAt > 8000) return this.disconnected('连接超时');
+    if (this.awaitingWelcome && (this.socket || this.opening) && now - this.openedAt > 8000) return this.disconnected('连接超时');
     if (this.status === 'connected') {
       if (now - this.lastReceived > 12000) return this.disconnected('服务器暂时没有响应');
       if (now - (this.lastPing || 0) >= 1000) this.ping();
@@ -133,6 +143,7 @@ class Network {
     this.code = this.token = this.matchId = null; this.seq = this.action = 0;
     this.queue = []; this.inFlight = false; this.status = 'closed'; this.retrySince = null;
     this.clockOffset = null;
+    this.features = []; this.awaitingWelcome = false;
     this.resolve = this.reject = null;
     if (socket) {
       // A leave frame is best effort; closed sockets still enter server timeout cleanup.

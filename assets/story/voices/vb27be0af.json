@@ -1,0 +1,16 @@
+{
+  "digest": "9f4f9d64464880395396282d0da5eff9639c2fb14ace9ac5c7c527e23fc5167c",
+  "request_id": "ad10d246-9ca5-9f6f-b512-c51cbb3f8930",
+  "usage": {
+    "input_tokens": 19,
+    "output_tokens": 40,
+    "total_tokens": 59,
+    "characters": 36
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyxiaohong-50dc0caa82b447ae85e9bc8b63563bcd",
+  "text": "群名我改了：“羽毛球天下第一（四缺零）”。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "xiaohong"
+}

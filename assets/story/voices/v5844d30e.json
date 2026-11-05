@@ -1,0 +1,16 @@
+{
+  "digest": "6f66408610ecd93a3d0a3c6b023eb846915266a8ca991635b0c7a2606ec5f627",
+  "request_id": "c32363fa-9398-9326-945f-5633b2e5d3b5",
+  "usage": {
+    "input_tokens": 11,
+    "output_tokens": 27,
+    "total_tokens": 38,
+    "characters": 20
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyme-fe7bb10e54c34773bd5b8380c1b96481",
+  "text": "守门的人，不是只有你。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "me"
+}

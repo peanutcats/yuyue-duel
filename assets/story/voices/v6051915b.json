@@ -1,0 +1,20 @@
+{
+  "digest": "3260beee8c6e2c37a5a75a54779dce2d1b79d772ec002d79427382126a395b8e",
+  "file": "ruibao-v6051915b.wav",
+  "who": "ruibao",
+  "name": "王瑞",
+  "text": "我们谁都没怪过你，猴子。只是……谁都没说出口。",
+  "mood": "talk",
+  "delivery": "日常",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "request_id": "c83cf3b5-d475-9afd-95ee-24a378e134e1",
+  "usage": {
+    "input_tokens": 22,
+    "output_tokens": 74,
+    "total_tokens": 96,
+    "characters": 41
+  },
+  "reused_audition": true,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyruibao-7c0dac9fd7f44dc39d4ce5e967f96cb0"
+}

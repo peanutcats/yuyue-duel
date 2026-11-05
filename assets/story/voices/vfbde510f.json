@@ -1,0 +1,16 @@
+{
+  "digest": "89086fc746e206f63c34ad1c179c94e0034d713a224b04a7cbe92c1cc5354804",
+  "request_id": "0a2af212-ec39-95e8-9d5c-6fec3f02e065",
+  "usage": {
+    "input_tokens": 24,
+    "output_tokens": 76,
+    "total_tokens": 100,
+    "characters": 44
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyguoge-9c9d4191af904024a507774c10119d97",
+  "text": "……停，停一下。超过三个回合，不在我的训练计划里。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：稍显疲惫，语速放缓但清楚。",
+  "who": "guoge"
+}

@@ -1,0 +1,16 @@
+{
+  "digest": "7d7c450a1d420acde33ec02e80ee37ac565e65d45e4beb74d2f0045bd8da9815",
+  "request_id": "0cc366ae-f1d8-9120-bfe4-6f4ca9f30c86",
+  "usage": {
+    "input_tokens": 16,
+    "output_tokens": 33,
+    "total_tokens": 49,
+    "characters": 28
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyxingxing-bf1d887d84034502aa01912d757758a3",
+  "text": "好球。……你看，我输了，可我在笑。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "xingxing"
+}

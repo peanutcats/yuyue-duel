@@ -1,0 +1,16 @@
+{
+  "digest": "3023419d2400f93393614bca59134ba9fc0e66d789af6ff308c5a9e6fa5bebe2",
+  "request_id": "4f81511e-5d39-93a6-9738-54e740935743",
+  "usage": {
+    "input_tokens": 26,
+    "output_tokens": 75,
+    "total_tokens": 101,
+    "characters": 49
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyxiaohong-50dc0caa82b447ae85e9bc8b63563bcd",
+  "text": "赛后，先说一个做得好的决定，再说一个下次想改的地方。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：清楚地提醒同伴，强调关键动作。",
+  "who": "xiaohong"
+}

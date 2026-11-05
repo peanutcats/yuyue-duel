@@ -1,0 +1,16 @@
+{
+  "digest": "21193bdb72a531784f21a39d6a1cba392cf687ffebeed4aac2c6a298577f76fc",
+  "request_id": "4e7bd9e1-2978-92ad-a758-745911295777",
+  "usage": {
+    "input_tokens": 15,
+    "output_tokens": 37,
+    "total_tokens": 52,
+    "characters": 28
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yylu-77a02af0575b449fadd3046da74d049f",
+  "text": "我能算出落点，但我的腿不同意。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：稍显疲惫，语速放缓但清楚。",
+  "who": "lu"
+}

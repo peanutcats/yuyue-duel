@@ -1,0 +1,16 @@
+{
+  "digest": "47610ccf33fe9fe2cab92bdb0ab4d725959a3cbb16486c492a7a106ffa4f0fdc",
+  "request_id": "ba141f6b-1673-9bc8-9d20-c8972521fabb",
+  "usage": {
+    "input_tokens": 14,
+    "output_tokens": 33,
+    "total_tokens": 47,
+    "characters": 26
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyxiaohong-50dc0caa82b447ae85e9bc8b63563bcd",
+  "text": "落地稳住，再回位……零点九秒。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "xiaohong"
+}

@@ -1,0 +1,16 @@
+{
+  "digest": "39565a486fa44095def5330ed7ce3c16a8a864f6930b050220b30d9456a929f3",
+  "request_id": "e7bf3ff5-3553-9c9b-a51e-08b1a7747bf1",
+  "usage": {
+    "input_tokens": 22,
+    "output_tokens": 71,
+    "total_tokens": 93,
+    "characters": 41
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yylu-77a02af0575b449fadd3046da74d049f",
+  "text": "当年有人说，是星光这边怕输，才借着下雨叫停。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：边想边说，停顿有分寸，不拖长。",
+  "who": "lu"
+}

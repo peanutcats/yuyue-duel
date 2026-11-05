@@ -1,0 +1,16 @@
+{
+  "digest": "58e81523da1a4e4e569a39bd5260db8e3e99b976eff2842979c693b45c02b028",
+  "request_id": "90868563-dd17-9afd-9608-d597ddaa140e",
+  "usage": {
+    "input_tokens": 31,
+    "output_tokens": 76,
+    "total_tokens": 107,
+    "characters": 59
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyxiaohong-50dc0caa82b447ae85e9bc8b63563bcd",
+  "text": "我的公式里本来没有误差项。可刚才输给你的那几分，好像就是误差。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：边想边说，停顿有分寸，不拖长。",
+  "who": "xiaohong"
+}

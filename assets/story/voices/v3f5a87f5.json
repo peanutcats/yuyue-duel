@@ -1,0 +1,16 @@
+{
+  "digest": "f898fe98d1044e3fa85083b48a5bf52e6e2ca764fd3fc0777b031e4429bb7b76",
+  "request_id": "73c2d544-9109-929b-81f2-a852b006589b",
+  "usage": {
+    "input_tokens": 8,
+    "output_tokens": 20,
+    "total_tokens": 28,
+    "characters": 15
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yylu-77a02af0575b449fadd3046da74d049f",
+  "text": "……那我就讲新的。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：短暂惊讶，随后像向同伴确认。",
+  "who": "lu"
+}

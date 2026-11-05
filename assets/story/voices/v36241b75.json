@@ -1,0 +1,16 @@
+{
+  "digest": "b4e1729010e2b186495192f54890af0668ecd2bce9634a48944f1c0968827e50",
+  "request_id": "f75bff5e-edf3-963d-9b3d-87f1805700a0",
+  "usage": {
+    "input_tokens": 31,
+    "output_tokens": 77,
+    "total_tokens": 108,
+    "characters": 59
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yymm-13991994e40b44a7b5af603229af22b3",
+  "text": "先接几个球热热身。黄色圈是落点，青色是站位——别追着我的尾巴跑！",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：清楚地提醒同伴，强调关键动作。",
+  "who": "mm"
+}

@@ -1,0 +1,16 @@
+{
+  "digest": "31c2595723a0d7ab87aae7266eeaf40ce9c9556834cd52f4ec052152fe28a14c",
+  "request_id": "9eb52933-c3c9-9dcc-b6b0-e71bf8659e94",
+  "usage": {
+    "input_tokens": 31,
+    "output_tokens": 81,
+    "total_tokens": 112,
+    "characters": 58
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yylaochen-7f836bbf53de430389176c261a0e42e5",
+  "text": "田楚的数据：他喜欢用同一个引拍打出不同的球。别看他的手，看球。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "laochen"
+}

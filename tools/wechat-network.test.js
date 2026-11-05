@@ -119,7 +119,7 @@ test('cloud reconnect opens just one async request and resumes the existing seat
   for (let i = 0; i < 10; i++) h.advance(100);
   assert.equal(h.calls.length, 2);
   const resumed = await h.socket(1); resumed.handlers.open();
-  assert.deepEqual(resumed.sent[0], { t: 'resume', room: 'ABCD', token: 'seat' });
+  assert.deepEqual(resumed.sent[0], { t: 'resume', room: 'ABCD', token: 'seat', roomProtocol: 2 });
   assert.equal(h.inits.length, 1); h.net.close();
 });
 
@@ -140,11 +140,14 @@ async function until(fn, ms = 4000) {
 for (const cloudMode of [false, true]) test(`${cloudMode ? 'async cloud SocketTask adapter' : 'native SocketTask'} integration: real server create/join, state parity, pause and token reconnect`, async t => {
   const server = createServer(); server.server.listen(0, '127.0.0.1'); await once(server.server, 'listening');
   const url = `ws://127.0.0.1:${server.server.address().port}/ws`, a = liveClient(url, cloudMode), b = liveClient(url, cloudMode);
-  const seen = [[], []]; let starts = 0;
-  for (const [i, n] of [a, b].entries()) { n.onStart = () => starts++; n.onMessage = data => { if (data.t === 'st') seen[i].push(data); }; }
+  const seen = [[], []], lobbies = []; let starts = 0;
+  for (const [i, n] of [a, b].entries()) { n.onStart = () => starts++; n.onMessage = data => { if (data.t === 'st') seen[i].push(data); if (data.t === 'room') lobbies[i] = data; }; }
   const timer = setInterval(() => { a.update(); b.update(); }, 20);
   t.after(async () => { clearInterval(timer); a.close(); b.close(); await server.close(); });
   const code = await a.connect({ t: 'create', venue: 'sunset' }); await b.connect({ t: 'join', room: code });
+  await until(() => lobbies.every(r => r.players.length === 2) && lobbies.length === 2);
+  assert.equal(starts, 0);
+  a.send({ t: 'ready', ready: true, revision: lobbies[0].revision }); b.send({ t: 'ready', ready: true, revision: lobbies[1].revision });
   await until(() => starts === 2 && seen.every(s => s.length));
   assert.equal(a.code, b.code); assert.equal(a.player, 0); assert.equal(b.player, 1);
   assert.deepEqual(seen[0][0].s, seen[1][0].s);
@@ -154,4 +157,16 @@ for (const cloudMode of [false, true]) test(`${cloudMode ? 'async cloud SocketTa
   await until(() => seen[1].at(-1).wait === null);
   const token = b.token; b.disconnected(); await until(() => starts === 3);
   assert.equal(b.token, token); assert.equal(b.player, 1); assert.equal(b.status, 'connected');
+});
+
+test('reconnect countdown continues through a stalled resume handshake and connection text reflects remaining time', async () => {
+  const h = fakeNetwork(), ready = h.net.connect({ t: 'create' }), socket = h.sockets[0];
+  socket.handlers.open(); socket.receive({ t: 'welcome', room: 'ABCD', token: 'seat', seq: 0, action: 0, player: 0 }); await ready;
+  h.net.disconnected(); assert.equal(h.net.reconnectRemaining(), 20);
+  h.advance(800); h.sockets[1].handlers.open(); h.advance(3200);
+  assert.match(h.net.connectionText(), /剩余 16 秒/);
+  // A pong alone is not an authenticated resume and cannot reset its deadline.
+  h.sockets[1].receive({ t: 'pong', ts: 4000, nt: 4 });
+  let reason; h.net.onEnd = text => reason = text; h.advance(16000);
+  assert.match(reason, /重连超时/); assert.equal(h.net.status, 'closed');
 });

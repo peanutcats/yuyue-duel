@@ -1,0 +1,20 @@
+{
+  "digest": "31d048c03428b47e5c0fd416d1a52096ad2ad2489a902720737189c806c83e27",
+  "file": "canglan-vf487368c.wav",
+  "who": "canglan",
+  "name": "沧澜",
+  "text": "也许有人只是想找个地方，安心打一场球。",
+  "mood": "talk",
+  "delivery": "日常",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "request_id": "0d603d1e-6f45-94f8-881a-d1b18619d1a2",
+  "usage": {
+    "input_tokens": 19,
+    "output_tokens": 48,
+    "total_tokens": 67,
+    "characters": 36
+  },
+  "reused_audition": true,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yycanglan-a4eb561889b24f5985d096ce0c286c74"
+}

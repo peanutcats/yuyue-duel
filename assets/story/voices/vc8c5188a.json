@@ -1,0 +1,16 @@
+{
+  "digest": "49cfef3ac5f0abf31563156e36f283e37fc060c25c3a729c6fedbe08afc29648",
+  "request_id": "15f5f775-59e6-9eb1-b44d-e28f1fc04e29",
+  "usage": {
+    "input_tokens": 14,
+    "output_tokens": 50,
+    "total_tokens": 64,
+    "characters": 25
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyzhu-51d3e2230c6d4ee8b71cd80474e27aef",
+  "text": "林姐要是在，会说：门开对了。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "zhu"
+}

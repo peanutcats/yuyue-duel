@@ -1,0 +1,16 @@
+{
+  "digest": "94f6c95299b079dc5f64f448e62c0d3cb4e002eaf5c47421354d6f12606b50ac",
+  "request_id": "d9e8feac-ee6e-9f5b-b717-2704c55b20fc",
+  "usage": {
+    "input_tokens": 13,
+    "output_tokens": 32,
+    "total_tokens": 45,
+    "characters": 25
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyxingxing-bf1d887d84034502aa01912d757758a3",
+  "text": "原来战术也可以是一种安慰。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "xingxing"
+}

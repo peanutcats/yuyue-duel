@@ -4,6 +4,7 @@
 (function (G) {
   'use strict';
   const YY = (G.YY = G.YY || {});
+  YY.PHYSICS_VERSION = 2;
 
   // Host services are supplied by the browser or the WeChat entry point.
   YY.platform = YY.platform || {
@@ -44,6 +45,7 @@
     SW_SWEET: 0.11,     // 最佳击球时刻
     SW_DUR: 0.3,        // 普通挥拍总时长（含收拍）
     SW_SMASH_DUR: 0.56, // 扣杀收拍较慢
+    SW_BUFFER: 0.10,    // 收拍将结束时，短暂保留最近一次击球按键
     SMASH_MIN_Y: 2.45,  // 扣杀最低击球点
 
     SPEED_DISPLAY: 2.4, // 显示球速的夸张倍率（游戏内速度做了放慢）
@@ -105,39 +107,48 @@
   /** 推进一步羽毛球物理；返回 'net' | 'floor' | null。
    * env（可选）：{ drag: 阻力系数（高原空气稀薄更小）, wind: 水平风速 m/s（+x 吹向右场） } */
   YY.stepShuttle = function (s, dt, env) {
-    const drag = env && env.drag != null ? env.drag : C.DRAG;
-    const rx = s.vx - ((env && env.wind) || 0); // 相对空气的速度
-    const v = Math.hypot(rx, s.vy);
-    const k = drag * v;
-    s.vx += -k * rx * dt;
-    s.vy += (-C.G - k * s.vy) * dt;
-    const px = s.x, py = s.y;
-    s.x += s.vx * dt;
-    s.y += s.vy * dt;
-    let res = null;
-    if (!s.netHit) {
-      const f = netContact(px, py, s.x, s.y);
-      if (f !== null) {
-        // 球头中心可能已略过 x=0，但尾部仍擦网；始终退回入射的一侧。
-        const side = s.vx > 0 ? -1 : s.vx < 0 ? 1 : px < 0 ? -1 : 1;
-        s.x = side * (C.SHUTTLE_R + 0.0001);
-        s.y = py + (s.y - py) * f;
-        s.vx = -s.vx * 0.06;
-        s.vy = Math.min(s.vy, 0) * 0.3 - 0.5;
-        s.netHit = true;
-        s.crossedNet = false;
-        res = 'net';
-      } else if ((px < C.SHUTTLE_R && s.x >= C.SHUTTLE_R) ||
-                 (px > -C.SHUTTLE_R && s.x <= -C.SHUTTLE_R)) {
-        s.crossedNet = true;
+    s.stepTime = 0;
+    if (!Number.isFinite(dt) || dt <= 0) return null;
+    const drag = Math.max(0, env && env.drag != null ? env.drag : C.DRAG);
+    const wind = (env && env.wind) || 0;
+    let remaining = dt, result = null;
+    while (remaining > 1e-10) {
+      const rx = s.vx - wind, speed = Math.hypot(rx, s.vy);
+      // Midpoint integration preserves ballistic motion without drag and is
+      // substantially less step-size dependent than the previous Euler update.
+      // Small substeps also prevent strong drag from reversing the velocity.
+      const h = Math.min(remaining, C.DT, 0.2 / Math.max(1e-9, drag * speed));
+      const k = drag * speed;
+      const mx = s.vx - k * rx * h / 2, my = s.vy + (-C.G - k * s.vy) * h / 2;
+      const mk = drag * Math.hypot(mx - wind, my);
+      const vx = s.vx - mk * (mx - wind) * h, vy = s.vy + (-C.G - mk * my) * h;
+      const px = s.x, py = Math.max(C.SHUTTLE_R, s.y);
+      const x = px + mx * h, y = py + my * h;
+      const floor = y <= C.SHUTTLE_R ? clampFraction((py - C.SHUTTLE_R) / Math.max(1e-12, py - y)) : null;
+      const net = s.netHit ? null : netContact(px, py, x, y);
+      s.vx = vx; s.vy = vy;
+      if (floor !== null && (net === null || floor <= net)) {
+        // Score at the first cork/ground contact, not the far end of a frame.
+        s.x = px + (x - px) * floor; s.y = C.SHUTTLE_R;
+        s.stepTime += h * floor;
+        return 'floor';
       }
+      if (net !== null) {
+        const side = mx > 0 ? -1 : mx < 0 ? 1 : px < 0 ? -1 : 1;
+        s.x = side * (C.SHUTTLE_R + 0.0001);
+        s.y = py + (y - py) * net;
+        s.vx = -vx * 0.06; s.vy = Math.min(vy, 0) * 0.3 - 0.5;
+        s.netHit = true; s.crossedNet = false; result = 'net';
+      } else {
+        s.x = x; s.y = y;
+        if (!s.netHit && ((px < C.SHUTTLE_R && x >= C.SHUTTLE_R) ||
+            (px > -C.SHUTTLE_R && x <= -C.SHUTTLE_R))) s.crossedNet = true;
+      }
+      s.stepTime += h; remaining -= h;
     }
-    if (s.y <= 0) {
-      s.y = 0;
-      res = 'floor';
-    }
-    return res;
+    return result;
   };
+  const clampFraction = value => Math.max(0, Math.min(1, value));
 
   /** 从给定状态模拟到落地。record=true 时返回轨迹点（相对时间） */
   YY.simulate = function (x, y, vx, vy, maxT, record, netHit, env) {
@@ -147,17 +158,17 @@
     const pts = record ? [{ t: 0, x, y, vx, vy }] : null;
     maxT = maxT || 6;
     let i = 0;
-    while (t < maxT) {
+    while (t < maxT - 1e-10) {
       const px = s.x, py = s.y;
-      const r = YY.stepShuttle(s, dt, env);
-      t += dt;
+      const r = YY.stepShuttle(s, Math.min(dt, maxT - t), env);
+      t += s.stepTime;
       i++;
       if (netY === null && (px < 0) !== (s.x < 0) && r !== 'net') {
         const f = px / (px - s.x);
         netY = py + (s.y - py) * f;
       }
       if (s.y > apex) apex = s.y;
-      if (record && (i % 2 === 0 || r === 'floor')) pts.push({ t, x: s.x, y: s.y, vx: s.vx, vy: s.vy });
+      if (record && (i % 2 === 0 || r || t >= maxT - 1e-10)) pts.push({ t, x: s.x, y: s.y, vx: s.vx, vy: s.vy });
       if (r === 'floor') break;
     }
     return { landX: s.x, t, netHit: s.netHit, netY, apex, pts };
@@ -169,11 +180,17 @@
     const ca = Math.cos(a) * dir, sa = Math.sin(a);
     let lo = 0.5, hi = 55;
     const range = (v) => (YY.simulate(x0, y0, v * ca, v * sa, 6, false, true, env).landX - x0) * dir;
-    if (range(hi) < dist) return hi;
+    let rLo = range(lo), rHi = range(hi);
+    if (rHi < dist) return hi;
+    if (rLo > dist) return lo;
     for (let i = 0; i < 24; i++) {
-      const m = (lo + hi) / 2;
-      if (range(m) < dist) lo = m;
-      else hi = m;
+      // Safeguarded interpolation needs fewer full trajectory simulations than
+      // always halving the speed range; stop once landing error is sub-millimetre.
+      const u = YY.clamp((dist - rLo) / (rHi - rLo || 1), 0.1, 0.9);
+      const m = lo + (hi - lo) * u, r = range(m);
+      if (Math.abs(r - dist) < 0.0002) return m;
+      if (r < dist) { lo = m; rLo = r; }
+      else { hi = m; rHi = r; }
     }
     return (lo + hi) / 2;
   };
@@ -185,12 +202,15 @@
       return (YY.simulate(x0, y0, speed * Math.cos(a) * dir, speed * Math.sin(a), 6, false, true, env).landX - x0) * dir;
     };
     let lo = aLo, hi = aHi;
-    if (range(lo) >= dist) return lo;
-    if (range(hi) <= dist) return hi;
+    let rLo = range(lo), rHi = range(hi);
+    if (rLo >= dist) return lo;
+    if (rHi <= dist) return hi;
     for (let i = 0; i < 22; i++) {
-      const m = (lo + hi) / 2;
-      if (range(m) < dist) lo = m;
-      else hi = m;
+      const u = YY.clamp((dist - rLo) / (rHi - rLo || 1), 0.1, 0.9);
+      const m = lo + (hi - lo) * u, r = range(m);
+      if (Math.abs(r - dist) < 0.0002) return m;
+      if (r < dist) { lo = m; rLo = r; }
+      else { hi = m; rHi = r; }
     }
     return (lo + hi) / 2;
   };
@@ -204,13 +224,14 @@
   YY.SHOT_NAMES = {
     clear: '高远球', flatclear: '平高球', lift: '挑球', drop: '吊球', slice: '劈吊',
     net: '网前轻放', block: '放网', smash: '扣杀', drive: '平抽',
+    kill: '网前扑球', halfsmash: '点杀', tumble: '搓球', push: '推后场',
     lserve: '发高远球', sserve: '发网前球', feed: '发球机',
   };
   // 归类：用于“重复球路被针对”的判断
   YY.SHOT_CAT = {
     clear: 'clear', flatclear: 'clear', lift: 'clear', lserve: 'clear',
     drop: 'drop', slice: 'drop', net: 'drop', block: 'drop', sserve: 'drop',
-    smash: 'smash', drive: 'drive',
+    smash: 'smash', drive: 'drive', kill: 'smash', halfsmash: 'smash', tumble: 'drop', push: 'clear',
   };
 
   if (typeof module !== 'undefined') module.exports = YY;

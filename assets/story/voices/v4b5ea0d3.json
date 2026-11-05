@@ -1,0 +1,16 @@
+{
+  "digest": "8eb81c1cc2d1bc6ef03e6bdce188c1c47363f6221bb657e41c7b6a0a7ab97d04",
+  "request_id": "335f32f3-651d-9dd7-a355-d1c847db95d3",
+  "usage": {
+    "input_tokens": 9,
+    "output_tokens": 23,
+    "total_tokens": 32,
+    "characters": 16
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yylaochen-7f836bbf53de430389176c261a0e42e5",
+  "text": "陪。打完球一起去。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "laochen"
+}

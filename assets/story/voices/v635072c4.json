@@ -1,0 +1,16 @@
+{
+  "digest": "95d81d7f36ca31dae0044dcfd77a9fff48fa33d10d0790a55f75bdd6754081da",
+  "request_id": "f265ee5e-bb81-9cb9-ab9e-079863e003ce",
+  "usage": {
+    "input_tokens": 28,
+    "output_tokens": 70,
+    "total_tokens": 98,
+    "characters": 53
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yynar-9a6555ee9f6e43f0b167a59eec741be0",
+  "text": "复查组到了。朱老师和田楚的外公，坐在场边的同一条长椅上。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "nar"
+}

@@ -1,0 +1,16 @@
+{
+  "digest": "96c5018b334269df499e77ee6e333f8967cda92bbfeb65add36725ba009872e0",
+  "request_id": "b9f6dc8b-35f5-9725-ab8d-1f2698c20697",
+  "usage": {
+    "input_tokens": 26,
+    "output_tokens": 56,
+    "total_tokens": 82,
+    "characters": 49
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yynar-9a6555ee9f6e43f0b167a59eec741be0",
+  "text": "晚上九点，其他人都走了。沧澜还在一盏一盏地检查灯管。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "nar"
+}

@@ -1,0 +1,20 @@
+{
+  "digest": "51e1783d718c1858ce5f742b0c62ba7e54eec555eec4be3517db9c1a77d23d46",
+  "file": "laochen-vae72f7ac.wav",
+  "who": "laochen",
+  "name": "老陈",
+  "text": "我？我就是个记数据的……",
+  "mood": "surprise",
+  "delivery": "激动",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：短暂惊讶，随后像向同伴确认。",
+  "request_id": "4eb2dc8c-6aef-9827-9eaf-1fcc210e7345",
+  "usage": {
+    "input_tokens": 11,
+    "output_tokens": 26,
+    "total_tokens": 37,
+    "characters": 21
+  },
+  "reused_audition": true,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yylaochen-7f836bbf53de430389176c261a0e42e5"
+}

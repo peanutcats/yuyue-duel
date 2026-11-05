@@ -27,7 +27,7 @@ function peer(url, origin) {
     let data;
     try { data = JSON.parse(raw.toString()); } catch (_) { return fail(new Error('服务器未返回预期的 JSON 协议')); }
     if (data.t === 'error') return fail(new Error(data.message || '服务器拒绝请求'));
-    const waiter = [...waiters].find(w => w.type === data.t);
+    const waiter = [...waiters].find(w => w.type === data.t && (!w.test || w.test(data)));
     if (waiter) waiter.resolve(data); else if (messages.length < 256) messages.push(data);
   });
   const opened = new Promise((resolve, reject) => {
@@ -38,13 +38,13 @@ function peer(url, origin) {
   return {
     opened,
     send: data => ws.send(JSON.stringify(data)),
-    next(type) {
+    next(type, test = () => true) {
       if (failure) return Promise.reject(failure);
-      const i = messages.findIndex(m => m.t === type);
+      const i = messages.findIndex(m => m.t === type && test(m));
       if (i >= 0) return Promise.resolve(messages.splice(i, 1)[0]);
       return new Promise((resolve, reject) => {
         const done = (fn, value) => { clearTimeout(timer); waiters.delete(w); fn(value); };
-        const w = { type, resolve: data => done(resolve, data), reject: error => done(reject, error) };
+        const w = { type, test, resolve: data => done(resolve, data), reject: error => done(reject, error) };
         const timer = setTimeout(() => w.reject(new Error(`等待 ${type} 超时`)), 10000);
         waiters.add(w);
       });
@@ -71,27 +71,40 @@ async function checkCloudrun(value = deployment.publicUrl, { origin = 'https://s
   if (health.ok !== true || health.mode !== 'authoritative' || health.physicsHz !== 120 || health.snapshotHz !== 30) {
     throw new Error('/healthz 不是当前羽毛球比赛服务器');
   }
+  if (health.physicsVersion !== require('../js/core').PHYSICS_VERSION) {
+    throw new Error('线上物理版本尚未更新，请部署新的比赛服务包后重试');
+  }
+  if (health.roomProtocol !== 2) throw new Error('线上房间版本尚未更新，请部署支持双方准备的比赛服务包');
   const url = new URL('/ws', base); url.protocol = base.protocol === 'https:' ? 'wss:' : 'ws:';
   const peers = [];
   try {
     const host = peer(url, origin); peers.push(host); await host.opened;
-    host.send({ t: 'create', venue: 'arena' });
+    host.send({ t: 'create', venue: 'arena', roomProtocol: 2 });
     const a = await host.next('welcome');
     if (!/^[A-Z2-9]{4}$/.test(a.room) || a.player !== 0) throw new Error('建房返回值不符合协议');
     const guest = peer(url, origin); peers.push(guest); await guest.opened;
-    guest.send({ t: 'join', room: a.room });
+    guest.send({ t: 'join', room: a.room, roomProtocol: 2 });
     const b = await guest.next('welcome');
     if (a.room !== b.room || b.player !== 1) throw new Error('两端未加入同一房间；检查是否只有一个实例/版本接收流量');
-    const [startA, startB, stateA, stateB] = await Promise.all([
-      host.next('start'), guest.next('start'), host.next('st'), guest.next('st'),
-    ]);
-    if (startA.matchId !== startB.matchId || stateA.matchId !== startA.matchId ||
-        stateB.matchId !== startA.matchId || stateA.pp?.length !== 2 || stateB.pp?.length !== 2) {
-      throw new Error('两端对局或服务器快照不一致');
-    }
-    const ts = Date.now(); host.send({ t: 'ping', ts });
-    if ((await host.next('pong')).ts !== ts) throw new Error('心跳回包不符合协议');
-    return { ok: true, checks: ['healthz', 'WSS upgrade', 'create', 'join', 'shared match', 'snapshots', 'heartbeat'] };
+    // The join snapshot is authoritative; confirm exactly that rule revision.
+    const lobby = await guest.next('room');
+    if (lobby.phase !== 'lobby' || lobby.players.length !== 2) throw new Error('加入后应停留在准备房间');
+    const keepAlive = setInterval(() => { host.send({ t: 'ping', ts: Date.now(), active: true }); guest.send({ t: 'ping', ts: Date.now(), active: true }); }, 800);
+    try {
+      host.send({ t: 'ready', revision: lobby.revision, ready: true });
+      guest.send({ t: 'ready', revision: lobby.revision, ready: true });
+      const [startA, startB, stateA, stateB] = await Promise.all([
+        host.next('start'), guest.next('start'), host.next('st'), guest.next('st'),
+      ]);
+      if (startA.matchId !== startB.matchId || stateA.matchId !== startA.matchId ||
+          stateB.matchId !== startA.matchId || stateA.pp?.length !== 2 || stateB.pp?.length !== 2) {
+        throw new Error('两端对局或服务器快照不一致');
+      }
+      const ts = Date.now(); host.send({ t: 'ping', ts });
+      await host.next('pong', d => d.ts === ts);
+      if (startA.rules.skills !== lobby.rules.skills || startA.chars.join() !== lobby.players.map(p => p.char).join()) throw new Error('开局角色或规则与准备房间不一致');
+      return { ok: true, checks: ['healthz', 'WSS upgrade', 'create', 'join', 'ready', 'countdown', 'shared match', 'snapshots', 'heartbeat'] };
+    } finally { clearInterval(keepAlive); }
   } finally {
     // This check only creates its own temporary room and explicitly removes it.
     await Promise.all(peers.map(p => p.close()));

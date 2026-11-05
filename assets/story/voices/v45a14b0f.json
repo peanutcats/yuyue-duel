@@ -1,0 +1,16 @@
+{
+  "digest": "fa2b1fc43b504b33a46a4813001306a794cd712533bbd87c79030e48b97a66d7",
+  "request_id": "f8443625-166c-9b8d-af6e-9b2e733a4cb1",
+  "usage": {
+    "input_tokens": 34,
+    "output_tokens": 123,
+    "total_tokens": 157,
+    "characters": 62
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyhouzi-8b1303f4011a48d5a7de5234aa93c44f",
+  "text": "高远压后场，吊球调网前，抓机会进攻。跟推塔一个道理：先拉扯，再收割。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：清楚地提醒同伴，强调关键动作。",
+  "who": "houzi"
+}

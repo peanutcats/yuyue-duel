@@ -1,0 +1,16 @@
+{
+  "digest": "45cd49dd3c58d39c17906ffc5cb8ed3f183256d55eb72f6ca0e03114af9d05d9",
+  "request_id": "19a5d6ab-9811-909d-b095-02ab16f01008",
+  "usage": {
+    "input_tokens": 23,
+    "output_tokens": 51,
+    "total_tokens": 74,
+    "characters": 44
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yycanglan-a4eb561889b24f5985d096ce0c286c74",
+  "text": "她去年走了。钥匙留给了我，还有一句话：“门别关。”",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：略感失落，声音放轻，保留完整吐字，不要哭腔。",
+  "who": "canglan"
+}

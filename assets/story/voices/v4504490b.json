@@ -1,0 +1,16 @@
+{
+  "digest": "98e40a65108dec071a1fb3cf42073a6a211948f6fb2d1ca74cd8f37bcbab0658",
+  "request_id": "931cd0eb-e738-9859-add3-eb4412d6fc2d",
+  "usage": {
+    "input_tokens": 27,
+    "output_tokens": 77,
+    "total_tokens": 104,
+    "characters": 51
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yymm-13991994e40b44a7b5af603229af22b3",
+  "text": "同一个出球点，改角度和速度，看看落点和飞行时间怎么变。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "mm"
+}

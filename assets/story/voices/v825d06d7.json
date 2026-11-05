@@ -1,0 +1,16 @@
+{
+  "digest": "bc2746d8e52867d46d1ef6ff58223c980968d9c1670a3caeae4b3e55af2c64dc",
+  "request_id": "365a7cb9-b274-9fba-9e88-61ff9ae247d8",
+  "usage": {
+    "input_tokens": 20,
+    "output_tokens": 34,
+    "total_tokens": 54,
+    "characters": 38
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yylaochen-7f836bbf53de430389176c261a0e42e5",
+  "text": "原来“风一吹就倒”，也可以是“风一吹就到”。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "laochen"
+}

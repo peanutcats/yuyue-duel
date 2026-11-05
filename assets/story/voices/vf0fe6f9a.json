@@ -1,0 +1,16 @@
+{
+  "digest": "e50c1a8c74d529ce40428d50c8c1154f0be1502c74114eda66cb252660be2f75",
+  "request_id": "2330ddce-6516-922a-a9f9-a23dc4c65552",
+  "usage": {
+    "input_tokens": 27,
+    "output_tokens": 76,
+    "total_tokens": 103,
+    "characters": 50
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yylaochen-7f836bbf53de430389176c261a0e42e5",
+  "text": "补充一条：他输球的时候，冷笑话讲得最多。这个我有统计。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "laochen"
+}

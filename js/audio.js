@@ -59,6 +59,9 @@
     net() { if (this.ok()) { this.burst(500, 1, 0.2, 0.35); this.tone(120, 0.15, 0.15, 'sine'); } },
     floor() { if (this.ok()) { this.burst(700, 2, 0.08, 0.3); this.tone(220, 0.08, 0.15, 'sine', 120); } },
     jump() { if (this.ok()) this.burst(300, 1, 0.08, 0.12, 'lowpass'); },
+    land() { if (this.ok()) { this.burst(450, 1, .06, .10, 'lowpass'); this.tone(210, .06, .045, 'sine', 130); } },
+    point(won) { if (this.ok()) this.tone(won ? 880 : 440, .1, .07, 'triangle'); },
+    success() { if (this.ok()) this.tone(988, .08, .045, 'triangle'); },
     whistle() {
       if (!this.ok()) return;
       const c = this.ctx, t = c.currentTime;

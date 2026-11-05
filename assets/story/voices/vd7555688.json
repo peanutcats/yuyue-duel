@@ -1,0 +1,16 @@
+{
+  "digest": "880c58e1074c0e76ae86efee4279bffecc8824bd04379481058117acd37707a3",
+  "request_id": "1dc25fb2-28ea-9ed7-8e18-ffb8fb0c5c11",
+  "usage": {
+    "input_tokens": 21,
+    "output_tokens": 47,
+    "total_tokens": 68,
+    "characters": 39
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyxingxing-bf1d887d84034502aa01912d757758a3",
+  "text": "第五条：完成自己的一个小目标，就值得庆祝。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "xingxing"
+}

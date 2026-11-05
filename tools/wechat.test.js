@@ -7,7 +7,7 @@ test('WeChat entry boots and renders all menu screens without window, document, 
   assert.equal(context.window, undefined); assert.equal(context.document, undefined); assert.equal(context.performance, undefined);
   assert.equal(app.screen, 'menu'); assert.ok(h.canvases.length > 1);
   for (const screen of ['ai', 'practice', 'friend', 'join', 'story', 'team', 'codex', 'help', 'settings']) { app.show(screen); h.frames(2); assert.ok(app.ui.buttons.length); }
-  assert.equal(h.YY.STAGES.length, 18); assert.equal(h.YY.CHARS.length, 7); app.destroy();
+  assert.equal(h.YY.STAGES.length, 60); assert.equal(h.YY.CHARS.length, 13); app.destroy();
 });
 
 test('real canvas buttons enter matches, three independent fingers move/jump/swing, cancel and direction sliding release correctly', () => {
@@ -46,7 +46,7 @@ test('background freeze, resume without catch-up, and stale delayed results cann
   app.startPractice('clear'); h.frames(100); assert.equal(app.staleFired, undefined); app.destroy();
 });
 
-test('all 18 story stages can traverse dialogs, choices, challenge scenes, stars and rewards in the native runtime', () => {
+test('all story stages traverse dialog, choices, activities, challenges, stars and rewards in the native runtime', () => {
   const h = loadGame(), { app, YY } = h;
   for (const stage of YY.STAGES) {
     app.startStage(stage.id);
@@ -55,6 +55,9 @@ test('all 18 story stages can traverse dialogs, choices, challenge scenes, stars
       h.frames();
       if (app.screen === 'dialog') app.dlgFinish();
       else if (app.screen === 'quiz') { app.quizAnswer(app.quiz.step.qs[app.quiz.i].a); h.frames(); app.quizNext(); }
+      else if (app.screen === 'inspect') { for(const item of app.activity.step.items) app.inspectItem(item.id); app.finishInspect(); }
+      else if (app.screen === 'board') { app.boardAnswer(app.activity.step.cases[app.activity.index].answer);app.boardNext(); }
+      else if (app.screen === 'lab') { for(let i=0;i<3;i++){app.labSelect(i);app.labTry();}app.labSelect(YY.LABS[app.activity.experiment].target);app.finishLab(); }
       else if (app.screen === 'step') app.stepContinue();
       else if (app.mode === 'story') {
         h.frames(4);
@@ -68,18 +71,18 @@ test('all 18 story stages can traverse dialogs, choices, challenge scenes, stars
     assert.ok(limit < 60, stage.id + ' stalled'); assert.ok(YY.Profile.stars(stage.id) >= 1);
     assert.equal(app.screen, 'clear'); h.frames();
   }
-  assert.equal(YY.Profile.d.chars.length, 7); assert.equal(YY.Profile.d.cards.length, 22); assert.ok(YY.Profile.canTune());
+  assert.equal(YY.Profile.d.chars.length, 13); assert.equal(YY.Profile.d.cards.length, YY.CARDS.length); assert.ok(YY.Profile.canTune());
   const storage = h.storage; app.destroy();
-  const restarted = loadGame({ storage }); assert.equal(restarted.YY.Profile.d.chars.length, 7); assert.equal(Object.keys(restarted.YY.Profile.d.stages).length, 18); restarted.app.destroy();
+  const restarted = loadGame({ storage }); assert.equal(restarted.YY.Profile.d.chars.length, 13); assert.equal(Object.keys(restarted.YY.Profile.d.stages).length, YY.STAGES.length); restarted.app.destroy();
 });
 
 test('failed quiz cannot advance; environmental choice affects next challenge; locked stages stay locked', () => {
   const h = loadGame(), { app, YY } = h;
   app.startStage(YY.STAGES.at(-1).id); assert.equal(app.story, null);
-  const stage = YY.STAGES.find(s => s.steps.some(step => step.t === 'pick'));
+  const stage = YY.STAGES.find(s => s.steps.some(step => step.t === 'pick' && step.o.some(o=>!o.ok)));
   YY.STAGES.slice(0, YY.STAGES.indexOf(stage)).forEach(s => YY.Profile.setStars(s.id, 1));
   app.startStage(stage.id);
-  const choice = stage.steps.find(s => s.t === 'pick'); app.playPick(choice);
+  const choice = stage.steps.find(s => s.t === 'pick' && s.o.some(o=>!o.ok)); app.playPick(choice);
   const index = choice.o.findIndex(o => !o.ok); app.quizAnswer(index); assert.equal(app.story.ctx.pickOk, false); assert.ok(app.story.ctx.env);
   const before = app.story.i;
   app.playQuiz({ need: 1, qs: [{ q: 'test', o: ['yes', 'no'], a: 0, exp: 'explanation' }] }); app.quizAnswer(1); app.quizNext();

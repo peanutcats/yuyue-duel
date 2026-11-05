@@ -1,0 +1,16 @@
+{
+  "digest": "ffbd6ea6c9245b6705cb0fb4e18d5dfd0d45b36b7ef6e97cdb4fb3e6034da450",
+  "request_id": "7dd00601-85e2-9f3d-a878-f68663e025c6",
+  "usage": {
+    "input_tokens": 14,
+    "output_tokens": 42,
+    "total_tokens": 56,
+    "characters": 26
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyruibao-7c0dac9fd7f44dc39d4ce5e967f96cb0",
+  "text": "……这种队友，我初中见过不少。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：略感失落，声音放轻，保留完整吐字，不要哭腔。",
+  "who": "ruibao"
+}

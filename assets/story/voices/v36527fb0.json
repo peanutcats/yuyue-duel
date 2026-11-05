@@ -1,0 +1,16 @@
+{
+  "digest": "21cd85c2626da39a3ee6c6ebe698ba07a73070e321499ee92c3dd28bf31fc5a2",
+  "request_id": "e6324561-a0db-9eb5-97a6-9f50b5b5f025",
+  "usage": {
+    "input_tokens": 11,
+    "output_tokens": 26,
+    "total_tokens": 37,
+    "characters": 19
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyzhu-51d3e2230c6d4ee8b71cd80474e27aef",
+  "text": "好球。这一分，打完了。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "zhu"
+}

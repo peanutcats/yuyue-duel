@@ -1,0 +1,16 @@
+{
+  "digest": "8dbd6ccc442f9bd8d8610f9f81418ae2287673dfa19f9f66b01d136ad113b31b",
+  "request_id": "d831b84b-a1c4-958e-9bfd-414ee700581f",
+  "usage": {
+    "input_tokens": 8,
+    "output_tokens": 22,
+    "total_tokens": 30,
+    "characters": 15
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yycanglan-a4eb561889b24f5985d096ce0c286c74",
+  "text": "你们怎么都来了？",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：短暂惊讶，随后像向同伴确认。",
+  "who": "canglan"
+}

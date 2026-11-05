@@ -1,0 +1,16 @@
+{
+  "digest": "0899d966d546ac8ba2da3d8c7fc83d3ba8efc80b2be239903810ce72e5e037e2",
+  "request_id": "be013da1-3ab9-9e63-b1a1-dbb87f32987f",
+  "usage": {
+    "input_tokens": 12,
+    "output_tokens": 38,
+    "total_tokens": 50,
+    "characters": 22
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yylu-77a02af0575b449fadd3046da74d049f",
+  "text": "模型更新：百分之七十九。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "lu"
+}

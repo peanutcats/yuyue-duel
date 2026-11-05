@@ -1,0 +1,16 @@
+{
+  "digest": "68de7bff547fbb95b2a61b2225ac930813583d18d5decc2a0a36a6b8dd4e26d6",
+  "request_id": "8c09938d-4265-97ad-b94a-fa9acc5a6e82",
+  "usage": {
+    "input_tokens": 15,
+    "output_tokens": 41,
+    "total_tokens": 56,
+    "characters": 28
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyme-fe7bb10e54c34773bd5b8380c1b96481",
+  "text": "今晚你背的那位奶奶，记住你了。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "me"
+}

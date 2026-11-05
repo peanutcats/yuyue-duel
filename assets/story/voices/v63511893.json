@@ -1,0 +1,16 @@
+{
+  "digest": "cac04a0517e305d34cb49792ee711cd6873e65e656ce56099dea6f6f85bbbbfb",
+  "request_id": "c3338ed6-52ec-9484-bb37-1c4d49d16b86",
+  "usage": {
+    "input_tokens": 20,
+    "output_tokens": 41,
+    "total_tokens": 61,
+    "characters": 37
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyxiaohong-50dc0caa82b447ae85e9bc8b63563bcd",
+  "text": "我画了三条轨迹。最快的一条，不一定最好。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：清楚地提醒同伴，强调关键动作。",
+  "who": "xiaohong"
+}

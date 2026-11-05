@@ -1,5 +1,35 @@
 {
   "deviceOrientation": "landscape",
   "showStatusBar": false,
-  "networkTimeout": { "request": 10000, "connectSocket": 10000, "downloadFile": 10000 }
+  "networkTimeout": {
+    "request": 10000,
+    "connectSocket": 10000,
+    "downloadFile": 10000
+  },
+  "subpackages": [
+    {
+      "name": "voice-0",
+      "root": "voice-0"
+    },
+    {
+      "name": "voice-1",
+      "root": "voice-1"
+    },
+    {
+      "name": "voice-2",
+      "root": "voice-2"
+    },
+    {
+      "name": "voice-3",
+      "root": "voice-3"
+    },
+    {
+      "name": "voice-4",
+      "root": "voice-4"
+    },
+    {
+      "name": "voice-5",
+      "root": "voice-5"
+    }
+  ]
 }

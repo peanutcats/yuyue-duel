@@ -1,0 +1,16 @@
+{
+  "digest": "1a447ff87cb83ba93df4012da5fff360d199674ba9f434e140a5d484e02533d3",
+  "request_id": "0f9038fc-5ecf-9bcf-a341-b386a109d298",
+  "usage": {
+    "input_tokens": 34,
+    "output_tokens": 76,
+    "total_tokens": 110,
+    "characters": 65
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yynar-9a6555ee9f6e43f0b167a59eec741be0",
+  "text": "夜里十一点，电恢复了一半。朱老师撑着伞出现在门口——他就住在两条街外。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "nar"
+}

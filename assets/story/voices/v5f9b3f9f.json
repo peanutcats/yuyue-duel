@@ -1,0 +1,16 @@
+{
+  "digest": "91c1a90fcdd1a32ea1fc046a58fcfd47454b0fbcd05d5311817178039294ae31",
+  "request_id": "5573c340-621c-99c9-85a7-a091df2c810c",
+  "usage": {
+    "input_tokens": 12,
+    "output_tokens": 39,
+    "total_tokens": 51,
+    "characters": 22
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyruibao-7c0dac9fd7f44dc39d4ce5e967f96cb0",
+  "text": "这回的投机，我投你一票。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "ruibao"
+}

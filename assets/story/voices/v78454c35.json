@@ -1,0 +1,16 @@
+{
+  "digest": "ac5b944f234262f5fc59629516ae18132ede2b683d748a4846482d2abef7118d",
+  "request_id": "27761cf6-fd3e-9a55-a88d-59e29e43eaba",
+  "usage": {
+    "input_tokens": 20,
+    "output_tokens": 46,
+    "total_tokens": 66,
+    "characters": 38
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yymm-13991994e40b44a7b5af603229af22b3",
+  "text": "输了也有东西带回家，赢了也还有东西要学。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：高兴而充满干劲，笑意自然。",
+  "who": "mm"
+}

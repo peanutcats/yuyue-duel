@@ -1,4 +1,5 @@
 'use strict';
+const ControlLayout = require('./control-layout');
 /*
  * 羽跃对决 · 微信小游戏 Canvas 界面
  * 逻辑坐标以 380 高（或 700 宽）为基准，手机横屏下约 1 逻辑像素 = 1pt，正文 ≥ 14pt。
@@ -17,36 +18,45 @@ const HELP = [
   '球必须过网并进入己方半场，靠近肩部甜区时挥拍。太早、太晚都会落空。',
   '扣杀需要先起跳，在足够高的位置击球。起跳与扣杀消耗体力，稍作停顿就会恢复。',
   '向球网移动时击球，可打出平高、劈吊或近网扣杀；向后移动时扣杀打得更深。',
-  '技能环充满后点技能键。故事模式可以解锁新角色、球拍、球线和球鞋。',
+  '每名角色有 1 个被动和 3 个主动技能，赛前在「角色装备 · 技能」里选 2 个携带；能量环达到技能消耗即可按对应技能键。故事模式可以解锁新角色、球拍、球线和球鞋。',
   '快速对战为 7 分制，需领先 2 分，10:10 后先得 11 分者获胜。压线算界内。',
-  '同屏和在线对战采用相同基础能力，不使用装备加成和角色技能。',
+  '同屏和在线对战采用相同基础能力，不带入装备加成；角色技能按赛前确认的规则启用。',
 ];
 const PAD = 20;
-const KIND = { drill: ['训练', 'target', C.cyan], quiz: ['问答', 'help', C.purple], match: ['比赛', 'racket', C.red], footwork: ['步法', 'steps', C.green], serve: ['发球', 'up', C.orange], special: ['特殊', 'spark', C.gold] };
-const DRILL_LOOK = { receive: ['target', C.cyan], clear: ['up', C.gold], drop: ['down', C.green], smash: ['bolt', C.red] };
+const KIND = { inspect:['调查','eye',C.gold], board:['战术板','map',C.cyan], lab:['实验','spark',C.purple], combo:['三拍战术','racket',C.green], pick:['选择','book',C.gold], drill: ['训练', 'target', C.cyan], quiz: ['问答', 'help', C.purple], match: ['比赛', 'racket', C.red], footwork: ['步法', 'steps', C.green], serve: ['发球', 'up', C.orange], special: ['特殊', 'spark', C.gold] };
+const DRILL_LOOK = { receive: ['target', C.cyan], clear: ['up', C.gold], drop: ['down', C.green], net: ['spark', C.purple], smash: ['bolt', C.red] };
 
 class UI {
   constructor(YY, app, platform) {
     this.YY = YY; this.app = app; this.P = platform;
     this.buttons = []; this.regions = []; this.scroll = {}; this.pointers = new Map(); this.portraits = new Map();
     this.now = 0;
+    this.savedControls = ControlLayout.clean(platform.read(ControlLayout.KEY, null));
     this.resize();
   }
   resize() {
+    this.cancel();
     const v = this.P.viewport(); this.v = v; this.isPortrait = v.H > v.W;
-    const sw = Math.max(1, v.W - v.left - v.right), sh = Math.max(1, v.H - v.top - v.bottom);
+    // Use equal gutters even if the device has a cutout on only one side.
+    // The capsule limits the header locally; it must not push the entire page left.
+    const side = Math.max(v.left, v.right, this.isPortrait ? 12 : 16);
+    const sw = Math.max(1, v.W - side * 2), sh = Math.max(1, v.H - v.top - v.bottom);
     this.scale = this.isPortrait ? Math.min(sw / 360, sh / 560) : Math.min(sh / 380, sw / 700);
     this.W = sw / this.scale; this.H = sh / this.scale;
-    this.originX = v.left; this.originY = v.top;
+    this.originX = (v.W - sw) / 2; this.originY = v.top;
     const cap = v.capsule;
     const hasCap = cap && cap.left > v.W * .5 && cap.bottom > 0;
     this.capL = hasCap ? Math.min(this.W - 8, (cap.left - this.originX) / this.scale - 10) : this.W - PAD;
     this.capB = hasCap ? Math.max(0, (cap.bottom - this.originY) / this.scale + 6) : 0;
     this.pointers.clear();
+    if (this.editor) this.refreshControlEditor();
   }
   point(x, y) { return { x: (x - this.originX) / this.scale, y: (y - this.originY) / this.scale }; }
   reset() { this.scroll = {}; this.buttons = []; this.regions = []; this.pointers.clear(); }
-  cancel() { this.pointers.clear(); }
+  cancel() {
+    if (this.editor?.drag) { this.editor.drag = null; this.refreshControlEditor(); }
+    this.pointers?.clear();
+  }
 
   // ---------- 触摸 ----------
   touchStart(id, p) {
@@ -54,16 +64,36 @@ class UI {
     const list = [...this.buttons].reverse();
     // 精确命中优先；其次给手指 8 逻辑像素的容差，避免点在按钮边缘没反应。
     const b = list.find(b => this.contains(b, p)) || list.find(b => !b.disabled && b.h > 0 && this.contains(b, p, 8));
+    if (this.app.screen === 'controlEditor' && !b) {
+      const e = this.editor;
+      if (e.drag) return;
+      const hit = [...e.groups].reverse().find(g => Math.hypot(Math.max(0, Math.abs(p.x - g.x) - g.off), p.y - g.y) <= g.r + 8);
+      if (hit) { e.selected = hit.id; e.drag = { id, group: hit, dx: p.x - hit.x, dy: p.y - hit.y }; }
+      return;
+    }
     const region = [...this.regions].reverse().find(r => this.contains(r, p));
     this.pointers.set(id, { x: p.x, y: p.y, lastY: p.y, b, region, moved: false, screen: this.app.screen });
   }
   touchMove(id, p) {
+    const e = this.editor;
+    if (this.app.screen === 'controlEditor' && e?.drag?.id === id) {
+      ControlLayout.move(e.drag.group, p.x - e.drag.dx, p.y - e.drag.dy, this.W, this.H, e.mode);
+      e.conflicts = ControlLayout.conflicts(e.groups); return;
+    }
     const s = this.pointers.get(id); if (!s) return;
     if (Math.hypot(p.x - s.x, p.y - s.y) > 10) s.moved = true;
     if (s.region && s.moved) this.scroll[s.region.id] = Math.max(0, Math.min(s.region.max, (this.scroll[s.region.id] || 0) + s.lastY - p.y));
     s.lastY = p.y;
   }
   touchEnd(id, p, cancelled) {
+    const e = this.editor;
+    if (this.app.screen === 'controlEditor' && e?.drag?.id === id) {
+      const group = e.drag.group;
+      if (!cancelled) this.touchMove(id, p);
+      if (!cancelled && !e.conflicts.size) e.draft[e.mode][group.id] = ControlLayout.encode(group, this.W, this.H, e.mode);
+      else if (!cancelled) this.P.toast('按键不能重叠，请换个位置');
+      e.drag = null; this.refreshControlEditor(); return;
+    }
     const s = this.pointers.get(id); this.pointers.delete(id);
     if (!s || cancelled || s.moved || s.screen !== this.app.screen || !s.b || !this.contains(s.b, p, 14)) return;
     const current = this.buttons.find(b => b.id === s.b.id);
@@ -263,6 +293,7 @@ class UI {
     const dot = (cx, cy, r) => { g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.fill(); };
     switch (name) {
       case 'back': P([[5, -9], [-4, 0], [5, 9]]); g.lineWidth = 3; g.stroke(); break;
+      case 'pin': g.beginPath(); g.arc(0, -3, 6.5, Math.PI * .85, Math.PI * 2.15); g.lineTo(0, 10); g.closePath(); g.stroke(); dot(0, -3, 2.4); break;
       case 'next': P([[-4, -8], [4, 0], [-4, 8]]); g.lineWidth = 3; g.stroke(); break;
       case 'left': P([[6, -10], [-7, 0], [6, 10]]); g.closePath(); g.fill(); break;
       case 'right': P([[-6, -10], [7, 0], [-6, 10]]); g.closePath(); g.fill(); break;
@@ -356,57 +387,129 @@ class UI {
   }
 
   // ---------- 对局触控 ----------
-  layoutControls() {
-    if (!this.app.input) return;
+  makeControls(mode, preview = false) {
     const controls = [], W = this.W, H = this.H;
-    const circle = (id, action, player, x, y, r, label, color) => controls.push({ id, action, player, x, y, r, hitR: r + 12, label, color });
+    const circle = (id, action, player, x, y, r, label, color, extra) => controls.push({ id, action, player, x, y, r, hitR: r + 12, label, color, ...extra });
+    const SK = this.YY.SKILLS, kits = this.app.input.skill;
+    // 携带的两个主动技能：kits 单人为 [a, b]，双人为 [[a, b], [c, d]]
+    const list = (k) => Array.isArray(k) ? k : typeof k === 'string' ? [k] : [];
+    const kitOf = (i) => mode === 'duo' ? list(Array.isArray(kits) ? kits[i] : null) : i === 0 ? list(kits) : [];
+    const skillKey = (id, slot, player, x, y, r) => {
+      const sk = SK[kitOf(player)[slot]];
+      if (sk || preview) circle(id, slot ? 'skill2' : 'skill', player, x, y, r, preview ? (slot ? '技能二' : '技能一') : sk.short, sk?.color || C.purple, { cost: sk?.cost || 100 });
+    };
     // 方向区：左右两半共用一块大判定区，手指在区内左右滑动即换向，压在中缝也不会丢方向。
     const pad = (prefix, player, cx, cy, r, off, zone) => {
       zone.cx = cx;
       controls.push({ id: prefix + 'left', player, x: cx - off, y: cy, r, dir: -1, label: '‹', zone, pad: { cx, cy, r, off } });
       controls.push({ id: prefix + 'right', player, x: cx + off, y: cy, r, dir: 1, label: '›', zone, pad: { cx, cy, r, off } });
     };
-    if (this.app.input.layout === 'duo') {
+    if (mode === 'duo') {
       for (let i = 0; i < 2; i++) {
         const base = i * W / 2, half = W / 2;
-        pad(`p${i}-`, i, base + 92, H - 52, 36, 40, { x: base, y: H * .45, w: half * .5, h: H * .55 });
-        circle(`p${i}-jump`, 'jump', i, base + half - 50, H - 50, 34, '跳', C.gold);
-        circle(`p${i}-clear`, 'clear', i, base + half - 128, H - 44, 28, '高远', C.cyan);
-        circle(`p${i}-drop`, 'drop', i, base + half - 118, H - 116, 28, '吊球', C.green);
-        circle(`p${i}-smash`, 'smash', i, base + half - 48, H - 128, 28, '扣杀', C.red);
+        pad(`p${i}-`, i, base + 108, H - 72, 32, 36, { x: base, y: H * .45, w: half * .55, h: H * .55 });
+        circle(`p${i}-jump`, 'jump', i, base + half - 50, H - 62, 34, '跳', C.gold);
+        circle(`p${i}-clear`, 'clear', i, base + half - 128, H - 56, 28, '高远', C.cyan);
+        circle(`p${i}-drop`, 'drop', i, base + half - 118, H - 128, 28, '吊球', C.green);
+        circle(`p${i}-smash`, 'smash', i, base + half - 48, H - 140, 28, '扣杀', C.red);
+        skillKey(`p${i}-skill`, 0, i, base + half - 124, H - 196, 23);
+        skillKey(`p${i}-skill2`, 1, i, base + half - 58, H - 208, 23);
       }
       for (const b of controls) if (b.hitR) b.hitR = b.r + 8;
     } else {
-      pad('', 0, PAD + 100, H - 62, 44, 50, { x: 0, y: H * .45, w: PAD + 100 + 94 + 70, h: H * .55 });
-      circle('jump', 'jump', 0, W - 62, H - 60, 42, '跳', C.gold);
-      circle('clear', 'clear', 0, W - 158, H - 48, 34, '高远', C.cyan);
-      circle('drop', 'drop', 0, W - 146, H - 136, 34, '吊球', C.green);
-      circle('smash', 'smash', 0, W - 58, H - 160, 34, '扣杀', C.red);
-      const skill = this.app.input.skill && this.YY.SKILLS[this.app.input.skill];
-      if (skill) circle('skill', 'skill', 0, W - 60, H - 246, 27, skill.short, skill.color);
+      // Bring the visible pad under the resting thumb; keep the wider slide
+      // target so drifting fingers still move without requiring an exact hit.
+      const cx = Math.min(164, W * .24);
+      pad('', 0, cx, H - 84, 44, 50, { x: 0, y: H * .45, w: cx + 94 + 40, h: H * .55 });
+      circle('jump', 'jump', 0, W - 86, H - 74, 42, '跳', C.gold);
+      circle('clear', 'clear', 0, W - 182, H - 62, 34, '高远', C.cyan);
+      circle('drop', 'drop', 0, W - 170, H - 150, 34, '吊球', C.green);
+      circle('smash', 'smash', 0, W - 82, H - 174, 34, '扣杀', C.red);
+      skillKey('skill', 0, 0, W - 84, H - 260, 27);
+      skillKey('skill2', 1, 0, W - 168, H - 250, 27);
     }
+    return controls;
+  }
+  arrangedControls(mode, saved, preview = false) {
+    const result = ControlLayout.apply(this.makeControls(mode, preview), saved, this.W, this.H, mode);
+    if (result.fits) return result;
+    // A much narrower screen may no longer fit a stored layout. Use a valid
+    // default without deleting the saved layout for the original screen.
+    return { ...ControlLayout.apply(this.makeControls(mode, preview), {}, this.W, this.H, mode), adapted: true };
+  }
+  layoutControls() {
+    if (!this.app.input) return;
+    const mode = this.app.input.layout;
+    const { controls } = this.arrangedControls(mode, this.savedControls[mode]);
     this.controls = controls; this.app.input.setControls(controls);
   }
-  drawControls() {
+  openControlEditor(back = 'settings') {
+    this.app.show('controlEditor');
+    this.editor = { back, mode: back === 'pause' ? this.app.input.layout : 'solo', draft: ControlLayout.clean(this.savedControls), selected: null, drag: null };
+    this.refreshControlEditor();
+  }
+  refreshControlEditor() {
+    const e = this.editor; if (!e) return;
+    const layout = this.arrangedControls(e.mode, e.draft[e.mode], true);
+    if (layout.adapted) e.draft[e.mode] = {};
+    e.controls = layout.controls; e.groups = layout.groups; e.adapted = layout.adapted;
+    e.conflicts = new Set();
+  }
+  closeControlEditor(save = false) {
+    const e = this.editor; if (!e) return;
+    if (save) {
+      if (e.drag || e.conflicts.size) return this.P.toast('请先松开按键，完成位置调整');
+      if (!this.P.write(ControlLayout.KEY, e.draft)) return this.P.toast('保存失败，请检查设备存储空间');
+      this.savedControls = ControlLayout.clean(e.draft);
+    }
+    this.editor = null; this.app.show(e.back); this.layoutControls();
+    if (save) this.P.toast('键位已保存在本机');
+  }
+  controlEditor() {
+    const e = this.editor; if (!e) return;
+    const g = this.g, W = this.W, H = this.H;
+    this.header('自定义键位', '', () => this.closeControlEditor(false));
+    this.button('layout-save', '保存', this.capL - 96, 10, 96, 40, () => this.closeControlEditor(true), { primary: true, size: 16 });
+    for (const [i, mode] of ['solo', 'duo'].entries()) this.button('layout-' + mode, i ? '同屏双人' : '单人 / 联机', PAD + i * 116, 62, 108, 28, () => {
+      this.cancel(); e.mode = mode; e.selected = null; this.refreshControlEditor();
+    }, { selected: e.mode === mode, size: 12, radius: 10 });
+    this.button('layout-reset', '恢复默认', W - PAD - 100, 62, 100, 28, () => {
+      this.cancel(); e.draft[e.mode] = {}; e.selected = null; this.refreshControlEditor();
+    }, { size: 12, radius: 10 });
+    const hint = e.conflicts.size ? '位置重叠，松手将回到原位' : e.adapted ? '当前屏幕使用默认布局，可重新拖动调整' : '拖动按键 · 移动区整体调整';
+    this.text(hint, 262, 76, 12, e.conflicts.size ? C.red : C.sub, 500, 'left', W - 390);
+    g.save(); g.strokeStyle = 'rgba(255,255,255,.07)'; g.lineWidth = 1;
+    for (let x = PAD; x < W; x += 32) { g.beginPath(); g.moveTo(x, 100); g.lineTo(x, H - 12); g.stroke(); }
+    for (let y = 100; y < H; y += 32) { g.beginPath(); g.moveTo(PAD, y); g.lineTo(W - PAD, y); g.stroke(); }
+    if (e.mode === 'duo') { g.strokeStyle = 'rgba(255,207,74,.35)'; g.beginPath(); g.moveTo(W / 2, 100); g.lineTo(W / 2, H - 12); g.stroke(); }
+    g.restore();
+    this.drawControls(e.controls, true);
+    for (const item of e.groups) {
+      const color = e.conflicts.has(item.id) ? C.red : item.id === e.selected ? C.gold : 'rgba(220,235,255,.48)';
+      this.rect(item.x - item.off - item.r - 4, item.y - item.r - 4, (item.off + item.r + 4) * 2, (item.r + 4) * 2, null, item.r + 4, color, item.id === e.selected ? 2 : 1);
+      if (item.off) this.text(e.mode === 'duo' ? `P${item.player + 1} 移动` : '移动区', item.x, item.y, 11, color, 700, 'center');
+    }
+  }
+  drawControls(controls = this.controls, editing = false) {
     const g = this.g, a = this.app;
-    if (!this.controls) this.layoutControls();
-    const held = b => { for (const p of a.input.pointers.values()) if (p.hit?.id === b.id || (b.dir && p.hit?.player === b.player && p.dir === b.dir)) return true; for (const k of a.input.keys.values()) if (b.dir ? k.hit?.player === b.player && k.dir === b.dir : false) return true; return false; };
+    if (!controls) { this.layoutControls(); controls = this.controls; }
+    const held = b => { if (editing) return false; for (const p of a.input.pointers.values()) if (p.hit?.id === b.id || (b.dir && p.hit?.player === b.player && p.dir === b.dir)) return true; for (const k of a.input.keys.values()) if (b.dir ? k.hit?.player === b.player && k.dir === b.dir : false) return true; return false; };
     const pads = new Set();
-    for (const b of this.controls) {
+    for (const b of controls) {
       if (b.dir) {
         if (pads.has(b.zone)) continue; pads.add(b.zone);
-        const { cx, cy, r, off } = b.pad, left = this.controls.find(c => c.zone === b.zone && c.dir < 0), right = this.controls.find(c => c.zone === b.zone && c.dir > 0);
+        const { cx, cy, r, off } = b.pad, left = controls.find(c => c.zone === b.zone && c.dir < 0), right = controls.find(c => c.zone === b.zone && c.dir > 0);
         const x = cx - off - r, w = (off + r) * 2, h = r * 2, y = cy - r;
-        this.rect(x, y + 3, w, h, 'rgba(0,0,0,.28)', r);
-        this.rect(x, y, w, h, this.grad(0, y, 0, y + h, [[0, 'rgba(34,48,86,.78)'], [1, 'rgba(12,18,38,.82)']]), r, 'rgba(170,200,255,.30)', 1.5);
+        this.rect(x, y, w, h, this.grad(0, y, 0, y + h, [[0, 'rgba(210,230,255,.06)'], [1, 'rgba(12,18,38,.12)']]), r, 'rgba(210,230,255,.38)', 1.2);
         for (const [c, d] of [[left, -1], [right, 1]]) {
           const on = held(c);
           if (on) {
             g.save(); this.YY.rr(g, x, y, w, h, r); g.clip();
-            g.fillStyle = this.grad(cx, 0, cx + d * w / 2, 0, [[0, 'rgba(255,207,74,.10)'], [1, 'rgba(255,207,74,.55)']]);
+            g.fillStyle = this.grad(cx, 0, cx + d * w / 2, 0, [[0, 'rgba(255,207,74,.04)'], [1, 'rgba(255,207,74,.18)']]);
             g.fillRect(d < 0 ? x : cx, y, w / 2, h); g.restore();
           }
-          this.icon(d < 0 ? 'left' : 'right', cx + d * off, cy, r * .62, on ? C.gold : 'rgba(235,242,255,.92)');
+          g.save(); g.shadowColor = 'rgba(0,0,0,.65)'; g.shadowBlur = 3;
+          this.icon(d < 0 ? 'left' : 'right', cx + d * off, cy, r * .62, on ? C.gold : 'rgba(235,242,255,.92)'); g.restore();
         }
         this.rect(cx - .75, cy - r * .55, 1.5, r * 1.1, 'rgba(255,255,255,.18)', 1);
         continue;
@@ -420,16 +523,21 @@ class UI {
       } else {
         this.circle(b.x, b.y, r, this.grad(0, b.y - r, 0, b.y + r, on ? [[0, this.alpha(color, .55)], [1, this.alpha(color, .3)]] : [[0, 'rgba(34,48,86,.80)'], [1, 'rgba(10,16,34,.84)']]));
         this.circle(b.x, b.y, r - 1.5, null, color, on ? 3.5 : 2.2);
-        this.text(b.label, b.x, b.y + 1, b.action === 'skill' ? 13 : Math.round(r * .46), on ? '#fff' : color, 800, 'center');
+        const isSkill = b.action === 'skill' || b.action === 'skill2';
+        this.text(b.label, b.x, b.y + (isSkill && !editing ? -4 : 1), isSkill ? (b.label.length > 2 ? 11 : 13) : Math.round(r * .46), on ? '#fff' : color, 800, 'center');
       }
-      if (b.action === 'skill') {
-        const energy = a.match?.players[0]?.energy || 0;
-        g.lineCap = 'round'; g.beginPath(); g.arc(b.x, b.y, b.r + 5, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.min(1, energy / 100)); g.strokeStyle = color; g.lineWidth = 4; g.stroke(); g.lineCap = 'butt';
-        this.text(energy >= 100 ? '就绪' : Math.round(energy) + '%', b.x - b.r - 10, b.y, 13, color, 800, 'right');
+      if ((b.action === 'skill' || b.action === 'skill2') && !editing) {
+        const m = a.isOnline() ? a.view : a.match, energy = m?.players[a.isOnline() ? a.playerIndex : b.player]?.energy || 0;
+        const cost = b.cost || 100, ready = energy >= cost;
+        if (ready) { g.save(); g.globalAlpha = .35 + .3 * Math.sin(this.now * 8); this.circle(b.x, b.y, b.r + 9, null, color, 3); g.restore(); }
+        else { g.save(); g.globalAlpha = .45; this.circle(b.x, b.y, b.r - 2, 'rgba(0,0,0,.5)'); g.restore(); }
+        g.lineCap = 'round'; g.beginPath(); g.arc(b.x, b.y, b.r + 5, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.min(1, energy / cost)); g.strokeStyle = color; g.lineWidth = 4; g.stroke(); g.lineCap = 'butt';
+        this.text(String(cost), b.x, b.y + b.r * .48, 10, ready ? '#fff' : 'rgba(255,255,255,.6)', 800, 'center');
+        if (a.input.layout !== 'duo' && b.action === 'skill2') this.text('能量 ' + Math.floor(energy), b.x - b.r - 10, b.y, 13, C.gold, 800, 'right');
       }
     }
-    this.button('pause', '', PAD - 6, 10, 42, 40, () => a.togglePause(), { icon: 'pause', iconSize: 18, radius: 14 });
-    if (a.isOnline()) this.chip(a.net.status === 'reconnecting' ? '重新连接中' : `延迟 ${Math.round(a.net.rtt * 1000)} ms`, this.W / 2, this.H - 14, a.net.status === 'reconnecting' ? C.red : C.green, { align: 'center' });
+    if (!editing) this.button('pause', '', PAD - 6, 10, 42, 40, () => a.togglePause(), { icon: 'pause', iconSize: 18, radius: 14 });
+    if (!editing && a.isOnline()) this.chip(a.net.connectionText(), this.W / 2, this.H - 14, a.net.reconnectRemaining() != null ? C.red : C.green, { align: 'center' });
   }
 
   draw() {
@@ -438,13 +546,87 @@ class UI {
     g.save(); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.translate(this.originX, this.originY); g.scale(this.scale, this.scale);
     g.textBaseline = 'middle';
     if (this.isPortrait) { this.portraitHint(); g.restore(); return; }
+    if (this.picker && this.picker.screen !== a.screen) this.picker = null;
     if (!a.screen) this.drawControls();
     else {
-      this.backdrop(a.screen === 'dialog' ? 'dialog' : a.screen === 'menu' ? 'menu' : 'page');
+      if (a.screen === 'controlEditor') {
+        g.fillStyle = 'rgba(6,10,26,.18)'; g.fillRect(-this.originX / this.scale, -this.originY / this.scale, this.v.W / this.scale, this.v.H / this.scale);
+        this.rect(0, 0, this.W, 96, 'rgba(6,10,26,.92)', 12);
+      } else this.backdrop(['dialog','inspect'].includes(a.screen) ? 'dialog' : a.screen === 'menu' ? 'menu' : 'page');
       const screen = this[a.screen];
       if (typeof screen === 'function') screen.call(this);
+      if (this.picker) this.kitPicker();
     }
     g.restore();
+  }
+  // ---------- 技能选择面板（同屏 / 联机准备 / 快速对战共用） ----------
+  /**
+   * 打开技能面板。opt: { char, kit, title, readOnly, onDone(kit) }
+   * 可编辑时：点卡片选中/取消，选满 2 个后点未选的卡片会替换较早选中的那个；确认后回调。
+   * 只读时：仅查看对方的被动与携带的技能。
+   */
+  openKitPicker(opt) {
+    const YY = this.YY, char = YY.char(opt.char);
+    this.picker = { char: char.id, sel: YY.skillSet(char.id, opt.kit).act.slice(), title: opt.title || '选择技能', readOnly: !!opt.readOnly, live: opt.live, onDone: opt.onDone, screen: this.app.screen };
+  }
+  closeKitPicker() { this.picker = null; }
+  pickSkill(k) {
+    const pk = this.picker; if (!pk || pk.readOnly) return;
+    const i = pk.sel.indexOf(k);
+    if (i >= 0) pk.sel.splice(i, 1);
+    else if (pk.sel.length < 2) pk.sel.push(k);
+    else pk.sel = [pk.sel[1], k];
+  }
+  kitPicker() {
+    const a = this.app, YY = this.YY, W = this.W, H = this.H, g = this.g, pk = this.picker;
+    if (pk.live) { const cur = pk.live(); if (!cur) { this.picker = null; return; } pk.char = cur.char; pk.sel = cur.kit.slice(); }
+    // 面板是模态的：底层页面的按钮与滚动区全部失效
+    this.buttons = []; this.regions = [];
+    g.fillStyle = 'rgba(4,8,20,.78)'; g.fillRect(-this.originX / this.scale, -this.originY / this.scale, this.v.W / this.scale, this.v.H / this.scale);
+    const char = YY.char(pk.char), look = YY.lookOf(char.id), pas = YY.SKILLS[char.passive] || { name: '—', desc: '' };
+    const x = PAD, y = 12, w = W - PAD * 2, h = H - 24;
+    this.card(x, y, w, h, { glow: this.alpha(look.shirt, .18), stroke: this.alpha(look.shirt, .5) });
+    // 顶部：角色 + 被动
+    const cx = Math.min(x + w - 52, this.capL - 44); // 避开微信右上角胶囊
+    this.portrait(char.id, x + 14, y + 12, 50, look.shirt);
+    this.text(pk.title, x + 76, y + 24, 13, C.gold, 700, 'left', cx - x - 90);
+    this.text(YY.charName(char.id) + ' · ' + char.title, x + 76, y + 48, 19, C.text, 800, 'left', cx - x - 90);
+    this.button('kit-close', '', cx, y + 12, 40, 40, () => this.closeKitPicker(), { icon: 'cross', radius: 14 });
+    const py = y + 72;
+    this.rect(x + 14, py, w - 28, 44, 'rgba(255,255,255,.05)', 12, 'rgba(255,255,255,.1)');
+    this.chip('被动 · ' + pas.name, x + 24, py + 22, pas.color || C.gold, { size: 12, h: 24 });
+    const pw = this.measure('被动 · ' + pas.name, 12, 700) + 30;
+    this.wrap(pas.desc, x + 24 + pw, py + 13, w - 62 - pw, 12, C.sub, 17, 2);
+    // 中部：三张主动技能卡
+    const footH = 54, cy = py + 54, chH = h - (cy - y) - footH, gap = 10, cw = (w - 28 - gap * 2) / 3;
+    (char.acts || []).forEach((k, i) => {
+      const sk = YY.SKILLS[k]; if (!sk) return;
+      const on = pk.sel.indexOf(k), id = 'pick-' + k, pressed = !pk.readOnly && this.isPressed(id);
+      const bx = x + 14 + i * (cw + gap), by = cy + (pressed ? 2 : 0), dim = pk.readOnly && on < 0;
+      g.globalAlpha = dim ? .5 : 1;
+      this.card(bx, by, cw, chH, { radius: 14, accent: on >= 0 ? sk.color : null, glow: on >= 0 ? this.alpha(sk.color, .2) : null, stroke: on >= 0 ? this.alpha(sk.color, .85) : 'rgba(255,255,255,.12)', flat: pressed });
+      if (!pk.readOnly) this.buttons.push({ id, x: bx, y: cy, w: cw, h: chH, onClick: () => this.pickSkill(k), disabled: false });
+      this.rect(bx + 12, by + 13, 4, 20, sk.color, 2);
+      this.text(sk.name, bx + 22, by + 23, 15, on >= 0 ? C.gold : C.text, 800, 'left', cw - 84);
+      this.chip('能量 ' + sk.cost, bx + cw - 10, by + 23, sk.color, { align: 'right', size: 11, h: 20 });
+      const lines = Math.max(1, Math.floor((chH - 82) / 17));
+      this.wrap(sk.desc, bx + 12, by + 48, cw - 24, 12, on >= 0 ? C.text : C.sub, 17, lines);
+      const ly = by + chH - 20;
+      if (on >= 0) this.chip((pk.readOnly ? '携带 · ' : '已选 · ') + (on ? '技能二' : '技能一'), bx + cw / 2, ly, C.green, { align: 'center', size: 12, h: 24 });
+      else this.text(pk.readOnly ? '未携带' : '点击选择', bx + cw / 2, ly, 12, C.dim, 600, 'center');
+      g.globalAlpha = 1;
+    });
+    // 底部：说明 + 确认
+    const fy = y + h - footH + 6;
+    if (pk.readOnly) {
+      this.text('能量够即可释放 · 对手携带的两个技能已高亮', x + 18, fy + 21, 12, C.dim, 500, 'left', w - 200);
+      this.button('kit-ok', '知道了', x + w - 150, fy, 136, 42, () => this.closeKitPicker(), { primary: true, size: 15 });
+    } else {
+      const n = pk.sel.length;
+      this.text(n === 2 ? '已选 2 / 2 · 先选的是技能一（右下大键）' : `还需选择 ${2 - n} 个 · 点卡片选中，再点一次取消`, x + 18, fy + 21, 12, n === 2 ? C.sub : C.gold, 600, 'left', w - 330);
+      this.button('kit-cancel', '取消', x + w - 290, fy, 120, 42, () => this.closeKitPicker(), { size: 15 });
+      this.button('kit-ok', '确认携带', x + w - 160, fy, 146, 42, () => { const kit = pk.sel.slice(); this.closeKitPicker(); if (pk.onDone) pk.onDone(kit); }, { primary: true, disabled: n !== 2, size: 15, icon: 'check' });
+    }
   }
   portraitHint() {
     const g = this.g, x = -this.originX / this.scale, y = -this.originY / this.scale;
@@ -473,7 +655,7 @@ class UI {
     const cw = Math.min(260, split - PAD - 6), cy = 226 + hy;
     this.card(PAD, cy, cw, 66, { radius: 16 });
     this.icon('trophy', PAD + 24, cy + 24, 20, C.gold);
-    this.text('星光杯故事', PAD + 42, cy + 24, 14, C.sub, 600);
+    this.text('星光回响', PAD + 42, cy + 24, 14, C.sub, 600);
     this.text(`${done}/${YY.STAGES.length} 关`, PAD + cw - 14, cy + 24, 15, C.text, 800, 'right');
     this.bar(PAD + 14, cy + 44, cw - 28 - 46, 7, done / YY.STAGES.length);
     this.icon('star', PAD + cw - 40, cy + 47.5, 12, C.gold); this.text(String(stars), PAD + cw - 14, cy + 48, 13, C.gold, 700, 'right');
@@ -485,7 +667,7 @@ class UI {
     const chap = (YY.STAGES.find(s => !YY.Profile.stars(s.id)) || YY.STAGES[YY.STAGES.length - 1]).chapter;
     this.tile('story', x, top, w, 92, { primary: true, icon: 'book', title: '故事模式', sub: chap.title.replace(' · ', '  ·  '), titleSize: 24, onClick: () => a.show('story') });
     this.tile('ai', x, top + 102, gw, 70, { icon: 'bolt', title: '快速对战', sub: '三档 AI 对手', color: C.red, onClick: () => a.show('ai') });
-    this.tile('practice', x + gw + 10, top + 102, gw, 70, { icon: 'target', title: '自由练习', sub: '四项专项训练', color: C.cyan, onClick: () => a.show('practice') });
+    this.tile('practice', x + gw + 10, top + 102, gw, 70, { icon: 'target', title: '自由练习', sub: '训练与战术教学', color: C.cyan, onClick: () => a.show('practice') });
     this.tile('friend', x, top + 182, gw, 70, { icon: 'users', title: '好友对战', sub: '同屏 · 在线', color: C.green, onClick: () => a.show('friend') });
     this.tile('team', x + gw + 10, top + 182, gw, 70, { icon: 'shirt', title: '角色装备', sub: `${YY.CHARS.filter(c => YY.Profile.has('char', c.id)).length}/${YY.CHARS.length} 位角色`, color: C.purple, onClick: () => a.show('team') });
     const sw = (w - 20) / 3;
@@ -508,14 +690,13 @@ class UI {
       else { this.rect(x + 14, by, cardW - 28, 32, this.alpha(color, .14), 16, this.alpha(color, .5)); this.text('开始对战', x + cardW / 2, by + 16.5, 15, color, 800, 'center'); }
       this.buttons.push({ id, x, y: top, w: cardW, h: cardH, onClick: () => a.startAI(id), disabled: false });
     });
-    const id = YY.Profile.sel.char, skill = YY.SKILLS[YY.char(id).skill];
+    const id = YY.Profile.sel.char, kit = YY.skillSet(id, YY.Profile.kit(id)), skill = YY.SKILLS[kit.act[0]];
     this.card(PAD, rowY, W - 2 * PAD, 60, { radius: 16 });
     this.portrait(id, PAD + 10, rowY + 8, 44, 'rgba(255,255,255,.35)');
+    const bx = W - PAD - 10, sx = bx - 112 - 10 - 168;
     this.text(YY.charName(id), PAD + 66, rowY + 21, 17, C.text, 800);
-    this.text('技能 · ' + skill.name, PAD + 66, rowY + 42, 13, skill.color || C.gold, 600);
-    const bx = W - PAD - 10;
-    this.button('loadout', '调整装备', bx - 112, rowY + 10, 112, 40, () => { a.teamBack = 'ai'; a.show('team'); }, { icon: 'shirt', size: 14 });
-    const sx = bx - 112 - 10 - 168;
+    this.text('携带 ' + kit.act.map(k => YY.SKILLS[k].name).join(' + '), PAD + 66, rowY + 42, 13, skill.color || C.gold, 600, 'left', sx - PAD - 76);
+    this.button('loadout', '选择技能', bx - 112, rowY + 10, 112, 40, () => this.openKitPicker({ char: id, kit: kit.act, title: '快速对战 · 选择携带的 2 个技能', onDone: k => YY.Profile.setKit(id, k) }), { icon: 'spark', size: 14 });
     this.button('skills', '角色技能', sx, rowY + 10, 168, 40, () => { a.settings.skills = !a.settings.skills; a.saveSettings(); }, { align: 'left', icon: 'spark', size: 14, iconColor: a.settings.skills ? C.gold : C.dim });
     this.toggle(sx + 168 - 54, rowY + 30 + (this.isPressed('skills') ? 2 : 0), a.settings.skills);
     this.venues(venueY);
@@ -536,19 +717,36 @@ class UI {
   practice() {
     this.header('自由练习', '跟随落点与挥拍提示，找到你的节奏');
     const W = this.W, H = this.H, entries = Object.entries(this.YY.DRILLS), venueY = H - 54, top = 64;
-    const w = (W - 2 * PAD - 12) / 2, h = (venueY - 12 - top - 12) / 2;
+    const cols = entries.length > 4 ? 3 : 2, rows = Math.ceil(entries.length / cols);
+    const w = (W - 2 * PAD - 12 * (cols - 1)) / cols, h = (venueY - 12 - top - 12 * (rows - 1)) / rows;
     entries.forEach(([id, def], i) => {
       const [icon, color] = DRILL_LOOK[id] || ['target', C.gold], bid = 'drill-' + id, pressed = this.isPressed(bid);
-      const x = PAD + (i % 2) * (w + 12), y0 = top + Math.floor(i / 2) * (h + 12), y = y0 + (pressed ? 2 : 0);
+      const x = PAD + (i % cols) * (w + 12), y0 = top + Math.floor(i / cols) * (h + 12), y = y0 + (pressed ? 2 : 0);
       this.card(x, y, w, h, { glow: this.alpha(color, .14), flat: pressed });
-      this.rect(x + 14, y + 14, 40, 40, this.alpha(color, .18), 12, this.alpha(color, .45)); this.icon(icon, x + 34, y + 34, 22, color);
-      this.text(def.name, x + 66, y + 34, 18, C.text, 800, 'left', w - 160);
-      this.wrap(def.tip, x + 16, y + 72, w - 32, 13, C.sub, 19, Math.max(1, Math.floor((h - 72) / 19)));
-      this.rect(x + w - 84, y + 19, 70, 30, this.grad(0, y + 19, 0, y + 49, [[0, C.goldHi], [1, C.goldLo]]), 15);
-      this.icon('play', x + w - 66, y + 34, 11, C.ink); this.text('开始', x + w - 42, y + 34.5, 14, C.ink, 800, 'center');
+      this.icon(icon, x + 25, y + 30, 20, color);
+      this.text(def.name, x + 48, y + 30, 17, C.text, 800, 'left', w - 80);
+      this.wrap(def.tip, x + 16, y + 62, w - 32, 13, C.sub, 19, Math.max(1, Math.floor((h - 56) / 19)));
+      this.circle(x + w - 22, y + 30, 12, C.gold);
+      this.icon('play', x + w - 21, y + 30, 10, C.ink);
       this.buttons.push({ id: bid, x, y: y0, w, h, onClick: () => this.app.startPractice(id), disabled: false });
     });
     this.venues(venueY);
+  }
+  tacticsComplete() {
+    const a = this.app, W = this.W, H = this.H;
+    this.header('三拍战术 · 已掌握', '把三个动作连起来，制造属于你的进攻机会', () => { a.startAttract(); a.show('practice'); });
+    const w = (W - PAD * 2 - 24) / 3, top = 68, h = H - 152;
+    this.YY.TACTIC_LESSON.forEach((step, i) => {
+      const x = PAD + i * (w + 12);
+      this.card(x, top, w, h, { glow: 'rgba(255,207,74,.12)' });
+      this.chip('0' + (i + 1) + '  已完成', x + 16, top + 24, C.green);
+      this.text(step.title, x + 16, top + 64, 20, C.gold, 800, 'left', w - 32);
+      this.wrap(step.why, x + 16, top + 100, w - 32, 14, C.sub, 22, Math.floor((h - 100) / 22) + 1);
+    });
+    const bw = (W - PAD * 2 - 24) / 3;
+    this.button('tactics-back', '返回训练', PAD, H - 62, bw, 46, () => { a.startAttract(); a.show('practice'); }, { icon: 'back' });
+    this.button('tactics-retry', '再练一遍', PAD + bw + 12, H - 62, bw, 46, () => a.startPractice('tactics'), { icon: 'retry' });
+    this.button('tactics-match', '实战试一试', PAD + 2 * (bw + 12), H - 62, bw, 46, () => a.startAI('easy'), { primary: true, icon: 'play' });
   }
   friend() {
     const a = this.app, W = this.W, H = this.H; this.header('好友对战', '同样的能力，只比拼操作与判断');
@@ -556,8 +754,8 @@ class UI {
     this.card(PAD, top, w, h, { glow: 'rgba(255,207,74,.16)' });
     this.rect(PAD + 18, top + 18, 46, 46, 'rgba(255,207,74,.18)', 14, 'rgba(255,207,74,.45)'); this.icon('users', PAD + 41, top + 41, 26, C.gold);
     this.text('同屏切磋', PAD + 78, top + 41, 22, C.text, 800);
-    this.wrap('和身边的好友共用一块屏幕，左右各一套按键，各自控制一名选手。', PAD + 20, top + 92, w - 40, 15, C.sub, 23, 3);
-    this.button('local', '开始同屏对战', PAD + 18, top + h - 66, w - 36, 48, () => a.startLocal(), { primary: true, size: 17, icon: 'play' });
+    this.wrap('和身边的好友共用一块屏幕，左右各一套按键，各自选择角色、发动技能。', PAD + 20, top + 92, w - 40, 15, C.sub, 23, 3);
+    this.button('local', '选择角色', PAD + 18, top + h - 66, w - 36, 48, () => a.show('duo'), { primary: true, size: 17, icon: 'users' });
     const x = PAD + w + 14;
     this.card(x, top, w, h, { glow: 'rgba(95,212,255,.14)' });
     this.rect(x + 18, top + 18, 46, 46, 'rgba(95,212,255,.18)', 14, 'rgba(95,212,255,.45)'); this.icon('share', x + 41, top + 41, 24, C.cyan);
@@ -568,7 +766,29 @@ class UI {
     this.button('host', '创建房间', x + 18, top + h - 66, bw, 48, () => a.hostOnline(), { disabled: !online, size: 16 });
     this.button('join', '加入房间', x + 28 + bw, top + h - 66, bw, 48, () => { a.roomInput = ''; a.show('join'); }, { disabled: !online, size: 16 });
     this.icon('info', PAD + 8, H - 20, 14, C.dim);
-    this.text('同屏与在线模式均不使用角色技能和装备加成', PAD + 22, H - 20, 13, C.dim);
+    this.text('统一基础能力，不计装备加成；在线房间由双方确认技能规则', PAD + 22, H - 20, 13, C.dim);
+  }
+  duo() {
+    const a = this.app, YY = this.YY, W = this.W, H = this.H, { pick } = a.duoChars();
+    this.header('同屏对战', '左右玩家各选一名角色', () => a.show('friend'));
+    const top = 62, w = (W - 2 * PAD - 70) / 2, h = H - top - 74;
+    pick.forEach((id, i) => {
+      const x = i ? W - PAD - w : PAD, c = YY.char(id), look = YY.lookOf(id), kit = YY.Profile.kit(id);
+      this.card(x, top, w, h, { glow: this.alpha(look.shirt, .2), stroke: this.alpha(look.shirt, .5) });
+      this.chip(i ? 'P2 · 右侧' : 'P1 · 左侧', x + 16, top + 22, i ? C.cyan : C.red, { size: 12, h: 24 });
+      const ps = Math.min(108, h - 92);
+      this.portrait(id, x + w / 2 - ps / 2, top + 40, ps, look.shirt);
+      this.button(`duo-prev-${i}`, '', x + 12, top + 40 + ps / 2 - 22, 40, 44, () => a.duoCycle(i, -1), { icon: 'back', radius: 14 });
+      this.button(`duo-next-${i}`, '', x + w - 52, top + 40 + ps / 2 - 22, 40, 44, () => a.duoCycle(i, 1), { icon: 'next', radius: 14 });
+      this.text(look.name, x + w / 2, top + ps + 58, 20, C.text, 800, 'center');
+      this.text(c.title, x + w / 2, top + ps + 80, 13, C.sub, 600, 'center');
+      if (a.settings.skills) this.button(`duo-kit-${i}`, kit.map(k => YY.SKILLS[k].name).join(' + ') + '  ›', x + 18, top + ps + 92, w - 36, 32, () => this.openKitPicker({ char: id, kit, title: (i ? 'P2' : 'P1') + ' · 选择携带的 2 个技能', onDone: k => YY.Profile.setKit(id, k) }), { icon: 'spark', size: 13, radius: 12 });
+    });
+    this.text('VS', W / 2, top + h / 2, 30, C.gold, 900, 'center');
+    const by = H - 58;
+    this.button('duo-skills', '角色技能', PAD, by, 168, 44, () => { a.settings.skills = !a.settings.skills; a.saveSettings(); }, { align: 'left', icon: 'spark', size: 14, iconColor: a.settings.skills ? C.gold : C.dim });
+    this.toggle(PAD + 168 - 54, by + 22 + (this.isPressed('duo-skills') ? 2 : 0), a.settings.skills);
+    this.button('duo-start', '开始对战', W - PAD - 200, by, 200, 44, () => a.startLocal(), { primary: true, size: 17, icon: 'play' });
   }
   join() {
     const a = this.app, W = this.W; this.header('加入房间', '输入好友分享的 4 位房间码', () => a.show('friend'));
@@ -587,17 +807,50 @@ class UI {
     this.button('enter', '加入比赛', lx + kw * 2 + 12, ly, right - (lx + kw * 2 + 12), kh, () => a.joinOnline(a.roomInput), { primary: true, disabled: code.length !== 4, size: 16 });
   }
   lobby() {
-    const a = this.app, W = this.W, H = this.H; this.header('好友房间', '双方进入后自动开始比赛', () => { a.net.close(); a.show('friend'); });
-    const w = Math.min(520, W - 2 * PAD), x = (W - w) / 2, top = 66, h = H - top - 18;
-    this.card(x, top, w, h, { glow: 'rgba(255,207,74,.16)' });
-    this.text('房间码', W / 2, top + 28, 14, C.dim, 600, 'center');
-    this.text(a.net.code || '····', W / 2, top + 84, 68, C.gold, 900, 'center');
-    this.wrap(a.lobbyStatus || '正在连接…', x + 30, top + 140, w - 60, 15, C.sub, 22, 2);
-    this.button('invite', '分享给好友', W / 2 - 130, top + h - 68, 260, 50, () => this.P.share(a.net.code), { primary: true, disabled: !a.net.code, icon: 'share', size: 17 });
+    const a = this.app, YY = this.YY, W = this.W, H = this.H, room = a.roomState, me = a.net.player || 0;
+    const online = a.net.status === 'connected' && a.net.reconnectRemaining() == null && !a.net.awaitingWelcome;
+    const last = room?.lastResult, sub = a.roomScore() + (last ? ` · 上局 ${last.score[me]}:${last.score[1 - me]}` : ' · 双方确认后开局');
+    this.header('房间 ' + (a.net.code || '····'), sub, () => { a.net.close(); a.roomState = null; a.startAttract(); a.show('friend'); });
+    const top = 64, w = (W - PAD * 2 - 14) / 2, h = H - 224;
+    [me, 1 - me].forEach((idx, col) => {
+      const p = room?.players[idx], x = PAD + col * (w + 14), mine = idx === me;
+      this.card(x, top, w, h, { glow: this.alpha(mine ? C.gold : C.cyan, .14) });
+      this.text((mine ? '你' : '好友') + (idx === 0 ? ' · 房主' : ''), x + 16, top + 21, 13, C.sub, 700);
+      if (!p) { this.text('等待好友加入', x + w / 2, top + 82, 20, C.dim, 700, 'center'); return; }
+      const status = !p.connected ? `重连 ${p.reconnect} 秒` : p.away ? '暂时离开' : p.ready ? '已准备' : '未准备';
+      this.chip(status, x + w - 14, top + 21, p.ready && p.connected && !p.away ? C.green : C.gold, { align: 'right', size: 12 });
+      this.portrait(p.char, x + 14, top + 43, 52, mine ? C.gold : C.cyan);
+      const kit = a.roomKit(idx).map(k => YY.SKILLS[k]).filter(Boolean), pas = YY.SKILLS[YY.char(p.char).passive] || { name: '' };
+      this.text(YY.charName(p.char), x + 82, top + 55, 21, C.text, 800, 'left', w - 98);
+      this.text(room.rules.skills ? kit.map(k => k.name).join(' + ') : '标准对战 · 技能关闭', x + 82, top + 81, 13, room.rules.skills ? (kit[0]?.color || C.gold) : C.dim, 600, 'left', w - 98);
+      if (mine) {
+        this.button('room-prev', '', x + 14, top + h - 46, 40, 34, () => a.roomCycle(-1), { icon: 'back', disabled: !online });
+        this.button('room-next', '', x + 62, top + h - 46, 40, 34, () => a.roomCycle(1), { icon: 'next', disabled: !online });
+        if (room.rules.skills) this.button('room-kit', '选技能', x + 110, top + h - 46, 86, 34, () => this.openKitPicker({ char: p.char, kit: a.roomKit(idx), title: '房间 ' + (a.net.code || '') + ' · 选择携带的 2 个技能', onDone: k => a.roomSetKit(k) }), { icon: 'spark', size: 13, disabled: !online });
+        this.wrap(room.rules.skills ? '被动 · ' + pas.name + '\n换角色或技能后重新准备' : '全角色可试用\n换角色后重新准备', x + (room.rules.skills ? 206 : 116), top + h - 35, w - (room.rules.skills ? 222 : 132), 12, C.dim, 17, 2);
+      } else if (room.rules.skills) {
+        this.button('room-peek', '查看对手技能', x + 14, top + h - 46, 128, 34, () => this.openKitPicker({ char: p.char, kit: a.roomKit(idx), title: '好友的技能 · 被动与携带', readOnly: true, live: () => { const q = a.roomState?.players[idx]; return q && { char: q.char, kit: a.roomKit(idx) }; } }), { icon: 'info', size: 13 });
+        this.wrap('被动 · ' + pas.name, x + 152, top + h - 35, w - 168, 12, C.sub, 17, 2);
+      } else this.wrap('统一基础能力，不计装备加成。', x + 16, top + h - 36, w - 32, 12, C.sub, 17, 2);
+    });
+    const ry = H - 150, skills = room?.rules.skills;
+    if (me === 0) this.button('room-rules', skills ? '角色技能对战' : '标准对战 · 关闭技能', PAD, ry, W - PAD * 2, 50, () => a.roomConfigure({ skills: !skills }), { align: 'left', icon: 'spark', disabled: !room || !online, size: 16 });
+    else {
+      this.card(PAD, ry, W - PAD * 2, 50, { radius: 14 });
+      this.icon('spark', PAD + 24, ry + 25, 18, C.gold);
+      this.text(skills ? '角色技能对战' : '标准对战 · 关闭技能', PAD + 44, ry + 25, 16, C.text, 700);
+    }
+    this.text(me === 0 ? '点此切换 · 7 分制 · 改规则后双方重新准备' : '房主选择规则 · 7 分制 · 准备即确认以上设置', W - PAD - 16, ry + 25, 12, C.sub, 500, 'right', W - PAD * 2 - 245);
+    const countdown = room?.phase === 'countdown';
+    this.text(countdown ? `${room.countdown} 秒后开局 · 可取消准备` : a.net.connectionText(), W / 2, H - 82, countdown ? 20 : 13, countdown ? C.gold : online ? C.green : C.red, 700, 'center');
+    this.button('invite', '分享邀请', PAD, H - 62, 170, 46, () => this.P.share(a.net.code), { disabled: !a.net.code, icon: 'share', size: 16 });
+    const ready = room?.players[me]?.ready;
+    this.button('room-ready', ready ? '取消准备' : '确认角色与规则 · 准备', PAD + 182, H - 62, W - PAD * 2 - 182, 46, () => a.roomReady(), { primary: !ready, disabled: !online || !room || !!room.players[me]?.away, icon: ready ? 'cross' : 'check', size: 17 });
   }
   story() {
     const YY = this.YY, a = this.app, W = this.W, H = this.H, total = YY.STAGES.reduce((n, s) => n + YY.Profile.stars(s.id), 0);
-    this.header('守护星光体育馆', `故事进度  ★ ${total} / ${YY.STAGES.length * 3}`);
+    this.header('星光回响', `12 章故事  ★ ${total} / ${YY.STAGES.length * 3}`);
+    this.button('story-journal','球馆手记',this.capL-116,12,110,36,()=>a.show('journal'),{size:13,icon:'book'});
     const railW = 172, ch = YY.STORY.find(ch => ch.id === a.storyChap) || YY.STORY[0], top = 62;
     this.scrollArea('chapters', PAD, top, railW, H - top - 12, YY.STORY.length * 60 - 8, y => YY.STORY.forEach((c, i) => {
       const open = YY.stageOpen(c.stages[0].id), parts = c.title.split(' · '), sel = ch.id === c.id;
@@ -620,7 +873,8 @@ class UI {
       this.text(st.id, x + 34, yy + 48, 11, open ? kindColor : C.dim, 800, 'center');
       const tx = x + 68, right = x + cw - 14;
       this.text(st.title, tx, yy + 25, 16, open ? C.text : C.dim, 800, 'left', cw - 68 - 150);
-      this.text(open ? `${kindName} · ${st.desc}` : '完成上一关后解锁', tx, yy + 48, 13, C.dim, 500, 'left', cw - 68 - 120);
+      const continuing=YY.Profile.d.campaign.checkpoint?.stage===st.id;
+      this.text(open ? `${continuing?'继续上次 · ':kindName+' · '}${st.desc}` : '完成上一关后解锁', tx, yy + 48, 13, continuing?C.gold:C.dim, 500, 'left', cw - 68 - 120);
       if (open) {
         this.stars(stars, right - 52, yy + 25, 13, 'right', 3);
         const pr = 17, px = right - pr, py = yy + ih / 2;
@@ -631,31 +885,90 @@ class UI {
       this.buttons.push({ id, x, y: y + i * (ih + 10), w: cw, h: ih, onClick: () => a.startStage(st.id), disabled: !open });
     }));
   }
+  journal() {
+    const a=this.app,YY=this.YY,W=this.W,H=this.H,save=YY.Profile.d.campaign;
+    this.header('球馆手记',`${save.clues.length} 条线索 · 选择与阶段进度自动保存`,()=>a.show('story'));
+    const items=YY.STAGES.flatMap(st=>st.steps.filter(s=>s.t==='inspect').flatMap(s=>s.items)).filter(i=>save.clues.includes(i.clue));
+    const cp=save.checkpoint, current=cp&&YY.stage(cp.stage);
+    const text=[current?'正在进行：'+current.title+'（第 '+(cp.index+1)+' 个环节）':'尚无进行中的关卡。',...Object.entries(save.choices).map(([k,v])=>'我们的约定：'+v),...items.map(i=>i.label+'\n'+i.text)].join('\n\n');
+    const top=70,tw=W-PAD*2-40;
+    this.card(PAD,top,W-PAD*2,H-top-76,{radius:18});
+    this.scrollArea('journal',PAD+20,top+15,tw,H-top-110,this.lines(text,tw,15).length*24+8,y=>this.wrap(text,PAD+20,y+12,tw,15,C.sub,24));
+    this.button('journal-return',current?'继续：'+current.title:'返回故事地图',PAD,H-54,W-PAD*2,40,()=>current?a.startStage(current.id):a.show('story'),{primary:true,size:15});
+  }
   dialog() {
     const a = this.app, d = a.dlg; if (!d) return;
-    const W = this.W, H = this.H, [who, text] = d.lines[d.i];
-    const name = who === 'nar' ? '星光体育馆' : who === 'mm' ? '毛毛' : who === 'me' ? '凌风（你）' : this.YY.charName(who);
+    const W = this.W, H = this.H, [who, text] = d.lines[d.i], YY = this.YY;
+    const name = who === 'nar' ? '旁白' : who === 'mm' ? '毛毛' : who === 'me' ? '凌风（你）' : YY.charName(who);
+    const staged = !!(d.step && d.step.scene && YY.SCENES);
+    const tone = who === 'nar' ? 'rgba(255,255,255,.75)' : who === 'mm' ? C.gold : (YY.lookOf(who === 'me' ? 'lingfeng' : who)?.shirt || C.gold);
+    const sceneName = staged ? YY.SCENES[d.step.scene]?.name : null;
     this.chip(a.story?.st.title || '星光故事', PAD, 30, C.gold, { size: 14, h: 30, icon: 'book', fill: 'rgba(8,13,30,.72)' });
+    if (sceneName) this.chip(sceneName, PAD, 66, C.sub, { size: 12, h: 24, icon: 'pin', fill: 'rgba(8,13,30,.55)' });
+    this.button('voice', a.settings.voice===false?'配音关':'配音开', this.capL - 256, 12, 78, 36, () => a.toggleStoryVoice(), { size: 12 });
+    this.button('replay-voice', '重听', this.capL - 170, 12, 76, 36, () => a.repeatStoryVoice(), { size: 12, disabled:a.settings.voice===false });
     this.button('skip', '跳过', this.capL - 86, 12, 86, 36, () => a.dlgFinish(), { size: 14, icon: 'next' });
-    const ph = 140, py = H - ph - 12, px = PAD, pw = W - 2 * PAD, ps = 112;
-    this.card(px, py, pw, ph, { radius: 20, top: 'rgba(28,40,74,.95)', bottom: 'rgba(12,18,38,.97)', stroke: 'rgba(255,207,74,.28)' });
-    this.portrait(who, px + 16, py - 30, ps, C.gold);
-    const tx = px + ps + 34, nw = this.measure(name, 16, 800) + 26;
-    this.rect(tx - 4, py - 15, nw, 30, this.grad(0, py - 15, 0, py + 15, [[0, C.goldHi], [1, C.goldLo]]), 15);
-    this.text(name, tx + nw / 2 - 4, py + .5, 16, C.ink, 800, 'center');
-    const textW = pw - (tx - px) - 22, size = 17, lead = 26, shown = text.slice(0, Math.floor(d.progress));
+    const ph = 132, py = H - ph - 10, px = PAD, pw = W - 2 * PAD, ps = staged ? 0 : 112;
+    const nar = who === 'nar';
+    this.card(px, py, pw, ph, { radius: 20, top: nar ? 'rgba(14,18,34,.9)' : 'rgba(24,34,66,.93)', bottom: 'rgba(10,15,32,.96)', stroke: nar ? 'rgba(255,255,255,.18)' : 'rgba(255,207,74,.3)' });
+    if (!staged) this.portrait(who, px + 16, py - 30, ps, C.gold);
+    // 名牌：用角色的主色，说话人一眼就能认出来
+    const tx = staged ? px + 24 : px + ps + 34, nw = this.measure(name, 16, 800) + 28;
+    if (!nar) {
+      this.rect(tx - 4, py - 15, nw, 30, tone, 15);
+      this.rect(tx - 4, py - 15, nw, 15, 'rgba(255,255,255,.18)', 15);
+      this.text(name, tx + nw / 2 - 4, py + .5, 16, '#fff', 800, 'center');
+    }
+    const textW = pw - (tx - px) - 24, size = 17, lead = 26, shown = text.slice(0, Math.floor(d.progress));
     const contentHeight = this.lines(text, textW, size).length * lead;
-    this.scrollArea('dialog-text', tx, py + 26, textW + 4, 78, contentHeight, y => this.wrap(shown, tx, y + 12, textW, size, C.text, lead));
+    const color = nar ? 'rgba(235,240,255,.9)' : C.text;
+    this.scrollArea('dialog-text', tx, py + (nar ? 14 : 24), textW + 4, nar ? 88 : 76, contentHeight, y => this.wrap(shown, tx, y + 12, textW, size, color, lead));
     const doneTyping = d.progress >= text.length;
     this.button('advance', doneTyping ? (d.i + 1 < d.lines.length ? '继续' : '完成') : '显示全文', px + pw - 120, py + ph - 42, 108, 32, () => a.dlgAdvance(), { size: 14, icon: doneTyping ? 'next' : null, primary: doneTyping });
-    this.text(`${d.i + 1} / ${d.lines.length}`, tx, py + ph - 26, 12, C.dim, 600);
+    this.text(`${d.i + 1} / ${d.lines.length}`, tx, py + ph - 24, 12, C.dim, 600);
+    this.text(a.settings.voice===false?'配音已关闭 · 自动存进度':YY.Audio.speech?.state==='loading'?'配音加载中 · 可继续阅读':YY.Audio.speech?.failed?'配音暂不可用 · 字幕可继续':'合成配音 · 自动存进度', tx+60, py+ph-24, 11, C.dim, 500);
+    if (doneTyping) { const bob = Math.sin(this.now * 6) * 2; this.text('▼', px + pw - 132, py + ph - 26 + bob, 11, C.gold, 800, 'center'); }
     // 整块对话框都可以点击推进；显式按钮优先命中。
-    this.buttons.unshift({ id: 'dialogue', x: px, y: py - 30, w: pw, h: ph - 14, onClick: () => a.dlgAdvance() });
+    this.buttons.unshift({ id: 'dialogue', x: px, y: staged ? 0 : py - 30, w: pw, h: staged ? py + ph - 46 : ph - 14, onClick: () => a.dlgAdvance() });
+  }
+  inspect() {
+    const a=this.app,v=a.activity;if(!v)return;const W=this.W,H=this.H;
+    this.header(v.step.title,`调查 ${v.found.length}/${v.step.items.length} · 点击场景标记`,()=>a.quit());
+    const panelY=H-154;
+    v.step.items.forEach((item,i)=>{
+      const x=Math.max(PAD,Math.min(W-PAD-142,item.x*W-71)),y=72+item.y*Math.max(30,panelY-112),seen=v.found.includes(item.id);
+      this.button('inspect-'+item.id,(seen?'✓ ':'')+item.label,x,y,142,40,()=>a.inspectItem(item.id),{selected:v.selected===item.id,icon:seen?'check':'target',size:14});
+    });
+    this.card(PAD,panelY,W-PAD*2,91,{radius:16,top:'rgba(12,23,39,.94)',bottom:'rgba(10,18,33,.96)'});
+    const item=v.step.items.find(i=>i.id===v.selected);
+    this.text(item?item.label:'从可以确认的事实开始',PAD+18,panelY+23,17,C.gold,800);
+    this.wrap(item?item.text:'点击三个标记，阅读线索与知识。每次发现会自动保存，回来可以接着调查。',PAD+18,panelY+51,W-PAD*2-36,14,C.text,21,2);
+    this.text('已收集 '+this.YY.Profile.d.campaign.clues.length+' 条球馆线索',PAD,H-30,12,C.sub,500);
+    this.button('inspect-done','整理线索 · 继续',W-PAD-235,H-52,235,40,()=>a.finishInspect(),{primary:true,disabled:v.found.length!==v.step.items.length,size:15});
+  }
+  board() {
+    const a=this.app,v=a.activity;if(!v)return;const W=this.W,H=this.H,c=v.step.cases[v.index],left=W*.37,x=left+30,rw=W-x-PAD;
+    this.header(v.step.title,`${v.index+1}/${v.step.cases.length} · 判断后看解析，不设倒计时`,()=>a.quit());
+    this.YY.drawLessonBoard(this.g,c.picture,PAD,66,left-PAD,H-82,v.selected!=null);
+    this.wrap(c.q,x,83,rw,16,C.text,22,3,700);
+    c.options.forEach((option,i)=>this.button('board-'+i,option,x,143+i*43,rw,36,()=>a.boardAnswer(i),{size:14,align:'left',selected:v.selected===i,disabled:v.selected!=null&&i!==c.answer&&i!==v.selected,tone:v.selected!=null&&i===c.answer?'good':null}));
+    if(v.selected!=null){this.wrap(c.explanation,x,H-100,rw,12,C.sub,18,2);this.button('board-next',v.index+1<v.step.cases.length?'下一幕':'完成学习',x,H-49,rw,36,()=>a.boardNext(),{primary:true,size:15});}
+    else this.text('看清图示，再做决定',x,H-29,12,C.dim,500);
+  }
+  lab() {
+    const a=this.app,v=a.activity;if(!v)return;const W=this.W,H=this.H,d=this.YY.LABS[v.experiment],left=W*.60,x=left+16,w=W-x-PAD;
+    this.header(v.step.title,'先试验，再比较，最后作出选择',()=>a.quit());
+    this.wrap(d.hint,PAD,75,W-2*PAD,14,C.sub,20,2);
+    this.YY.drawLab(this.g,v,PAD,115,left-PAD-4,H-181);
+    d.labels.forEach((label,i)=>this.button('lab-'+i,(v.tried.includes(i)?'✓ ':'')+label,x,115+i*45,w,36,()=>a.labSelect(i),{selected:v.selected===i,size:14}));
+    this.wrap(v.note||'点击设置，再点「试打一球」',x,260,w,12,C.sub,18,3);
+    this.button('lab-try','试打一球',PAD,H-53,left-PAD-4,40,()=>a.labTry(),{icon:'play',size:15});
+    this.button('lab-done','提交我的选择',x,H-53,w,40,()=>a.finishLab(),{primary:true,size:15,disabled:v.tried.length<3});
   }
   quiz() {
     const a = this.app, q = a.quiz; if (!q) return;
     const W = this.W, H = this.H, question = q.step.qs[q.i];
-    this.header(a.story?.st.title || '羽球问答', q.pick ? '你的选择会影响接下来的比赛' : `第 ${q.i + 1} / ${q.step.qs.length} 题 · 答对 ${q.step.need} 题过关`, () => a.quit());
+    this.header(a.story?.st.title || '羽球问答', q.pick ? '队友会记住你的回应' : `第 ${q.i + 1} / ${q.step.qs.length} 题 · 答对 ${q.step.need} 题过关`, () => a.quit());
     const qLines = Math.min(3, this.lines(question.q, W - 2 * PAD - 70, 18, 700).length), qh = 26 + qLines * 26;
     this.card(PAD, 62, W - 2 * PAD, qh, { accent: q.pick ? C.cyan : C.purple });
     this.chip(q.pick ? '选择' : 'Q' + (q.i + 1), PAD + 16, 62 + qh / 2, q.pick ? C.cyan : C.purple, { size: 12 });
@@ -716,7 +1029,7 @@ class UI {
     this.button('next-stage', a.clearNextId ? '下一关' : '重温故事', x + bw + 12, H - 60, bw, 46, () => a.clearNext(), { primary: true, icon: 'next', size: 16 });
   }
   team() {
-    const YY = this.YY, a = this.app, p = YY.Profile, W = this.W, H = this.H, char = YY.char(a.teamPeek || p.sel.char), owned = p.has('char', char.id), skill = YY.SKILLS[char.skill];
+    const YY = this.YY, a = this.app, p = YY.Profile, W = this.W, H = this.H, char = YY.char(a.teamPeek || p.sel.char), owned = p.has('char', char.id), skill = YY.SKILLS[char.skill], passive = YY.SKILLS[char.passive] || skill;
     this.header('角色与装备', '通过故事解锁队友与装备', () => { a.show(a.teamBack || 'menu'); a.teamBack = null; });
     const rail = 150, top = 62;
     this.scrollArea('roster', PAD, top, rail, H - top - 12, YY.CHARS.length * 56 - 8, y => YY.CHARS.forEach((c, i) => {
@@ -732,11 +1045,11 @@ class UI {
     const x = PAD + rail + 16, w = W - x - PAD;
     this.portrait(char.id, x, top, 60, skill.color || C.gold);
     this.text(YY.charName(char.id), x + 74, top + 16, 20, C.text, 800, 'left', w - 190);
-    this.chip(skill.name, x + 74, top + 44, skill.color || C.gold, { icon: 'spark', size: 12 });
-    this.button('character-bio', '角色介绍', x + w - 100, top, 100, 34, () => a.message(YY.charName(char.id), char.title + '\n' + char.bio + '\n技能：' + skill.desc, 'team'), { size: 13, icon: 'info' });
-    this.wrap(owned ? skill.desc : YY.lockText(char.lock), x, top + 82, w, 13, C.sub, 19, 2);
-    const tabs = ['racket', 'string', 'tension', 'shoe', 'stats'], names = Object.assign({ stats: '能力' }, YY.GEAR_CATS);
-    a.gearTab = a.gearTab || 'racket';
+    this.chip('被动 · ' + passive.name, x + 74, top + 44, passive.color || C.gold, { icon: 'spark', size: 12 });
+    this.button('character-bio', '角色介绍', x + w - 100, top, 100, 34, () => a.message(YY.charName(char.id), char.title + '\n' + char.bio + '\n被动「' + passive.name + '」：' + passive.desc + '\n主动：' + (char.acts || []).map(k => YY.SKILLS[k].name).join('、'), 'team'), { size: 13, icon: 'info' });
+    this.wrap(owned ? passive.desc : YY.lockText(char.lock), x, top + 82, w, 13, C.sub, 19, 2);
+    const tabs = ['skills', 'racket', 'string', 'tension', 'shoe', 'stats'], names = Object.assign({ skills: '技能', stats: '能力' }, YY.GEAR_CATS);
+    a.gearTab = a.gearTab || 'skills';
     const ty = top + 112, tw = (w - 8) / tabs.length;
     this.rect(x, ty, w, 38, 'rgba(0,0,0,.28)', 13, 'rgba(255,255,255,.08)');
     tabs.forEach((tab, i) => {
@@ -746,7 +1059,25 @@ class UI {
       this.buttons.push({ id: 'tab-' + tab, x: bx, y: ty, w: tw, h: 38, onClick: () => { a.gearTab = tab; this.scroll.gear = 0; }, disabled: false });
     });
     const cy = ty + 50, chH = H - cy - 12;
-    if (a.gearTab === 'tension') {
+    if (a.gearTab === 'skills') {
+      // 三张技能卡并排：点卡片切换携带（始终携带 2 个，对应对局里的两个技能键）
+      const acts = char.acts || [], kit = p.kit(char.id), gap = 8, cw = (w - gap * 2) / 3;
+      acts.forEach((k, i) => {
+        const sk = YY.SKILLS[k], on = kit.includes(k), bx = x + i * (cw + gap), id = 'kit-' + k;
+        const pressed = this.isPressed(id), yy = cy + (pressed ? 2 : 0);
+        this.card(bx, yy, cw, chH, { radius: 14, accent: on ? sk.color : null, glow: on ? this.alpha(sk.color, .16) : null, stroke: on ? this.alpha(sk.color, .7) : 'rgba(255,255,255,.1)', flat: pressed });
+        this.buttons.push({ id, x: bx, y: cy, w: cw, h: chH, onClick: () => { if (owned) p.toggleKit(char.id, k); else this.P.toast(YY.lockText(char.lock)); }, disabled: false });
+        this.g.globalAlpha = owned ? 1 : .55;
+        this.rect(bx + 12, yy + 12, 4, 20, sk.color, 2);
+        this.text(sk.name, bx + 22, yy + 22, 14, on ? C.gold : C.text, 800, 'left', cw - 74);
+        this.chip(String(sk.cost), bx + cw - 10, yy + 22, sk.color, { align: 'right', size: 11, h: 18, icon: 'spark' });
+        const lines = Math.max(1, Math.floor((chH - 68) / 16));
+        this.wrap(sk.desc, bx + 12, yy + 46, cw - 24, 12, on ? C.sub : C.dim, 16, lines);
+        if (on) this.chip('携带 · 技能' + (kit.indexOf(k) ? '二' : '一'), bx + cw / 2, yy + chH - 16, C.green, { align: 'center', size: 11, h: 20 });
+        else this.text(owned ? '点击携带' : '未解锁', bx + cw / 2, yy + chH - 16, 12, C.dim, 600, 'center');
+        this.g.globalAlpha = 1;
+      });
+    } else if (a.gearTab === 'tension') {
       const can = p.canTune(), val = can ? p.sel.tension : 24;
       this.card(x, cy, w, chH, { radius: 16 });
       this.button('tension-minus', '−', x + 16, cy + 14, 56, 46, () => p.choose('tension', Math.max(20, p.sel.tension - 1)), { disabled: !can || p.sel.tension <= 20, size: 26 });
@@ -805,12 +1136,13 @@ class UI {
     this.chip(cat[0], x + 20, top + 26, cat[1]);
     this.text(selected.title, x + 20, top + 58, 21, C.text, 800, 'left', w - 40);
     this.rect(x + 20, top + 78, 36, 3, cat[1], 2);
-    const ty = top + 92, th = h - 92 - 14, size = 15, lead = 24, tw = w - 46;
+    const ty = top + 92, th = h - 92 - 42, size = 15, lead = 24, tw = w - 46;
     this.scrollArea('card-detail', x + 20, ty, tw + 4, th, this.lines(selected.text, tw, size).length * lead + 8, y => this.wrap(selected.text, x + 20, y + 12, tw, size, C.sub, lead));
+    this.text(YY.KNOWLEDGE_SOURCES[selected.source]?.name||'羽球知识',x+20,H-29,11,C.dim,500,'left',w-40);
   }
   result() {
     const a = this.app, r = a.result; if (!r) return;
-    const W = this.W, H = this.H; this.header(r.title, `最长回合 ${r.longest || 0} 拍 · 用时 ${Math.floor(r.seconds / 60)} 分 ${r.seconds % 60} 秒`, () => a.quit());
+    const W = this.W, H = this.H; this.header(r.title, a.isOnline() ? a.roomScore() : `最长回合 ${r.longest || 0} 拍 · 用时 ${Math.floor(r.seconds / 60)} 分 ${r.seconds % 60} 秒`, () => a.quit());
     const { x, w } = this.resultCard(H - 62 - 76);
     if (r.won) this.icon('trophy', W / 2, 86, 26, C.gold);
     this.text(r.score[0], W / 2 - 46, 122, 52, r.won ? C.gold : C.text, 900, 'right');
@@ -829,22 +1161,24 @@ class UI {
       this.text(`${r.stats[1][key] || 0}`, sx + sw / 2 + 8, sy + 40, 15, C.dim, 700, 'left');
     });
     this.icon('spark', x + 30, sy + 84, 14, C.gold);
-    this.wrap(r.note, x + 44, sy + 84, w - 64, 14, C.sub, 21, Math.max(1, Math.floor((H - 76 - sy - 76) / 21) + 1));
+    const connectionNote = a.isOnline() ? (a.net.reconnectRemaining() != null ? a.net.connectionText() : a.serverWait) : null;
+    this.wrap(connectionNote || r.note, x + 44, sy + 84, w - 64, 14, C.sub, 21, Math.max(1, Math.floor((H - 76 - sy - 76) / 21) + 1));
     const bw = (w - 12) / 2;
     this.button('result-menu', '返回主页', x, H - 60, bw, 46, () => a.quit(), { icon: 'home', size: 16 });
-    this.button('again', a.isOnline() ? '请求再来一局' : '再来一局', x + bw + 12, H - 60, bw, 46, () => a.restart(), { primary: true, icon: 'retry', size: 16 });
+    this.button('again', a.isOnline() ? '换角色再战' : '再来一局', x + bw + 12, H - 60, bw, 46, () => a.restart(), { primary: true, icon: 'retry', size: 16, disabled: a.isOnline() && a.net.reconnectRemaining() != null });
   }
   pause() {
-    const a = this.app, W = this.W, H = this.H, w = Math.min(400, W - 2 * PAD), h = 292, x = (W - w) / 2, y = Math.max(12, (H - h) / 2);
+    const a = this.app, W = this.W, H = this.H, w = Math.min(400, W - 2 * PAD), h = 344, x = (W - w) / 2, y = Math.max(12, (H - h) / 2);
     this.card(x, y, w, h, { glow: 'rgba(255,207,74,.14)', radius: 22 });
     this.icon('pause', W / 2, y + 30, 20, C.gold);
     this.text('稍作休息', W / 2, y + 62, 24, C.text, 800, 'center');
-    this.text(a.isOnline() ? '比赛已暂停，返回后继续' : '准备好了，就继续上场', W / 2, y + 90, 14, C.dim, 500, 'center');
+    this.text(a.isOnline() ? (a.net.reconnectRemaining() != null ? a.net.connectionText() : a.serverWait || '比赛已暂停，返回后继续') : '准备好了，就继续上场', W / 2, y + 90, 13, C.dim, 500, 'center', w - 30);
     this.button('resume', '继续比赛', x + 22, y + 112, w - 44, 50, () => a.togglePause(), { primary: true, size: 18, icon: 'play' });
     const bw = (w - 54) / 2;
     this.button('help-pause', '查看操作', x + 22, y + 174, bw, 44, () => { a.helpFromPause = true; a.show('help'); }, { icon: 'help', size: 15 });
     this.button('restart', '重新开始', x + 32 + bw, y + 174, bw, 44, () => a.restart(), { disabled: a.isOnline(), icon: 'retry', size: 15 });
-    this.button('quit', '离开对局', x + 22, y + 230, w - 44, 44, () => a.quit(), { danger: true, icon: 'home', size: 15 });
+    this.button('layout-pause', '调整键位', x + 22, y + 230, w - 44, 44, () => this.openControlEditor('pause'), { icon: 'gear', size: 15 });
+    this.button('quit', '离开对局', x + 22, y + 282, w - 44, 44, () => a.quit(), { danger: true, icon: 'home', size: 15 });
   }
   help() {
     const a = this.app, W = this.W, H = this.H;
@@ -865,17 +1199,18 @@ class UI {
   settings() {
     const a = this.app, W = this.W, H = this.H; this.header('设置', '按你的习惯，调整每一场对局');
     const w = (W - 2 * PAD - 12) / 2, top = 64;
-    [['sound', '游戏音效', 'sound'], ['haptics', '击球振动', 'vibrate'], ['hint', '落点提示', 'eye'], ['skills', '快速对战技能', 'spark']].forEach(([key, label, icon], i) => {
+    [['sound', '游戏音效', 'sound'], ['haptics', '击球振动', 'vibrate'], ['hint', '落点提示', 'eye'], ['skills', '对战角色技能', 'spark']].forEach(([key, label, icon], i) => {
       const x = PAD + i % 2 * (w + 12), y = top + Math.floor(i / 2) * 64;
       this.button('setting-' + key, label, x, y, w, 54, () => { a.settings[key] = !a.settings[key]; a.saveSettings(); }, { align: 'left', icon, size: 16, iconColor: a.settings[key] ? C.gold : C.dim });
       this.toggle(x + w - 58, y + 27 + (this.isPressed('setting-' + key) ? 2 : 0), a.settings[key]);
     });
     const by = top + 2 * 64 + 8;
-    this.button('data', '数据与隐私说明', PAD, by, w, 48, () => a.message('数据与隐私', '角色、装备、图鉴和故事进度保存在本机。清除微信中的小游戏数据或更换设备可能丢失进度。当前版本不索取头像、昵称、手机号或位置。在线对战开放后，比赛服务会处理房间码、操作指令与临时重连凭证；网络连接会向服务商暴露连接 IP。', 'settings'), { icon: 'shield', size: 15 });
+    this.button('data', '数据与隐私说明', PAD, by, w, 48, () => a.message('数据与隐私', '故事星级、角色和装备解锁、图鉴及装备选择会自动保存在本机。剧情会保存当前环节、对话位置、调查发现和人物选择；重新进入可继续该环节。未打完的比赛与训练从本环节开头重来。当前没有微信账号云存档，换手机不会自动同步，清除小游戏数据会丢失本机进度。当前版本不索取头像、昵称、手机号或位置。在线比赛处理房间码、操作指令和临时重连凭证；云通道可能附带微信身份信息，但本游戏没有用它保存个人进度。', 'settings'), { icon: 'shield', size: 15 });
     this.button('share-game', '分享游戏', PAD + w + 12, by, w, 48, () => this.P.share(), { icon: 'share', size: 15 });
     this.button('reset-save', '重置故事进度', PAD, by + 60, w, 46, () => this.P.confirm('重置故事进度', '这会清空已解锁的角色、装备和图鉴，无法撤销。', () => { this.YY.Profile.reset(); a.storyChap = null; a.teamPeek = null; a.codexSel = null; this.P.toast('故事进度已重置'); }), { danger: true, icon: 'trash', size: 15 });
+    this.button('layout-settings', '自定义键位', PAD + w + 12, by + 60, w, 46, () => this.openControlEditor('settings'), { icon: 'gear', size: 15 });
     this.icon('info', PAD + 8, H - 20, 14, C.dim);
-    this.text(`存档保存在当前设备 · 羽跃对决 v${a.net.config.version}`, PAD + 22, H - 20, 13, C.dim);
+    this.text(`本机自动存档 · 暂无跨设备同步 · v${a.net.config.version}`, PAD + 22, H - 20, 13, C.dim);
   }
   message() {
     const a = this.app, m = a.messageData, W = this.W, H = this.H;

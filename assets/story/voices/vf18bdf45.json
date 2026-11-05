@@ -1,0 +1,16 @@
+{
+  "digest": "dd34213d05f96ed165f10fa7159944cb667b07d1af33a0a8337d178c2acecd23",
+  "request_id": "6e4f9a66-4ce0-9c78-acb5-42bcb79279cc",
+  "usage": {
+    "input_tokens": 17,
+    "output_tokens": 44,
+    "total_tokens": 61,
+    "characters": 31
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yymm-13991994e40b44a7b5af603229af22b3",
+  "text": "规则会更新，先标清日期，再来判断。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "mm"
+}

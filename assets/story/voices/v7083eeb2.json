@@ -1,0 +1,16 @@
+{
+  "digest": "e33caae8dc8bc2c410800a29fabb1da646427d82a10293a20ec736f6c148b629",
+  "request_id": "cabc1e0d-b7c4-9c9d-a22b-8c7e7ed66af3",
+  "usage": {
+    "input_tokens": 34,
+    "output_tokens": 101,
+    "total_tokens": 135,
+    "characters": 63
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyhouzi-8b1303f4011a48d5a7de5234aa93c44f",
+  "text": "所以我们赌一把。我用球拍赢你，群里就发集结令。输了，我请全群喝奶茶。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "houzi"
+}

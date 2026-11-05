@@ -16,6 +16,7 @@ const sources = {
   'server/index.js': 'server/index.js',
   'server/rooms.js': 'server/rooms.js',
   'js/core.js': 'js/core.js',
+  'js/roster.js': 'js/roster.js',
   'js/match.js': 'js/match.js',
   'js/state.js': 'js/state.js',
   'README.md': 'deploy/WECHAT_CLOUDRUN.md',

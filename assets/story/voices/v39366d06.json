@@ -1,0 +1,16 @@
+{
+  "digest": "8046f2b3b9b17ab26947e291946dbb82f166ad070a92cd19c53556bbc983519a",
+  "request_id": "a26fdd85-2638-9095-8f4b-e8888c637e02",
+  "usage": {
+    "input_tokens": 38,
+    "output_tokens": 82,
+    "total_tokens": 120,
+    "characters": 72
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yylaochen-7f836bbf53de430389176c261a0e42e5",
+  "text": "开黑群四十一人，穿线铺老顾客二十三人，铁力会员十五人，还有广场舞队的阿姨们。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "laochen"
+}

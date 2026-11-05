@@ -1,0 +1,16 @@
+{
+  "digest": "9a65aa5299c62ec9d39397782cbb3f6c9f39ee6f108a30591c2ec659bb61d973",
+  "request_id": "7a9fd06d-ae07-992a-97f8-a94d7e597ddb",
+  "usage": {
+    "input_tokens": 17,
+    "output_tokens": 71,
+    "total_tokens": 88,
+    "characters": 31
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyhouzi-8b1303f4011a48d5a7de5234aa93c44f",
+  "text": "第四条：打不好也没关系，问题不大。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "houzi"
+}

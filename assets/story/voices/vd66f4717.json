@@ -1,0 +1,16 @@
+{
+  "digest": "5c60d33e05194c3ac54388c0f96afbf165c9c1b504e29d541a0bc9a9735af92b",
+  "request_id": "026ac205-7c77-9500-bbe7-53e30411a4e9",
+  "usage": {
+    "input_tokens": 29,
+    "output_tokens": 74,
+    "total_tokens": 103,
+    "characters": 55
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yynar-9a6555ee9f6e43f0b167a59eec741be0",
+  "text": "倒计时第十五天。傍晚起风了，风顺着侧门的缝一阵一阵往里灌。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "nar"
+}

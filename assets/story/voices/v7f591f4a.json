@@ -1,0 +1,16 @@
+{
+  "digest": "8b414fb765da5f7704900840f7a44cc7faa89cb060cf69440878b2f7e2cdd3db",
+  "request_id": "3559c388-79b7-9090-8fd9-620f9728bd48",
+  "usage": {
+    "input_tokens": 31,
+    "output_tokens": 93,
+    "total_tokens": 124,
+    "characters": 59
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyme-fe7bb10e54c34773bd5b8380c1b96481",
+  "text": "照片里五个人，最右边只剩一只手，手里握着一支缠蓝色握把的球拍。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：边想边说，停顿有分寸，不拖长。",
+  "who": "me"
+}

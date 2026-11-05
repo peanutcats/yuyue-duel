@@ -1,0 +1,16 @@
+{
+  "digest": "250db5cb6263a7996eed27fab0947bbb1801bf05c581656431e15d554ad810e6",
+  "request_id": "15841a94-7ad7-966a-8376-cb69d2a95b38",
+  "usage": {
+    "input_tokens": 27,
+    "output_tokens": 70,
+    "total_tokens": 97,
+    "characters": 50
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yymm-13991994e40b44a7b5af603229af22b3",
+  "text": "“训练要有计划，也要允许失误。”——记住了，这句可要算数。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "mm"
+}

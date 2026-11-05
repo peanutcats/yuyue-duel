@@ -1,0 +1,16 @@
+{
+  "digest": "6e2a04d512d768ceb220b0959a5f798207fd0efefa3041b53c3c629e7af371bf",
+  "request_id": "1ae0c53f-2d9b-9b9b-92f4-c439319d06a3",
+  "usage": {
+    "input_tokens": 14,
+    "output_tokens": 42,
+    "total_tokens": 56,
+    "characters": 26
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yylu-77a02af0575b449fadd3046da74d049f",
+  "text": "我昨晚现编的。这叫版本更新。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "lu"
+}

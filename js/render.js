@@ -146,6 +146,16 @@
         this.add({ type: 'confetti', x: x + (Math.random() - 0.5) * 1.5, y, vx: Math.cos(a) * v * 0.6, vy: -Math.sin(a) * v, life: 1.8 + Math.random() * 1.2, t: 0, size: 0.06 + Math.random() * 0.05, rot: Math.random() * 6, vr: (Math.random() - 0.5) * 14, g: 4, drag: 1.6, color: cols[i % cols.length] });
       }
     }
+    /** 沿出球方向喷射的火花（击球反馈：让人“看见”力量的方向） */
+    jet(x, y, vx, vy, n, color, spd, spread) {
+      const L = Math.hypot(vx, vy) || 1, a0 = Math.atan2(vy, vx);
+      for (let i = 0; i < n; i++) {
+        const a = a0 + (Math.random() - 0.5) * (spread || 0.9), v = spd * (0.5 + Math.random() * 0.8);
+        this.add({ type: 'spark', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.18 + Math.random() * 0.22, t: 0, color, size: 0.035, g: 2, drag: 5 });
+      }
+      return L;
+    }
+    impact(x, y, color, size, life) { this.add({ type: 'star', x, y, life: life || 0.22, t: 0, size, color, vx: 0, vy: 0, g: 0, rot: Math.random() * 0.8 }); }
     ring(x, y, color, size, life, floor) { this.add({ type: floor ? 'fring' : 'ring', x, y, life, t: 0, size, color, vx: 0, vy: 0, g: 0 }); }
     glow(x, y, color, size, life) { this.add({ type: 'glow', x, y, life, t: 0, size, color, vx: 0, vy: 0, g: 0 }); }
     popText(text, x, y, color, size, life) {
@@ -158,28 +168,49 @@
       this.cam.fx = this.sx(x); this.cam.fy = this.sy(y);
     }
 
-    /** 击球特效 */
+    /** 击球特效：力度越大，闪光、火花、镜头冲击越强；不同球路有不同的颜色与形态 */
     hitFx(e) {
       const smash = e.shot === 'smash';
       if (e.feed) { this.burst(e.x, e.y, 5, '255,255,255', 2.5); return; }
-      if (smash) {
-        this.burst(e.x, e.y, 30, '255,190,90', 9, 0.05);
-        this.burst(e.x, e.y, 14, '255,255,255', 6, 0.03);
+      const vx = e.vx || 0, vy = e.vy || 0;
+      this.hitPulse = 1; this.hitShot = e.shot;
+      if (smash || e.shot === 'kill') {
+        const col = e.fire ? '255,140,40' : e.shot === 'kill' ? '255,90,90' : '255,190,90';
+        this.burst(e.x, e.y, 22, col, 9, 0.05);
+        this.jet(e.x, e.y, vx, vy, 18, '255,240,200', 14, 0.5);
+        this.impact(e.x, e.y, '255,230,170', 1.1, 0.26);
         this.glow(e.x, e.y, '255,200,120', 1.6, 0.35);
         this.ring(e.x, e.y, '255,220,160', 0.35, 0.4);
         this.feathers(e.x, e.y, 4);
-        this.shake = 0.95; this.flash = 0.22; this.flashCol = '255,235,210';
+        this.shake = e.shot === 'kill' ? 0.8 : 0.95; this.flash = 0.22; this.flashCol = '255,235,210';
         this.kick(1, e.x, e.y);
         this.lines.push({ x: this.sx(e.x), y: this.sy(e.y), t: 0, life: 0.38 });
         this.venueEvent('smash');
+      } else if (e.shot === 'halfsmash') {
+        this.jet(e.x, e.y, vx, vy, 12, '255,200,120', 11, 0.5);
+        this.impact(e.x, e.y, '255,220,150', 0.8, 0.22);
+        this.ring(e.x, e.y, '255,200,120', 0.25, 0.32);
+        this.shake = 0.45; this.kick(0.55, e.x, e.y);
+      } else if (e.shot === 'tumble') {
+        // 搓球：紫色小旋涡
+        for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; this.add({ type: 'spark', x: e.x + Math.cos(a) * 0.12, y: e.y + Math.sin(a) * 0.12, vx: -Math.sin(a) * 2.2, vy: Math.cos(a) * 2.2, life: 0.35, t: 0, color: '200,160,255', size: 0.03, g: 0, drag: 2 }); }
+        this.impact(e.x, e.y, '220,190,255', 0.5, 0.2);
+      } else if (e.shot === 'push' || e.shot === 'drive' || e.shot === 'flatclear') {
+        this.jet(e.x, e.y, vx, vy, 10, '140,230,255', 9, 0.35);
+        this.impact(e.x, e.y, '170,235,255', 0.6, 0.2);
       } else if (e.q >= 0.85) {
-        this.burst(e.x, e.y, 14, '255,225,120', 5, 0.035);
+        this.burst(e.x, e.y, 12, '255,225,120', 5, 0.035);
+        this.jet(e.x, e.y, vx, vy, 8, '255,240,180', 7, 0.6);
+        this.impact(e.x, e.y, '255,230,140', 0.75, 0.24);
         this.ring(e.x, e.y, '255,214,90', 0.25, 0.35);
         this.glow(e.x, e.y, '255,220,120', 0.8, 0.25);
+        this.kick(0.3, e.x, e.y);
       } else {
         this.burst(e.x, e.y, 8, '255,255,255', 3.5, 0.028);
+        this.impact(e.x, e.y, '255,255,255', 0.45, 0.16);
         this.glow(e.x, e.y, '255,255,255', 0.5, 0.18);
       }
+      if (e.meteor) { this.jet(e.x, e.y, vx, vy, 16, '255,226,122', 10, 0.4); this.impact(e.x, e.y, '255,226,122', 1, 0.3); }
       if (e.save || e.lowSave) { this.ring(e.x, e.y, '120,240,255', 0.3, 0.45); this.kick(0.5, e.x, e.y); }
       this.venueEvent('hit');
     }
@@ -194,7 +225,7 @@
       this.columns.push({ x, inB, t: 0, life: 1.4 });
     }
     pointFx(winner, m, label) {
-      this.lastWinner = winner;
+      this.lastWinner = winner; this.pointSeq = (this.pointSeq || 0) + 1;
       const look = this.lookOf(m, winner);
       const p = m.players[winner];
       this.confetti(p.x, 2.6, 26, [look.shirt, look.trim, '#ffffff', look.racket]);
@@ -288,7 +319,12 @@
 
     moodOf(p, m) {
       if (m.practice) return 'play';
-      if ((m.phase === 'point' || m.phase === 'over') && this.lastWinner >= 0) return p.idx === this.lastWinner ? 'happy' : 'sad';
+      if ((m.phase === 'point' || m.phase === 'over') && this.lastWinner >= 0) {
+        const n = (this.pointSeq || 0) + p.idx * 2;
+        if (p.idx === this.lastWinner) return m.phase === 'over' ? 'cheer' : ['happy', 'fist', 'cheer', 'point'][n % 4];
+        return m.phase === 'over' ? 'tired' : ['sad', 'tired', 'sad', 'angry'][n % 4];
+      }
+      if (p.buff && p.buff.laugh > 0) return 'happy';
       return 'play';
     }
 
@@ -396,6 +432,7 @@
       if (s.held) ang = Math.PI / 2;
       else if (!s.live) ang = 0.25;
       else ang = Math.atan2(-s.vy, this.mirror ? -s.vx : s.vx);
+      if (s.live && s.shot === 'tumble' && Math.abs(s.x) < 1.2) ang += this.time * 28; // 搓球：翻着跟头过网
       const R = C.SHUTTLE_R * k; // 球头半径与碰撞一致
       const sz = R / 3;
       if (s.live && spd > 14) {
@@ -456,7 +493,11 @@
       ctx.globalCompositeOperation = 'lighter';
       const head = pts[n - 1], tail = pts[0];
       const gr = ctx.createLinearGradient(tail[0], tail[1], head[0], head[1]);
+      const kind = this.trailKind;
       if (fire) { gr.addColorStop(0, 'rgba(255,30,0,0)'); gr.addColorStop(0.5, 'rgba(255,90,20,0.75)'); gr.addColorStop(1, 'rgba(255,230,120,1)'); }
+      else if (kind === 'meteor') { gr.addColorStop(0, 'rgba(255,200,60,0)'); gr.addColorStop(0.5, 'rgba(255,226,122,0.7)'); gr.addColorStop(1, 'rgba(255,255,230,1)'); }
+      else if (kind === 'tumble') { gr.addColorStop(0, 'rgba(160,110,255,0)'); gr.addColorStop(1, 'rgba(210,180,255,0.75)'); }
+      else if (kind === 'push' || kind === 'drive') { gr.addColorStop(0, 'rgba(80,200,255,0)'); gr.addColorStop(1, 'rgba(170,235,255,0.75)'); }
       else if (fast) { gr.addColorStop(0, 'rgba(255,60,40,0)'); gr.addColorStop(0.6, 'rgba(255,140,60,0.55)'); gr.addColorStop(1, 'rgba(255,240,200,0.95)'); }
       else { gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(1, 'rgba(220,240,255,0.55)'); }
       ctx.fillStyle = gr;
@@ -686,6 +727,20 @@
             const r = q.size * k * (1 + u * 4);
             ctx.strokeStyle = `rgba(${q.color},${a})`; ctx.lineWidth = Math.max(1, 3 * a);
             ctx.beginPath(); ctx.ellipse(X, Y, r, r * 0.28, 0, 0, Math.PI * 2); ctx.stroke();
+            break;
+          }
+          case 'star': {
+            // 四角星形的击球闪光
+            ctx.globalCompositeOperation = 'lighter';
+            const r = q.size * k * (0.7 + u * 0.9), w = r * 0.16 * a;
+            ctx.save(); ctx.translate(X, Y); ctx.rotate(q.rot);
+            ctx.fillStyle = `rgba(${q.color},${a})`;
+            ctx.beginPath();
+            for (let j = 0; j < 4; j++) { const an = j * Math.PI / 2; ctx.lineTo(Math.cos(an) * r, Math.sin(an) * r); ctx.lineTo(Math.cos(an + Math.PI / 4) * w, Math.sin(an + Math.PI / 4) * w); }
+            ctx.closePath(); ctx.fill();
+            ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.beginPath(); ctx.arc(0, 0, r * 0.12, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
+            ctx.globalCompositeOperation = 'source-over';
             break;
           }
           case 'glow': {
@@ -1010,14 +1065,14 @@
       ctx.fillText(pr.def.name, bx + 16, by + bh * 0.33);
       ctx.textAlign = 'right';
       const g = pr.goal;
-      const score = g ? `${pr.ok} / ${g.need}` : `${pr.ok} / ${pr.att}`;
+      const score = pr.tutorial ? `${pr.completed} / 3` : g ? `${pr.ok} / ${g.need}` : `${pr.ok} / ${pr.att}`;
       ctx.font = `900 ${Math.round(u * 0.85)}px ${NUMF}`;
       ctx.fillStyle = g && pr.ok >= g.need ? '#7dffb0' : '#fff';
       ctx.fillText(score, bx + bw - 16, by + bh * 0.33);
       const tw = ctx.measureText(score).width;
       ctx.font = `bold ${Math.round(u * 0.48)}px ${FONT}`;
       ctx.fillStyle = 'rgba(255,255,255,0.6)';
-      const sub = g ? `剩余 ${Math.max(0, g.total - pr.att)} ${g.unit || '球'} · 连续 ${pr.streak} · 目标` : `连续 ${pr.streak} · 最佳 ${pr.best} · 成功`;
+      const sub = pr.progressText || (g ? `剩余 ${Math.max(0, g.total - pr.att)} ${g.unit || '球'} · 连续 ${pr.streak} · 目标` : `连续 ${pr.streak} · 最佳 ${pr.best} · 成功`);
       ctx.fillText(sub, bx + bw - 24 - tw, by + bh * 0.34);
       ctx.textAlign = 'center';
       ctx.font = `${Math.round(u * 0.6)}px ${FONT}`;
@@ -1124,7 +1179,7 @@
         for (const i of o.landHint) if (m.shuttle.lastHitter !== i) this.drawHint(ctx, m, i, { landX: m.pred.landX }, false);
       }
 
-      const humans = m.players.filter((p) => !(m.practice && p.idx === 1));
+      const humans = m.players.filter((p) => !(m.practice && !m.tutorial && p.idx === 1));
       for (const p of humans) {
         this.updateSpring(p, dt);
         const fast = (p.swing && p.swing.dur > 0.4 && p.swing.t < 0.3) || (!p.onGround && Math.abs(p.vy) > 1.5) ||
@@ -1160,7 +1215,7 @@
       } else if (this.trail.length) this.trail.splice(0, 2);
 
       for (const p of m.players) {
-        if (m.practice && p.idx === 1) { if (!m.hideOpp) this.drawMachine(ctx, p); continue; }
+        if (m.practice && !m.tutorial && p.idx === 1) { if (!m.hideOpp) this.drawMachine(ctx, p); continue; }
         const look = this.lookOf(m, p.idx);
         const gs = this.ghosts[p.idx];
         const bk = p.buff ? Object.keys(p.buff).find((k) => p.buff[k] > 0 && YY.SKILLS && YY.SKILLS[k]) : null;
@@ -1175,6 +1230,16 @@
         ctx.globalAlpha = 1;
         this.drawCharAt(ctx, p, look, this.charOpts(p, m));
         this.drawSwoosh(ctx, p, look);
+        if (p.buff && p.buff.laugh > 0) {
+          // 被冷笑话击中：头顶冒出“哈哈”
+          const fs = Math.round(Math.max(12, 0.22 * this.sc) * this.hudK);
+          ctx.font = `900 ${fs}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          for (let j = 0; j < 3; j++) {
+            const u = (this.time * 0.9 + j / 3) % 1, X = this.sx(p.x + (j - 1) * 0.35), Y = this.sy(p.y + 2.1 + u * 0.8);
+            ctx.globalAlpha = Math.sin(u * Math.PI); ctx.fillStyle = '#7fd6ff'; ctx.fillText(j % 2 ? '哈' : '哈哈', X, Y);
+          }
+          ctx.globalAlpha = 1;
+        }
         if (o.labels && o.labels[p.idx]) {
           const X = this.sx(p.x), Y = this.sy(p.y + 2.2);
           const fs = Math.round(Math.max(11, 0.19 * this.sc) * this.hudK);
@@ -1187,6 +1252,7 @@
         }
       }
       this.trailFire = !!(s.live && s.fire);
+      this.trailKind = s.live ? (s.meteor ? 'meteor' : s.shot) : null;
       this.drawTrail(ctx);
       if (s.live && s.feint > 0) {
         // 假动作：两个幻影球向不同方向分叉

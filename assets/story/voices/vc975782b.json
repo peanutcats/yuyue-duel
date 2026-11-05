@@ -1,0 +1,16 @@
+{
+  "digest": "8300ab0c16210b7a273a4c7f0405c196235dc9e3bcc4c22d6b52a45b11b9411b",
+  "request_id": "567243d7-01d8-974b-a950-ef6556ed4800",
+  "usage": {
+    "input_tokens": 26,
+    "output_tokens": 48,
+    "total_tokens": 74,
+    "characters": 49
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yynar-9a6555ee9f6e43f0b167a59eec741be0",
+  "text": "果哥的手机一直在震。他看了一眼，把屏幕扣在了长椅上。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "nar"
+}

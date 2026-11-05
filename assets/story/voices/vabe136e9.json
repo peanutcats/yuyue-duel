@@ -1,0 +1,16 @@
+{
+  "digest": "ea8001cba9836c0e0f79e21824b4acf456651b030e404b2cb4efcccbf3d0f1c6",
+  "request_id": "20e323e8-35a0-91f8-a46e-3e323bb87c3b",
+  "usage": {
+    "input_tokens": 17,
+    "output_tokens": 41,
+    "total_tokens": 58,
+    "characters": 32
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyranran-3608278c42c041e2add2c5da6d1d2979",
+  "text": "第一课别讲太多。先让他们成功一次。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：清楚地提醒同伴，强调关键动作。",
+  "who": "ranran"
+}

@@ -1,0 +1,16 @@
+{
+  "digest": "9c18bb8a88e880018c5a63f01de526920f1a9f6b45447e3954c0aef520e35c90",
+  "request_id": "4cf697f3-0351-935f-ac0b-647264aa2eb0",
+  "usage": {
+    "input_tokens": 14,
+    "output_tokens": 42,
+    "total_tokens": 56,
+    "characters": 25
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyguoge-9c9d4191af904024a507774c10119d97",
+  "text": "……让开。这种活，我练了三年。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：边想边说，停顿有分寸，不拖长。",
+  "who": "guoge"
+}

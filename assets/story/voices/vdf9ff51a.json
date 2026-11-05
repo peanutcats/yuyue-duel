@@ -1,0 +1,16 @@
+{
+  "digest": "f102b00c4b0dde9331051169ffd27dbdc1150ea2209fe6f004e8bce32c2f3453",
+  "request_id": "d5ece59b-7ac9-9d1c-b57d-b1dd2a91f673",
+  "usage": {
+    "input_tokens": 15,
+    "output_tokens": 36,
+    "total_tokens": 51,
+    "characters": 27
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yymm-13991994e40b44a7b5af603229af22b3",
+  "text": "轻点！我是羽毛球，不是灰团子！",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：有点不服气和着急，声音有力度但不要喊叫。",
+  "who": "mm"
+}

@@ -1,0 +1,16 @@
+{
+  "digest": "c62dfb3165d5fc731cd7a3fe7d52efc818acffd52a88011e460937750b08a660",
+  "request_id": "397e4a32-6f03-9c47-9d45-ee33dec884ca",
+  "usage": {
+    "input_tokens": 21,
+    "output_tokens": 49,
+    "total_tokens": 70,
+    "characters": 39
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyxingxing-bf1d887d84034502aa01912d757758a3",
+  "text": "上次在公园，你轻轻一碰，就让我跑了一下午。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "xingxing"
+}

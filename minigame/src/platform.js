@@ -1,5 +1,6 @@
 'use strict';
 const createClock = require('./clock');
+const safeInsets = require('./safe-area');
 
 module.exports = function createPlatform(wx, config) {
   let hidden = false;
@@ -9,14 +10,10 @@ module.exports = function createPlatform(wx, config) {
   function viewport() {
     const info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync();
     const W = info.windowWidth, H = info.windowHeight;
-    const safe = info.safeArea || { left: 0, top: 0, right: W, bottom: H };
-    const left = Math.max(0, Math.min(safe.left || 0, W * .15));
-    const right = Math.max(0, Math.min(W - (safe.right || W), W * .15));
-    const top = Math.max(0, Math.min(safe.top || 0, H * .12));
-    const bottom = Math.max(0, Math.min(H - (safe.bottom || H), H * .12));
+    const safe = safeInsets(info);
     let capsule = null;
     try { capsule = wx.getMenuButtonBoundingClientRect?.(); } catch (_) {}
-    return { W, H, dpr: Math.min(info.pixelRatio || 1, config.maxPixelRatio), left, right, top, bottom, capsule };
+    return { W, H, dpr: Math.min(info.pixelRatio || 1, config.maxPixelRatio), ...safe, capsule };
   }
   function reportStorageError(e) {
     storageError = e;
@@ -28,13 +25,13 @@ module.exports = function createPlatform(wx, config) {
     setHidden: value => { hidden = value; },
     createCanvas: () => wx.createCanvas(),
     getStorage(key) { try { const v = wx.getStorageSync(key); return v === '' || v == null ? null : String(v); } catch (e) { reportStorageError(e); return null; } },
-    setStorage(key, value) { try { wx.setStorageSync(key, value); } catch (e) { reportStorageError(e); } },
+    setStorage(key, value) { try { wx.setStorageSync(key, value); return true; } catch (e) { reportStorageError(e); return false; } },
     takeStorageError() { const error = storageError; storageError = null; return error; },
     read(key, fallback) { try { const raw = this.getStorage(key); return raw == null ? fallback : JSON.parse(raw); } catch (_) { return fallback; } },
-    write(key, value) { this.setStorage(key, JSON.stringify(value)); },
+    write(key, value) { return this.setStorage(key, JSON.stringify(value)); },
     toast(title) { wx.showToast?.({ title, icon: 'none', duration: 2200 }); },
     share(room) { wx.shareAppMessage?.({ title: room ? `羽跃对决｜房间 ${room}，等你来挑战` : config.shareTitle, query: room ? `room=${encodeURIComponent(room)}` : '', imageUrl: 'assets/images/icon.png' }); },
-    vibrate() { wx.vibrateShort?.({ type: 'light', fail() {} }); },
+    vibrate(type = 'light') { wx.vibrateShort?.({ type, fail() {} }); },
     confirm(title, content, done) { wx.showModal({ title, content, confirmText: '确定', cancelText: '取消', success: r => { if (r.confirm) done(); } }); },
   };
 };

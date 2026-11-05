@@ -1,0 +1,16 @@
+{
+  "digest": "af33bf302bcd86c8307db6c5157379a3ddaf1d8ee077ed9ccca3d5a636f786d8",
+  "request_id": "3aee5df1-7515-91ae-85de-e39bc28e5802",
+  "usage": {
+    "input_tokens": 18,
+    "output_tokens": 39,
+    "total_tokens": 57,
+    "characters": 35
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyxiaohong-50dc0caa82b447ae85e9bc8b63563bcd",
+  "text": "标题我想好了：“冲击冠军，三十天逆袭”。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：清楚地提醒同伴，强调关键动作。",
+  "who": "xiaohong"
+}

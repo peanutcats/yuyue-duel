@@ -1,0 +1,16 @@
+{
+  "digest": "4dd9f080093abf1bab93a7535dfb496b2ca48b24f3ee3c6d302b44698301f5cc",
+  "request_id": "4f39c58d-9909-9482-8f8f-f7cf1599b35b",
+  "usage": {
+    "input_tokens": 18,
+    "output_tokens": 44,
+    "total_tokens": 62,
+    "characters": 34
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyguoge-9c9d4191af904024a507774c10119d97",
+  "text": "……光是爬上来，就用完了我今天的体力。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：稍显疲惫，语速放缓但清楚。",
+  "who": "guoge"
+}

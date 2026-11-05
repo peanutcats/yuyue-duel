@@ -1,0 +1,16 @@
+{
+  "digest": "d2f843cffbefd4ca6e6be28f83e6974f7668ac0824a4f6d7741da2361883e810",
+  "request_id": "9c57136a-c95a-917f-b1e1-2eb04c8b0c22",
+  "usage": {
+    "input_tokens": 22,
+    "output_tokens": 76,
+    "total_tokens": 98,
+    "characters": 41
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yylu-77a02af0575b449fadd3046da74d049f",
+  "text": "老陈，你以后打球去了，不会不陪我上厕所了吧？",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：有点不好意思，停顿轻微，自然含蓄。",
+  "who": "lu"
+}

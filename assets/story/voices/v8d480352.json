@@ -1,0 +1,16 @@
+{
+  "digest": "86ac9f1cca614057f7f3aa326ccb302ca5951dabd802e1d09576a52ddcc9226e",
+  "request_id": "507803f8-607d-9bc5-9eca-ea16ef15719c",
+  "usage": {
+    "input_tokens": 40,
+    "output_tokens": 107,
+    "total_tokens": 147,
+    "characters": 75
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyguoge-9c9d4191af904024a507774c10119d97",
+  "text": "可今晚，要是这里已经变成了健身房，这些人就只能站在雨里。一张终身卡，换不来这个。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：边想边说，停顿有分寸，不拖长。",
+  "who": "guoge"
+}

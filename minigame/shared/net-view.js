@@ -77,6 +77,16 @@
       s.netHit = !!sc[8]; s.crossedNet = !!sc[9];
       this.landMark = cur.lm ? { x: cur.lm[0], inB: !!cur.lm[1], t: cur.lm[2] } : null;
       this.pred = cur.pl != null ? { landX: cur.pl } : null;
+      if (cur.fx) {
+        for (let i = 0; i < 2; i++) {
+          const f = cur.fx[0][i], p = this.players[i];
+          p.energy = f[0]; p.buff = {};
+          if (f[1]) for (const k of f[1].split(',')) p.buff[k] = f[2] || 0.1;
+        }
+        this.slowT = cur.fx[1]; this.slowFor = cur.fx[2];
+        s.fire = !!cur.fx[3]; s.feint = cur.fx[4]; s.meteor = !!cur.fx[5]; this.skillsOn = !!cur.fx[6];
+      }
+      if (cur.ch && YY.lookOf) { if (this.chars !== cur.ch.join()) { this.chars = cur.ch.join(); this.looks = cur.ch.map((id) => YY.lookOf(id)); this.charIds = cur.ch.slice(); } }
       while (this.pendingEvents.length && this.pendingEvents[0].t <= this.renderStamp) {
         this.events.push(...this.pendingEvents.shift().events);
       }

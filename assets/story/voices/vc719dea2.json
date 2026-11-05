@@ -1,0 +1,16 @@
+{
+  "digest": "50ee7a7914ef96363fb693170113bf7ee4c0fc261bd85fd20df84fca0070d82a",
+  "request_id": "90f45fdd-4ad6-9208-aa5b-bb271f662c2c",
+  "usage": {
+    "input_tokens": 18,
+    "output_tokens": 49,
+    "total_tokens": 67,
+    "characters": 34
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyzhu-51d3e2230c6d4ee8b71cd80474e27aef",
+  "text": "会防守的人，才知道进攻该什么时候来。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "zhu"
+}

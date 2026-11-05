@@ -1,0 +1,20 @@
+{
+  "digest": "fc679b79f0209b874f6ae4c7c5072241fbac6fbb63fb6e382744b21e81e167c6",
+  "file": "lu-v33de9071.wav",
+  "who": "lu",
+  "name": "路先森",
+  "text": "老陈上场！我给你讲冷笑话加油！",
+  "mood": "cheer",
+  "delivery": "激动",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：高兴而充满干劲，笑意自然。",
+  "request_id": "67a9b33f-aa65-9a74-97e8-c5d5808501f5",
+  "usage": {
+    "input_tokens": 15,
+    "output_tokens": 42,
+    "total_tokens": 57,
+    "characters": 28
+  },
+  "reused_audition": true,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yylu-77a02af0575b449fadd3046da74d049f"
+}

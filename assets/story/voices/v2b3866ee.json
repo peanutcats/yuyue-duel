@@ -1,0 +1,16 @@
+{
+  "digest": "e1511400c46a8706864f68f840d08461020c9090f68feb7d5cdc3f8fe054613a",
+  "request_id": "731cb2fe-a8aa-97fc-8cbd-8b08f5c9eb90",
+  "usage": {
+    "input_tokens": 31,
+    "output_tokens": 69,
+    "total_tokens": 100,
+    "characters": 59
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yynar-9a6555ee9f6e43f0b167a59eec741be0",
+  "text": "放学后，王瑞领着大家拐进一栋旧楼。门上贴着纸条：“开黑中，勿扰。”",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "nar"
+}

@@ -1,0 +1,16 @@
+{
+  "digest": "a35eeb09fed487c15e2ec11e6e0183b12b367daa5ae3ec61d8ee67a4565a0ce5",
+  "request_id": "f3103b2f-d05b-9585-a352-0b5c3812e8d1",
+  "usage": {
+    "input_tokens": 20,
+    "output_tokens": 48,
+    "total_tokens": 68,
+    "characters": 36
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyxingxing-bf1d887d84034502aa01912d757758a3",
+  "text": "那是夏季大三角：织女、牛郎，还有天津四。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "xingxing"
+}

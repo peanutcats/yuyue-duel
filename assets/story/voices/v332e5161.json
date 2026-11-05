@@ -1,0 +1,16 @@
+{
+  "digest": "4c1fe9521d480a1ca495086bd09bc1c95c76e22534fa4b9f9e7c6551b74fa58e",
+  "request_id": "e9b4bb80-e149-9fe8-a47a-800510106b46",
+  "usage": {
+    "input_tokens": 10,
+    "output_tokens": 23,
+    "total_tokens": 33,
+    "characters": 19
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyranran-3608278c42c041e2add2c5da6d1d2979",
+  "text": "你居然没有一直扣杀。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：短暂惊讶，随后像向同伴确认。",
+  "who": "ranran"
+}

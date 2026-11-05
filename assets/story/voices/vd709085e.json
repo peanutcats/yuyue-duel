@@ -1,0 +1,20 @@
+{
+  "digest": "c4851b1d2925f5417821daae4443f76747aa5bcca64ccb8824842b0eae03b3ab",
+  "file": "me-vd709085e.wav",
+  "who": "me",
+  "name": "凌风",
+  "text": "那这次不当墙，换个打法？",
+  "mood": "talk",
+  "delivery": "日常",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "request_id": "fd80eb7e-2139-9db4-8517-a95c9270097b",
+  "usage": {
+    "input_tokens": 12,
+    "output_tokens": 44,
+    "total_tokens": 56,
+    "characters": 22
+  },
+  "reused_audition": true,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyme-fe7bb10e54c34773bd5b8380c1b96481"
+}

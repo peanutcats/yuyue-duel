@@ -1,0 +1,16 @@
+{
+  "digest": "308f36c18172291923a23fb33908c12bf68cc42f404a3b92ac17970b676f80cb",
+  "request_id": "dee6eec5-ebe2-90af-9b91-4aa46f4f79ce",
+  "usage": {
+    "input_tokens": 24,
+    "output_tokens": 62,
+    "total_tokens": 86,
+    "characters": 44
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yymm-13991994e40b44a7b5af603229af22b3",
+  "text": "开黑群、穿线铺、健身房……这座球馆，要热闹起来了！",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：高兴而充满干劲，笑意自然。",
+  "who": "mm"
+}

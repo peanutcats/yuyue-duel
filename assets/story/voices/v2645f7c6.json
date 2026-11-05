@@ -1,0 +1,16 @@
+{
+  "digest": "58b608564877a97398c2dab7b25b32ccaad8653a4d7106f849992c04643133ac",
+  "request_id": "150985b1-cc3e-9561-8261-b38e2c80e232",
+  "usage": {
+    "input_tokens": 14,
+    "output_tokens": 26,
+    "total_tokens": 40,
+    "characters": 26
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yymm-13991994e40b44a7b5af603229af22b3",
+  "text": "四个人的群，今晚聊到了半夜。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "mm"
+}

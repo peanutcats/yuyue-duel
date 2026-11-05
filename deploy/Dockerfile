@@ -3,7 +3,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 COPY server/ ./server/
-COPY js/core.js js/match.js js/state.js ./js/
+COPY js/core.js js/roster.js js/match.js js/state.js ./js/
 ENV NODE_ENV=production HOST=0.0.0.0 PORT=8080
 USER node
 EXPOSE 8080

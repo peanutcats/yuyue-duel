@@ -1,0 +1,16 @@
+{
+  "digest": "3a1549cca09465b0d0ba9794a3debffab6bc9dca9939cd0dda5f3a9db4ff6a52",
+  "request_id": "f9c16e6b-aedf-9fae-8f51-b46bea427ca6",
+  "usage": {
+    "input_tokens": 23,
+    "output_tokens": 74,
+    "total_tokens": 97,
+    "characters": 42
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yycanglan-a4eb561889b24f5985d096ce0c286c74",
+  "text": "今晚的练习赛照常。风会让球飘，先观察，再出手。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：清楚地提醒同伴，强调关键动作。",
+  "who": "canglan"
+}

@@ -1,0 +1,16 @@
+{
+  "digest": "8b849437abe7d26992bdae4f51024639ff256743a2ea77dd2e928a4e8d4f71a0",
+  "request_id": "678d4bdd-65c4-9904-b540-9fd8b6c3b946",
+  "usage": {
+    "input_tokens": 24,
+    "output_tokens": 78,
+    "total_tokens": 102,
+    "characters": 45
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yytianchu-2bb9df7a40db4ae7bafc77683d53adfb",
+  "text": "不过今天，我会认真赢你。先看看你懂不懂发球站位。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：清楚地提醒同伴，强调关键动作。",
+  "who": "tianchu"
+}

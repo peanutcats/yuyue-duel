@@ -1,0 +1,16 @@
+{
+  "digest": "aa379ae2e6e49cebe214d47a319b605ca50598e6ac13b622a865d351cedff8f8",
+  "request_id": "f89507e7-3e67-98b1-9910-fa259b739403",
+  "usage": {
+    "input_tokens": 5,
+    "output_tokens": 18,
+    "total_tokens": 23,
+    "characters": 9
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yycanglan-a4eb561889b24f5985d096ce0c286c74",
+  "text": "钥匙也是。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "canglan"
+}

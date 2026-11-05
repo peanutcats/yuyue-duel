@@ -1,0 +1,20 @@
+{
+  "digest": "480e434a8dbb0ee78995c39bf84b2548430d8aed9a50559c275a3749458cd7d9",
+  "file": "nar-vc2bd3fd9.wav",
+  "who": "nar",
+  "name": "旁白",
+  "text": "公告栏上，招新海报和评估通知贴在一起，像两个互相瞪眼的人。",
+  "mood": "talk",
+  "delivery": "柔和",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "request_id": "5f5ccdfb-ab33-9ca2-8181-5b13b63c41b8",
+  "usage": {
+    "input_tokens": 29,
+    "output_tokens": 71,
+    "total_tokens": 100,
+    "characters": 55
+  },
+  "reused_audition": true,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yynar-9a6555ee9f6e43f0b167a59eec741be0"
+}

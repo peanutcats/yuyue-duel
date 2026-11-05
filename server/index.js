@@ -2,7 +2,7 @@
 const http = require('node:http');
 const { isIP } = require('node:net');
 const { WebSocketServer } = require('ws');
-const { Rooms, YY } = require('./rooms');
+const { Rooms, YY, ROOM_PROTOCOL } = require('./rooms');
 
 function createServer(options = {}) {
   const rooms = new Rooms({ maxRooms: options.maxRooms || Number(process.env.MAX_ROOMS) || 20 });
@@ -15,7 +15,7 @@ function createServer(options = {}) {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     if (pathname === '/healthz') {
       res.setHeader('Content-Type', 'application/json');
-      return res.end(JSON.stringify({ ok: true, mode: 'authoritative', rooms: rooms.rooms.size, physicsHz: 120, snapshotHz: 30 }));
+      return res.end(JSON.stringify({ ok: true, mode: 'authoritative', rooms: rooms.rooms.size, physicsHz: 120, snapshotHz: 30, physicsVersion: YY.PHYSICS_VERSION, roomProtocol: ROOM_PROTOCOL }));
     }
     // Match service only: do not expose the repository or the browser build.
     res.writeHead(404); res.end('Not found');

@@ -1,0 +1,16 @@
+{
+  "digest": "e757a3feef638b2a4185a0e0675d67272bceb33e6669381589328e7012d30cb2",
+  "request_id": "14cba4a2-7f46-94f3-ab74-32946bc4b60b",
+  "usage": {
+    "input_tokens": 27,
+    "output_tokens": 83,
+    "total_tokens": 110,
+    "characters": 49
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yylaochen-7f836bbf53de430389176c261a0e42e5",
+  "text": "评估看三项：安全、使用、运营。奖杯只能证明我们会打球。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：清楚地提醒同伴，强调关键动作。",
+  "who": "laochen"
+}

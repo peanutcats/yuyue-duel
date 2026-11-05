@@ -1,0 +1,16 @@
+{
+  "digest": "d5c563f602cfffa4f6098f136c4a94cec0765fd07a58670f2dc68af639e4f901",
+  "request_id": "fc6c1e82-6683-90b4-a684-54cc8a2f691a",
+  "usage": {
+    "input_tokens": 26,
+    "output_tokens": 48,
+    "total_tokens": 74,
+    "characters": 48
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yynar-9a6555ee9f6e43f0b167a59eec741be0",
+  "text": "门口站着一个背着书包的新生，手里攥着开放日的传单。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "nar"
+}

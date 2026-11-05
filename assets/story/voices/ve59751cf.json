@@ -1,0 +1,16 @@
+{
+  "digest": "1e1be2d937f65f0f0d0617de6ed497402cf40081f46c155f244fecd16f652e1f",
+  "request_id": "f162f3f9-4e31-9115-991f-53dde841ce4b",
+  "usage": {
+    "input_tokens": 19,
+    "output_tokens": 46,
+    "total_tokens": 65,
+    "characters": 35
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyxingxing-bf1d887d84034502aa01912d757758a3",
+  "text": "我坐在正中间，两边都加油，不许有意见。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "xingxing"
+}

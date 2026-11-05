@@ -1,7 +1,7 @@
 'use strict';
 module.exports = {
   appId: 'wx4c24e883bac82367',
-  version: '1.0.3',
+  version: '1.1.1',
   // Cloud SDK transport does not require a manually configured socket domain.
   // Use 'socket' only for explicit public WSS/local testing; 'off' disables online.
   networkTransport: 'cloud',

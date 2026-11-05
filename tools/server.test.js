@@ -10,6 +10,8 @@ function fake() { return { readyState: 1, bufferedAmount: 0, messages: [], send(
 function game() {
   const r = new Rooms(), a = fake(), b = fake();
   r.create(a, { venue: 'neon' }); r.join(b, { room: a.slot.room.code });
+  const revision = a.slot.room.revision;
+  r.ready(a.slot, { ready: true, revision }); r.ready(b.slot, { ready: true, revision }); r.start(a.slot.room);
   return { r, a, b, room: a.slot.room };
 }
 function input(p, seq, move, presses = []) { return { t: 'in', matchId: p.room.id, seq, move, presses }; }
@@ -73,9 +75,13 @@ test('congestion retains events and only sends latest snapshot; rematch requires
   a.bufferedAmount = 0; r.broadcast(room);
   assert.equal(a.messages.at(-1).ev.filter(e => e.type === 'point').length, 1);
   r.broadcast(room); assert.equal(a.messages.at(-1).ev.length, 0);
-  room.match.phase = 'over'; const id = room.id;
+  room.match.phase = 'over'; room.match.winner = 0; const id = room.id;
   r.message(a, { t: 'rematch' }); assert.equal(room.id, id);
-  r.message(b, { t: 'rematch' }); assert.notEqual(room.id, id);
+  r.message(b, { t: 'rematch' }); assert.equal(room.id, id);
+  assert.equal(room.phase, 'lobby'); assert.deepEqual(room.wins, [1, 0]);
+  const revision = room.revision;
+  r.ready(a.slot, { ready: true, revision }); r.ready(b.slot, { ready: true, revision }); r.start(room);
+  assert.notEqual(room.id, id);
   r.input(a.slot, { ...input(a.slot, 1, 1), matchId: id }); assert.equal(a.slot.seq, 0);
 });
 
@@ -89,13 +95,19 @@ test('real HTTP/WebSocket server: create, join, broadcast; reject foreign origin
     assert.equal((await fetch(url + file)).status, 404);
   }
   const a = new WebSocket(`ws://127.0.0.1:${port}/ws`); await once(a, 'open');
-  const aw = once(a, 'message'); a.send(JSON.stringify({ t: 'create' }));
+  const aw = once(a, 'message'); a.send(JSON.stringify({ t: 'create', roomProtocol: 2 }));
   const welcome = JSON.parse((await aw)[0]); assert.equal(welcome.player, 0);
   const b = new WebSocket(`ws://127.0.0.1:${port}/ws`); await once(b, 'open');
-  const bw = once(b, 'message'), started = once(a, 'message');
-  b.send(JSON.stringify({ t: 'join', room: welcome.room }));
-  assert.equal(JSON.parse((await bw)[0]).player, 1); assert.equal(JSON.parse((await started)[0]).t, 'start');
-  const state = JSON.parse((await once(a, 'message'))[0]); assert.equal(state.t, 'st'); assert.ok(state.pp);
+  const bw = once(b, 'message'), joined = new Promise(resolve => a.on('message', raw => { const d = JSON.parse(raw); if (d.t === 'room' && d.players.length === 2) resolve(d); }));
+  b.send(JSON.stringify({ t: 'join', room: welcome.room, roomProtocol: 2 }));
+  assert.equal(JSON.parse((await bw)[0]).player, 1);
+  const lobby = await joined; assert.equal(lobby.phase, 'lobby');
+  const stateReady = new Promise(resolve => a.on('message', raw => { const d = JSON.parse(raw); if (d.t === 'st') resolve(d); }));
+  for (const socket of [a, b]) socket.send(JSON.stringify({ t: 'ready', ready: true, revision: lobby.revision }));
+  // Advance the already-tested countdown for this transport-focused check.
+  const room = app.rooms.rooms.get(welcome.room);
+  await new Promise(resolve => setTimeout(resolve, 40)); room.countdownAt = performance.now() / 1000;
+  const state = await stateReady; assert.ok(state.pp);
   const bad = new WebSocket(`ws://127.0.0.1:${port}/ws`, { origin: 'https://unrelated.example' });
   bad.on('error', () => {});
   const [, response] = await once(bad, 'unexpected-response'); assert.equal(response.statusCode, 403); response.resume(); bad.terminate();

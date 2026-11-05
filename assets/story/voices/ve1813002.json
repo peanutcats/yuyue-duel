@@ -1,0 +1,16 @@
+{
+  "digest": "5a252708cfb20a75f81c9dff7c04d49e4cec91e651add280166eb147a5a93e92",
+  "request_id": "e926ab0b-c9f9-94e3-83a5-cb1bc49eb26d",
+  "usage": {
+    "input_tokens": 10,
+    "output_tokens": 23,
+    "total_tokens": 33,
+    "characters": 18
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yymm-13991994e40b44a7b5af603229af22b3",
+  "text": "这一次，让我落地吧！",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：高兴而充满干劲，笑意自然。",
+  "who": "mm"
+}
