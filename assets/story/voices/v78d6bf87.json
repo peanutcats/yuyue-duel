@@ -1,0 +1,16 @@
+{
+  "digest": "a3e4b3eb0fe210947904e4bddcaf4bc485be1fcf3819a6ed518317cf67f874ea",
+  "request_id": "9bc81167-47bd-90e9-b09f-7c88f7b013b3",
+  "usage": {
+    "input_tokens": 26,
+    "output_tokens": 72,
+    "total_tokens": 98,
+    "characters": 49
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yymm-13991994e40b44a7b5af603229af22b3",
+  "text": "你以为故事结束了？听——又有人在问，能不能借一支球拍。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "mm"
+}

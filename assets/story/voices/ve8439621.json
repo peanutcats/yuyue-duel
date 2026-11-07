@@ -1,0 +1,16 @@
+{
+  "digest": "b6fa99202b33c1ca6e971ffbbfc6bfea770e0bbde6cbe7f017a9a40f73890cf6",
+  "request_id": "99f25972-ea7a-99e3-a592-ed40d12a7718",
+  "usage": {
+    "input_tokens": 14,
+    "output_tokens": 27,
+    "total_tokens": 41,
+    "characters": 26
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yymm-13991994e40b44a7b5af603229af22b3",
+  "text": "一个沉了两年的群，重新亮了。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "mm"
+}

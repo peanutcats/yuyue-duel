@@ -1,0 +1,16 @@
+{
+  "digest": "64b750f44d3f3fb86af259e5b7276c17a53bbf12d1aa79db520a9f143eed75bf",
+  "request_id": "61de388c-edbb-9bec-8c1e-d2220abc9ebf",
+  "usage": {
+    "input_tokens": 38,
+    "output_tokens": 110,
+    "total_tokens": 148,
+    "characters": 72
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyzhu-51d3e2230c6d4ee8b71cd80474e27aef",
+  "text": "下山以后，替我好好打星光杯。还有——寒星中学的王牌，是我当年那个老对手的外孙。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "zhu"
+}

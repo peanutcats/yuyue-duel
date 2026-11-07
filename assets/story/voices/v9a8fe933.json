@@ -1,0 +1,20 @@
+{
+  "digest": "86e7f320c4b409030325a275687dd7cb4742d18d0623feaec4fc24f44416afaa",
+  "file": "zhu-v9a8fe933.wav",
+  "who": "zhu",
+  "name": "朱老师",
+  "text": "我看见灯亮着，就知道又有人开了侧门。",
+  "mood": "surprise",
+  "delivery": "激动",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：短暂惊讶，随后像向同伴确认。",
+  "request_id": "ac3560a4-014a-91fc-a934-50f953fa6e74",
+  "usage": {
+    "input_tokens": 18,
+    "output_tokens": 47,
+    "total_tokens": 65,
+    "characters": 34
+  },
+  "reused_audition": true,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyzhu-51d3e2230c6d4ee8b71cd80474e27aef"
+}

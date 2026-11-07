@@ -1,0 +1,16 @@
+{
+  "digest": "b80d9c02ba7ad9f17f2b01a4d7b3e92bd800e2d87494a1334fa5f51df31c0117",
+  "request_id": "b90132a8-b29f-91c2-9e4b-a6d1096789f6",
+  "usage": {
+    "input_tokens": 7,
+    "output_tokens": 17,
+    "total_tokens": 24,
+    "characters": 13
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyxiaohong-50dc0caa82b447ae85e9bc8b63563bcd",
+  "text": "……你一直在看？",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：短暂惊讶，随后像向同伴确认。",
+  "who": "xiaohong"
+}

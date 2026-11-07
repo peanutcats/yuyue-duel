@@ -1,0 +1,16 @@
+{
+  "digest": "d458f21f45a73af3f167e63c5a0ca2620ff76a637de81cb31163aa3050e6b590",
+  "request_id": "7af97cf4-e258-9a68-8292-afa3702ef9a7",
+  "usage": {
+    "input_tokens": 16,
+    "output_tokens": 49,
+    "total_tokens": 65,
+    "characters": 29
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyhouzi-8b1303f4011a48d5a7de5234aa93c44f",
+  "text": "我也等到了。晚了两年，问题不大。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "houzi"
+}

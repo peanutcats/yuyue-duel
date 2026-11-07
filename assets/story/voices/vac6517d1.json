@@ -1,0 +1,16 @@
+{
+  "digest": "776cef9cdcb2151e54979e6385bd61f1b742d95eddd88a4329f8dcdceaf46cbf",
+  "request_id": "65cd71e2-a4c7-9966-b654-5a29ab9400ba",
+  "usage": {
+    "input_tokens": 13,
+    "output_tokens": 43,
+    "total_tokens": 56,
+    "characters": 25
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyme-fe7bb10e54c34773bd5b8380c1b96481",
+  "text": "你看什么都像在算投资回报。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "me"
+}

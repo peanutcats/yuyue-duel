@@ -1,0 +1,16 @@
+{
+  "digest": "9806ea98a7dc5358fb0b8b64bb7fdb7f0d1c5817e1941cdb04d202117b81a167",
+  "request_id": "76b04d67-6c3e-9a82-a4ac-632a1bfc8e03",
+  "usage": {
+    "input_tokens": 18,
+    "output_tokens": 42,
+    "total_tokens": 60,
+    "characters": 33
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yycanglan-a4eb561889b24f5985d096ce0c286c74",
+  "text": "那就周一和周五。钥匙，我多配了一把。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "canglan"
+}

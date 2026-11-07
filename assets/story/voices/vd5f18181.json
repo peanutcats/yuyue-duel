@@ -1,0 +1,16 @@
+{
+  "digest": "da1ece3334c69446ce11f27664ad5f3421ef03360f0396071e1e5c198df6b1ef",
+  "request_id": "9bb1dcb4-94ca-9383-9edf-18f1919a6206",
+  "usage": {
+    "input_tokens": 22,
+    "output_tokens": 72,
+    "total_tokens": 94,
+    "characters": 41
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyruibao-7c0dac9fd7f44dc39d4ce5e967f96cb0",
+  "text": "墙也可以教人。这句话，我想说给初中的自己听。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "ruibao"
+}

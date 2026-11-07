@@ -1,0 +1,16 @@
+{
+  "digest": "a8ab89aeceae15c5618c73c81204612c7ab2539559f642aede9bc41a66e84ba4",
+  "request_id": "307d7fb5-cd89-9136-99ba-359e12d242b6",
+  "usage": {
+    "input_tokens": 31,
+    "output_tokens": 75,
+    "total_tokens": 106,
+    "characters": 57
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yymm-13991994e40b44a7b5af603229af22b3",
+  "text": "我……我想起来了。那一夜，我就停在这里，十四平，所有人都看着我。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：短暂惊讶，随后像向同伴确认。",
+  "who": "mm"
+}

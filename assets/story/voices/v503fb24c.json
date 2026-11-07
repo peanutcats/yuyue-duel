@@ -1,0 +1,16 @@
+{
+  "digest": "09b5e3aa72e5bc87395b8aee13f942f4f7bffab15802e4acc71d725e7e0cb127",
+  "request_id": "cef6ace0-e249-9499-b13b-788eb5feaf25",
+  "usage": {
+    "input_tokens": 30,
+    "output_tokens": 73,
+    "total_tokens": 103,
+    "characters": 57
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yylaochen-7f836bbf53de430389176c261a0e42e5",
+  "text": "“铁力健身 · 场地考察”，来了三次。联系人一栏，写着果哥的名字。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "laochen"
+}

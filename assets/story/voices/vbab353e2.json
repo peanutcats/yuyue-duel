@@ -1,0 +1,16 @@
+{
+  "digest": "669c27650a638c0e47490e5a5f8afd0798811caf862a56431533e8e0bffbc7a9",
+  "request_id": "104cad1b-a56b-96c6-b32f-b9e921c6e2ab",
+  "usage": {
+    "input_tokens": 26,
+    "output_tokens": 73,
+    "total_tokens": 99,
+    "characters": 50
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyguoge-9c9d4191af904024a507774c10119d97",
+  "text": "那就让别人跑。我只负责最后那一下——收益最高的那一下。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "guoge"
+}

@@ -1,0 +1,16 @@
+{
+  "digest": "a43417166e270da6441abac7f3c89ebfb3265b65aacdfd5a274661ed5649207f",
+  "request_id": "67090a8b-c867-97b8-9230-26bc41069691",
+  "usage": {
+    "input_tokens": 29,
+    "output_tokens": 89,
+    "total_tokens": 118,
+    "characters": 55
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyguoge-9c9d4191af904024a507774c10119d97",
+  "text": "我去找了铁力的店长。他们要的其实不是这块地，是会员和曝光。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：清楚地提醒同伴，强调关键动作。",
+  "who": "guoge"
+}

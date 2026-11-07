@@ -1,0 +1,16 @@
+{
+  "digest": "296a07058a63ec454f430fafb1712cdb09bb9797884d8a09453c69569abaa50f",
+  "request_id": "cd0d8881-e098-904a-a1d5-da570c41ac4d",
+  "usage": {
+    "input_tokens": 21,
+    "output_tokens": 50,
+    "total_tokens": 71,
+    "characters": 39
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyranran-3608278c42c041e2add2c5da6d1d2979",
+  "text": "还有，奶茶不准带进场地。这条是我自己定的。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "ranran"
+}

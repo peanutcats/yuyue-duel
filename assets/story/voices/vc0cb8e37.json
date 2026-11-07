@@ -1,0 +1,16 @@
+{
+  "digest": "25631c581cdafd8412b05b5c8db818413d8ce68f85b557141903867bd24aff41",
+  "request_id": "a708bbf8-4b53-9e3a-9ff9-ddd600dbe438",
+  "usage": {
+    "input_tokens": 17,
+    "output_tokens": 45,
+    "total_tokens": 62,
+    "characters": 31
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yydingding-f5dc89dc6e3d4bbbb2d3395d7982e6ee",
+  "text": "二十四磅，握把干燥，拍框检查过了。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：清楚地提醒同伴，强调关键动作。",
+  "who": "dingding"
+}

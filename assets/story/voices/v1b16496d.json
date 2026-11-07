@@ -1,0 +1,16 @@
+{
+  "digest": "e018bbae58d5d9083b379a80ec49d57942ffef0730b6047f42cfb3859b2273f2",
+  "request_id": "596b1f80-f529-9a93-8d71-1c477dcee413",
+  "usage": {
+    "input_tokens": 22,
+    "output_tokens": 44,
+    "total_tokens": 66,
+    "characters": 38
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yydingding-f5dc89dc6e3d4bbbb2d3395d7982e6ee",
+  "text": "闭嘴，猴子。投诉“杀不动”的那位，马上就到。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：清楚地提醒同伴，强调关键动作。",
+  "who": "dingding"
+}

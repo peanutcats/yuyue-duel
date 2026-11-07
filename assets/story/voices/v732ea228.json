@@ -1,0 +1,16 @@
+{
+  "digest": "2c8c76d95768a006eb02c084bc5982bca03f650917044bc0a87f331cc55495d0",
+  "request_id": "51984b44-8704-9164-8215-cf3f732d5edb",
+  "usage": {
+    "input_tokens": 21,
+    "output_tokens": 49,
+    "total_tokens": 70,
+    "characters": 38
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yycanglan-a4eb561889b24f5985d096ce0c286c74",
+  "text": "所有人停下，别跑！原地站好，打开手机电筒。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：清楚地提醒同伴，强调关键动作。",
+  "who": "canglan"
+}

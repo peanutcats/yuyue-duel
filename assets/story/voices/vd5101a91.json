@@ -1,0 +1,16 @@
+{
+  "digest": "481ad8deac4c3a531207435fd51fd8bd726436cb917032a9e4fcbc9f9c460e50",
+  "request_id": "815212d9-1e23-9dc0-90b1-55aa3548087d",
+  "usage": {
+    "input_tokens": 27,
+    "output_tokens": 72,
+    "total_tokens": 99,
+    "characters": 50
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yylaochen-7f836bbf53de430389176c261a0e42e5",
+  "text": "“星光体育馆：继续开放，实行共享运营，每季度复查一次。”",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "laochen"
+}

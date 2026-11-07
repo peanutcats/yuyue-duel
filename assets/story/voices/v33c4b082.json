@@ -1,0 +1,16 @@
+{
+  "digest": "236e45b56215689e41cf473eea4051bbefdd9829ad26efe2ffa73601d80358a0",
+  "request_id": "b7a9d0aa-6f0c-9cbe-95c4-ccc18690c091",
+  "usage": {
+    "input_tokens": 29,
+    "output_tokens": 100,
+    "total_tokens": 129,
+    "characters": 54
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyhouzi-8b1303f4011a48d5a7de5234aa93c44f",
+  "text": "那时候我觉得，游戏和球只能选一个。现在想想，好像都能留着。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：边想边说，停顿有分寸，不拖长。",
+  "who": "houzi"
+}

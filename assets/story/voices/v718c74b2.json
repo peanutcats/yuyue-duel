@@ -1,0 +1,16 @@
+{
+  "digest": "1a9a2dc62bb825b3e0db1ad3fae901f0bbd9706d474754b5ef63abfba7dad675",
+  "request_id": "d55a0c6b-ac4e-9b49-96da-c25b9907f809",
+  "usage": {
+    "input_tokens": 25,
+    "output_tokens": 73,
+    "total_tokens": 98,
+    "characters": 47
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yydingding-f5dc89dc6e3d4bbbb2d3395d7982e6ee",
+  "text": "那开黑也得留一晚打球。我还没答应入社呢，先说清楚。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：清楚地提醒同伴，强调关键动作。",
+  "who": "dingding"
+}

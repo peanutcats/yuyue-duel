@@ -1,0 +1,16 @@
+{
+  "digest": "7be5d43df66b9ab22a7206d0c524d3aa8fe7aeab2c9284d1ff813142485ffe54",
+  "request_id": "4f2b6225-e42e-939f-bbb0-383ff5709407",
+  "usage": {
+    "input_tokens": 21,
+    "output_tokens": 43,
+    "total_tokens": 64,
+    "characters": 40
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyxingxing-bf1d887d84034502aa01912d757758a3",
+  "text": "那以后每盏灯下面，说一个跟胜率无关的话题。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "xingxing"
+}

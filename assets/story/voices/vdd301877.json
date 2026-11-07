@@ -1,0 +1,16 @@
+{
+  "digest": "a6eacf2d7aaa7f5eb087218402d27e81d2043f54aa813fd514c88b11ec1b25fe",
+  "request_id": "e09cd01b-24b9-91b2-a735-393e5be291c8",
+  "usage": {
+    "input_tokens": 29,
+    "output_tokens": 77,
+    "total_tokens": 106,
+    "characters": 54
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyme-fe7bb10e54c34773bd5b8380c1b96481",
+  "text": "转学第一天，就被分来体育馆值日。行吧，反正我也待不了多久。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：边想边说，停顿有分寸，不拖长。",
+  "who": "me"
+}

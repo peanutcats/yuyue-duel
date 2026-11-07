@@ -1,0 +1,16 @@
+{
+  "digest": "22e824584636dd8eb0fd1493c328b95274c4aaed1b2b737b43790bfbb9b92093",
+  "request_id": "db69dad9-aca6-9932-8175-c61b317ce8ba",
+  "usage": {
+    "input_tokens": 26,
+    "output_tokens": 83,
+    "total_tokens": 109,
+    "characters": 48
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yylu-77a02af0575b449fadd3046da74d049f",
+  "text": "下一个问题：开放日新手多，打双打时，场地线怎么说明？",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：清楚地提醒同伴，强调关键动作。",
+  "who": "lu"
+}

@@ -1,0 +1,16 @@
+{
+  "digest": "457a9af8b99614e170752fee3d44589f78e2ac4077528e97e5bb00468d86a262",
+  "request_id": "57ee7adf-d53a-9fe5-bd53-f9cc8b7f1e42",
+  "usage": {
+    "input_tokens": 14,
+    "output_tokens": 43,
+    "total_tokens": 57,
+    "characters": 25
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yytianchu-2bb9df7a40db4ae7bafc77683d53adfb",
+  "text": "很好。你看规则，不只看对手。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "tianchu"
+}

@@ -9,7 +9,7 @@
   <meta name="description" content="羽跃对决：打开网页即可游玩的侧视羽毛球对战游戏，支持 AI 对战、好友对战与自由练习。">
   <title>羽跃对决 · 网页羽毛球对战</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23ff4b55'/%3E%3Cpath d='M22 40 L46 14 L52 20 L28 46Z' fill='%23fff'/%3E%3Ccircle cx='22' cy='44' r='8' fill='%23ffd23f'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="css/style.css?v=13">
+  <link rel="stylesheet" href="css/style.css?v=24">
 </head>
 <body>
   <!-- 图标 -->
@@ -127,7 +127,7 @@
     <!-- 好友对战 -->
     <section id="scr-friend" class="screen panel-screen hidden">
       <div class="panel wide">
-        <header class="ph"><button class="icon-btn" data-go="menu" aria-label="返回"><svg><use href="#i-back"/></svg></button><div><h2>好友对战</h2><small>同样的规则与能力，一决高下</small></div></header>
+        <header class="ph"><button class="icon-btn" data-go="menu" aria-label="返回"><svg><use href="#i-back"/></svg></button><div><h2>好友对战</h2></div></header>
         <div class="sect-title">场馆</div>
         <div class="venue-pick"></div>
         <div class="cards">
@@ -164,12 +164,14 @@
     <!-- 练习 -->
     <section id="scr-practice" class="screen panel-screen hidden">
       <div class="panel wide">
-        <header class="ph"><button class="icon-btn" data-go="menu" aria-label="返回"><svg><use href="#i-back"/></svg></button><div><h2>自由练习</h2><small>发球机陪练 · 每一球都有提示与反馈</small></div></header>
+        <header class="ph"><button class="icon-btn" data-go="menu" aria-label="返回"><svg><use href="#i-back"/></svg></button><div><h2>自由练习</h2><small>发球机陪练 · 落点与挥拍提示</small></div></header>
         <div class="cards four">
           <button class="card drill" data-drill="receive"><span class="drill-no">01</span><b>接球</b><span>发球机随机喂高远、吊球、扣杀和平抽，练判断与移动。</span></button>
           <button class="card drill" data-drill="clear"><span class="drill-no">02</span><b>高远球</b><span>头顶高点击球，把球送进对方后场目标区。</span></button>
           <button class="card drill" data-drill="drop"><span class="drill-no">03</span><b>吊球</b><span>后场轻吊，让球刚过网落在前场目标区。</span></button>
           <button class="card drill" data-drill="smash"><span class="drill-no">04</span><b>跳杀</b><span>按提示起跳，在空中高点扣杀。</span></button>
+          <button class="card drill" data-drill="net"><span class="drill-no">05</span><b>网前</b><span>搓放、推挑与扑球，练会网前的不同选择。</span></button>
+          <button class="card drill" data-drill="tactics"><span class="drill-no">06</span><b>三拍战术教学</b><span>高远压后场 → 吊球调网前 → 抓高球跳杀。失误只重练当前一步。</span></button>
         </div>
         <div class="legend">
           <span><i style="background:#ffd23f"></i>预计落点</span>
@@ -179,10 +181,22 @@
       </div>
     </section>
 
+    <section id="scr-tacticsComplete" class="screen panel-screen hidden">
+      <div class="panel wide">
+        <header class="ph"><div><h2>三拍战术 · 已掌握</h2></div></header>
+        <div class="cards three">
+          <div class="card"><b>01 高远压后场</b><p>把对手压到底线，为自己争取回位时间。</p></div>
+          <div class="card"><b>02 吊球调网前</b><p>趁对手还在后场，把球轻轻放到网前。</p></div>
+          <div class="card"><b>03 抓高球跳杀</b><p>对手被调动后回出半场高球，起跳终结；没有机会就重新组织。</p></div>
+        </div>
+        <div class="actions"><button class="btn" data-tactics-back>返回训练</button><button class="btn" data-drill="tactics">再练一遍</button><button class="btn primary" data-level="easy">实战试一试</button></div>
+      </div>
+    </section>
+
     <!-- 帮助 -->
     <section id="scr-help" class="screen panel-screen hidden">
       <div class="panel wide scroll">
-        <header class="ph"><button class="icon-btn" data-go="menu" aria-label="返回"><svg><use href="#i-back"/></svg></button><div><h2>操作与技巧</h2><small>看懂球路，才能赢下每一分</small></div></header>
+        <header class="ph"><button class="icon-btn" data-go="menu" aria-label="返回"><svg><use href="#i-back"/></svg></button><div><h2>操作与技巧</h2></div></header>
         <div class="help">
           <div class="col">
             <h3>电脑键盘</h3>
@@ -192,7 +206,7 @@
               <tr><td>高远球 / 挑球</td><td><kbd>J</kbd> 或 <kbd>Z</kbd></td></tr>
               <tr><td>吊球 / 网前轻放</td><td><kbd>K</kbd> 或 <kbd>X</kbd></td></tr>
               <tr><td>扣杀</td><td><kbd>L</kbd> 或 <kbd>C</kbd></td></tr>
-              <tr><td>角色技能</td><td><kbd>I</kbd> 或 <kbd>V</kbd>（能量环充满后）</td></tr>
+              <tr><td>角色技能</td><td><kbd>I</kbd> / <kbd>O</kbd>（能量够技能消耗时；再按一次＝释放 / 取消）</td></tr>
               <tr><td>暂停</td><td><kbd>Esc</kbd> 或 <kbd>P</kbd></td></tr>
             </table>
             <h3>同屏双人</h3>
@@ -213,7 +227,7 @@
             <h3>进阶</h3>
             <p>击球瞬间按住「向网」方向：高远变平高、吊球变劈吊、扣杀打近；按住「向后」：扣杀打深。扣杀自动瞄向对手站位的空当，击球质量越高越刁钻。</p>
             <h3>角色技能</h3>
-            <p>击球、救球和失分都会给头像外圈的能量环充能，充满后按 <kbd>I</kbd>（手机点「技能」）发动。每个角色的技能都不同，可在「角色与装备」查看。故事模式、快速对战可用；联机与同屏对战不启用技能，保证公平。</p>
+            <p>每名角色有 1 个被动和 3 个主动技能，赛前选 2 个主动携带，分别对应 <kbd>I</kbd> 和 <kbd>O</kbd>（手机点两个技能键）。击球、救球和失分会给能量环充能，能量够该技能的消耗就能发动；部分技能再按一次同一个键可以释放或取消。场上只有一只真球计分：分身、假球、投影都没有拖尾，只是干扰；技能装置都有可见的提示和应对方式。</p>
             <h3>装备</h3>
             <p>球拍、球线、磅数、球鞋会改变力量、控制、网前、甜区、移动与体力等数值。在故事模式中逐步解锁。</p>
             <h3>体力</h3>
@@ -231,7 +245,7 @@
     <section id="scr-story" class="screen panel-screen hidden">
       <div class="panel wide story">
         <header class="ph"><button class="icon-btn" data-go="menu" aria-label="返回"><svg><use href="#i-back"/></svg></button>
-          <div><h2>故事模式</h2><small>羽跃社的星光杯之旅</small></div>
+          <div><h2>故事模式</h2><small>星光回响 · 找到让球馆继续亮灯的答案</small></div>
           <div class="ph-right"><span class="star-total" id="storyStars"></span></div>
         </header>
         <div class="story-wrap">
@@ -378,18 +392,30 @@
     <button class="btn ghost" id="btnRotateOk">继续竖屏</button>
   </div>
 
-  <script src="js/core.js?v=12"></script>
-  <script src="js/roster.js?v=12"></script>
-  <script src="js/match.js?v=12"></script>
-  <script src="js/ai.js?v=12"></script>
-  <script src="js/practice.js?v=12"></script>
-  <script src="js/char.js?v=12"></script>
-  <script src="js/venues.js?v=12"></script>
-  <script src="js/render.js?v=12"></script>
-  <script src="js/audio.js?v=12"></script>
-  <script src="js/input.js?v=12"></script>
-  <script src="js/net.js?v=12"></script>
-  <script src="js/story.js?v=12"></script>
-  <script src="js/main.js?v=12"></script>
+  <script src="js/core.js?v=24"></script>
+  <script src="js/roster.js?v=24"></script>
+  <script src="js/gear-looks.js?v=24"></script>
+  <script src="js/market-art.js?v=24"></script>
+  <script src="js/skill-icons.js?v=24"></script>
+  <script src="js/match.js?v=24"></script>
+  <script src="js/ai.js?v=24"></script>
+  <script src="js/practice.js?v=24"></script>
+  <script src="js/char.js?v=24"></script>
+  <script src="js/venues.js?v=24"></script>
+  <script src="js/render.js?v=24"></script>
+  <script src="js/emote.js?v=24"></script>
+  <script src="js/skillfx.js?v=24"></script>
+  <script src="js/scenes.js?v=24"></script>
+  <script src="js/audio.js?v=24"></script>
+  <script src="js/input.js?v=24"></script>
+  <script src="js/net.js?v=24"></script>
+  <script src="js/campaign.js?v=24"></script>
+  <script src="js/knowledge.js?v=24"></script>
+  <script src="js/story.js?v=24"></script>
+  <script src="js/story-play.js?v=24"></script>
+  <script src="js/story-art.js?v=24"></script>
+  <script src="js/gameplay.js?v=24"></script>
+  <script src="js/main.js?v=24"></script>
+  <script src="js/story-web.js?v=24"></script>
 </body>
 </html>

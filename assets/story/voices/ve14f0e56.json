@@ -1,0 +1,16 @@
+{
+  "digest": "8c7a9cc82dac74fc19d6b8d7fd3293ed30bd6f7c3dfd1512697313471744a500",
+  "request_id": "fbb8b4d8-7d61-9809-b80e-a9967d5f52b6",
+  "usage": {
+    "input_tokens": 26,
+    "output_tokens": 76,
+    "total_tokens": 102,
+    "characters": 49
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyzhu-51d3e2230c6d4ee8b71cd80474e27aef",
+  "text": "跑不动，就让球跑。我会读你的习惯——别连续打同一种球。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "zhu"
+}

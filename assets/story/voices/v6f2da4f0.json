@@ -1,0 +1,20 @@
+{
+  "digest": "433100c1cd1c68ea664f51291855d52a492e00e53e2d9eae0883fbd109f48e7f",
+  "file": "nar-v6f2da4f0.wav",
+  "who": "nar",
+  "name": "旁白",
+  "text": "开学第一天。星光体育馆只剩一扇窗亮着，门上贴着“停馆评估倒计时：三十天”。",
+  "mood": "talk",
+  "delivery": "日常",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "request_id": "ca06b2d8-6587-9bed-8f0e-f129ada5f67d",
+  "usage": {
+    "input_tokens": 36,
+    "output_tokens": 77,
+    "total_tokens": 113,
+    "characters": 68
+  },
+  "reused_audition": true,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yynar-9a6555ee9f6e43f0b167a59eec741be0"
+}

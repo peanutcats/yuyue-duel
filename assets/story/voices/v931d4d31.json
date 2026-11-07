@@ -1,0 +1,16 @@
+{
+  "digest": "3c74bfa277ba7344ae8aa79de0e68888b965dab3286c65cf584aedbd30ba70ca",
+  "request_id": "0c0ba996-ec4e-9ebe-ad7e-7774fc1dcd70",
+  "usage": {
+    "input_tokens": 27,
+    "output_tokens": 73,
+    "total_tokens": 100,
+    "characters": 49
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyguoge-9c9d4191af904024a507774c10119d97",
+  "text": "巧合，纯属巧合。来，打一局，看看你们这支股值不值得投。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：边想边说，停顿有分寸，不拖长。",
+  "who": "guoge"
+}

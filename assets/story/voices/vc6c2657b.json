@@ -1,0 +1,16 @@
+{
+  "digest": "f5f3d88ea738c34b795ce56600446842e41ded42035f79d8c6696d4a608b6420",
+  "request_id": "281da103-ea3e-9f91-aaba-0c1bcfc2ecde",
+  "usage": {
+    "input_tokens": 19,
+    "output_tokens": 76,
+    "total_tokens": 95,
+    "characters": 34
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyhouzi-8b1303f4011a48d5a7de5234aa93c44f",
+  "text": "……全对？行啊新同学，你这意识，能上分。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：短暂惊讶，随后像向同伴确认。",
+  "who": "houzi"
+}

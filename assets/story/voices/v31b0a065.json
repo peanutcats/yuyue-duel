@@ -1,0 +1,16 @@
+{
+  "digest": "5b96683fa8b6937e371f1203a175944cdcd9e142b00f9751380a24e391f5aa63",
+  "request_id": "82d46edd-ca5f-9ca1-8ffc-03b9d144cf7f",
+  "usage": {
+    "input_tokens": 6,
+    "output_tokens": 21,
+    "total_tokens": 27,
+    "characters": 11
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyme-fe7bb10e54c34773bd5b8380c1b96481",
+  "text": "那就认真打。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "me"
+}

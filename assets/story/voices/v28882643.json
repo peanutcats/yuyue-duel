@@ -1,0 +1,16 @@
+{
+  "digest": "88eac8b6daa6494dfe576516ad8f276d8ab2ebb72d3dde025a8d8f0db6e48652",
+  "request_id": "5ed15e48-2f03-97a5-b13a-0d1427fea111",
+  "usage": {
+    "input_tokens": 36,
+    "output_tokens": 111,
+    "total_tokens": 147,
+    "characters": 67
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyhouzi-8b1303f4011a48d5a7de5234aa93c44f",
+  "text": "这样，你们答我三个问题。用打游戏的思路讲羽毛球，讲通了，我陪你们打一局。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：清楚地提醒同伴，强调关键动作。",
+  "who": "houzi"
+}

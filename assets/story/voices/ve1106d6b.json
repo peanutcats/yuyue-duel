@@ -1,0 +1,20 @@
+{
+  "digest": "31b56daec455c441eb8444674338317400ef2734c754d2b3485fc0be728ca2d6",
+  "file": "xiaohong-ve1106d6b.wav",
+  "who": "xiaohong",
+  "name": "小红",
+  "text": "入社不考天赋，考判断。我的扣杀很快，但扣完回位会慢半拍——看你抓不抓得住。",
+  "mood": "fist",
+  "delivery": "激动",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：认真坚定，短句有力量。",
+  "request_id": "7d919ec6-0c2d-930f-b37f-01194da95f54",
+  "usage": {
+    "input_tokens": 36,
+    "output_tokens": 81,
+    "total_tokens": 117,
+    "characters": 68
+  },
+  "reused_audition": true,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyxiaohong-50dc0caa82b447ae85e9bc8b63563bcd"
+}

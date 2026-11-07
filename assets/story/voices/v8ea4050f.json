@@ -1,0 +1,16 @@
+{
+  "digest": "32f1e18e6fceef669f9e6e81750ec600c1531fab44a0be5686579b6c5beeb593",
+  "request_id": "5fb8b8d6-2a50-98d6-a586-a39120b9ebd5",
+  "usage": {
+    "input_tokens": 24,
+    "output_tokens": 47,
+    "total_tokens": 71,
+    "characters": 45
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yynar-9a6555ee9f6e43f0b167a59eec741be0",
+  "text": "最后一球落地。记分牌停住，看台上的人全站了起来。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "nar"
+}

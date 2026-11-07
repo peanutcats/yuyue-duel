@@ -1,0 +1,16 @@
+{
+  "digest": "3c1ff564bd85bdf93f6062ee5c8911c8aecf78b2c5c7d132322c636d0cb24c72",
+  "request_id": "e9a0c10e-ebe5-9bd4-a4c6-a5da1652abd6",
+  "usage": {
+    "input_tokens": 22,
+    "output_tokens": 48,
+    "total_tokens": 70,
+    "characters": 41
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yylaochen-7f836bbf53de430389176c261a0e42e5",
+  "text": "阻力小，同样的出球飞得更远。三组数据很干净。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "laochen"
+}

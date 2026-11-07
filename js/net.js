@@ -111,7 +111,7 @@
       for (const u of YY.NET_CONFIG.cdn) {
         try { await loadScript(u); if (G.Peer) return; } catch (_) { /* 试下一个 */ }
       }
-      throw new Error('无法加载联机组件（PeerJS），请检查网络');
+      throw new Error('无法开启在线对战，请检查网络后重试');
     },
     status(t) { if (this.onStatus) this.onStatus(t); },
     async host() {
@@ -122,9 +122,9 @@
         return this.code;
       }
       await this.load();
-      this.status('正在获取中转服务器…');
+      this.status('正在连接…');
       await this.getIce();
-      this.status('正在连接联机服务器…');
+      this.status('正在创建房间…');
       return new Promise((resolve, reject) => {
         const tryOpen = (n) => {
           const code = genCode();
@@ -155,9 +155,9 @@
         });
       }
       await this.load();
-      this.status('正在获取中转服务器…');
+      this.status('正在连接…');
       await this.getIce();
-      this.status('正在连接联机服务器…');
+      this.status('正在加入房间…');
       return new Promise((resolve, reject) => {
         const peer = new G.Peer(undefined, this.peerOpts());
         this.peer = peer;
@@ -165,7 +165,7 @@
         peer.on('open', () => {
           const conn = peer.connect(YY.NET_CONFIG.prefix + code, { reliable: true, serialization: 'json' });
           this.bind(conn, () => { done = true; resolve(); });
-          this.status(this.turn === 'ok' ? '已找到房间，正在建立连接（直连失败会自动走中转）…' : '已找到房间，正在与房主建立直连…');
+          this.status('已找到房间，正在连接房主…');
           const fail = (msg) => { if (!done) { done = true; reject(new Error(msg)); } };
           const NAT = YY.netFailText(this.turn);
           // 监听 ICE 失败，给出明确原因
@@ -257,18 +257,16 @@
     return app ? `检测到在${app}内打开，若连接失败，请点右上角「…」选择「在浏览器打开」。` : '';
   };
   /** 找到房间但连接建立失败时的说明 */
-  YY.netFailText = function (turn) {
-    const base = turn === 'ok'
-      ? '找到了房间，但连接没有建立：直连和中转服务器都没有连通。请确认网络正常后重试，或两人连接同一个 Wi-Fi。'
-      : '找到了房间，但双方网络无法直连，且当前没有可用的中转服务器（TURN）。可让两人连接同一个 Wi-Fi，或由部署者按 README 配置 Cloudflare TURN。';
+  YY.netFailText = function () {
+    const base = '无法连接房主，请检查网络后重试，或尝试连接同一个 Wi-Fi。';
     const hint = YY.inAppHint();
     return hint ? base + '\n' + hint : base;
   };
 
   function errText(err) {
     const m = {
-      'peer-unavailable': '房间不存在或房主已离开', 'network': '网络连接失败', 'server-error': '信令服务器不可用',
-      'browser-incompatible': '浏览器不支持 WebRTC', 'unavailable-id': '房间码冲突', 'socket-error': '信令服务器连接失败',
+      'peer-unavailable': '房间不存在或房主已离开', 'network': '网络连接失败', 'server-error': '在线对战暂不可用，请稍后再试',
+      'browser-incompatible': '此浏览器无法进行在线对战，请更换浏览器重试', 'unavailable-id': '房间码已占用，请重新创建', 'socket-error': '连接失败，请检查网络后重试',
     };
     return m[err.type] || err.message || String(err);
   }
@@ -276,6 +274,8 @@
   // ---------- 快照 ----------
   const r3 = (v) => Math.round(v * 1000) / 1000;
   const KIND = ['over', 'side', 'under'];
+  // 当前生效的技能 / 状态（用于好友端绘制光环与特效）
+  const buffOf = (p) => { const b = p.buff || {}; const k = Object.keys(b).filter((x) => b[x] > 0); return [k.join(','), k.length ? r3(Math.max(...k.map((x) => b[x]))) : 0]; };
   YY.snapshot = function (m, events) {
     return {
       t: 'st', nt: performance.now() / 1000, ht: r3(m.time), ph: m.phase, sc: m.score.slice(), sv: m.server, st: r3(m.serveT), sg: m.serving ? 1 : 0,
@@ -283,12 +283,15 @@
       p: m.players.map((p) => [
         r3(p.x), r3(p.y), r3(p.vx), r3(p.vy), p.onGround ? 1 : 0, Math.round(p.stamina),
         p.swing ? [r3(p.swing.t), KIND.indexOf(p.swing.kind), p.swing.dur, p.swing.serve ? 1 : 0,
-          p.swing.contact ? [r3(p.swing.contact.x), r3(p.swing.contact.y), r3(p.swing.contact.t)] : null] : 0,
+          p.swing.contact ? [r3(p.swing.contact.x), r3(p.swing.contact.y), r3(p.swing.contact.t)] : null, p.swing.style || 0, p.swing.fromStyle || 0, p.swing.fromDur || 0] : 0,
         r3(p.runPhase), r3(p.flash), r3(p.land),
+        p.motion ? [p.motion.speed, p.motion.accel, p.motion.air, p.motion.land, p.motion.split].map(r3) : null,
       ]),
-      s: [r3(m.shuttle.x), r3(m.shuttle.y), r3(m.shuttle.vx), r3(m.shuttle.vy), m.shuttle.live ? 1 : 0, m.shuttle.held ? 1 : 0, r3(m.shuttle.speed || 0), m.shuttle.lastHitter, m.shuttle.netHit ? 1 : 0, m.shuttle.crossedNet ? 1 : 0],
+      s: [r3(m.shuttle.x), r3(m.shuttle.y), r3(m.shuttle.vx), r3(m.shuttle.vy), m.shuttle.live ? 1 : 0, m.shuttle.held ? 1 : 0, r3(m.shuttle.speed || 0), m.shuttle.lastHitter, m.shuttle.netHit ? 1 : 0, m.shuttle.crossedNet ? 1 : 0, m.shuttle.shot || 0],
       lm: m.landMark ? [r3(m.landMark.x), m.landMark.inB ? 1 : 0, r3(m.landMark.t)] : 0,
-      pl: m.pred && m.shuttle.live ? r3(m.pred.landX) : null,
+      pl: m.pred && m.shuttle.live && !m.pred.hidden ? r3(m.pred.landX) : null, // 技能藏起的落点，好友端也看不到
+      fx: [m.players.map(p => [Math.round(p.energy || 0), ...buffOf(p)]), r3(m.slowT || 0), m.slowFor ?? -1, m.shuttle.fire ? 1 : 0, r3(m.shuttle.feint || 0), m.shuttle.meteor ? 1 : 0, m.skillsOn ? 1 : 0],
+      k: YY.skPack ? YY.skPack(m) : 0,
       ev: events,
       rtt: r3(Net.rtt),
     };
@@ -305,10 +308,11 @@
       this.opt = { target: 7, cap: 11 }; this.names = ['房主', '你']; this.practice = false; this.time = 0;
       this.landMark = null; this.pred = null; this.hint = null; this.winner = -1;
       this.buf = []; this.clockOff = null; this.stats = null; this.longest = 0;
-      this.pendingEvents = []; this.events = [];
+      this.pendingEvents = []; this.events = []; this.ents = []; this.sk = null;
       this.delay = 0.025; this.jitter = 0; this.lastArrival = null; this.lastStamp = null; this.renderStamp = -Infinity;
     }
     serveMeter() { const u = this.serveT * 1.15; return 1 - Math.abs((u % 2) - 1); }
+    halfOf(i) { return this.sk && this.sk.half ? this.sk.half[i] : YY.C.HALF; }
     push(sn, now = performance.now() / 1000) {
       const time = stamp(sn);
       // 同一连接晚到的旧快照不能把画面倒回去。
@@ -359,9 +363,17 @@
         const sameSwing = pa[6] && pb[6] && pb[6][0] >= pa[6][0] && pa[6][1] === pb[6][1];
         p.swing = sw ? {
           t: sameSwing ? L(pa[6][0], pb[6][0]) : sw[0], kind: KIND[sw[1]] || 'over', dur: sw[2], serve: !!sw[3],
-          contact: sw[4] ? { x: sw[4][0], y: sw[4][1], t: sw[4][2] } : null,
+          contact: sw[4] ? { x: sw[4][0], y: sw[4][1], t: sw[4][2] } : null, style: sw[5] || null, fromStyle: sw[6] || null, fromDur: sw[7] || null, // 技术动作（旧服务器没有该字段）
         } : null;
         p.runPhase = reset ? pc[7] : L(pa[7], pb[7]); p.flash = pc[8]; p.land = pc[9];
+        p.motion = null;
+        if (pc[10]) {
+          p.motion = {};
+          ['speed', 'accel', 'air', 'land', 'split'].forEach((key, k) => {
+            const blend = !reset && pa[10] && pb[10] && pa[4] === pb[4] && Math.abs(pb[10][k] - pa[10][k]) < .1;
+            p.motion[key] = blend ? L(pa[10][k], pb[10][k]) : pc[10][k];
+          });
+        }
       }
       const s = this.shuttle, sa = a.s, sb = b.s;
       const sc = cur.s;
@@ -370,9 +382,21 @@
       // 只在同一次飞行内插值，禁止跨发球、触拍、撞网或重置连出虚假的穿网轨迹。
       s.x = sameFlight ? L(sa[0], sb[0]) : sc[0]; s.y = sameFlight ? L(sa[1], sb[1]) : sc[1];
       s.vx = sc[2]; s.vy = sc[3]; s.live = !!sc[4]; s.held = !!sc[5]; s.speed = sc[6]; s.lastHitter = sc[7];
-      s.netHit = !!sc[8]; s.crossedNet = !!sc[9];
+      s.netHit = !!sc[8]; s.crossedNet = !!sc[9]; s.shot = sc[10] || null; // 球路类型：好友端据此绘制搓球翻滚等
       this.landMark = cur.lm ? { x: cur.lm[0], inB: !!cur.lm[1], t: cur.lm[2] } : null;
       this.pred = cur.pl != null ? { landX: cur.pl } : null;
+      if (cur.fx) {
+        for (let i = 0; i < 2; i++) {
+          const f = cur.fx[0][i], p = this.players[i];
+          p.energy = f[0]; p.buff = {};
+          if (f[1]) for (const k of f[1].split(',')) p.buff[k] = f[2] || 0.1;
+        }
+        this.slowT = cur.fx[1]; this.slowFor = cur.fx[2];
+        s.fire = !!cur.fx[3]; s.feint = cur.fx[4]; s.meteor = !!cur.fx[5]; this.skillsOn = !!cur.fx[6];
+      }
+      // 技能装置、规则改动（短场 / 平移 / 防火墙…）、受控球与完整状态
+      if (YY.skUnpack) YY.skUnpack(this, a.k, cur === a ? a.k : b.k, u);
+      if (cur.ch && YY.lookOf) { if (this.chars !== cur.ch.join()) { this.chars = cur.ch.join(); this.looks = cur.ch.map((id) => YY.lookOf(id)); this.charIds = cur.ch.slice(); } }
       while (this.pendingEvents.length && this.pendingEvents[0].t <= this.renderStamp) {
         this.events.push(...this.pendingEvents.shift().events);
       }

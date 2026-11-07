@@ -1,0 +1,16 @@
+{
+  "digest": "9e0d9191de2cd69f172f391de91e8a76214d60706b6db8dc14a9c627a68cfa11",
+  "request_id": "94123a1c-cc1f-9235-b6ec-7237635a2ce1",
+  "usage": {
+    "input_tokens": 21,
+    "output_tokens": 50,
+    "total_tokens": 71,
+    "characters": 39
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyme-fe7bb10e54c34773bd5b8380c1b96481",
+  "text": "最后那个网前球，你明明能扑，为什么收手了？",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "me"
+}

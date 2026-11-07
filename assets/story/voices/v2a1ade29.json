@@ -1,0 +1,16 @@
+{
+  "digest": "cd12ae76b2bc771864afdabea21c5e555801011aa876e90785e02066b13d1e16",
+  "request_id": "a66670d8-6cc6-9c71-8f17-28d294d2ae9d",
+  "usage": {
+    "input_tokens": 23,
+    "output_tokens": 90,
+    "total_tokens": 113,
+    "characters": 43
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyhouzi-8b1303f4011a48d5a7de5234aa93c44f",
+  "text": "看见没，打游戏也不全是浪费时间。这叫社交资源。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "houzi"
+}

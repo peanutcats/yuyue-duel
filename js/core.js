@@ -4,6 +4,16 @@
 (function (G) {
   'use strict';
   const YY = (G.YY = G.YY || {});
+  YY.PHYSICS_VERSION = 6;
+
+  // Host services are supplied by the browser or the WeChat entry point.
+  YY.platform = YY.platform || {
+    createCanvas: () => G.document.createElement('canvas'),
+    viewport: () => ({ W: G.innerWidth, H: G.innerHeight, dpr: G.devicePixelRatio || 1 }),
+    hidden: () => !!G.document?.hidden,
+    getStorage: key => G.localStorage?.getItem(key) ?? null,
+    setStorage: (key, value) => G.localStorage?.setItem(key, value),
+  };
 
   const C = (YY.C = {
     HALF: 6.7,          // 半场长度（底线到网）
@@ -28,13 +38,26 @@
     JUMP_V: 4.4, JUMP_V_LOW: 2.7,
     X_NEAR: 0.45, X_FAR: 7.3,  // 离网可站位范围
 
-    STAM_MAX: 100, JUMP_COST: 12, SMASH_COST: 24, STAM_REGEN: 16, STAM_DELAY: 1.0,
+    // 体力：整场比赛持续累积，每分之间只恢复一部分。跑动、急停折返、起跳是主要消耗；
+    // 体力低于 STAM_FRESH 后，移动、加速、挥拍、起跳、发力球的深度与球速连续下降。
+    STAM_MAX: 100, JUMP_COST: 10, SMASH_COST: 16, STAM_REGEN: 16, STAM_DELAY: 0.8,
+    STAM_RUN: 0.9,      // 冲刺跑动：超过慢步速度的部分，每 (m/s) 每秒消耗
+    STAM_JOG: 1.6,      // 慢步速度：低于此速度移动不额外消耗
+    STAM_TURN: 4.5,     // 全速急停折返一次的消耗
+    STAM_LUNGE: 3,      // 跑动中弓步够球 / 下手救低球
+    STAM_POWER: 2,      // 高远、挑球、推后场等发力球（后场再加一点）
+    STAM_REST: 7,       // 回合中站稳（基本不动）每秒恢复
+    STAM_MOVE_REGEN: 1.2, // 回合中移动、发球准备时每秒恢复
+    STAM_POINT: 34,     // 每分结束后恢复量（不是回满）
+    STAM_FRESH: 60,     // 高于此值没有疲劳惩罚
 
     SW_W0: 0.035,       // 挥拍有效窗口起点
     SW_W1: 0.205,       // 挥拍有效窗口终点
     SW_SWEET: 0.11,     // 最佳击球时刻
     SW_DUR: 0.3,        // 普通挥拍总时长（含收拍）
-    SW_SMASH_DUR: 0.56, // 扣杀收拍较慢
+    SW_SMASH_DUR: 0.44, // 重杀保留完整随挥，但更快衔接回位
+    SW_BUFFER: 0.13,    // 收拍将结束时，短暂保留最近一次击球按键
+    JUMP_BUFFER: 0.14,  // 即将落地 / 落地缓冲期间保留一次起跳输入
     SMASH_MIN_Y: 2.45,  // 扣杀最低击球点
 
     SPEED_DISPLAY: 2.4, // 显示球速的夸张倍率（游戏内速度做了放慢）
@@ -64,7 +87,8 @@
   };
 
   // 连续检测圆形球头与球网：先裁剪包围范围，再精确求网带顶端的圆形接触。
-  function netContact(px, py, x, y) {
+  function netContact(px, py, x, y, netH) {
+    const NH = netH || C.NET_H, NC = NH + C.SHUTTLE_R;
     const dx = x - px, dy = y - py;
     let lo = 0, hi = 1;
     if (dx === 0) {
@@ -75,17 +99,17 @@
       hi = Math.min(hi, Math.max(a, b));
     }
     if (dy === 0) {
-      if (py > C.NET_CLEAR) return null;
+      if (py > NC) return null;
     } else {
-      const f = (C.NET_CLEAR - py) / dy;
+      const f = (NC - py) / dy;
       if (dy < 0) lo = Math.max(lo, f);
       else hi = Math.min(hi, f);
     }
     if (lo > hi) return null;
-    if (py + dy * lo <= C.NET_H) return lo; // 网面侧边
+    if (py + dy * lo <= NH) return lo; // 网面侧边
     const a = dx * dx + dy * dy;
-    const b = 2 * (px * dx + (py - C.NET_H) * dy);
-    const c = px * px + (py - C.NET_H) ** 2 - C.SHUTTLE_R ** 2;
+    const b = 2 * (px * dx + (py - NH) * dy);
+    const c = px * px + (py - NH) ** 2 - C.SHUTTLE_R ** 2;
     if (c <= 0) return 0;
     const disc = b * b - 4 * a * c;
     if (a === 0 || disc < 0) return null;
@@ -96,39 +120,54 @@
   /** 推进一步羽毛球物理；返回 'net' | 'floor' | null。
    * env（可选）：{ drag: 阻力系数（高原空气稀薄更小）, wind: 水平风速 m/s（+x 吹向右场） } */
   YY.stepShuttle = function (s, dt, env) {
-    const drag = env && env.drag != null ? env.drag : C.DRAG;
-    const rx = s.vx - ((env && env.wind) || 0); // 相对空气的速度
-    const v = Math.hypot(rx, s.vy);
-    const k = drag * v;
-    s.vx += -k * rx * dt;
-    s.vy += (-C.G - k * s.vy) * dt;
-    const px = s.x, py = s.y;
-    s.x += s.vx * dt;
-    s.y += s.vy * dt;
-    let res = null;
-    if (!s.netHit) {
-      const f = netContact(px, py, s.x, s.y);
-      if (f !== null) {
-        // 球头中心可能已略过 x=0，但尾部仍擦网；始终退回入射的一侧。
-        const side = s.vx > 0 ? -1 : s.vx < 0 ? 1 : px < 0 ? -1 : 1;
-        s.x = side * (C.SHUTTLE_R + 0.0001);
-        s.y = py + (s.y - py) * f;
-        s.vx = -s.vx * 0.06;
-        s.vy = Math.min(s.vy, 0) * 0.3 - 0.5;
-        s.netHit = true;
-        s.crossedNet = false;
-        res = 'net';
-      } else if ((px < C.SHUTTLE_R && s.x >= C.SHUTTLE_R) ||
-                 (px > -C.SHUTTLE_R && s.x <= -C.SHUTTLE_R)) {
-        s.crossedNet = true;
+    s.stepTime = 0;
+    if (!Number.isFinite(dt) || dt <= 0) return null;
+    const drag = Math.max(0, env && env.drag != null ? env.drag : C.DRAG);
+    const wind = (env && env.wind) || 0;
+    // 技能环境：netH 临时网高（防火墙），g 重力倍率（重力换班，负值＝向上飘）
+    const netH = (env && env.netH) || C.NET_H, g0 = C.G * (env && env.g != null ? env.g : 1);
+    const gFar = env && env.gFar; // 重力球：过到 gFar.side 那一侧后重力 ×gFar.m
+    const ceil = env && env.ceil; // 重力翻转的球最高飘到这里，悬停等着落
+    let remaining = dt, result = null;
+    while (remaining > 1e-10) {
+      const g = gFar && s.x * gFar.side > 0 ? g0 * gFar.m : g0;
+      const rx = s.vx - wind, speed = Math.hypot(rx, s.vy);
+      // Midpoint integration preserves ballistic motion without drag and is
+      // substantially less step-size dependent than the previous Euler update.
+      // Small substeps also prevent strong drag from reversing the velocity.
+      const h = Math.min(remaining, C.DT, 0.2 / Math.max(1e-9, drag * speed));
+      const k = drag * speed;
+      const mx = s.vx - k * rx * h / 2, my = s.vy + (-g - k * s.vy) * h / 2;
+      const mk = drag * Math.hypot(mx - wind, my);
+      const vx = s.vx - mk * (mx - wind) * h, vy = s.vy + (-g - mk * my) * h;
+      const px = s.x, py = Math.max(C.SHUTTLE_R, s.y);
+      const x = px + mx * h, y = py + my * h;
+      const floor = y <= C.SHUTTLE_R ? clampFraction((py - C.SHUTTLE_R) / Math.max(1e-12, py - y)) : null;
+      const net = s.netHit ? null : netContact(px, py, x, y, netH);
+      s.vx = vx; s.vy = vy;
+      if (floor !== null && (net === null || floor <= net)) {
+        // Score at the first cork/ground contact, not the far end of a frame.
+        s.x = px + (x - px) * floor; s.y = C.SHUTTLE_R;
+        s.stepTime += h * floor;
+        return 'floor';
       }
+      if (net !== null) {
+        const side = mx > 0 ? -1 : mx < 0 ? 1 : px < 0 ? -1 : 1;
+        s.x = side * (C.SHUTTLE_R + 0.0001);
+        s.y = py + (y - py) * net;
+        s.vx = -vx * 0.06; s.vy = Math.min(vy, 0) * 0.3 - 0.5;
+        s.netHit = true; s.crossedNet = false; result = 'net';
+      } else {
+        s.x = x; s.y = y;
+        if (ceil && s.y >= ceil - 1e-6) { s.y = Math.min(s.y, ceil); if (s.vy > 0) s.vy = 0; s.vx *= Math.max(0, 1 - 3 * h); } // 顶上悬停：横向也慢慢停住
+        if (!s.netHit && ((px < C.SHUTTLE_R && x >= C.SHUTTLE_R) ||
+            (px > -C.SHUTTLE_R && x <= -C.SHUTTLE_R))) s.crossedNet = true;
+      }
+      s.stepTime += h; remaining -= h;
     }
-    if (s.y <= 0) {
-      s.y = 0;
-      res = 'floor';
-    }
-    return res;
+    return result;
   };
+  const clampFraction = value => Math.max(0, Math.min(1, value));
 
   /** 从给定状态模拟到落地。record=true 时返回轨迹点（相对时间） */
   YY.simulate = function (x, y, vx, vy, maxT, record, netHit, env) {
@@ -138,17 +177,17 @@
     const pts = record ? [{ t: 0, x, y, vx, vy }] : null;
     maxT = maxT || 6;
     let i = 0;
-    while (t < maxT) {
+    while (t < maxT - 1e-10) {
       const px = s.x, py = s.y;
-      const r = YY.stepShuttle(s, dt, env);
-      t += dt;
+      const r = YY.stepShuttle(s, Math.min(dt, maxT - t), env);
+      t += s.stepTime;
       i++;
       if (netY === null && (px < 0) !== (s.x < 0) && r !== 'net') {
         const f = px / (px - s.x);
         netY = py + (s.y - py) * f;
       }
       if (s.y > apex) apex = s.y;
-      if (record && (i % 2 === 0 || r === 'floor')) pts.push({ t, x: s.x, y: s.y, vx: s.vx, vy: s.vy });
+      if (record && (i % 2 === 0 || r || t >= maxT - 1e-10)) pts.push({ t, x: s.x, y: s.y, vx: s.vx, vy: s.vy });
       if (r === 'floor') break;
     }
     return { landX: s.x, t, netHit: s.netHit, netY, apex, pts };
@@ -160,11 +199,17 @@
     const ca = Math.cos(a) * dir, sa = Math.sin(a);
     let lo = 0.5, hi = 55;
     const range = (v) => (YY.simulate(x0, y0, v * ca, v * sa, 6, false, true, env).landX - x0) * dir;
-    if (range(hi) < dist) return hi;
+    let rLo = range(lo), rHi = range(hi);
+    if (rHi < dist) return hi;
+    if (rLo > dist) return lo;
     for (let i = 0; i < 24; i++) {
-      const m = (lo + hi) / 2;
-      if (range(m) < dist) lo = m;
-      else hi = m;
+      // Safeguarded interpolation needs fewer full trajectory simulations than
+      // always halving the speed range; stop once landing error is sub-millimetre.
+      const u = YY.clamp((dist - rLo) / (rHi - rLo || 1), 0.1, 0.9);
+      const m = lo + (hi - lo) * u, r = range(m);
+      if (Math.abs(r - dist) < 0.0002) return m;
+      if (r < dist) { lo = m; rLo = r; }
+      else { hi = m; rHi = r; }
     }
     return (lo + hi) / 2;
   };
@@ -176,12 +221,15 @@
       return (YY.simulate(x0, y0, speed * Math.cos(a) * dir, speed * Math.sin(a), 6, false, true, env).landX - x0) * dir;
     };
     let lo = aLo, hi = aHi;
-    if (range(lo) >= dist) return lo;
-    if (range(hi) <= dist) return hi;
+    let rLo = range(lo), rHi = range(hi);
+    if (rLo >= dist) return lo;
+    if (rHi <= dist) return hi;
     for (let i = 0; i < 22; i++) {
-      const m = (lo + hi) / 2;
-      if (range(m) < dist) lo = m;
-      else hi = m;
+      const u = YY.clamp((dist - rLo) / (rHi - rLo || 1), 0.1, 0.9);
+      const m = lo + (hi - lo) * u, r = range(m);
+      if (Math.abs(r - dist) < 0.0002) return m;
+      if (r < dist) { lo = m; rLo = r; }
+      else { hi = m; rHi = r; }
     }
     return (lo + hi) / 2;
   };
@@ -195,14 +243,15 @@
   YY.SHOT_NAMES = {
     clear: '高远球', flatclear: '平高球', lift: '挑球', drop: '吊球', slice: '劈吊',
     net: '网前轻放', block: '放网', smash: '扣杀', drive: '平抽',
+    kill: '网前扑球', halfsmash: '点杀', tumble: '搓球', push: '推后场',
     lserve: '发高远球', sserve: '发网前球', feed: '发球机',
   };
   // 归类：用于“重复球路被针对”的判断
   YY.SHOT_CAT = {
     clear: 'clear', flatclear: 'clear', lift: 'clear', lserve: 'clear',
     drop: 'drop', slice: 'drop', net: 'drop', block: 'drop', sserve: 'drop',
-    smash: 'smash', drive: 'drive',
+    smash: 'smash', drive: 'drive', kill: 'smash', halfsmash: 'smash', tumble: 'drop', push: 'clear',
   };
 
   if (typeof module !== 'undefined') module.exports = YY;
-})(typeof window !== 'undefined' ? window : globalThis);
+})(typeof GameGlobal !== 'undefined' ? GameGlobal : typeof window !== 'undefined' ? window : globalThis);

@@ -1,0 +1,16 @@
+{
+  "digest": "bbf5ddcdc787274b7d3a6f37df4e8b22ce07e6e9027045b098337631ee068f2b",
+  "request_id": "7f5b545c-b926-94e8-9ae3-df72134b0403",
+  "usage": {
+    "input_tokens": 30,
+    "output_tokens": 78,
+    "total_tokens": 108,
+    "characters": 55
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyzhu-51d3e2230c6d4ee8b71cd80474e27aef",
+  "text": "到新场地，先试球，再校准。别一打出界，就怀疑自己不会打球了。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "zhu"
+}

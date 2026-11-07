@@ -1,0 +1,16 @@
+{
+  "digest": "52eb1caf3aaea5c58224d621e06bfb02b86a301f90216ab1738c5694c707684d",
+  "request_id": "3f8a353e-3d13-98e8-bc66-d31983c26fed",
+  "usage": {
+    "input_tokens": 26,
+    "output_tokens": 75,
+    "total_tokens": 101,
+    "characters": 49
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyruibao-7c0dac9fd7f44dc39d4ce5e967f96cb0",
+  "text": "你从来就不是一个人站着。只是以前，你不让我们站过去。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "ruibao"
+}

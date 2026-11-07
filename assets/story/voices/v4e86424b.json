@@ -1,0 +1,16 @@
+{
+  "digest": "6139e61f24ebbaa1011457079a6af384baeb0ad8799d7a4e39be93de56815850",
+  "request_id": "7f87c491-690a-95ac-acda-82dd53a47d67",
+  "usage": {
+    "input_tokens": 13,
+    "output_tokens": 35,
+    "total_tokens": 48,
+    "characters": 25
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyxingxing-bf1d887d84034502aa01912d757758a3",
+  "text": "我总想把每个网前球都打死。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：边想边说，停顿有分寸，不拖长。",
+  "who": "xingxing"
+}

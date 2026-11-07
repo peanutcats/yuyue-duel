@@ -1,0 +1,16 @@
+{
+  "digest": "0e42affb862ae0ef9d2fce33270aa110138872ca1e53a238593a03b0926e9047",
+  "request_id": "da3aeb46-8fbc-9baa-b2a9-d69d2298543b",
+  "usage": {
+    "input_tokens": 18,
+    "output_tokens": 53,
+    "total_tokens": 71,
+    "characters": 34
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyzhu-51d3e2230c6d4ee8b71cd80474e27aef",
+  "text": "只会进攻的人，比赛里一半时间都在等。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "zhu"
+}

@@ -1,0 +1,16 @@
+{
+  "digest": "d8c6cd8f1b551fbd3eb895a5f045ac72d78786d28f5bed5e78f28a04a13d82d9",
+  "request_id": "57a2c05e-994e-983b-8ae0-21a55379bbb7",
+  "usage": {
+    "input_tokens": 33,
+    "output_tokens": 91,
+    "total_tokens": 124,
+    "characters": 61
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyguoge-9c9d4191af904024a507774c10119d97",
+  "text": "看见没？两边都赚，才叫好投资。以前我是两边下注，这次是让两边都赢。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "guoge"
+}

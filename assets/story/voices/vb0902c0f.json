@@ -1,0 +1,16 @@
+{
+  "digest": "f328f73965065d366f0a62e68cbe67997f4e2b491b4f553a7d18c5cde6d3e6c9",
+  "request_id": "47d23073-d50d-972d-bd80-3836b2ed2666",
+  "usage": {
+    "input_tokens": 14,
+    "output_tokens": 40,
+    "total_tokens": 54,
+    "characters": 26
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yycanglan-a4eb561889b24f5985d096ce0c286c74",
+  "text": "那为什么有人说，是星光怕输？",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：略感失落，声音放轻，保留完整吐字，不要哭腔。",
+  "who": "canglan"
+}

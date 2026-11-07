@@ -1,0 +1,16 @@
+{
+  "digest": "3c53f8eb9719e35be5e77951b4e0377b431427b4d6bf17bcdb3ef8c31566ddc4",
+  "request_id": "8e1da531-4ce4-9420-8b39-461a14f6eb36",
+  "usage": {
+    "input_tokens": 30,
+    "output_tokens": 79,
+    "total_tokens": 109,
+    "characters": 56
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yylaochen-7f836bbf53de430389176c261a0e42e5",
+  "text": "时间戳是晚上九点零三分。同一分钟的气象记录写着：暴雨，积水。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：边想边说，停顿有分寸，不拖长。",
+  "who": "laochen"
+}

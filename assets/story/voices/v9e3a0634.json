@@ -1,0 +1,16 @@
+{
+  "digest": "1d51297f51856c80e02c96948359f4b9d6a511f6ce7a8d92b0d6d8ae855648d5",
+  "request_id": "22410151-cf8b-9415-948f-af78d53b6829",
+  "usage": {
+    "input_tokens": 22,
+    "output_tokens": 47,
+    "total_tokens": 69,
+    "characters": 42
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yymm-13991994e40b44a7b5af603229af22b3",
+  "text": "所以我一直落不了地……那一球，到现在还在空中。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：略感失落，声音放轻，保留完整吐字，不要哭腔。",
+  "who": "mm"
+}

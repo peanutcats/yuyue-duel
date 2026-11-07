@@ -1,0 +1,16 @@
+{
+  "digest": "6bd6e49bd898a7449cd0130d8c6bd54de0b385f0c2be5cf6fd1e083f45eb8f0d",
+  "request_id": "55b014c7-7120-9215-a185-9e8926e6cb60",
+  "usage": {
+    "input_tokens": 34,
+    "output_tokens": 79,
+    "total_tokens": 113,
+    "characters": 62
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yynar-9a6555ee9f6e43f0b167a59eec741be0",
+  "text": "开放日最后一场。看台上，坐着新朋友、老顾客、阿姨们，还有铁力的店长。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "nar"
+}

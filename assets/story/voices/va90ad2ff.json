@@ -1,0 +1,16 @@
+{
+  "digest": "344515910bf4e1c0e7401b000f97fb073369c4a73f3240d6b193ffc384881ddd",
+  "request_id": "40912cda-fc5a-99cc-906c-32b3084cdad6",
+  "usage": {
+    "input_tokens": 36,
+    "output_tokens": 103,
+    "total_tokens": 139,
+    "characters": 68
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyguoge-9c9d4191af904024a507774c10119d97",
+  "text": "别急。这次我是替我们谈。我做了个方案——让羽毛球和健身，待在同一座球馆里。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "guoge"
+}

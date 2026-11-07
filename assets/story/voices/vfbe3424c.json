@@ -1,0 +1,16 @@
+{
+  "digest": "7d9a39ef9a79be04258853c0cb1d01446ada0383fd7b56fa424d1a09026d0811",
+  "request_id": "4a6f4933-127f-9ca1-8526-3779d203fda0",
+  "usage": {
+    "input_tokens": 30,
+    "output_tokens": 79,
+    "total_tokens": 109,
+    "characters": 56
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yydingding-f5dc89dc6e3d4bbbb2d3395d7982e6ee",
+  "text": "那叫节奏！……我常提前上网。你要是能把球送深，就能让我跑回去。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：有点不服气和着急，声音有力度但不要喊叫。",
+  "who": "dingding"
+}

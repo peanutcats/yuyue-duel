@@ -1,0 +1,16 @@
+{
+  "digest": "f140a47adb4ee0e0aef57e11c746fa5761c9b631e2fa6c706017343ed6d8f99b",
+  "request_id": "323e6a08-72ce-93b4-8438-a6425749f17d",
+  "usage": {
+    "input_tokens": 25,
+    "output_tokens": 52,
+    "total_tokens": 77,
+    "characters": 47
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyxiaohong-50dc0caa82b447ae85e9bc8b63563bcd",
+  "text": "输了。可是这一局，我每一拍都记得自己为什么这么打。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "xiaohong"
+}

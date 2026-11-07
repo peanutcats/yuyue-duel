@@ -1,0 +1,16 @@
+{
+  "digest": "279ba461ababef91eefa7df17a215a2cf8b256ab03cd4ffc0e6801f21c9a554f",
+  "request_id": "6086dddc-010c-9eef-bccc-84f627728328",
+  "usage": {
+    "input_tokens": 28,
+    "output_tokens": 78,
+    "total_tokens": 106,
+    "characters": 52
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yylaochen-7f836bbf53de430389176c261a0e42e5",
+  "text": "评估组同意了：给三天试运营。开放日来了多少人，就是答案。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：清楚地提醒同伴，强调关键动作。",
+  "who": "laochen"
+}

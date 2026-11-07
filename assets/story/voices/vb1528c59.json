@@ -1,0 +1,16 @@
+{
+  "digest": "9f6fcc496200f50d60e4186c220ad07f023ca1ff85e77e673b6d8f06f1f339a6",
+  "request_id": "eceea4ca-b161-9cec-a5b1-2ed936edf987",
+  "usage": {
+    "input_tokens": 30,
+    "output_tokens": 77,
+    "total_tokens": 107,
+    "characters": 57
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yynar-9a6555ee9f6e43f0b167a59eec741be0",
+  "text": "倒计时第六天。评估组同意开一场公开说明会，铁力健身也会到场。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "nar"
+}

@@ -1,0 +1,16 @@
+{
+  "digest": "f1a8bf64f67ee04f543a0129f49e7588731ab293384b5638060b6e15708c55c4",
+  "request_id": "a1edeb33-ef07-9b50-b739-23b22c319847",
+  "usage": {
+    "input_tokens": 16,
+    "output_tokens": 31,
+    "total_tokens": 47,
+    "characters": 30
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yynar-9a6555ee9f6e43f0b167a59eec741be0",
+  "text": "这句话，比奖杯在球馆里留得更久。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "nar"
+}

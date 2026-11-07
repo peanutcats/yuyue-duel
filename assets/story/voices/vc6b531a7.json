@@ -1,0 +1,20 @@
+{
+  "digest": "c8e4489c3109653a63a0bd744246146ccc96a784eb0c8f52118417e67b93971f",
+  "file": "tianchu-vc6b531a7.wav",
+  "who": "tianchu",
+  "name": "田楚",
+  "text": "现在，你不只会背三拍的顺序了。",
+  "mood": "happy",
+  "delivery": "激动",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "request_id": "328c6b70-1d83-96d1-8198-f468e28141f7",
+  "usage": {
+    "input_tokens": 15,
+    "output_tokens": 40,
+    "total_tokens": 55,
+    "characters": 28
+  },
+  "reused_audition": true,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yytianchu-2bb9df7a40db4ae7bafc77683d53adfb"
+}

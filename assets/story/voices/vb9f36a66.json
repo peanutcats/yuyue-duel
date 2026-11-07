@@ -1,0 +1,20 @@
+{
+  "digest": "97abe6e46cbda8738b9e9c84c47e6ba05215e53ceaee4cace630b7ea67bc9a8d",
+  "file": "ruibao-vb9f36a66.wav",
+  "who": "ruibao",
+  "name": "王瑞",
+  "text": "他每次说“问题不大”，问题都挺大的。",
+  "mood": "sad",
+  "delivery": "柔和",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：略感失落，声音放轻，保留完整吐字，不要哭腔。",
+  "request_id": "c9f8acb8-d716-9cce-9dd5-7bae3cf14caa",
+  "usage": {
+    "input_tokens": 17,
+    "output_tokens": 46,
+    "total_tokens": 63,
+    "characters": 32
+  },
+  "reused_audition": true,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyruibao-7c0dac9fd7f44dc39d4ce5e967f96cb0"
+}

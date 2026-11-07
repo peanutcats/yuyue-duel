@@ -1,0 +1,16 @@
+{
+  "digest": "1f92cbc7198d724e056f87296c1211247e5c9fe579f3e7b16a1235b3cd4781f5",
+  "request_id": "b332e601-4816-9b98-a129-697cf34d1d07",
+  "usage": {
+    "input_tokens": 17,
+    "output_tokens": 44,
+    "total_tokens": 61,
+    "characters": 32
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyxingxing-bf1d887d84034502aa01912d757758a3",
+  "text": "你每次跳完，都要过很久才回到中间。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：边想边说，停顿有分寸，不拖长。",
+  "who": "xingxing"
+}

@@ -1,0 +1,16 @@
+{
+  "digest": "642ca8a877f7ec2cec64f17565e05b8e294d169b5444313da428611ee78038a0",
+  "request_id": "93e4a6fa-46b2-9431-8896-84726540bbec",
+  "usage": {
+    "input_tokens": 16,
+    "output_tokens": 44,
+    "total_tokens": 60,
+    "characters": 30
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yylu-77a02af0575b449fadd3046da74d049f",
+  "text": "我已经提前攒好了三个。开局就讲。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "lu"
+}

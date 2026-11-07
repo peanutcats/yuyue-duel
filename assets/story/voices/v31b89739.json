@@ -1,0 +1,16 @@
+{
+  "digest": "e9d70f9e000acf289fb7ca9030daaeee9e90098995092981827217f99e509ede",
+  "request_id": "bbe4233d-ea8b-9e2f-ac7f-1b7ec09389a7",
+  "usage": {
+    "input_tokens": 19,
+    "output_tokens": 49,
+    "total_tokens": 68,
+    "characters": 35
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yymm-13991994e40b44a7b5af603229af22b3",
+  "text": "落后的时候，把目标缩小：下一球先回深。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：清楚地提醒同伴，强调关键动作。",
+  "who": "mm"
+}

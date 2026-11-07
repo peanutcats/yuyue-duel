@@ -1,0 +1,16 @@
+{
+  "digest": "b3f3b6f0e68c9e7d2e26c1726f10894c4d881d1c48c9861d69dbbbd531e09d0f",
+  "request_id": "fa449fcc-d3f0-9af6-a13b-1e48020b6356",
+  "usage": {
+    "input_tokens": 28,
+    "output_tokens": 82,
+    "total_tokens": 110,
+    "characters": 53
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yylu-77a02af0575b449fadd3046da74d049f",
+  "text": "模型更新：保住球馆的概率，从百分之三涨到了百分之四十一！",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "lu"
+}

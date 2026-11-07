@@ -1,0 +1,16 @@
+{
+  "digest": "da54b09d0241ee94c981bdeae6dfcf62ef6d42e764f5619a0aaf71f09bd56752",
+  "request_id": "4a2566e6-b493-9cfb-ab3d-c8e4492a776a",
+  "usage": {
+    "input_tokens": 23,
+    "output_tokens": 47,
+    "total_tokens": 70,
+    "characters": 43
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yynar-9a6555ee9f6e43f0b167a59eec741be0",
+  "text": "果哥转身太急，背包撞在门框上，一叠纸滑了出来。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "nar"
+}

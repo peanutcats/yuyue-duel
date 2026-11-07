@@ -1,0 +1,16 @@
+{
+  "digest": "7d7954b6d2d53567306c7d4aae4d02079313fc709e93bc10315a431f6fb4ecca",
+  "request_id": "bce6f573-bd0f-9732-90c3-2eeaa05555bd",
+  "usage": {
+    "input_tokens": 43,
+    "output_tokens": 92,
+    "total_tokens": 135,
+    "characters": 82
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yynar-9a6555ee9f6e43f0b167a59eec741be0",
+  "text": "星光回响 · 完。可以回到任意已解锁的章节重温、补星，也可以邀请好友，打出你自己的下一球。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "nar"
+}

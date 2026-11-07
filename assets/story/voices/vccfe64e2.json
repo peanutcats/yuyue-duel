@@ -1,0 +1,16 @@
+{
+  "digest": "eafb4967b60631503c732d87b0ea1d04e34da6dc4c5e49f42f92d6b8a51e04c0",
+  "request_id": "6468f07a-2d15-9436-8ff2-1934648e62f8",
+  "usage": {
+    "input_tokens": 18,
+    "output_tokens": 42,
+    "total_tokens": 60,
+    "characters": 35
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yytianchu-2bb9df7a40db4ae7bafc77683d53adfb",
+  "text": "外公说：“林姐要是在，肯定嫌我们磨蹭。”",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "tianchu"
+}

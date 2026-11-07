@@ -1,0 +1,16 @@
+{
+  "digest": "d380c1565ef7fd4d132f914af508e0f22498306cc5153d0c077bd7fd8ddfe9cf",
+  "request_id": "7ab17c45-bf83-9d5a-a171-6b757f71942a",
+  "usage": {
+    "input_tokens": 19,
+    "output_tokens": 77,
+    "total_tokens": 96,
+    "characters": 38
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyhouzi-8b1303f4011a48d5a7de5234aa93c44f",
+  "text": "他打 Dota 也这样，开局三分钟就想推高地。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "houzi"
+}

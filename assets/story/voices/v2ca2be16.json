@@ -1,0 +1,16 @@
+{
+  "digest": "26c37eb0d3cfdb3eada666c8805d7eb6670094e13c5793a49df209eee32b82dd",
+  "request_id": "25c3f7f7-8842-9f87-8ba3-6346a56e5ef7",
+  "usage": {
+    "input_tokens": 24,
+    "output_tokens": 77,
+    "total_tokens": 101,
+    "characters": 45
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyranran-3608278c42c041e2add2c5da6d1d2979",
+  "text": "先看高度。球低的时候硬往下压，球网会比对手先赢。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：清楚地提醒同伴，强调关键动作。",
+  "who": "ranran"
+}

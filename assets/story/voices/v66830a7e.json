@@ -1,0 +1,16 @@
+{
+  "digest": "a65eb1be28857f1295b095e996600c07f2d902599afbc3a0b0eb8b8b62f56fb7",
+  "request_id": "ad233026-1851-922e-aa4e-6c77353608d3",
+  "usage": {
+    "input_tokens": 31,
+    "output_tokens": 62,
+    "total_tokens": 93,
+    "characters": 57
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yynar-9a6555ee9f6e43f0b167a59eec741be0",
+  "text": "新的约定，写在旧照片的背面。字迹不同，留下名字的人，越来越多。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "nar"
+}

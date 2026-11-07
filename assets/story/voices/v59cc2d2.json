@@ -1,0 +1,20 @@
+{
+  "digest": "5bdff882592eeb522b5ebf3745db64d8b49b20f934347ccd0b8add2c6a880ac6",
+  "file": "mm-v59cc2d2.wav",
+  "who": "mm",
+  "name": "毛毛",
+  "text": "我叫毛毛。十六根羽毛，外加一点点不肯认输。我好像在这儿睡了很久，久到忘了自己是怎么落地的。",
+  "mood": "talk",
+  "delivery": "日常",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "request_id": "ccce220e-b745-9cf7-9d98-434933098f62",
+  "usage": {
+    "input_tokens": 45,
+    "output_tokens": 101,
+    "total_tokens": 146,
+    "characters": 85
+  },
+  "reused_audition": true,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yymm-13991994e40b44a7b5af603229af22b3"
+}

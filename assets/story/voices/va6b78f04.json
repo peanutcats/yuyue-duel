@@ -1,0 +1,16 @@
+{
+  "digest": "3897f128c47bf5326492719a2b2cb23572cdc5c227f627f4fe7829a533c6defe",
+  "request_id": "a5e921d0-dbde-9a55-81bb-c3d7d5b152bf",
+  "usage": {
+    "input_tokens": 15,
+    "output_tokens": 42,
+    "total_tokens": 57,
+    "characters": 27
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yydingding-f5dc89dc6e3d4bbbb2d3395d7982e6ee",
+  "text": "拍线我刚检查过，二十四磅，稳。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：清楚地提醒同伴，强调关键动作。",
+  "who": "dingding"
+}

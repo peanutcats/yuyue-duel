@@ -1,0 +1,16 @@
+{
+  "digest": "fb1b692a6a9d1233da218faaae95a056aeabda5df7939d04c916fb348fed325f",
+  "request_id": "8af15d61-f20a-9d94-b5b0-2f8e8d860ccc",
+  "usage": {
+    "input_tokens": 19,
+    "output_tokens": 51,
+    "total_tokens": 70,
+    "characters": 35
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yydingding-f5dc89dc6e3d4bbbb2d3395d7982e6ee",
+  "text": "对你现在来说是。等你稳定了，再慢慢调。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "dingding"
+}

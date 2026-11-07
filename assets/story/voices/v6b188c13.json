@@ -1,0 +1,16 @@
+{
+  "digest": "49cbc01589effca66885cb855370cb25ea847c2d03b5472a1d7b473210e32935",
+  "request_id": "3136a529-d79b-9612-a63f-c5af3326954c",
+  "usage": {
+    "input_tokens": 22,
+    "output_tokens": 72,
+    "total_tokens": 94,
+    "characters": 40
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yydingding-f5dc89dc6e3d4bbbb2d3395d7982e6ee",
+  "text": "行，我入社。店后面的小仓库，借给社团放器材。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：亲切地招呼同伴。",
+  "who": "dingding"
+}

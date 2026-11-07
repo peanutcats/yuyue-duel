@@ -1,0 +1,16 @@
+{
+  "digest": "8d17c5a7dfc3aa4ca4bc924241b5a7b4534a9cf4a2eedafba44420339670a0d8",
+  "request_id": "7734ff20-101b-99fc-a002-968ca8e23683",
+  "usage": {
+    "input_tokens": 15,
+    "output_tokens": 41,
+    "total_tokens": 56,
+    "characters": 28
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yydingding-f5dc89dc6e3d4bbbb2d3395d7982e6ee",
+  "text": "问题是，球不会自己飞到你面前。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：清楚地提醒同伴，强调关键动作。",
+  "who": "dingding"
+}

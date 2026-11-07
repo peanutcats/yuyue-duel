@@ -1,0 +1,16 @@
+{
+  "digest": "6eb08bf9aba1d02ba4013cd0ab546b5b3eaf86873e189bdad3cef601ff71ca31",
+  "request_id": "817bc595-d1cc-9ea5-a230-eed67a78a836",
+  "usage": {
+    "input_tokens": 24,
+    "output_tokens": 77,
+    "total_tokens": 101,
+    "characters": 44
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyguoge-9c9d4191af904024a507774c10119d97",
+  "text": "我一直以为，投机就是聪明。两边下注，谁也不得罪。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：略感失落，声音放轻，保留完整吐字，不要哭腔。",
+  "who": "guoge"
+}

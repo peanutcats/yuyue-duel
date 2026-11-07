@@ -1,0 +1,16 @@
+{
+  "digest": "bd2afe2b28b8bd0c4c2dbce996bf479084682b6c06b0064c45760c45f0e9d574",
+  "request_id": "c8cbfb95-9fe1-9404-852f-c3863f865849",
+  "usage": {
+    "input_tokens": 20,
+    "output_tokens": 42,
+    "total_tokens": 62,
+    "characters": 39
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yynar-9a6555ee9f6e43f0b167a59eec741be0",
+  "text": "说明会结束了。评估组只留下一句：“再看看。”",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "nar"
+}

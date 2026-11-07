@@ -1,0 +1,16 @@
+{
+  "digest": "5070707048260f4eb1d4463248ffd93bb99c99e77c08508f21c30d9280713f02",
+  "request_id": "1c1145d6-e0b7-9eae-b295-625ef0b451ca",
+  "usage": {
+    "input_tokens": 17,
+    "output_tokens": 48,
+    "total_tokens": 65,
+    "characters": 30
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yydingding-f5dc89dc6e3d4bbbb2d3395d7982e6ee",
+  "text": "然后第二天比赛，你在场上打瞌睡。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "dingding"
+}

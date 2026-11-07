@@ -1,0 +1,16 @@
+{
+  "digest": "b3ba80072c3562d6b7e54190b18ba3a43c54df1338ec3aa66f726488ab34b1e8",
+  "request_id": "b5b3e4b8-dbbd-970e-8e5a-9663ae94558f",
+  "usage": {
+    "input_tokens": 16,
+    "output_tokens": 46,
+    "total_tokens": 62,
+    "characters": 29
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyzhu-51d3e2230c6d4ee8b71cd80474e27aef",
+  "text": "明天下山。最后一课，跟我打一局。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：清楚地提醒同伴，强调关键动作。",
+  "who": "zhu"
+}

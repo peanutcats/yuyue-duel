@@ -1,0 +1,5429 @@
+[
+  {
+    "id": "v6f2da4f0",
+    "who": "nar",
+    "text": "开学第一天。星光体育馆只剩一扇窗亮着，门上贴着“停馆评估倒计时：三十天”。",
+    "mood": "talk",
+    "chapter": "ch0",
+    "stage": "0-1",
+    "root": "voice-0"
+  },
+  {
+    "id": "vdd301877",
+    "who": "me",
+    "text": "转学第一天，就被分来体育馆值日。行吧，反正我也待不了多久。",
+    "mood": "think",
+    "chapter": "ch0",
+    "stage": "0-1",
+    "root": "voice-0"
+  },
+  {
+    "id": "vdc51bbe",
+    "who": "nar",
+    "text": "扫把伸进柜底，一团白色的东西“哎哟”叫了一声。",
+    "mood": "talk",
+    "chapter": "ch0",
+    "stage": "0-1",
+    "root": "voice-0"
+  },
+  {
+    "id": "vdf9ff51a",
+    "who": "mm",
+    "text": "轻点！我是羽毛球，不是灰团子！",
+    "mood": "angry",
+    "chapter": "ch0",
+    "stage": "0-1",
+    "root": "voice-0"
+  },
+  {
+    "id": "vf8c68f7c",
+    "who": "me",
+    "text": "……羽毛球会说话？",
+    "mood": "surprise",
+    "chapter": "ch0",
+    "stage": "0-1",
+    "root": "voice-0"
+  },
+  {
+    "id": "v59cc2d2",
+    "who": "mm",
+    "text": "我叫毛毛。十六根羽毛，外加一点点不肯认输。我好像在这儿睡了很久，久到忘了自己是怎么落地的。",
+    "mood": "talk",
+    "chapter": "ch0",
+    "stage": "0-1",
+    "root": "voice-0"
+  },
+  {
+    "id": "v55e91c71",
+    "who": "canglan",
+    "text": "新同学？别站着，帮我把场地清出来。灯管坏了三根，能用的场地只剩一块。",
+    "mood": "wave",
+    "chapter": "ch0",
+    "stage": "0-1",
+    "root": "voice-0"
+  },
+  {
+    "id": "v36241b75",
+    "who": "mm",
+    "text": "先接几个球热热身。黄色圈是落点，青色是站位——别追着我的尾巴跑！",
+    "mood": "point",
+    "chapter": "ch0",
+    "stage": "0-1",
+    "root": "voice-0"
+  },
+  {
+    "id": "vb417f382",
+    "who": "me",
+    "text": "原来不是等球掉到眼前才动。看见它飞起来，就该出发。",
+    "mood": "happy",
+    "chapter": "ch0",
+    "stage": "0-1",
+    "root": "voice-0"
+  },
+  {
+    "id": "vf212869a",
+    "who": "canglan",
+    "text": "提前准备。打球和修球馆，都一样。",
+    "mood": "smile",
+    "chapter": "ch0",
+    "stage": "0-1",
+    "root": "voice-0"
+  },
+  {
+    "id": "v9086a13f",
+    "who": "mm",
+    "text": "等等，柜子后面……那张合影怎么少了一角？",
+    "mood": "surprise",
+    "chapter": "ch0",
+    "stage": "0-1",
+    "root": "voice-0"
+  },
+  {
+    "id": "v8ab32601",
+    "who": "canglan",
+    "text": "那张照片一直挂在这儿。缺的那一角，我从小就没见过。",
+    "mood": "sad",
+    "chapter": "ch0",
+    "stage": "0-1",
+    "root": "voice-0"
+  },
+  {
+    "id": "v7f591f4a",
+    "who": "me",
+    "text": "照片里五个人，最右边只剩一只手，手里握着一支缠蓝色握把的球拍。",
+    "mood": "think",
+    "chapter": "ch0",
+    "stage": "0-2",
+    "root": "voice-0"
+  },
+  {
+    "id": "v707a6d8d",
+    "who": "mm",
+    "text": "那场比赛我好像在场……可最后一球之后的事，我一点也想不起来。",
+    "mood": "sad",
+    "chapter": "ch0",
+    "stage": "0-2",
+    "root": "voice-0"
+  },
+  {
+    "id": "vdb3d5938",
+    "who": "canglan",
+    "text": "先别猜。能确认的东西，一件一件记下来。",
+    "mood": "point",
+    "chapter": "ch0",
+    "stage": "0-2",
+    "root": "voice-0"
+  },
+  {
+    "id": "v4fa31e39",
+    "who": "me",
+    "text": "改成健身房？那这块场地……",
+    "mood": "surprise",
+    "chapter": "ch0",
+    "stage": "0-2",
+    "root": "voice-0"
+  },
+  {
+    "id": "vbfce1f9c",
+    "who": "canglan",
+    "text": "评估组说，这里一个月没几个人来，地板老化，灯也坏。数字上，我们输得很难看。",
+    "mood": "sad",
+    "chapter": "ch0",
+    "stage": "0-2",
+    "root": "voice-0"
+  },
+  {
+    "id": "v82f3f88e",
+    "who": "me",
+    "text": "那就让数字变一变。三十天，能做的事不少。",
+    "mood": "think",
+    "chapter": "ch0",
+    "stage": "0-2",
+    "root": "voice-0"
+  },
+  {
+    "id": "vff33e25a",
+    "who": "canglan",
+    "text": "……你不是说待不了多久吗？",
+    "mood": "surprise",
+    "chapter": "ch0",
+    "stage": "0-2",
+    "root": "voice-0"
+  },
+  {
+    "id": "v3d3e7ccd",
+    "who": "me",
+    "text": "待多久，和要不要把地扫干净，是两回事。",
+    "mood": "smile",
+    "chapter": "ch0",
+    "stage": "0-2",
+    "root": "voice-0"
+  },
+  {
+    "id": "v708934e3",
+    "who": "mm",
+    "text": "说得好！先去找社长——他是全校最会算数的人。",
+    "mood": "cheer",
+    "chapter": "ch0",
+    "stage": "0-2",
+    "root": "voice-0"
+  },
+  {
+    "id": "vc5ab8725",
+    "who": "xiaohong",
+    "text": "你就是新来的？我是羽跃社社长小红。三十天的训练表，我已经算好了。",
+    "mood": "point",
+    "chapter": "ch0",
+    "stage": "0-3",
+    "root": "voice-0"
+  },
+  {
+    "id": "vdd2521a1",
+    "who": "me",
+    "text": "社里一共几个人？",
+    "mood": "surprise",
+    "chapter": "ch0",
+    "stage": "0-3",
+    "root": "voice-0"
+  },
+  {
+    "id": "v38d0da99",
+    "who": "xiaohong",
+    "text": "算上你，两个。算上未来的队友……这个变量暂时为零。",
+    "mood": "think",
+    "chapter": "ch0",
+    "stage": "0-3",
+    "root": "voice-0"
+  },
+  {
+    "id": "v4275a8ca",
+    "who": "canglan",
+    "text": "他连“未来的队友”的训练量都排好了。",
+    "mood": "smile",
+    "chapter": "ch0",
+    "stage": "0-3",
+    "root": "voice-0"
+  },
+  {
+    "id": "ve1106d6b",
+    "who": "xiaohong",
+    "text": "入社不考天赋，考判断。我的扣杀很快，但扣完回位会慢半拍——看你抓不抓得住。",
+    "mood": "fist",
+    "chapter": "ch0",
+    "stage": "0-3",
+    "root": "voice-0"
+  },
+  {
+    "id": "vc6ccfeda",
+    "who": "mm",
+    "text": "被压住时先打高远争取时间，机会不好，别硬扣。",
+    "mood": "point",
+    "chapter": "ch0",
+    "stage": "0-3",
+    "root": "voice-0"
+  },
+  {
+    "id": "v8a95203e",
+    "who": "xiaohong",
+    "text": "通过。你是羽跃社第……三号正式社员。",
+    "mood": "happy",
+    "chapter": "ch0",
+    "stage": "0-3",
+    "root": "voice-0"
+  },
+  {
+    "id": "v11df020d",
+    "who": "me",
+    "text": "我还以为必须一球不丢。",
+    "mood": "talk",
+    "chapter": "ch0",
+    "stage": "0-3",
+    "root": "voice-0"
+  },
+  {
+    "id": "vef94f9cd",
+    "who": "xiaohong",
+    "text": "我的公式里本来没有误差项。可刚才输给你的那几分，好像就是误差。",
+    "mood": "think",
+    "chapter": "ch0",
+    "stage": "0-3",
+    "root": "voice-0"
+  },
+  {
+    "id": "v78574c2f",
+    "who": "canglan",
+    "text": "那就改公式。明天招新——会接球的人，也要学会接住队友。",
+    "mood": "wave",
+    "chapter": "ch0",
+    "stage": "0-3",
+    "root": "voice-0"
+  },
+  {
+    "id": "vc2bd3fd9",
+    "who": "nar",
+    "text": "公告栏上，招新海报和评估通知贴在一起，像两个互相瞪眼的人。",
+    "mood": "talk",
+    "chapter": "ch0",
+    "stage": "0-4",
+    "root": "voice-0"
+  },
+  {
+    "id": "vac0e202b",
+    "who": "xiaohong",
+    "text": "标题我想好了：“冲击冠军，三十天逆袭”。",
+    "mood": "point",
+    "chapter": "ch0",
+    "stage": "0-4",
+    "root": "voice-0"
+  },
+  {
+    "id": "vf487368c",
+    "who": "canglan",
+    "text": "也许有人只是想找个地方，安心打一场球。",
+    "mood": "talk",
+    "chapter": "ch0",
+    "stage": "0-4",
+    "root": "voice-0"
+  },
+  {
+    "id": "v3f7c1915",
+    "who": "me",
+    "text": "那就把承诺写具体一点。写一句我们真的做得到的。",
+    "mood": "think",
+    "chapter": "ch0",
+    "stage": "0-4",
+    "root": "voice-0"
+  },
+  {
+    "id": "vc849a67e",
+    "who": "mm",
+    "text": "“训练要有计划，也要允许失误。”——记住了，这句可要算数。",
+    "mood": "happy",
+    "chapter": "ch0",
+    "stage": "0-4",
+    "root": "voice-0"
+  },
+  {
+    "id": "v621fd70e",
+    "who": "mm",
+    "text": "“先让大家愿意留下，再谈成绩。”——记住了，这句可要算数。",
+    "mood": "happy",
+    "chapter": "ch0",
+    "stage": "0-4",
+    "root": "voice-0"
+  },
+  {
+    "id": "vac303bfa",
+    "who": "canglan",
+    "text": "热身先活动身体，再练短距离启动。落地稳住，别把热身打成比赛。",
+    "mood": "point",
+    "chapter": "ch0",
+    "stage": "0-4",
+    "root": "voice-0"
+  },
+  {
+    "id": "vbf808d65",
+    "who": "xiaohong",
+    "text": "热身时间我得重算。原来五分钟，现在改成十五。",
+    "mood": "think",
+    "chapter": "ch0",
+    "stage": "0-4",
+    "root": "voice-0"
+  },
+  {
+    "id": "v7fded047",
+    "who": "me",
+    "text": "海报贴好了。明天，会有人推开门吧。",
+    "mood": "wave",
+    "chapter": "ch0",
+    "stage": "0-4",
+    "root": "voice-0"
+  },
+  {
+    "id": "v1b7cb6db",
+    "who": "nar",
+    "text": "晚上九点，其他人都走了。沧澜还在一盏一盏地检查灯管。",
+    "mood": "talk",
+    "chapter": "ch0",
+    "stage": "0-5",
+    "root": "voice-0"
+  },
+  {
+    "id": "vd6dacca3",
+    "who": "me",
+    "text": "你每天都最后一个走？",
+    "mood": "talk",
+    "chapter": "ch0",
+    "stage": "0-5",
+    "root": "voice-0"
+  },
+  {
+    "id": "v733b2eb3",
+    "who": "canglan",
+    "text": "习惯了。外婆以前是这里的管理员。她说：灯要有人开，也要有人关。",
+    "mood": "smile",
+    "chapter": "ch0",
+    "stage": "0-5",
+    "root": "voice-0"
+  },
+  {
+    "id": "v4c56257f",
+    "who": "me",
+    "text": "门卫室那串写着“林”的钥匙……是她的？",
+    "mood": "think",
+    "chapter": "ch0",
+    "stage": "0-5",
+    "root": "voice-0"
+  },
+  {
+    "id": "v50b35932",
+    "who": "canglan",
+    "text": "她去年走了。钥匙留给了我，还有一句话：“门别关。”",
+    "mood": "sad",
+    "chapter": "ch0",
+    "stage": "0-5",
+    "root": "voice-0"
+  },
+  {
+    "id": "v291c5941",
+    "who": "mm",
+    "text": "林……这个字，我好像听过很多次。",
+    "mood": "sad",
+    "chapter": "ch0",
+    "stage": "0-5",
+    "root": "voice-0"
+  },
+  {
+    "id": "v78a54762",
+    "who": "canglan",
+    "text": "别想太多。来，关灯前陪我发几个球。发球是每一分的开始，也是我每天的收尾。",
+    "mood": "point",
+    "chapter": "ch0",
+    "stage": "0-5",
+    "root": "voice-0"
+  },
+  {
+    "id": "va01df6c1",
+    "who": "canglan",
+    "text": "今天第一次，有人陪我发完最后一个球。",
+    "mood": "happy",
+    "chapter": "ch0",
+    "stage": "0-5",
+    "root": "voice-0"
+  },
+  {
+    "id": "v29887652",
+    "who": "me",
+    "text": "明天也可以有。",
+    "mood": "smile",
+    "chapter": "ch0",
+    "stage": "0-5",
+    "root": "voice-0"
+  },
+  {
+    "id": "vd8f1b924",
+    "who": "canglan",
+    "text": "……那这把钥匙，我得考虑多配一把了。",
+    "mood": "think",
+    "chapter": "ch0",
+    "stage": "0-5",
+    "root": "voice-0"
+  },
+  {
+    "id": "v5bb29fe6",
+    "who": "nar",
+    "text": "灯熄了。黑暗里，毛毛小声说：“三十天，从今天开始数。”",
+    "mood": "talk",
+    "chapter": "ch0",
+    "stage": "0-5",
+    "root": "voice-0"
+  },
+  {
+    "id": "v3e4915fe",
+    "who": "xiaohong",
+    "text": "海报贴了一天：七个赞，零个报名。",
+    "mood": "sad",
+    "chapter": "ch1",
+    "stage": "1-1",
+    "root": "voice-0"
+  },
+  {
+    "id": "vd0c817b3",
+    "who": "me",
+    "text": "有没有可能，是因为你把训练时间写成了早上五点？",
+    "mood": "think",
+    "chapter": "ch1",
+    "stage": "1-1",
+    "root": "voice-0"
+  },
+  {
+    "id": "v5948bf70",
+    "who": "xiaohong",
+    "text": "……那是科学安排。",
+    "mood": "surprise",
+    "chapter": "ch1",
+    "stage": "1-1",
+    "root": "voice-0"
+  },
+  {
+    "id": "vf87783f6",
+    "who": "canglan",
+    "text": "你手机里不是还有个群吗？初中校队那个。",
+    "mood": "talk",
+    "chapter": "ch1",
+    "stage": "1-1",
+    "root": "voice-0"
+  },
+  {
+    "id": "vba605349",
+    "who": "xiaohong",
+    "text": "“羽毛球天下第一”。最后一条消息，停在两年前。",
+    "mood": "sad",
+    "chapter": "ch1",
+    "stage": "1-1",
+    "root": "voice-0"
+  },
+  {
+    "id": "v90e111cf",
+    "who": "me",
+    "text": "群里都有谁？",
+    "mood": "talk",
+    "chapter": "ch1",
+    "stage": "1-1",
+    "root": "voice-0"
+  },
+  {
+    "id": "v3860f4e5",
+    "who": "xiaohong",
+    "text": "王瑞、丁丁、猴子，还有我。我们四个从初一打到初三。后来……就不打了。",
+    "mood": "think",
+    "chapter": "ch1",
+    "stage": "1-1",
+    "root": "voice-0"
+  },
+  {
+    "id": "v3301771e",
+    "who": "mm",
+    "text": "先把这球送到后场。回得深，你才有时间想下一句该怎么说。",
+    "mood": "point",
+    "chapter": "ch1",
+    "stage": "1-1",
+    "root": "voice-0"
+  },
+  {
+    "id": "v8909f1ad",
+    "who": "me",
+    "text": "这一拍飞得久，我就来得及回到准备位置了。",
+    "mood": "happy",
+    "chapter": "ch1",
+    "stage": "1-1",
+    "root": "voice-0"
+  },
+  {
+    "id": "v1c331916",
+    "who": "xiaohong",
+    "text": "准备位置也不是钉死的，要看自己的回球再决定站哪。……人也一样。",
+    "mood": "think",
+    "chapter": "ch1",
+    "stage": "1-1",
+    "root": "voice-0"
+  },
+  {
+    "id": "v641f55e2",
+    "who": "canglan",
+    "text": "那就先去找最好找的那个。",
+    "mood": "smile",
+    "chapter": "ch1",
+    "stage": "1-1",
+    "root": "voice-0"
+  },
+  {
+    "id": "v24e37a5c",
+    "who": "xiaohong",
+    "text": "王瑞。午饭时间，他一定在食堂第三个窗口。",
+    "mood": "talk",
+    "chapter": "ch1",
+    "stage": "1-1",
+    "root": "voice-0"
+  },
+  {
+    "id": "v4855b969",
+    "who": "ruibao",
+    "text": "小红？你居然主动来食堂找我。先说好，这个包子我不分。",
+    "mood": "surprise",
+    "chapter": "ch1",
+    "stage": "1-2",
+    "root": "voice-0"
+  },
+  {
+    "id": "vac25b3b0",
+    "who": "xiaohong",
+    "text": "……不是来抢包子的。社团缺人，我想问你回不回来。",
+    "mood": "shy",
+    "chapter": "ch1",
+    "stage": "1-2",
+    "root": "voice-0"
+  },
+  {
+    "id": "vba8bf82b",
+    "who": "ruibao",
+    "text": "回来干嘛？继续站在后场当墙？初中三年，你们只让我“负责挡着”。",
+    "mood": "think",
+    "chapter": "ch1",
+    "stage": "1-2",
+    "root": "voice-0"
+  },
+  {
+    "id": "vd709085e",
+    "who": "me",
+    "text": "那这次不当墙，换个打法？",
+    "mood": "talk",
+    "chapter": "ch1",
+    "stage": "1-2",
+    "root": "voice-0"
+  },
+  {
+    "id": "vc62791ba",
+    "who": "ruibao",
+    "text": "口说无凭。你们要是能把我调动起来，我就考虑。",
+    "mood": "fist",
+    "chapter": "ch1",
+    "stage": "1-2",
+    "root": "voice-0"
+  },
+  {
+    "id": "v6a21473a",
+    "who": "canglan",
+    "text": "墙也会前后移动。先跟着他的步子走一遍。",
+    "mood": "point",
+    "chapter": "ch1",
+    "stage": "1-2",
+    "root": "voice-0"
+  },
+  {
+    "id": "vcb96bdf0",
+    "who": "ruibao",
+    "text": "呼……你一直前后调我，我差点把早饭跑出来。",
+    "mood": "tired",
+    "chapter": "ch1",
+    "stage": "1-2",
+    "root": "voice-0"
+  },
+  {
+    "id": "v38fef838",
+    "who": "me",
+    "text": "你刚才那拍反抽，可一点也不像墙。",
+    "mood": "smile",
+    "chapter": "ch1",
+    "stage": "1-2",
+    "root": "voice-0"
+  },
+  {
+    "id": "vdcc10e35",
+    "who": "ruibao",
+    "text": "因为你把球送到了我够得着、也想打的地方。",
+    "mood": "happy",
+    "chapter": "ch1",
+    "stage": "1-2",
+    "root": "voice-0"
+  },
+  {
+    "id": "ve69e77db",
+    "who": "xiaohong",
+    "text": "初中的时候，我只会喊“挡住就行”。对不起。",
+    "mood": "sad",
+    "chapter": "ch1",
+    "stage": "1-2",
+    "root": "voice-0"
+  },
+  {
+    "id": "vfc3cbace",
+    "who": "ruibao",
+    "text": "道歉收下，包子还是不分。……猴子那边，你去说还是我去说？",
+    "mood": "smile",
+    "chapter": "ch1",
+    "stage": "1-2",
+    "root": "voice-0"
+  },
+  {
+    "id": "v8de635e",
+    "who": "xiaohong",
+    "text": "他最难。他已经两年没碰过拍子了。",
+    "mood": "think",
+    "chapter": "ch1",
+    "stage": "1-2",
+    "root": "voice-0"
+  },
+  {
+    "id": "v2b3866ee",
+    "who": "nar",
+    "text": "放学后，王瑞领着大家拐进一栋旧楼。门上贴着纸条：“开黑中，勿扰。”",
+    "mood": "talk",
+    "chapter": "ch1",
+    "stage": "1-3",
+    "root": "voice-0"
+  },
+  {
+    "id": "va59c62b",
+    "who": "houzi",
+    "text": "推！推！高地就差一口气——哎？小红？瑞宝？今天刮的什么风？",
+    "mood": "cheer",
+    "chapter": "ch1",
+    "stage": "1-3",
+    "root": "voice-0"
+  },
+  {
+    "id": "v4d2df86",
+    "who": "me",
+    "text": "……他就是猴子？",
+    "mood": "surprise",
+    "chapter": "ch1",
+    "stage": "1-3",
+    "root": "voice-0"
+  },
+  {
+    "id": "va43a7bab",
+    "who": "ruibao",
+    "text": "别看他脸小，肚子可是战略储备。初中外号“北京猿人”，后来简称猴子。",
+    "mood": "smile",
+    "chapter": "ch1",
+    "stage": "1-3",
+    "root": "voice-0"
+  },
+  {
+    "id": "v959fc44c",
+    "who": "houzi",
+    "text": "问题不大，这叫返祖式帅气。新同学你好，我玩中单也玩辅助，主要玩心态。",
+    "mood": "happy",
+    "chapter": "ch1",
+    "stage": "1-3",
+    "root": "voice-0"
+  },
+  {
+    "id": "vd7049f7b",
+    "who": "dingding",
+    "text": "猴子！你又挂机！高地就剩我一个人守了！",
+    "mood": "angry",
+    "chapter": "ch1",
+    "stage": "1-3",
+    "root": "voice-0"
+  },
+  {
+    "id": "v2b0d54c6",
+    "who": "xiaohong",
+    "text": "丁丁也在？",
+    "mood": "surprise",
+    "chapter": "ch1",
+    "stage": "1-3",
+    "root": "voice-0"
+  },
+  {
+    "id": "vbca71a8c",
+    "who": "dingding",
+    "text": "店里网断了，来借网。……顺便赢一把 Dota。",
+    "mood": "point",
+    "chapter": "ch1",
+    "stage": "1-3",
+    "root": "voice-0"
+  },
+  {
+    "id": "v22a8db9c",
+    "who": "xiaohong",
+    "text": "猴子，社团缺人。回来打球吧。",
+    "mood": "talk",
+    "chapter": "ch1",
+    "stage": "1-3",
+    "root": "voice-0"
+  },
+  {
+    "id": "vbdd61b0c",
+    "who": "houzi",
+    "text": "打球啊……随缘吧。游戏输了能重开，球场上输了，可没有重开键。",
+    "mood": "smile",
+    "chapter": "ch1",
+    "stage": "1-3",
+    "root": "voice-0"
+  },
+  {
+    "id": "v2484183e",
+    "who": "mm",
+    "text": "他笑得很轻松，可握手机的手指，一直按着同一个键。",
+    "mood": "think",
+    "chapter": "ch1",
+    "stage": "1-3",
+    "root": "voice-0"
+  },
+  {
+    "id": "v28882643",
+    "who": "houzi",
+    "text": "这样，你们答我三个问题。用打游戏的思路讲羽毛球，讲通了，我陪你们打一局。",
+    "mood": "point",
+    "chapter": "ch1",
+    "stage": "1-3",
+    "root": "voice-0"
+  },
+  {
+    "id": "vc6c2657b",
+    "who": "houzi",
+    "text": "……全对？行啊新同学，你这意识，能上分。",
+    "mood": "surprise",
+    "chapter": "ch1",
+    "stage": "1-3",
+    "root": "voice-0"
+  },
+  {
+    "id": "vc090ca0d",
+    "who": "dingding",
+    "text": "他刚才说“重复最容易被抓”。猴子，你初三那球就是——",
+    "mood": "think",
+    "chapter": "ch1",
+    "stage": "1-3",
+    "root": "voice-0"
+  },
+  {
+    "id": "v9032e5c",
+    "who": "houzi",
+    "text": "丁丁，问题不大。都过去了。走，打一局就打一局。",
+    "mood": "smile",
+    "chapter": "ch1",
+    "stage": "1-3",
+    "root": "voice-0"
+  },
+  {
+    "id": "vb9f36a66",
+    "who": "ruibao",
+    "text": "他每次说“问题不大”，问题都挺大的。",
+    "mood": "sad",
+    "chapter": "ch1",
+    "stage": "1-3",
+    "root": "voice-0"
+  },
+  {
+    "id": "v5a10762",
+    "who": "houzi",
+    "text": "先说好，我两年没摸拍子了，输了不许截图。",
+    "mood": "wave",
+    "chapter": "ch1",
+    "stage": "1-4",
+    "root": "voice-0"
+  },
+  {
+    "id": "v69aa939a",
+    "who": "xiaohong",
+    "text": "他守在中场，手比谁都快。前后跑动是他的短板。",
+    "mood": "think",
+    "chapter": "ch1",
+    "stage": "1-4",
+    "root": "voice-0"
+  },
+  {
+    "id": "va3ea61b4",
+    "who": "mm",
+    "text": "多打深远的高球，逼他动起来。别跟他拼手速。",
+    "mood": "point",
+    "chapter": "ch1",
+    "stage": "1-4",
+    "root": "voice-0"
+  },
+  {
+    "id": "v70c9089e",
+    "who": "houzi",
+    "text": "呼……不行了，肚子在抗议。",
+    "mood": "tired",
+    "chapter": "ch1",
+    "stage": "1-4",
+    "root": "voice-0"
+  },
+  {
+    "id": "v1f02a059",
+    "who": "me",
+    "text": "最后那个网前球，你明明能扑，为什么收手了？",
+    "mood": "talk",
+    "chapter": "ch1",
+    "stage": "1-4",
+    "root": "voice-0"
+  },
+  {
+    "id": "v6dd7e80",
+    "who": "houzi",
+    "text": "……初三县赛，决胜局，十四平。我也站在网前，球就飘在眼前。",
+    "mood": "sad",
+    "chapter": "ch1",
+    "stage": "1-4",
+    "root": "voice-0"
+  },
+  {
+    "id": "vf4498f34",
+    "who": "houzi",
+    "text": "我想“这球必须扑死”，手一抖，下网了。那年之后，我们四个就没再一起打过。",
+    "mood": "sad",
+    "chapter": "ch1",
+    "stage": "1-4",
+    "root": "voice-0"
+  },
+  {
+    "id": "v3fef5861",
+    "who": "xiaohong",
+    "text": "那球之前，我冲他喊的就是“必须赢”。是我把这三个字塞进了他手里。",
+    "mood": "sad",
+    "chapter": "ch1",
+    "stage": "1-4",
+    "root": "voice-0"
+  },
+  {
+    "id": "v6051915b",
+    "who": "ruibao",
+    "text": "我们谁都没怪过你，猴子。只是……谁都没说出口。",
+    "mood": "talk",
+    "chapter": "ch1",
+    "stage": "1-4",
+    "root": "voice-0"
+  },
+  {
+    "id": "v12dd171c",
+    "who": "dingding",
+    "text": "你后来天天拉我开黑，我还以为你早就不在乎了。",
+    "mood": "sad",
+    "chapter": "ch1",
+    "stage": "1-4",
+    "root": "voice-0"
+  },
+  {
+    "id": "v49e27617",
+    "who": "me",
+    "text": "这次别一个人扛着。",
+    "mood": "smile",
+    "chapter": "ch1",
+    "stage": "1-4",
+    "root": "voice-0"
+  },
+  {
+    "id": "va721de4f",
+    "who": "me",
+    "text": "下一球，扑不扑都行。",
+    "mood": "smile",
+    "chapter": "ch1",
+    "stage": "1-4",
+    "root": "voice-0"
+  },
+  {
+    "id": "ve23c36ca",
+    "who": "houzi",
+    "text": "……行。你们这社团，我入了。不过先说好，每周得留一晚开黑。",
+    "mood": "happy",
+    "chapter": "ch1",
+    "stage": "1-4",
+    "root": "voice-0"
+  },
+  {
+    "id": "v718c74b2",
+    "who": "dingding",
+    "text": "那开黑也得留一晚打球。我还没答应入社呢，先说清楚。",
+    "mood": "point",
+    "chapter": "ch1",
+    "stage": "1-4",
+    "root": "voice-0"
+  },
+  {
+    "id": "vb4e3dc45",
+    "who": "houzi",
+    "text": "成交！羽毛球天下第一，复活！",
+    "mood": "cheer",
+    "chapter": "ch1",
+    "stage": "1-4",
+    "root": "voice-0"
+  },
+  {
+    "id": "ve8439621",
+    "who": "mm",
+    "text": "一个沉了两年的群，重新亮了。",
+    "mood": "happy",
+    "chapter": "ch1",
+    "stage": "1-4",
+    "root": "voice-0"
+  },
+  {
+    "id": "v62d5ac28",
+    "who": "nar",
+    "text": "周五，招新表演赛。看台上坐了十几个人——比平时多了十几个。",
+    "mood": "talk",
+    "chapter": "ch1",
+    "stage": "1-5",
+    "root": "voice-0"
+  },
+  {
+    "id": "v27d27dcd",
+    "who": "houzi",
+    "text": "新同学，借你的手用用。我教你一招：闪现。",
+    "mood": "fist",
+    "chapter": "ch1",
+    "stage": "1-5",
+    "root": "voice-0"
+  },
+  {
+    "id": "v4b0fd829",
+    "who": "me",
+    "text": "这也是游戏里学来的？",
+    "mood": "surprise",
+    "chapter": "ch1",
+    "stage": "1-5",
+    "root": "voice-0"
+  },
+  {
+    "id": "vf8a3535f",
+    "who": "houzi",
+    "text": "打球学来的。我不爱跑，就练怎么一步到位。技能条满了按一下，球飞到哪，我就在哪。",
+    "mood": "smile",
+    "chapter": "ch1",
+    "stage": "1-5",
+    "root": "voice-0"
+  },
+  {
+    "id": "v3a825984",
+    "who": "mm",
+    "text": "闪现只帮你站到位置上，挥拍时机还得自己来。",
+    "mood": "point",
+    "chapter": "ch1",
+    "stage": "1-5",
+    "root": "voice-0"
+  },
+  {
+    "id": "vd41b74e4",
+    "who": "nar",
+    "text": "最后一球落在白线附近。看台上，两边同时喊了出来。",
+    "mood": "talk",
+    "chapter": "ch1",
+    "stage": "1-5",
+    "root": "voice-0"
+  },
+  {
+    "id": "v22ec2f50",
+    "who": "xiaohong",
+    "text": "出界！我看得很清楚！",
+    "mood": "angry",
+    "chapter": "ch1",
+    "stage": "1-5",
+    "root": "voice-0"
+  },
+  {
+    "id": "v3954d09c",
+    "who": "ruibao",
+    "text": "你站在另一头，真的看清了？",
+    "mood": "think",
+    "chapter": "ch1",
+    "stage": "1-5",
+    "root": "voice-0"
+  },
+  {
+    "id": "va422b778",
+    "who": "me",
+    "text": "先把规则说清，再回到那一帧。",
+    "mood": "point",
+    "chapter": "ch1",
+    "stage": "1-5",
+    "root": "voice-0"
+  },
+  {
+    "id": "vb6303d0",
+    "who": "xiaohong",
+    "text": "是我急了。那球压线，算猴子的。",
+    "mood": "sad",
+    "chapter": "ch1",
+    "stage": "1-5",
+    "root": "voice-0"
+  },
+  {
+    "id": "v900e4dee",
+    "who": "houzi",
+    "text": "社长认错了！截图！",
+    "mood": "happy",
+    "chapter": "ch1",
+    "stage": "1-5",
+    "root": "voice-0"
+  },
+  {
+    "id": "v2c50b073",
+    "who": "xiaohong",
+    "text": "……删掉。",
+    "mood": "shy",
+    "chapter": "ch1",
+    "stage": "1-5",
+    "root": "voice-0"
+  },
+  {
+    "id": "v83e01ca3",
+    "who": "mm",
+    "text": "合影背面还有一行小字：“最难的不是赢一分，是把该给的那一分还回去。”",
+    "mood": "point",
+    "chapter": "ch1",
+    "stage": "1-5",
+    "root": "voice-0"
+  },
+  {
+    "id": "v5fd13fbc",
+    "who": "nar",
+    "text": "当晚，报名表上多了两个名字：冉冉、星星。",
+    "mood": "talk",
+    "chapter": "ch1",
+    "stage": "1-5",
+    "root": "voice-0"
+  },
+  {
+    "id": "ve76cd45a",
+    "who": "ranran",
+    "text": "我只是陪星星来看看。跑那么远，奶茶会化的。",
+    "mood": "shy",
+    "chapter": "ch2",
+    "stage": "2-1",
+    "root": "voice-1"
+  },
+  {
+    "id": "vd0e6d7f6",
+    "who": "xingxing",
+    "text": "上次在公园，你轻轻一碰，就让我跑了一下午。",
+    "mood": "smile",
+    "chapter": "ch2",
+    "stage": "2-1",
+    "root": "voice-1"
+  },
+  {
+    "id": "v1724a28e",
+    "who": "ranran",
+    "text": "因为我打不远，只好想办法让别人也别站太远。",
+    "mood": "think",
+    "chapter": "ch2",
+    "stage": "2-1",
+    "root": "voice-1"
+  },
+  {
+    "id": "v6b7603a8",
+    "who": "houzi",
+    "text": "这叫控线。高端操作。",
+    "mood": "happy",
+    "chapter": "ch2",
+    "stage": "2-1",
+    "root": "voice-1"
+  },
+  {
+    "id": "v3a83f2a1",
+    "who": "mm",
+    "text": "这就是网前控制的起点。轻，不等于随便；落点和过网高度都要讲究。",
+    "mood": "point",
+    "chapter": "ch2",
+    "stage": "2-1",
+    "root": "voice-1"
+  },
+  {
+    "id": "v332e5161",
+    "who": "ranran",
+    "text": "你居然没有一直扣杀。",
+    "mood": "surprise",
+    "chapter": "ch2",
+    "stage": "2-1",
+    "root": "voice-1"
+  },
+  {
+    "id": "vdca4309a",
+    "who": "me",
+    "text": "因为你一直在等我送机会。",
+    "mood": "smile",
+    "chapter": "ch2",
+    "stage": "2-1",
+    "root": "voice-1"
+  },
+  {
+    "id": "v9d977a45",
+    "who": "ranran",
+    "text": "那我加入。条件是：训练表里必须有休息。",
+    "mood": "happy",
+    "chapter": "ch2",
+    "stage": "2-1",
+    "root": "voice-1"
+  },
+  {
+    "id": "vb745bd85",
+    "who": "xiaohong",
+    "text": "……可以。休息也算训练变量。",
+    "mood": "think",
+    "chapter": "ch2",
+    "stage": "2-1",
+    "root": "voice-1"
+  },
+  {
+    "id": "v2717d1a7",
+    "who": "ranran",
+    "text": "还有，奶茶不准带进场地。这条是我自己定的。",
+    "mood": "smile",
+    "chapter": "ch2",
+    "stage": "2-1",
+    "root": "voice-1"
+  },
+  {
+    "id": "v63511893",
+    "who": "xiaohong",
+    "text": "我画了三条轨迹。最快的一条，不一定最好。",
+    "mood": "point",
+    "chapter": "ch2",
+    "stage": "2-2",
+    "root": "voice-1"
+  },
+  {
+    "id": "vb033004b",
+    "who": "xingxing",
+    "text": "最高的那条，能让人喘口气，还能看清下一步。",
+    "mood": "think",
+    "chapter": "ch2",
+    "stage": "2-2",
+    "root": "voice-1"
+  },
+  {
+    "id": "v8df299a0",
+    "who": "me",
+    "text": "黑板上终于不只写着第一名了。",
+    "mood": "smile",
+    "chapter": "ch2",
+    "stage": "2-2",
+    "root": "voice-1"
+  },
+  {
+    "id": "v4504490b",
+    "who": "mm",
+    "text": "同一个出球点，改角度和速度，看看落点和飞行时间怎么变。",
+    "mood": "talk",
+    "chapter": "ch2",
+    "stage": "2-2",
+    "root": "voice-1"
+  },
+  {
+    "id": "va61ac48f",
+    "who": "xiaohong",
+    "text": "我以前只看球有多快，漏掉了时间也是资源。",
+    "mood": "think",
+    "chapter": "ch2",
+    "stage": "2-2",
+    "root": "voice-1"
+  },
+  {
+    "id": "va7f719f1",
+    "who": "xingxing",
+    "text": "那你以后走路，也可以慢一点吗？每次都把我甩在后面。",
+    "mood": "shy",
+    "chapter": "ch2",
+    "stage": "2-2",
+    "root": "voice-1"
+  },
+  {
+    "id": "vef7f3445",
+    "who": "xiaohong",
+    "text": "……我走得很快吗？",
+    "mood": "surprise",
+    "chapter": "ch2",
+    "stage": "2-2",
+    "root": "voice-1"
+  },
+  {
+    "id": "v20b3f465",
+    "who": "ranran",
+    "text": "快。快得像在躲什么。",
+    "mood": "smile",
+    "chapter": "ch2",
+    "stage": "2-2",
+    "root": "voice-1"
+  },
+  {
+    "id": "v42dcce9e",
+    "who": "nar",
+    "text": "小红在训练本上写下“给队友留时间”，然后把本子合上了。",
+    "mood": "talk",
+    "chapter": "ch2",
+    "stage": "2-2",
+    "root": "voice-1"
+  },
+  {
+    "id": "v2a1b1568",
+    "who": "xingxing",
+    "text": "每次大家说“这球一定能赢”，我就更怕打丢。",
+    "mood": "sad",
+    "chapter": "ch2",
+    "stage": "2-3",
+    "root": "voice-1"
+  },
+  {
+    "id": "v1fe25e2d",
+    "who": "me",
+    "text": "那就不说“一定”。只说下一球想怎么打。",
+    "mood": "talk",
+    "chapter": "ch2",
+    "stage": "2-3",
+    "root": "voice-1"
+  },
+  {
+    "id": "v164fcf0f",
+    "who": "xingxing",
+    "text": "我想先把你调到网前，再看你留出哪里。",
+    "mood": "think",
+    "chapter": "ch2",
+    "stage": "2-3",
+    "root": "voice-1"
+  },
+  {
+    "id": "v8bae04a5",
+    "who": "mm",
+    "text": "目标从“不能输”变成“做好下一拍”，手就没那么僵了。",
+    "mood": "smile",
+    "chapter": "ch2",
+    "stage": "2-3",
+    "root": "voice-1"
+  },
+  {
+    "id": "v7de012d5",
+    "who": "xingxing",
+    "text": "我还是紧张。但今天，我没有一直盯着比分。",
+    "mood": "happy",
+    "chapter": "ch2",
+    "stage": "2-3",
+    "root": "voice-1"
+  },
+  {
+    "id": "v2b9ca3aa",
+    "who": "xiaohong",
+    "text": "从这里走到你家，一共十二盏路灯。我数过。",
+    "mood": "shy",
+    "chapter": "ch2",
+    "stage": "2-3",
+    "root": "voice-1"
+  },
+  {
+    "id": "ve35fa09f",
+    "who": "xingxing",
+    "text": "那以后每盏灯下面，说一个跟胜率无关的话题。",
+    "mood": "smile",
+    "chapter": "ch2",
+    "stage": "2-3",
+    "root": "voice-1"
+  },
+  {
+    "id": "v31254185",
+    "who": "me",
+    "text": "……我是不是该先走？",
+    "mood": "think",
+    "chapter": "ch2",
+    "stage": "2-3",
+    "root": "voice-1"
+  },
+  {
+    "id": "v213c487d",
+    "who": "houzi",
+    "text": "一起走！我负责数路灯，凌风负责假装没听见。",
+    "mood": "cheer",
+    "chapter": "ch2",
+    "stage": "2-3",
+    "root": "voice-1"
+  },
+  {
+    "id": "v24ab9d97",
+    "who": "mm",
+    "text": "十二盏灯，今晚都亮着。",
+    "mood": "happy",
+    "chapter": "ch2",
+    "stage": "2-3",
+    "root": "voice-1"
+  },
+  {
+    "id": "v4e86424b",
+    "who": "xingxing",
+    "text": "我总想把每个网前球都打死。",
+    "mood": "think",
+    "chapter": "ch2",
+    "stage": "2-4",
+    "root": "voice-1"
+  },
+  {
+    "id": "v2ca2be16",
+    "who": "ranran",
+    "text": "先看高度。球低的时候硬往下压，球网会比对手先赢。",
+    "mood": "point",
+    "chapter": "ch2",
+    "stage": "2-4",
+    "root": "voice-1"
+  },
+  {
+    "id": "v39aa2c22",
+    "who": "houzi",
+    "text": "……这句我熟。",
+    "mood": "sad",
+    "chapter": "ch2",
+    "stage": "2-4",
+    "root": "voice-1"
+  },
+  {
+    "id": "vb13525c0",
+    "who": "ranran",
+    "text": "所以低球先搓，高球再扑。等一下，也是主动的选择。",
+    "mood": "smile",
+    "chapter": "ch2",
+    "stage": "2-4",
+    "root": "voice-1"
+  },
+  {
+    "id": "vad2267a3",
+    "who": "xingxing",
+    "text": "这次我等到了高球！",
+    "mood": "happy",
+    "chapter": "ch2",
+    "stage": "2-4",
+    "root": "voice-1"
+  },
+  {
+    "id": "v2dc4cb2f",
+    "who": "houzi",
+    "text": "我也等到了。晚了两年，问题不大。",
+    "mood": "smile",
+    "chapter": "ch2",
+    "stage": "2-4",
+    "root": "voice-1"
+  },
+  {
+    "id": "v14418665",
+    "who": "nar",
+    "text": "星星从旧训练本里抽出一张观众票。日期，和那张缺角合影是同一天。",
+    "mood": "talk",
+    "chapter": "ch2",
+    "stage": "2-4",
+    "root": "voice-1"
+  },
+  {
+    "id": "v1618bace",
+    "who": "xingxing",
+    "text": "一九九六年，星光杯决赛。票根背面写着：“比赛暂停，请大家去侧门帮忙。”",
+    "mood": "surprise",
+    "chapter": "ch2",
+    "stage": "2-4",
+    "root": "voice-1"
+  },
+  {
+    "id": "v2362e3aa",
+    "who": "mm",
+    "text": "侧门……那一晚，我好像听见了很多很多脚步声。",
+    "mood": "surprise",
+    "chapter": "ch2",
+    "stage": "2-4",
+    "root": "voice-1"
+  },
+  {
+    "id": "v3b50c681",
+    "who": "canglan",
+    "text": "外婆说过，那年夏天，有一场特别大的雨。",
+    "mood": "think",
+    "chapter": "ch2",
+    "stage": "2-4",
+    "root": "voice-1"
+  },
+  {
+    "id": "vbf56418f",
+    "who": "xiaohong",
+    "text": "明明知道该怎么打，一紧张，我就想一拍结束。",
+    "mood": "sad",
+    "chapter": "ch2",
+    "stage": "2-5",
+    "root": "voice-1"
+  },
+  {
+    "id": "vc32a1462",
+    "who": "xingxing",
+    "text": "因为你不相信，打不死的球，我们也接得住。",
+    "mood": "talk",
+    "chapter": "ch2",
+    "stage": "2-5",
+    "root": "voice-1"
+  },
+  {
+    "id": "v4ec89084",
+    "who": "me",
+    "text": "下周有练习赛。这次赛前，我想换一句提醒。",
+    "mood": "think",
+    "chapter": "ch2",
+    "stage": "2-5",
+    "root": "voice-1"
+  },
+  {
+    "id": "v524c0f45",
+    "who": "xiaohong",
+    "text": "“先打深，我们有时间。”……这句比“必须赢”管用。",
+    "mood": "smile",
+    "chapter": "ch2",
+    "stage": "2-5",
+    "root": "voice-1"
+  },
+  {
+    "id": "v333db27f",
+    "who": "xiaohong",
+    "text": "“我在这儿，按计划来。”……这句比“必须赢”管用。",
+    "mood": "smile",
+    "chapter": "ch2",
+    "stage": "2-5",
+    "root": "voice-1"
+  },
+  {
+    "id": "v2acd624",
+    "who": "xingxing",
+    "text": "原来战术也可以是一种安慰。",
+    "mood": "happy",
+    "chapter": "ch2",
+    "stage": "2-5",
+    "root": "voice-1"
+  },
+  {
+    "id": "v45a14b0f",
+    "who": "houzi",
+    "text": "高远压后场，吊球调网前，抓机会进攻。跟推塔一个道理：先拉扯，再收割。",
+    "mood": "point",
+    "chapter": "ch2",
+    "stage": "2-5",
+    "root": "voice-1"
+  },
+  {
+    "id": "vb5e8822",
+    "who": "mm",
+    "text": "可别把三拍背成固定答案。对手一换站位，计划也得换。",
+    "mood": "point",
+    "chapter": "ch2",
+    "stage": "2-5",
+    "root": "voice-1"
+  },
+  {
+    "id": "vb405ac8b",
+    "who": "canglan",
+    "text": "社里有六个人了。今天，灯是大家一起关的。",
+    "mood": "smile",
+    "chapter": "ch2",
+    "stage": "2-5",
+    "root": "voice-1"
+  },
+  {
+    "id": "v5cd2e8e",
+    "who": "dingding",
+    "text": "两张单子贴反了！进攻拍给了刚入门的人，轻头拍被投诉“杀不动”。",
+    "mood": "angry",
+    "chapter": "ch3",
+    "stage": "3-1",
+    "root": "voice-1"
+  },
+  {
+    "id": "v35ef64e1",
+    "who": "houzi",
+    "text": "丁丁家的店，日常翻车。",
+    "mood": "smile",
+    "chapter": "ch3",
+    "stage": "3-1",
+    "root": "voice-1"
+  },
+  {
+    "id": "v1b16496d",
+    "who": "dingding",
+    "text": "闭嘴，猴子。投诉“杀不动”的那位，马上就到。",
+    "mood": "point",
+    "chapter": "ch3",
+    "stage": "3-1",
+    "root": "voice-1"
+  },
+  {
+    "id": "v76c6bd4f",
+    "who": "guoge",
+    "text": "老板，我那支最贵的拍子呢？我要拍健身房自拍，配色得跟我的毛巾一样。",
+    "mood": "talk",
+    "chapter": "ch3",
+    "stage": "3-1",
+    "root": "voice-1"
+  },
+  {
+    "id": "vcc9255f8",
+    "who": "me",
+    "text": "……买球拍，是为了自拍？",
+    "mood": "surprise",
+    "chapter": "ch3",
+    "stage": "3-1",
+    "root": "voice-1"
+  },
+  {
+    "id": "v17ac1d2b",
+    "who": "guoge",
+    "text": "分散投资嘛。拍子好看是一份收益，能不能打球是另一份。",
+    "mood": "smile",
+    "chapter": "ch3",
+    "stage": "3-1",
+    "root": "voice-1"
+  },
+  {
+    "id": "v758a43fc",
+    "who": "mm",
+    "text": "先调查三件东西。别让标签替你做决定。",
+    "mood": "talk",
+    "chapter": "ch3",
+    "stage": "3-1",
+    "root": "voice-1"
+  },
+  {
+    "id": "v4d3a4d2d",
+    "who": "dingding",
+    "text": "终于有人先问“你怎么打”，而不是“哪支最贵”。",
+    "mood": "happy",
+    "chapter": "ch3",
+    "stage": "3-1",
+    "root": "voice-1"
+  },
+  {
+    "id": "vda50c9e4",
+    "who": "guoge",
+    "text": "“不想跑”是我写的，有什么问题？省下的体力，能多练两组卧推。",
+    "mood": "think",
+    "chapter": "ch3",
+    "stage": "3-1",
+    "root": "voice-1"
+  },
+  {
+    "id": "va0cdac0e",
+    "who": "dingding",
+    "text": "问题是，球不会自己飞到你面前。",
+    "mood": "point",
+    "chapter": "ch3",
+    "stage": "3-1",
+    "root": "voice-1"
+  },
+  {
+    "id": "vbab353e2",
+    "who": "guoge",
+    "text": "那就让别人跑。我只负责最后那一下——收益最高的那一下。",
+    "mood": "smile",
+    "chapter": "ch3",
+    "stage": "3-1",
+    "root": "voice-1"
+  },
+  {
+    "id": "vc47c37d0",
+    "who": "ruibao",
+    "text": "……这种队友，我初中见过不少。",
+    "mood": "sad",
+    "chapter": "ch3",
+    "stage": "3-1",
+    "root": "voice-1"
+  },
+  {
+    "id": "v48362052",
+    "who": "dingding",
+    "text": "装备聊完了。来，看看你是不是只会在菜单里变强。",
+    "mood": "fist",
+    "chapter": "ch3",
+    "stage": "3-2",
+    "root": "voice-1"
+  },
+  {
+    "id": "v27e265bb",
+    "who": "me",
+    "text": "你走路都这么快吗？",
+    "mood": "surprise",
+    "chapter": "ch3",
+    "stage": "3-2",
+    "root": "voice-1"
+  },
+  {
+    "id": "v41f496e2",
+    "who": "houzi",
+    "text": "他打 Dota 也这样，开局三分钟就想推高地。",
+    "mood": "happy",
+    "chapter": "ch3",
+    "stage": "3-2",
+    "root": "voice-1"
+  },
+  {
+    "id": "vfbe3424c",
+    "who": "dingding",
+    "text": "那叫节奏！……我常提前上网。你要是能把球送深，就能让我跑回去。",
+    "mood": "angry",
+    "chapter": "ch3",
+    "stage": "3-2",
+    "root": "voice-1"
+  },
+  {
+    "id": "v4c217f0b",
+    "who": "canglan",
+    "text": "看他的站位，别让他的速度替你决定球路。",
+    "mood": "point",
+    "chapter": "ch3",
+    "stage": "3-2",
+    "root": "voice-1"
+  },
+  {
+    "id": "v708fc073",
+    "who": "dingding",
+    "text": "……又跑过头了。每次都是我先冲出去。",
+    "mood": "tired",
+    "chapter": "ch3",
+    "stage": "3-2",
+    "root": "voice-1"
+  },
+  {
+    "id": "v4bffd51",
+    "who": "me",
+    "text": "那就一起练怎么停下来。",
+    "mood": "happy",
+    "chapter": "ch3",
+    "stage": "3-2",
+    "root": "voice-1"
+  },
+  {
+    "id": "vc133572d",
+    "who": "dingding",
+    "text": "初三那年我也是这样，总想一个人把局面扳回来。猴子在网前发呆的时候，我在后场喊得最凶。",
+    "mood": "sad",
+    "chapter": "ch3",
+    "stage": "3-2",
+    "root": "voice-1"
+  },
+  {
+    "id": "v733bd83e",
+    "who": "houzi",
+    "text": "别说了，都过去了。你回来就行。",
+    "mood": "smile",
+    "chapter": "ch3",
+    "stage": "3-2",
+    "root": "voice-1"
+  },
+  {
+    "id": "v6b188c13",
+    "who": "dingding",
+    "text": "行，我入社。店后面的小仓库，借给社团放器材。",
+    "mood": "wave",
+    "chapter": "ch3",
+    "stage": "3-2",
+    "root": "voice-1"
+  },
+  {
+    "id": "va11861a6",
+    "who": "mm",
+    "text": "仓库里……好像有个蓝色的握把。",
+    "mood": "surprise",
+    "chapter": "ch3",
+    "stage": "3-2",
+    "root": "voice-1"
+  },
+  {
+    "id": "vfb1f813f",
+    "who": "guoge",
+    "text": "丁丁，给我穿三十磅。职业选手都穿这么高，越高越厉害。",
+    "mood": "point",
+    "chapter": "ch3",
+    "stage": "3-3",
+    "root": "voice-1"
+  },
+  {
+    "id": "v84b4e8aa",
+    "who": "dingding",
+    "text": "磅数不是等级。拍框有允许范围，力量和击球习惯也得看。",
+    "mood": "talk",
+    "chapter": "ch3",
+    "stage": "3-3",
+    "root": "voice-1"
+  },
+  {
+    "id": "v2f59bc97",
+    "who": "guoge",
+    "text": "我力量够啊，卧推一百公斤。",
+    "mood": "smile",
+    "chapter": "ch3",
+    "stage": "3-3",
+    "root": "voice-1"
+  },
+  {
+    "id": "vb3717a9",
+    "who": "dingding",
+    "text": "卧推和挥拍是两回事。你试试就知道了。",
+    "mood": "think",
+    "chapter": "ch3",
+    "stage": "3-3",
+    "root": "voice-1"
+  },
+  {
+    "id": "v74924e06",
+    "who": "mm",
+    "text": "今天借游戏里的三种设定做个实验。数值是简化模型，不是现实穿线处方。",
+    "mood": "smile",
+    "chapter": "ch3",
+    "stage": "3-3",
+    "root": "voice-1"
+  },
+  {
+    "id": "vccb2600e",
+    "who": "guoge",
+    "text": "……最宽容的那个，反而打得最稳？",
+    "mood": "surprise",
+    "chapter": "ch3",
+    "stage": "3-3",
+    "root": "voice-1"
+  },
+  {
+    "id": "vf5f4bf2e",
+    "who": "dingding",
+    "text": "对你现在来说是。等你稳定了，再慢慢调。",
+    "mood": "happy",
+    "chapter": "ch3",
+    "stage": "3-3",
+    "root": "voice-1"
+  },
+  {
+    "id": "v82acc4e6",
+    "who": "guoge",
+    "text": "有意思。投入最少，回报最稳——这个思路我喜欢。",
+    "mood": "think",
+    "chapter": "ch3",
+    "stage": "3-3",
+    "root": "voice-1"
+  },
+  {
+    "id": "vac6517d1",
+    "who": "me",
+    "text": "你看什么都像在算投资回报。",
+    "mood": "smile",
+    "chapter": "ch3",
+    "stage": "3-3",
+    "root": "voice-1"
+  },
+  {
+    "id": "v7f6b0beb",
+    "who": "guoge",
+    "text": "人生就是投资。对了，听说你们要打星光杯？冠军奖品是什么？",
+    "mood": "smile",
+    "chapter": "ch3",
+    "stage": "3-3",
+    "root": "voice-1"
+  },
+  {
+    "id": "v7bc3a1e4",
+    "who": "dingding",
+    "text": "这些都是我爸留下的。他说有一支拍子，三十年都没人来取。",
+    "mood": "think",
+    "chapter": "ch3",
+    "stage": "3-4",
+    "root": "voice-1"
+  },
+  {
+    "id": "v5e163856",
+    "who": "canglan",
+    "text": "……握把底下，刻着一个“林”字。",
+    "mood": "surprise",
+    "chapter": "ch3",
+    "stage": "3-4",
+    "root": "voice-1"
+  },
+  {
+    "id": "v6024a138",
+    "who": "mm",
+    "text": "就是照片里那只手握着的拍子！",
+    "mood": "surprise",
+    "chapter": "ch3",
+    "stage": "3-4",
+    "root": "voice-1"
+  },
+  {
+    "id": "v5f2a654f",
+    "who": "canglan",
+    "text": "“比赛打完来取”……外婆一直没来取。是因为那场比赛，一直没有打完吗？",
+    "mood": "sad",
+    "chapter": "ch3",
+    "stage": "3-4",
+    "root": "voice-1"
+  },
+  {
+    "id": "vfc426bf5",
+    "who": "dingding",
+    "text": "我爸说，有位奶奶每年夏天都会来店门口站一会儿，又走了。",
+    "mood": "sad",
+    "chapter": "ch3",
+    "stage": "3-4",
+    "root": "voice-1"
+  },
+  {
+    "id": "vc6627007",
+    "who": "me",
+    "text": "照片里被撕掉的，也许不是输球的人。",
+    "mood": "think",
+    "chapter": "ch3",
+    "stage": "3-4",
+    "root": "voice-1"
+  },
+  {
+    "id": "vdf34c7fd",
+    "who": "canglan",
+    "text": "是外婆自己撕的。她从来不肯拍照，我一直以为她是害羞。",
+    "mood": "think",
+    "chapter": "ch3",
+    "stage": "3-4",
+    "root": "voice-1"
+  },
+  {
+    "id": "vbbed8121",
+    "who": "mm",
+    "text": "还差一块拼图。要是有那场比赛的录像就好了。",
+    "mood": "talk",
+    "chapter": "ch3",
+    "stage": "3-4",
+    "root": "voice-1"
+  },
+  {
+    "id": "v9db33d0",
+    "who": "dingding",
+    "text": "录像？电脑社的路先森，号称什么都能修。",
+    "mood": "point",
+    "chapter": "ch3",
+    "stage": "3-4",
+    "root": "voice-1"
+  },
+  {
+    "id": "vcac0436c",
+    "who": "nar",
+    "text": "第二天，凌风被果哥拉进了一家二十四小时亮灯的健身房。",
+    "mood": "talk",
+    "chapter": "ch3",
+    "stage": "3-5",
+    "root": "voice-1"
+  },
+  {
+    "id": "v21ebcdcf",
+    "who": "guoge",
+    "text": "欢迎来到我的第二个家。看见那面镜子没？我和它每天见两次面。",
+    "mood": "happy",
+    "chapter": "ch3",
+    "stage": "3-5",
+    "root": "voice-1"
+  },
+  {
+    "id": "v30695c1f",
+    "who": "me",
+    "text": "你找我来，是想……入社？",
+    "mood": "think",
+    "chapter": "ch3",
+    "stage": "3-5",
+    "root": "voice-1"
+  },
+  {
+    "id": "v9eb37bd3",
+    "who": "guoge",
+    "text": "星光杯冠军奖一支限定拍，还上市报。冠军合影，比健身照涨粉多了。",
+    "mood": "smile",
+    "chapter": "ch3",
+    "stage": "3-5",
+    "root": "voice-1"
+  },
+  {
+    "id": "vcfe7dfe1",
+    "who": "me",
+    "text": "那训练呢？值日呢？",
+    "mood": "talk",
+    "chapter": "ch3",
+    "stage": "3-5",
+    "root": "voice-1"
+  },
+  {
+    "id": "vf6e18f9d",
+    "who": "guoge",
+    "text": "值日这种低回报的事，不在我的投资组合里。我负责关键时刻的那一下。",
+    "mood": "smile",
+    "chapter": "ch3",
+    "stage": "3-5",
+    "root": "voice-1"
+  },
+  {
+    "id": "v808fdd8b",
+    "who": "nar",
+    "text": "果哥胸前别着一枚徽章：“铁力健身 · 体验官”。",
+    "mood": "talk",
+    "chapter": "ch3",
+    "stage": "3-5",
+    "root": "voice-1"
+  },
+  {
+    "id": "v1e90e257",
+    "who": "me",
+    "text": "铁力健身……不就是要改建球馆的那家？",
+    "mood": "surprise",
+    "chapter": "ch3",
+    "stage": "3-5",
+    "root": "voice-1"
+  },
+  {
+    "id": "v931d4d31",
+    "who": "guoge",
+    "text": "巧合，纯属巧合。来，打一局，看看你们这支股值不值得投。",
+    "mood": "think",
+    "chapter": "ch3",
+    "stage": "3-5",
+    "root": "voice-1"
+  },
+  {
+    "id": "vfbde510f",
+    "who": "guoge",
+    "text": "……停，停一下。超过三个回合，不在我的训练计划里。",
+    "mood": "tired",
+    "chapter": "ch3",
+    "stage": "3-5",
+    "root": "voice-1"
+  },
+  {
+    "id": "v36c27d7e",
+    "who": "me",
+    "text": "你的扣杀是真的重。可惜只有一下。",
+    "mood": "smile",
+    "chapter": "ch3",
+    "stage": "3-5",
+    "root": "voice-1"
+  },
+  {
+    "id": "v94257fa1",
+    "who": "guoge",
+    "text": "一下就够了，抓住机会的那一下。行吧，你们这支股，我先少量建仓。",
+    "mood": "smile",
+    "chapter": "ch3",
+    "stage": "3-5",
+    "root": "voice-1"
+  },
+  {
+    "id": "va6951ab5",
+    "who": "houzi",
+    "text": "他胸口那个徽章……我总觉得哪里不对劲。",
+    "mood": "think",
+    "chapter": "ch3",
+    "stage": "3-5",
+    "root": "voice-1"
+  },
+  {
+    "id": "v63f14a6e",
+    "who": "dingding",
+    "text": "先让他交值日表。看他是投资，还是投机。",
+    "mood": "point",
+    "chapter": "ch3",
+    "stage": "3-5",
+    "root": "voice-1"
+  },
+  {
+    "id": "vdbc039b1",
+    "who": "lu",
+    "text": "欢迎来到胜率实验室！本程序预测：你们保住球馆的概率是——百分之三。",
+    "mood": "happy",
+    "chapter": "ch4",
+    "stage": "4-1",
+    "root": "voice-2"
+  },
+  {
+    "id": "v56997bb9",
+    "who": "me",
+    "text": "这么精确？",
+    "mood": "think",
+    "chapter": "ch4",
+    "stage": "4-1",
+    "root": "voice-2"
+  },
+  {
+    "id": "va9da6853",
+    "who": "lu",
+    "text": "根据过去一个月的使用记录：每周平均来四个人，其中三个是来找厕所的。",
+    "mood": "point",
+    "chapter": "ch4",
+    "stage": "4-1",
+    "root": "voice-2"
+  },
+  {
+    "id": "ve83e836b",
+    "who": "laochen",
+    "text": "别听他吓人，数据还没清洗，里面一半是重复签到。你们好，我是老陈。",
+    "mood": "wave",
+    "chapter": "ch4",
+    "stage": "4-1",
+    "root": "voice-2"
+  },
+  {
+    "id": "ve50e57cd",
+    "who": "houzi",
+    "text": "老陈？看着比我还年轻啊。",
+    "mood": "surprise",
+    "chapter": "ch4",
+    "stage": "4-1",
+    "root": "voice-2"
+  },
+  {
+    "id": "v34d829f9",
+    "who": "laochen",
+    "text": "是他非要这么叫。我们初一就是同桌，叫着叫着就老了。",
+    "mood": "smile",
+    "chapter": "ch4",
+    "stage": "4-1",
+    "root": "voice-2"
+  },
+  {
+    "id": "vf109e08b",
+    "who": "lu",
+    "text": "我们关系好到上厕所都一起去。这叫高可用双机热备。",
+    "mood": "happy",
+    "chapter": "ch4",
+    "stage": "4-1",
+    "root": "voice-2"
+  },
+  {
+    "id": "v3b121c8",
+    "who": "laochen",
+    "text": "……这个可以不用介绍。来，先看三张表，再谈预测。",
+    "mood": "shy",
+    "chapter": "ch4",
+    "stage": "4-1",
+    "root": "voice-2"
+  },
+  {
+    "id": "vcbf1029e",
+    "who": "lu",
+    "text": "等一下，删掉重复签到，我们的使用率又降了！",
+    "mood": "surprise",
+    "chapter": "ch4",
+    "stage": "4-1",
+    "root": "voice-2"
+  },
+  {
+    "id": "vc0936d30",
+    "who": "laochen",
+    "text": "降了，但是真的。拿假数据去评估会，会被一眼看穿。",
+    "mood": "smile",
+    "chapter": "ch4",
+    "stage": "4-1",
+    "root": "voice-2"
+  },
+  {
+    "id": "vc5f60108",
+    "who": "me",
+    "text": "那就让真实的数字涨起来。",
+    "mood": "talk",
+    "chapter": "ch4",
+    "stage": "4-1",
+    "root": "voice-2"
+  },
+  {
+    "id": "v5f383e6e",
+    "who": "lu",
+    "text": "……行，我改模型。对了，你们说的那盘旧录像，拿来我看看。",
+    "mood": "think",
+    "chapter": "ch4",
+    "stage": "4-1",
+    "root": "voice-2"
+  },
+  {
+    "id": "v1e88b324",
+    "who": "lu",
+    "text": "修录像之前，先打一局。我的模型需要实测数据。",
+    "mood": "fist",
+    "chapter": "ch4",
+    "stage": "4-2",
+    "root": "voice-2"
+  },
+  {
+    "id": "v66639886",
+    "who": "laochen",
+    "text": "我在场边记。别紧张，他讲冷笑话的时候，你别笑就行。",
+    "mood": "wave",
+    "chapter": "ch4",
+    "stage": "4-2",
+    "root": "voice-2"
+  },
+  {
+    "id": "v2028770",
+    "who": "lu",
+    "text": "我已经提前攒好了三个。开局就讲。",
+    "mood": "happy",
+    "chapter": "ch4",
+    "stage": "4-2",
+    "root": "voice-2"
+  },
+  {
+    "id": "vf1683ed8",
+    "who": "mm",
+    "text": "笑声会打乱节奏。专注下一拍：站位、来球、体力，一样一样确认。",
+    "mood": "point",
+    "chapter": "ch4",
+    "stage": "4-2",
+    "root": "voice-2"
+  },
+  {
+    "id": "v5bad0301",
+    "who": "lu",
+    "text": "实测完毕：你的模型需要加一个新变量——“不笑”。",
+    "mood": "happy",
+    "chapter": "ch4",
+    "stage": "4-2",
+    "root": "voice-2"
+  },
+  {
+    "id": "vf0fe6f9a",
+    "who": "laochen",
+    "text": "补充一条：他输球的时候，冷笑话讲得最多。这个我有统计。",
+    "mood": "smile",
+    "chapter": "ch4",
+    "stage": "4-2",
+    "root": "voice-2"
+  },
+  {
+    "id": "v4da0105b",
+    "who": "lu",
+    "text": "……老陈，这种数据不要公开。",
+    "mood": "shy",
+    "chapter": "ch4",
+    "stage": "4-2",
+    "root": "voice-2"
+  },
+  {
+    "id": "v9fa102ec",
+    "who": "me",
+    "text": "入社吗？我们缺一个能修录像的人。",
+    "mood": "smile",
+    "chapter": "ch4",
+    "stage": "4-2",
+    "root": "voice-2"
+  },
+  {
+    "id": "vf150c3aa",
+    "who": "lu",
+    "text": "入！不过有个条件：老陈得一起来。",
+    "mood": "happy",
+    "chapter": "ch4",
+    "stage": "4-2",
+    "root": "voice-2"
+  },
+  {
+    "id": "v9de7fd89",
+    "who": "laochen",
+    "text": "我就不打了，在旁边记数据就好。我这身板，风一吹就倒。",
+    "mood": "talk",
+    "chapter": "ch4",
+    "stage": "4-2",
+    "root": "voice-2"
+  },
+  {
+    "id": "v7550e141",
+    "who": "lu",
+    "text": "我能算出落点，但我的腿不同意。",
+    "mood": "tired",
+    "chapter": "ch4",
+    "stage": "4-3",
+    "root": "voice-2"
+  },
+  {
+    "id": "vba8b13fd",
+    "who": "laochen",
+    "text": "你那是腿吗？那是两个待优化的进程。",
+    "mood": "smile",
+    "chapter": "ch4",
+    "stage": "4-3",
+    "root": "voice-2"
+  },
+  {
+    "id": "v4f3e6539",
+    "who": "ranran",
+    "text": "老陈，光说别人。你也上来试试？",
+    "mood": "point",
+    "chapter": "ch4",
+    "stage": "4-3",
+    "root": "voice-2"
+  },
+  {
+    "id": "vae72f7ac",
+    "who": "laochen",
+    "text": "我？我就是个记数据的……",
+    "mood": "surprise",
+    "chapter": "ch4",
+    "stage": "4-3",
+    "root": "voice-2"
+  },
+  {
+    "id": "v86446ed6",
+    "who": "canglan",
+    "text": "启动不是盲目跳高。身体轻轻准备，看清来球，再迈第一步。",
+    "mood": "point",
+    "chapter": "ch4",
+    "stage": "4-3",
+    "root": "voice-2"
+  },
+  {
+    "id": "va3162727",
+    "who": "mm",
+    "text": "这次，你来带老陈走一遍！",
+    "mood": "cheer",
+    "chapter": "ch4",
+    "stage": "4-3",
+    "root": "voice-2"
+  },
+  {
+    "id": "v9568f550",
+    "who": "laochen",
+    "text": "……我跑得还挺快？",
+    "mood": "surprise",
+    "chapter": "ch4",
+    "stage": "4-3",
+    "root": "voice-2"
+  },
+  {
+    "id": "vb2488d8a",
+    "who": "houzi",
+    "text": "废话！你那么轻，风一吹就到网前了！",
+    "mood": "cheer",
+    "chapter": "ch4",
+    "stage": "4-3",
+    "root": "voice-2"
+  },
+  {
+    "id": "v825d06d7",
+    "who": "laochen",
+    "text": "原来“风一吹就倒”，也可以是“风一吹就到”。",
+    "mood": "happy",
+    "chapter": "ch4",
+    "stage": "4-3",
+    "root": "voice-2"
+  },
+  {
+    "id": "vdf808fab",
+    "who": "lu",
+    "text": "老陈，你一顿吃四碗饭的能量，原来全存在腿里了。",
+    "mood": "think",
+    "chapter": "ch4",
+    "stage": "4-3",
+    "root": "voice-2"
+  },
+  {
+    "id": "v94fb4dbc",
+    "who": "xiaohong",
+    "text": "数据员兼替补。训练表上加一行。",
+    "mood": "point",
+    "chapter": "ch4",
+    "stage": "4-3",
+    "root": "voice-2"
+  },
+  {
+    "id": "vb83324c9",
+    "who": "lu",
+    "text": "录像修好了七成。最后一段不是坏了——是有人按了暂停。",
+    "mood": "point",
+    "chapter": "ch4",
+    "stage": "4-4",
+    "root": "voice-2"
+  },
+  {
+    "id": "v21a6828f",
+    "who": "laochen",
+    "text": "时间戳是晚上九点零三分。同一分钟的气象记录写着：暴雨，积水。",
+    "mood": "think",
+    "chapter": "ch4",
+    "stage": "4-4",
+    "root": "voice-2"
+  },
+  {
+    "id": "ve43169c7",
+    "who": "canglan",
+    "text": "是外婆。是她让比赛停下的。",
+    "mood": "surprise",
+    "chapter": "ch4",
+    "stage": "4-4",
+    "root": "voice-2"
+  },
+  {
+    "id": "v8b8215d5",
+    "who": "lu",
+    "text": "当年有人说，是星光这边怕输，才借着下雨叫停。",
+    "mood": "think",
+    "chapter": "ch4",
+    "stage": "4-4",
+    "root": "voice-2"
+  },
+  {
+    "id": "vbcd4d040",
+    "who": "laochen",
+    "text": "可暂停的时候，星光有发球权，比分也不落后。“怕输”这个解释，数据上站不住。",
+    "mood": "talk",
+    "chapter": "ch4",
+    "stage": "4-4",
+    "root": "voice-2"
+  },
+  {
+    "id": "v4d36cdaf",
+    "who": "me",
+    "text": "那她为什么叫停？侧门外的那些人，又是谁？",
+    "mood": "think",
+    "chapter": "ch4",
+    "stage": "4-4",
+    "root": "voice-2"
+  },
+  {
+    "id": "v364df340",
+    "who": "mm",
+    "text": "我想起来一点点……那天我在空中，很多人抬头看着我。然后，所有人都转身走向了门口。",
+    "mood": "sad",
+    "chapter": "ch4",
+    "stage": "4-4",
+    "root": "voice-2"
+  },
+  {
+    "id": "v69b1ac9c",
+    "who": "xiaohong",
+    "text": "画面里那个年轻的星光选手……戴眼镜，背有点驼。怎么那么像朱老师？",
+    "mood": "point",
+    "chapter": "ch4",
+    "stage": "4-4",
+    "root": "voice-2"
+  },
+  {
+    "id": "v95238b7b",
+    "who": "laochen",
+    "text": "我把三个月的签到表重新整理了一遍。有一行很奇怪。",
+    "mood": "think",
+    "chapter": "ch4",
+    "stage": "4-5",
+    "root": "voice-2"
+  },
+  {
+    "id": "v503fb24c",
+    "who": "laochen",
+    "text": "“铁力健身 · 场地考察”，来了三次。联系人一栏，写着果哥的名字。",
+    "mood": "talk",
+    "chapter": "ch4",
+    "stage": "4-5",
+    "root": "voice-2"
+  },
+  {
+    "id": "v3de99a1b",
+    "who": "houzi",
+    "text": "我就说那个徽章不对劲！",
+    "mood": "surprise",
+    "chapter": "ch4",
+    "stage": "4-5",
+    "root": "voice-2"
+  },
+  {
+    "id": "vdd45aa4b",
+    "who": "xiaohong",
+    "text": "先别下结论。数据是观察，原因要等他自己说。",
+    "mood": "think",
+    "chapter": "ch4",
+    "stage": "4-5",
+    "root": "voice-2"
+  },
+  {
+    "id": "vddf2818f",
+    "who": "ruibao",
+    "text": "那今晚呢？老陈，你还只坐在场边记吗？",
+    "mood": "talk",
+    "chapter": "ch4",
+    "stage": "4-5",
+    "root": "voice-2"
+  },
+  {
+    "id": "v4f20f147",
+    "who": "laochen",
+    "text": "我……想打一局。就一局。",
+    "mood": "shy",
+    "chapter": "ch4",
+    "stage": "4-5",
+    "root": "voice-2"
+  },
+  {
+    "id": "v33de9071",
+    "who": "lu",
+    "text": "老陈上场！我给你讲冷笑话加油！",
+    "mood": "cheer",
+    "chapter": "ch4",
+    "stage": "4-5",
+    "root": "voice-2"
+  },
+  {
+    "id": "vd1c1c663",
+    "who": "laochen",
+    "text": "你别讲，我会笑软的。",
+    "mood": "smile",
+    "chapter": "ch4",
+    "stage": "4-5",
+    "root": "voice-2"
+  },
+  {
+    "id": "v613475ee",
+    "who": "laochen",
+    "text": "我赢了？我真的……在场上赢了一局？",
+    "mood": "happy",
+    "chapter": "ch4",
+    "stage": "4-5",
+    "root": "voice-2"
+  },
+  {
+    "id": "v7e30b109",
+    "who": "ruibao",
+    "text": "你一直在等我往哪打。我连换三次方向，都被你提前等着。",
+    "mood": "smile",
+    "chapter": "ch4",
+    "stage": "4-5",
+    "root": "voice-2"
+  },
+  {
+    "id": "v3eff7c80",
+    "who": "laochen",
+    "text": "因为你连着吊了两拍。整理数据的人，最先看出来的就是重复。",
+    "mood": "smile",
+    "chapter": "ch4",
+    "stage": "4-5",
+    "root": "voice-2"
+  },
+  {
+    "id": "v765eb6fd",
+    "who": "lu",
+    "text": "老陈，你以后打球去了，不会不陪我上厕所了吧？",
+    "mood": "shy",
+    "chapter": "ch4",
+    "stage": "4-5",
+    "root": "voice-2"
+  },
+  {
+    "id": "v4b5ea0d3",
+    "who": "laochen",
+    "text": "陪。打完球一起去。",
+    "mood": "happy",
+    "chapter": "ch4",
+    "stage": "4-5",
+    "root": "voice-2"
+  },
+  {
+    "id": "v47aa13e5",
+    "who": "mm",
+    "text": "又一个人，从场边走进了场地。",
+    "mood": "happy",
+    "chapter": "ch4",
+    "stage": "4-5",
+    "root": "voice-2"
+  },
+  {
+    "id": "vd66f4717",
+    "who": "nar",
+    "text": "倒计时第十五天。傍晚起风了，风顺着侧门的缝一阵一阵往里灌。",
+    "mood": "talk",
+    "chapter": "ch5",
+    "stage": "5-1",
+    "root": "voice-2"
+  },
+  {
+    "id": "v42fcb22d",
+    "who": "canglan",
+    "text": "今晚的练习赛照常。风会让球飘，先观察，再出手。",
+    "mood": "point",
+    "chapter": "ch5",
+    "stage": "5-1",
+    "root": "voice-2"
+  },
+  {
+    "id": "v9c779e44",
+    "who": "guoge",
+    "text": "这种天就该在家躺着。我是来……看看的。",
+    "mood": "tired",
+    "chapter": "ch5",
+    "stage": "5-1",
+    "root": "voice-2"
+  },
+  {
+    "id": "v7342142f",
+    "who": "canglan",
+    "text": "顶风放心发力，顺风收着打。风不讲道理，但有规律。",
+    "mood": "smile",
+    "chapter": "ch5",
+    "stage": "5-1",
+    "root": "voice-2"
+  },
+  {
+    "id": "v2034e3e3",
+    "who": "me",
+    "text": "外面的雨……越来越大了。",
+    "mood": "think",
+    "chapter": "ch5",
+    "stage": "5-1",
+    "root": "voice-2"
+  },
+  {
+    "id": "vc975782b",
+    "who": "nar",
+    "text": "果哥的手机一直在震。他看了一眼，把屏幕扣在了长椅上。",
+    "mood": "talk",
+    "chapter": "ch5",
+    "stage": "5-1",
+    "root": "voice-2"
+  },
+  {
+    "id": "v29d28f64",
+    "who": "nar",
+    "text": "“啪”的一声，整座球馆暗了下来。",
+    "mood": "talk",
+    "chapter": "ch5",
+    "stage": "5-2",
+    "root": "voice-2"
+  },
+  {
+    "id": "v732ea228",
+    "who": "canglan",
+    "text": "所有人停下，别跑！原地站好，打开手机电筒。",
+    "mood": "point",
+    "chapter": "ch5",
+    "stage": "5-2",
+    "root": "voice-2"
+  },
+  {
+    "id": "v175083f6",
+    "who": "xiaohong",
+    "text": "地面有积水，侧门在漏雨。先确认每个人都在。",
+    "mood": "think",
+    "chapter": "ch5",
+    "stage": "5-2",
+    "root": "voice-2"
+  },
+  {
+    "id": "v708416c4",
+    "who": "guoge",
+    "text": "我……我得先走一步，有个约必须去。",
+    "mood": "talk",
+    "chapter": "ch5",
+    "stage": "5-2",
+    "root": "voice-2"
+  },
+  {
+    "id": "va8c67b2a",
+    "who": "nar",
+    "text": "果哥转身太急，背包撞在门框上，一叠纸滑了出来。",
+    "mood": "talk",
+    "chapter": "ch5",
+    "stage": "5-2",
+    "root": "voice-2"
+  },
+  {
+    "id": "v9f0dd8ad",
+    "who": "houzi",
+    "text": "果哥！这是什么？",
+    "mood": "angry",
+    "chapter": "ch5",
+    "stage": "5-2",
+    "root": "voice-2"
+  },
+  {
+    "id": "v930f8a51",
+    "who": "guoge",
+    "text": "……支持改建的签名。铁力答应我，凑够两百个，送我一张终身卡。",
+    "mood": "sad",
+    "chapter": "ch5",
+    "stage": "5-2",
+    "root": "voice-2"
+  },
+  {
+    "id": "v3def0870",
+    "who": "ruibao",
+    "text": "你一边跟我们训练，一边帮人拆我们的球馆？",
+    "mood": "angry",
+    "chapter": "ch5",
+    "stage": "5-2",
+    "root": "voice-2"
+  },
+  {
+    "id": "v57b66821",
+    "who": "guoge",
+    "text": "我只是两边都下注！哪边赢我都不亏，这有什么错？",
+    "mood": "talk",
+    "chapter": "ch5",
+    "stage": "5-2",
+    "root": "voice-2"
+  },
+  {
+    "id": "vc3e46686",
+    "who": "lu",
+    "text": "从收益模型看，没错。从朋友模型看……错得离谱。",
+    "mood": "think",
+    "chapter": "ch5",
+    "stage": "5-2",
+    "root": "voice-2"
+  },
+  {
+    "id": "vbd2ed6d6",
+    "who": "laochen",
+    "text": "场地考察那三次，也是你带他们来的吧。",
+    "mood": "sad",
+    "chapter": "ch5",
+    "stage": "5-2",
+    "root": "voice-2"
+  },
+  {
+    "id": "v23983a20",
+    "who": "nar",
+    "text": "门外传来敲门声。公交停运了，十几位阿姨叔叔挤在屋檐下，最小的孩子才五岁。",
+    "mood": "talk",
+    "chapter": "ch5",
+    "stage": "5-3",
+    "root": "voice-2"
+  },
+  {
+    "id": "v1acae369",
+    "who": "canglan",
+    "text": "……和外婆讲过的那一晚，一模一样。",
+    "mood": "surprise",
+    "chapter": "ch5",
+    "stage": "5-3",
+    "root": "voice-2"
+  },
+  {
+    "id": "v591b4b1",
+    "who": "canglan",
+    "text": "开侧门，让大家进来。先把场边的防滑垫铺好，把长椅搬到干的地方。",
+    "mood": "fist",
+    "chapter": "ch5",
+    "stage": "5-3",
+    "root": "voice-2"
+  },
+  {
+    "id": "v4dff68e3",
+    "who": "me",
+    "text": "垫子太重了，我们几个搬不动。",
+    "mood": "talk",
+    "chapter": "ch5",
+    "stage": "5-3",
+    "root": "voice-2"
+  },
+  {
+    "id": "vf800fad1",
+    "who": "guoge",
+    "text": "……让开。这种活，我练了三年。",
+    "mood": "think",
+    "chapter": "ch5",
+    "stage": "5-3",
+    "root": "voice-2"
+  },
+  {
+    "id": "va874762a",
+    "who": "nar",
+    "text": "果哥一趟扛两张垫子。最后，他背着一位扭了脚的奶奶，从侧门一直走到看台。",
+    "mood": "talk",
+    "chapter": "ch5",
+    "stage": "5-3",
+    "root": "voice-2"
+  },
+  {
+    "id": "v6be7395c",
+    "who": "guoge",
+    "text": "呼……健身三年，第一次觉得这身肌肉有用。",
+    "mood": "tired",
+    "chapter": "ch5",
+    "stage": "5-3",
+    "root": "voice-2"
+  },
+  {
+    "id": "vb679b0fa",
+    "who": "ranran",
+    "text": "奶茶店的老板娘送来了热水。今晚，我们不缺喝的了。",
+    "mood": "smile",
+    "chapter": "ch5",
+    "stage": "5-3",
+    "root": "voice-2"
+  },
+  {
+    "id": "v715f1cdb",
+    "who": "laochen",
+    "text": "我统计了：二十三个人，都在，都是干的。",
+    "mood": "talk",
+    "chapter": "ch5",
+    "stage": "5-3",
+    "root": "voice-2"
+  },
+  {
+    "id": "vd4f36ff0",
+    "who": "mm",
+    "text": "我想起来了……一九九六年，也是这扇门，也是这么多湿漉漉的人。",
+    "mood": "surprise",
+    "chapter": "ch5",
+    "stage": "5-3",
+    "root": "voice-2"
+  },
+  {
+    "id": "vb2089cc2",
+    "who": "nar",
+    "text": "夜里十一点，电恢复了一半。朱老师撑着伞出现在门口——他就住在两条街外。",
+    "mood": "talk",
+    "chapter": "ch5",
+    "stage": "5-4",
+    "root": "voice-2"
+  },
+  {
+    "id": "v9a8fe933",
+    "who": "zhu",
+    "text": "我看见灯亮着，就知道又有人开了侧门。",
+    "mood": "surprise",
+    "chapter": "ch5",
+    "stage": "5-4",
+    "root": "voice-2"
+  },
+  {
+    "id": "v98c15b55",
+    "who": "me",
+    "text": "朱老师，录像里那个星光选手……是您吧？",
+    "mood": "talk",
+    "chapter": "ch5",
+    "stage": "5-4",
+    "root": "voice-2"
+  },
+  {
+    "id": "v860a01a6",
+    "who": "zhu",
+    "text": "是我。十四平，我发球。我刚抬头看球，林姐就走到网前，说门外有人。",
+    "mood": "smile",
+    "chapter": "ch5",
+    "stage": "5-4",
+    "root": "voice-2"
+  },
+  {
+    "id": "v4dfa5f16",
+    "who": "zhu",
+    "text": "我们放下球拍去开门。那一晚，馆里睡了六十多个人。比赛，就再也没有打完。",
+    "mood": "talk",
+    "chapter": "ch5",
+    "stage": "5-4",
+    "root": "voice-2"
+  },
+  {
+    "id": "vb0902c0f",
+    "who": "canglan",
+    "text": "那为什么有人说，是星光怕输？",
+    "mood": "sad",
+    "chapter": "ch5",
+    "stage": "5-4",
+    "root": "voice-2"
+  },
+  {
+    "id": "v40c3aec2",
+    "who": "zhu",
+    "text": "寒星的队员当晚就被家长接走了。误会传了三十年，林姐一句也没解释。她说：“分数不重要，人重要。”",
+    "mood": "sad",
+    "chapter": "ch5",
+    "stage": "5-4",
+    "root": "voice-2"
+  },
+  {
+    "id": "v9e3a0634",
+    "who": "mm",
+    "text": "所以我一直落不了地……那一球，到现在还在空中。",
+    "mood": "sad",
+    "chapter": "ch5",
+    "stage": "5-4",
+    "root": "voice-2"
+  },
+  {
+    "id": "v7c0b75fe",
+    "who": "guoge",
+    "text": "……我拿着改建的签名表，站在她开过门的地方。",
+    "mood": "sad",
+    "chapter": "ch5",
+    "stage": "5-4",
+    "root": "voice-2"
+  },
+  {
+    "id": "vee8740d4",
+    "who": "me",
+    "text": "说清楚，你到底站哪边？",
+    "mood": "talk",
+    "chapter": "ch5",
+    "stage": "5-4",
+    "root": "voice-2"
+  },
+  {
+    "id": "v81465fe4",
+    "who": "me",
+    "text": "今晚你背的那位奶奶，记住你了。",
+    "mood": "talk",
+    "chapter": "ch5",
+    "stage": "5-4",
+    "root": "voice-2"
+  },
+  {
+    "id": "v8104f8ff",
+    "who": "guoge",
+    "text": "我一直以为，投机就是聪明。两边下注，谁也不得罪。",
+    "mood": "sad",
+    "chapter": "ch5",
+    "stage": "5-4",
+    "root": "voice-2"
+  },
+  {
+    "id": "v8d480352",
+    "who": "guoge",
+    "text": "可今晚，要是这里已经变成了健身房，这些人就只能站在雨里。一张终身卡，换不来这个。",
+    "mood": "think",
+    "chapter": "ch5",
+    "stage": "5-4",
+    "root": "voice-2"
+  },
+  {
+    "id": "va1635cda",
+    "who": "nar",
+    "text": "果哥把那叠签名表撕成了两半，又撕成了四半。",
+    "mood": "talk",
+    "chapter": "ch5",
+    "stage": "5-4",
+    "root": "voice-2"
+  },
+  {
+    "id": "v8d51f44f",
+    "who": "xingxing",
+    "text": "孩子们睡不着。凌风，在干的那块场地上，给他们发几个球看看吧？",
+    "mood": "talk",
+    "chapter": "ch5",
+    "stage": "5-4",
+    "root": "voice-2"
+  },
+  {
+    "id": "v87dcfb4c",
+    "who": "nar",
+    "text": "五岁的小女孩捡起毛毛，小心翼翼地抛了一下。毛毛在灯光里翻了个跟头。",
+    "mood": "talk",
+    "chapter": "ch5",
+    "stage": "5-4",
+    "root": "voice-2"
+  },
+  {
+    "id": "vbc788069",
+    "who": "mm",
+    "text": "好久没有人这样看着我飞了。",
+    "mood": "happy",
+    "chapter": "ch5",
+    "stage": "5-4",
+    "root": "voice-2"
+  },
+  {
+    "id": "vc8c5188a",
+    "who": "zhu",
+    "text": "林姐要是在，会说：门开对了。",
+    "mood": "smile",
+    "chapter": "ch5",
+    "stage": "5-4",
+    "root": "voice-2"
+  },
+  {
+    "id": "v89e54263",
+    "who": "nar",
+    "text": "天亮了。雨停了，地上还留着一层水光。",
+    "mood": "talk",
+    "chapter": "ch5",
+    "stage": "5-5",
+    "root": "voice-2"
+  },
+  {
+    "id": "vfea07e20",
+    "who": "laochen",
+    "text": "评估组一早来过了：侧门漏雨、两盏灯烧坏、地板起翘。球馆暂停开放，修好后复查。",
+    "mood": "sad",
+    "chapter": "ch5",
+    "stage": "5-5",
+    "root": "voice-2"
+  },
+  {
+    "id": "v7d828d43",
+    "who": "xiaohong",
+    "text": "安全这一项……我们扣分了。",
+    "mood": "sad",
+    "chapter": "ch5",
+    "stage": "5-5",
+    "root": "voice-2"
+  },
+  {
+    "id": "v96e498e2",
+    "who": "guoge",
+    "text": "那就修。我认识装修师傅，便宜，靠谱。这次不是投机，是投资。",
+    "mood": "fist",
+    "chapter": "ch5",
+    "stage": "5-5",
+    "root": "voice-2"
+  },
+  {
+    "id": "v6c973ab1",
+    "who": "houzi",
+    "text": "问题不大？",
+    "mood": "smile",
+    "chapter": "ch5",
+    "stage": "5-5",
+    "root": "voice-2"
+  },
+  {
+    "id": "v55f3d002",
+    "who": "guoge",
+    "text": "问题很大。但我有肌肉。",
+    "mood": "smile",
+    "chapter": "ch5",
+    "stage": "5-5",
+    "root": "voice-2"
+  },
+  {
+    "id": "vfef988b8",
+    "who": "ruibao",
+    "text": "想入社，先过考试。猴子，你来考他。",
+    "mood": "think",
+    "chapter": "ch5",
+    "stage": "5-5",
+    "root": "voice-2"
+  },
+  {
+    "id": "v1d1aad16",
+    "who": "houzi",
+    "text": "来，用你自己的招打我。看看你的“抄底”，到底抄不抄得到。",
+    "mood": "happy",
+    "chapter": "ch5",
+    "stage": "5-5",
+    "root": "voice-2"
+  },
+  {
+    "id": "v3d42576b",
+    "who": "guoge",
+    "text": "抄到了！看见没，机会球一来，我就上！",
+    "mood": "happy",
+    "chapter": "ch5",
+    "stage": "5-5",
+    "root": "voice-2"
+  },
+  {
+    "id": "v50517184",
+    "who": "houzi",
+    "text": "我就送了一个半高球……你至于吗。",
+    "mood": "tired",
+    "chapter": "ch5",
+    "stage": "5-5",
+    "root": "voice-2"
+  },
+  {
+    "id": "vb39ed71d",
+    "who": "dingding",
+    "text": "值日表上，你排周一和周四。",
+    "mood": "point",
+    "chapter": "ch5",
+    "stage": "5-5",
+    "root": "voice-2"
+  },
+  {
+    "id": "vb73d601c",
+    "who": "guoge",
+    "text": "……周四是我的练腿日。",
+    "mood": "tired",
+    "chapter": "ch5",
+    "stage": "5-5",
+    "root": "voice-2"
+  },
+  {
+    "id": "v5f97718b",
+    "who": "canglan",
+    "text": "那就周一和周五。钥匙，我多配了一把。",
+    "mood": "smile",
+    "chapter": "ch5",
+    "stage": "5-5",
+    "root": "voice-2"
+  },
+  {
+    "id": "vbfabfc8e",
+    "who": "nar",
+    "text": "那是沧澜第一次，把钥匙交到别人手里。",
+    "mood": "talk",
+    "chapter": "ch5",
+    "stage": "5-5",
+    "root": "voice-2"
+  },
+  {
+    "id": "v5ae8a4ff",
+    "who": "zhu",
+    "text": "球馆修好要一周。这一周，跟我上山。春城集训营是我老朋友开的。",
+    "mood": "point",
+    "chapter": "ch6",
+    "stage": "6-1",
+    "root": "voice-3"
+  },
+  {
+    "id": "v22565883",
+    "who": "houzi",
+    "text": "团建！我带了三个充电宝和一包零食！",
+    "mood": "cheer",
+    "chapter": "ch6",
+    "stage": "6-1",
+    "root": "voice-3"
+  },
+  {
+    "id": "veb816c4b",
+    "who": "zhu",
+    "text": "充电宝没收。这里海拔高、空气稀，球会飞得更远。先做实验。",
+    "mood": "smile",
+    "chapter": "ch6",
+    "stage": "6-1",
+    "root": "voice-3"
+  },
+  {
+    "id": "v4ddd8d5b",
+    "who": "laochen",
+    "text": "只改阻力，其他都保持一致。我来记。",
+    "mood": "think",
+    "chapter": "ch6",
+    "stage": "6-1",
+    "root": "voice-3"
+  },
+  {
+    "id": "vcc2b7454",
+    "who": "laochen",
+    "text": "阻力小，同样的出球飞得更远。三组数据很干净。",
+    "mood": "happy",
+    "chapter": "ch6",
+    "stage": "6-1",
+    "root": "voice-3"
+  },
+  {
+    "id": "v2fc815d8",
+    "who": "zhu",
+    "text": "到新场地，先试球，再校准。别一打出界，就怀疑自己不会打球了。",
+    "mood": "smile",
+    "chapter": "ch6",
+    "stage": "6-1",
+    "root": "voice-3"
+  },
+  {
+    "id": "v37493c8c",
+    "who": "guoge",
+    "text": "……光是爬上来，就用完了我今天的体力。",
+    "mood": "tired",
+    "chapter": "ch6",
+    "stage": "6-1",
+    "root": "voice-3"
+  },
+  {
+    "id": "v969d580f",
+    "who": "guoge",
+    "text": "为什么我要练接杀？我是负责扣杀的人！",
+    "mood": "angry",
+    "chapter": "ch6",
+    "stage": "6-2",
+    "root": "voice-3"
+  },
+  {
+    "id": "v886b5393",
+    "who": "zhu",
+    "text": "只会进攻的人，比赛里一半时间都在等。",
+    "mood": "talk",
+    "chapter": "ch6",
+    "stage": "6-2",
+    "root": "voice-3"
+  },
+  {
+    "id": "v22288b4d",
+    "who": "ruibao",
+    "text": "来，我教你。拍子放在身前，动作缩短，别抡。",
+    "mood": "smile",
+    "chapter": "ch6",
+    "stage": "6-2",
+    "root": "voice-3"
+  },
+  {
+    "id": "v1877311a",
+    "who": "guoge",
+    "text": "你？你不是只会挡吗？",
+    "mood": "surprise",
+    "chapter": "ch6",
+    "stage": "6-2",
+    "root": "voice-3"
+  },
+  {
+    "id": "v7119498b",
+    "who": "ruibao",
+    "text": "挡也是一门手艺。看好了。",
+    "mood": "fist",
+    "chapter": "ch6",
+    "stage": "6-2",
+    "root": "voice-3"
+  },
+  {
+    "id": "vcc10f33e",
+    "who": "guoge",
+    "text": "……挡回去了？我居然挡回去了？",
+    "mood": "surprise",
+    "chapter": "ch6",
+    "stage": "6-2",
+    "root": "voice-3"
+  },
+  {
+    "id": "vd5f18181",
+    "who": "ruibao",
+    "text": "墙也可以教人。这句话，我想说给初中的自己听。",
+    "mood": "happy",
+    "chapter": "ch6",
+    "stage": "6-2",
+    "root": "voice-3"
+  },
+  {
+    "id": "vc719dea2",
+    "who": "zhu",
+    "text": "会防守的人，才知道进攻该什么时候来。",
+    "mood": "smile",
+    "chapter": "ch6",
+    "stage": "6-2",
+    "root": "voice-3"
+  },
+  {
+    "id": "v86ee6e43",
+    "who": "xiaohong",
+    "text": "我要把跳杀练到最快。比赛里，一拍结束最省事。",
+    "mood": "fist",
+    "chapter": "ch6",
+    "stage": "6-3",
+    "root": "voice-3"
+  },
+  {
+    "id": "v9c6cc5b4",
+    "who": "zhu",
+    "text": "起跳要高，落地更要稳。落不稳，就没有下一拍了。",
+    "mood": "point",
+    "chapter": "ch6",
+    "stage": "6-3",
+    "root": "voice-3"
+  },
+  {
+    "id": "v75efedbc",
+    "who": "xingxing",
+    "text": "你每次跳完，都要过很久才回到中间。",
+    "mood": "think",
+    "chapter": "ch6",
+    "stage": "6-3",
+    "root": "voice-3"
+  },
+  {
+    "id": "v44e482f6",
+    "who": "xiaohong",
+    "text": "……你一直在看？",
+    "mood": "surprise",
+    "chapter": "ch6",
+    "stage": "6-3",
+    "root": "voice-3"
+  },
+  {
+    "id": "vcd952557",
+    "who": "xingxing",
+    "text": "我在数。平均一点二秒。",
+    "mood": "shy",
+    "chapter": "ch6",
+    "stage": "6-3",
+    "root": "voice-3"
+  },
+  {
+    "id": "v86a265cf",
+    "who": "xiaohong",
+    "text": "落地稳住，再回位……零点九秒。",
+    "mood": "happy",
+    "chapter": "ch6",
+    "stage": "6-3",
+    "root": "voice-3"
+  },
+  {
+    "id": "vf9785266",
+    "who": "xingxing",
+    "text": "快了零点三秒。比你那条公式靠谱。",
+    "mood": "smile",
+    "chapter": "ch6",
+    "stage": "6-3",
+    "root": "voice-3"
+  },
+  {
+    "id": "v846f10d3",
+    "who": "zhu",
+    "text": "再快的扣杀，也只是一拍。接下来那一拍，才见功夫。",
+    "mood": "smile",
+    "chapter": "ch6",
+    "stage": "6-3",
+    "root": "voice-3"
+  },
+  {
+    "id": "vdad96272",
+    "who": "nar",
+    "text": "营地的夜空很低，低得像伸手就能碰到星星。",
+    "mood": "talk",
+    "chapter": "ch6",
+    "stage": "6-4",
+    "root": "voice-3"
+  },
+  {
+    "id": "vd0756e07",
+    "who": "xingxing",
+    "text": "那是夏季大三角：织女、牛郎，还有天津四。",
+    "mood": "happy",
+    "chapter": "ch6",
+    "stage": "6-4",
+    "root": "voice-3"
+  },
+  {
+    "id": "v783c8a3e",
+    "who": "houzi",
+    "text": "丁丁，记得初二那年吗？我们为了一把排位，在网吧熬到天亮。",
+    "mood": "smile",
+    "chapter": "ch6",
+    "stage": "6-4",
+    "root": "voice-3"
+  },
+  {
+    "id": "vc12bfded",
+    "who": "dingding",
+    "text": "然后第二天比赛，你在场上打瞌睡。",
+    "mood": "happy",
+    "chapter": "ch6",
+    "stage": "6-4",
+    "root": "voice-3"
+  },
+  {
+    "id": "v33c4b082",
+    "who": "houzi",
+    "text": "那时候我觉得，游戏和球只能选一个。现在想想，好像都能留着。",
+    "mood": "think",
+    "chapter": "ch6",
+    "stage": "6-4",
+    "root": "voice-3"
+  },
+  {
+    "id": "veaa06f2a",
+    "who": "guoge",
+    "text": "说到熬夜——你们这作息，放在健身房会被教练骂死。来，我出几道题。",
+    "mood": "point",
+    "chapter": "ch6",
+    "stage": "6-4",
+    "root": "voice-3"
+  },
+  {
+    "id": "vf259f6",
+    "who": "laochen",
+    "text": "果哥，你懂得真多。",
+    "mood": "surprise",
+    "chapter": "ch6",
+    "stage": "6-4",
+    "root": "voice-3"
+  },
+  {
+    "id": "vc1f6a8b",
+    "who": "guoge",
+    "text": "……健身房待久了，总得学点真东西。偷懒的人，最懂怎么休息。",
+    "mood": "shy",
+    "chapter": "ch6",
+    "stage": "6-4",
+    "root": "voice-3"
+  },
+  {
+    "id": "vdeed0308",
+    "who": "lu",
+    "text": "我宣布：果哥的作息模型，比我的胜率模型靠谱。",
+    "mood": "happy",
+    "chapter": "ch6",
+    "stage": "6-4",
+    "root": "voice-3"
+  },
+  {
+    "id": "vad24ee5e",
+    "who": "laochen",
+    "text": "难得听你认输。我记下来了。",
+    "mood": "smile",
+    "chapter": "ch6",
+    "stage": "6-4",
+    "root": "voice-3"
+  },
+  {
+    "id": "vffe33586",
+    "who": "nar",
+    "text": "营火噼啪作响。没有人看手机，连猴子也没有。",
+    "mood": "talk",
+    "chapter": "ch6",
+    "stage": "6-4",
+    "root": "voice-3"
+  },
+  {
+    "id": "v274afad8",
+    "who": "zhu",
+    "text": "明天下山。最后一课，跟我打一局。",
+    "mood": "point",
+    "chapter": "ch6",
+    "stage": "6-5",
+    "root": "voice-3"
+  },
+  {
+    "id": "v8239febf",
+    "who": "me",
+    "text": "您不是说跑不动了吗？",
+    "mood": "surprise",
+    "chapter": "ch6",
+    "stage": "6-5",
+    "root": "voice-3"
+  },
+  {
+    "id": "ve14f0e56",
+    "who": "zhu",
+    "text": "跑不动，就让球跑。我会读你的习惯——别连续打同一种球。",
+    "mood": "smile",
+    "chapter": "ch6",
+    "stage": "6-5",
+    "root": "voice-3"
+  },
+  {
+    "id": "vb32faa7d",
+    "who": "mm",
+    "text": "打破他的预判：高远、吊球、杀球，轮着来。",
+    "mood": "point",
+    "chapter": "ch6",
+    "stage": "6-5",
+    "root": "voice-3"
+  },
+  {
+    "id": "va16ecd83",
+    "who": "zhu",
+    "text": "好。你没有被我读透。",
+    "mood": "happy",
+    "chapter": "ch6",
+    "stage": "6-5",
+    "root": "voice-3"
+  },
+  {
+    "id": "vefc64db",
+    "who": "me",
+    "text": "老师，那年的最后一球，您后悔过吗？",
+    "mood": "talk",
+    "chapter": "ch6",
+    "stage": "6-5",
+    "root": "voice-3"
+  },
+  {
+    "id": "vfdd79926",
+    "who": "zhu",
+    "text": "后悔没打完？有一点。后悔去开门？从来没有。",
+    "mood": "think",
+    "chapter": "ch6",
+    "stage": "6-5",
+    "root": "voice-3"
+  },
+  {
+    "id": "vc1696a7",
+    "who": "zhu",
+    "text": "下山以后，替我好好打星光杯。还有——寒星中学的王牌，是我当年那个老对手的外孙。",
+    "mood": "smile",
+    "chapter": "ch6",
+    "stage": "6-5",
+    "root": "voice-3"
+  },
+  {
+    "id": "vd645ec9e",
+    "who": "xiaohong",
+    "text": "星光杯单打，社里只有两个名额。先打一轮队内选拔。",
+    "mood": "point",
+    "chapter": "ch7",
+    "stage": "7-1",
+    "root": "voice-3"
+  },
+  {
+    "id": "vc311e7fd",
+    "who": "houzi",
+    "text": "我报名。问题不大。",
+    "mood": "happy",
+    "chapter": "ch7",
+    "stage": "7-1",
+    "root": "voice-3"
+  },
+  {
+    "id": "vde2a2905",
+    "who": "guoge",
+    "text": "我也报。这次不是为了奖品——好吧，一半是。",
+    "mood": "fist",
+    "chapter": "ch7",
+    "stage": "7-1",
+    "root": "voice-3"
+  },
+  {
+    "id": "v2ddf7596",
+    "who": "laochen",
+    "text": "我……也想试试。",
+    "mood": "shy",
+    "chapter": "ch7",
+    "stage": "7-1",
+    "root": "voice-3"
+  },
+  {
+    "id": "v60c671c3",
+    "who": "xiaohong",
+    "text": "凌风，你来当队长助理。挑一个人，替他打这场选拔赛。",
+    "mood": "think",
+    "chapter": "ch7",
+    "stage": "7-1",
+    "root": "voice-3"
+  },
+  {
+    "id": "v6bb8c0d3",
+    "who": "xiaohong",
+    "text": "猴子打得很好。不过，正式比赛的两个名额，我想留给凌风和我。",
+    "mood": "smile",
+    "chapter": "ch7",
+    "stage": "7-1",
+    "root": "voice-3"
+  },
+  {
+    "id": "vc1331106",
+    "who": "xiaohong",
+    "text": "果哥打得很好。不过，正式比赛的两个名额，我想留给凌风和我。",
+    "mood": "smile",
+    "chapter": "ch7",
+    "stage": "7-1",
+    "root": "voice-3"
+  },
+  {
+    "id": "v56f3be8c",
+    "who": "xiaohong",
+    "text": "老陈打得很好。不过，正式比赛的两个名额，我想留给凌风和我。",
+    "mood": "smile",
+    "chapter": "ch7",
+    "stage": "7-1",
+    "root": "voice-3"
+  },
+  {
+    "id": "v19e15a7",
+    "who": "houzi",
+    "text": "问题不大。场边也是战场，我负责喊加油。",
+    "mood": "smile",
+    "chapter": "ch7",
+    "stage": "7-1",
+    "root": "voice-3"
+  },
+  {
+    "id": "v252ee8bb",
+    "who": "guoge",
+    "text": "替补也有替补的回报率。我负责赛前热身。",
+    "mood": "think",
+    "chapter": "ch7",
+    "stage": "7-1",
+    "root": "voice-3"
+  },
+  {
+    "id": "v727732ee",
+    "who": "laochen",
+    "text": "我负责记数据。这一次，我想记的是你们赢下来的每一分。",
+    "mood": "happy",
+    "chapter": "ch7",
+    "stage": "7-1",
+    "root": "voice-3"
+  },
+  {
+    "id": "vf1c44d98",
+    "who": "nar",
+    "text": "星光杯开幕。看台挤满了人，寒星中学的队伍穿着一身深蓝。",
+    "mood": "talk",
+    "chapter": "ch7",
+    "stage": "7-2",
+    "root": "voice-3"
+  },
+  {
+    "id": "v2e1fd750",
+    "who": "tianchu",
+    "text": "你就是凌风？外公让我把这个交给你。",
+    "mood": "talk",
+    "chapter": "ch7",
+    "stage": "7-2",
+    "root": "voice-3"
+  },
+  {
+    "id": "v5b110296",
+    "who": "me",
+    "text": "一盘录像带？",
+    "mood": "surprise",
+    "chapter": "ch7",
+    "stage": "7-2",
+    "root": "voice-3"
+  },
+  {
+    "id": "v2b550996",
+    "who": "tianchu",
+    "text": "一九九六年的决赛，寒星那一侧的机位。我看过很多遍。那一分，没有人输。",
+    "mood": "smile",
+    "chapter": "ch7",
+    "stage": "7-2",
+    "root": "voice-3"
+  },
+  {
+    "id": "v676ffbb9",
+    "who": "tianchu",
+    "text": "不过今天，我会认真赢你。先看看你懂不懂发球站位。",
+    "mood": "point",
+    "chapter": "ch7",
+    "stage": "7-2",
+    "root": "voice-3"
+  },
+  {
+    "id": "v77722c26",
+    "who": "tianchu",
+    "text": "很好。你看规则，不只看对手。",
+    "mood": "smile",
+    "chapter": "ch7",
+    "stage": "7-2",
+    "root": "voice-3"
+  },
+  {
+    "id": "vb725e704",
+    "who": "xiaohong",
+    "text": "他递录像，是挑衅，还是……",
+    "mood": "think",
+    "chapter": "ch7",
+    "stage": "7-2",
+    "root": "voice-3"
+  },
+  {
+    "id": "v960e43da",
+    "who": "xingxing",
+    "text": "他说“没有人输”。我觉得，那是一种邀请。",
+    "mood": "talk",
+    "chapter": "ch7",
+    "stage": "7-2",
+    "root": "voice-3"
+  },
+  {
+    "id": "v16f3c87e",
+    "who": "xiaohong",
+    "text": "半决赛，我对你。抽签真会开玩笑。",
+    "mood": "think",
+    "chapter": "ch7",
+    "stage": "7-3",
+    "root": "voice-3"
+  },
+  {
+    "id": "v31b0a065",
+    "who": "me",
+    "text": "那就认真打。",
+    "mood": "smile",
+    "chapter": "ch7",
+    "stage": "7-3",
+    "root": "voice-3"
+  },
+  {
+    "id": "v7dc2ac7f",
+    "who": "xiaohong",
+    "text": "我不会让球，也不会再喊“必须赢”。我只想打出我们练过的东西。",
+    "mood": "fist",
+    "chapter": "ch7",
+    "stage": "7-3",
+    "root": "voice-3"
+  },
+  {
+    "id": "ve59751cf",
+    "who": "xingxing",
+    "text": "我坐在正中间，两边都加油，不许有意见。",
+    "mood": "smile",
+    "chapter": "ch7",
+    "stage": "7-3",
+    "root": "voice-3"
+  },
+  {
+    "id": "v7c2ff7e2",
+    "who": "xiaohong",
+    "text": "输了。可是这一局，我每一拍都记得自己为什么这么打。",
+    "mood": "happy",
+    "chapter": "ch7",
+    "stage": "7-3",
+    "root": "voice-3"
+  },
+  {
+    "id": "v86336bdd",
+    "who": "me",
+    "text": "你最后那拍没有硬扣，换成了吊球。",
+    "mood": "talk",
+    "chapter": "ch7",
+    "stage": "7-3",
+    "root": "voice-3"
+  },
+  {
+    "id": "vc753499",
+    "who": "xiaohong",
+    "text": "公式更新了：误差项后面，加上了队友。",
+    "mood": "smile",
+    "chapter": "ch7",
+    "stage": "7-3",
+    "root": "voice-3"
+  },
+  {
+    "id": "ve2a999c",
+    "who": "xingxing",
+    "text": "那十二盏路灯，今天也给你留着。",
+    "mood": "happy",
+    "chapter": "ch7",
+    "stage": "7-3",
+    "root": "voice-3"
+  },
+  {
+    "id": "vee47fae0",
+    "who": "me",
+    "text": "手在抖。明明只是一场比赛。",
+    "mood": "sad",
+    "chapter": "ch7",
+    "stage": "7-4",
+    "root": "voice-3"
+  },
+  {
+    "id": "vd2ee98b8",
+    "who": "houzi",
+    "text": "决赛前手抖？问题不大。初三那年，我抖得拍子都快掉了。",
+    "mood": "smile",
+    "chapter": "ch7",
+    "stage": "7-4",
+    "root": "voice-3"
+  },
+  {
+    "id": "vc2c0ce12",
+    "who": "houzi",
+    "text": "但这次不一样，你不是一个人。场边坐着十个人，每个人都替你看着一块地方。",
+    "mood": "talk",
+    "chapter": "ch7",
+    "stage": "7-4",
+    "root": "voice-3"
+  },
+  {
+    "id": "vf52b5b33",
+    "who": "guoge",
+    "text": "来，赛前热身。先慢跑，再活动关节，最后几个短距离启动。谁也不许偷懒——包括我。",
+    "mood": "point",
+    "chapter": "ch7",
+    "stage": "7-4",
+    "root": "voice-3"
+  },
+  {
+    "id": "v27cd8fe3",
+    "who": "guoge",
+    "text": "心率起来了，肌肉醒了。剩下的，交给你自己。",
+    "mood": "happy",
+    "chapter": "ch7",
+    "stage": "7-4",
+    "root": "voice-3"
+  },
+  {
+    "id": "veecb07db",
+    "who": "laochen",
+    "text": "田楚的数据：他喜欢用同一个引拍打出不同的球。别看他的手，看球。",
+    "mood": "talk",
+    "chapter": "ch7",
+    "stage": "7-4",
+    "root": "voice-3"
+  },
+  {
+    "id": "va6b78f04",
+    "who": "dingding",
+    "text": "拍线我刚检查过，二十四磅，稳。",
+    "mood": "point",
+    "chapter": "ch7",
+    "stage": "7-4",
+    "root": "voice-3"
+  },
+  {
+    "id": "v6161f87b",
+    "who": "canglan",
+    "text": "去吧。门，我们看着。",
+    "mood": "smile",
+    "chapter": "ch7",
+    "stage": "7-4",
+    "root": "voice-3"
+  },
+  {
+    "id": "v5af96c93",
+    "who": "tianchu",
+    "text": "你看到的，未必是真的。",
+    "mood": "point",
+    "chapter": "ch7",
+    "stage": "7-5",
+    "root": "voice-3"
+  },
+  {
+    "id": "vd9914f2b",
+    "who": "me",
+    "text": "那我就等球真的飞过来。",
+    "mood": "talk",
+    "chapter": "ch7",
+    "stage": "7-5",
+    "root": "voice-3"
+  },
+  {
+    "id": "va86b4c9e",
+    "who": "mm",
+    "text": "他同一个准备动作能打出不同的球。站稳，看清，再出发。",
+    "mood": "point",
+    "chapter": "ch7",
+    "stage": "7-5",
+    "root": "voice-3"
+  },
+  {
+    "id": "v8ea4050f",
+    "who": "nar",
+    "text": "最后一球落地。记分牌停住，看台上的人全站了起来。",
+    "mood": "talk",
+    "chapter": "ch7",
+    "stage": "7-5",
+    "root": "voice-3"
+  },
+  {
+    "id": "veb8fa566",
+    "who": "tianchu",
+    "text": "恭喜。这一次，比赛打完了。",
+    "mood": "smile",
+    "chapter": "ch7",
+    "stage": "7-5",
+    "root": "voice-3"
+  },
+  {
+    "id": "ve50f0a2a",
+    "who": "me",
+    "text": "谢谢你，也谢谢你外公。",
+    "mood": "happy",
+    "chapter": "ch7",
+    "stage": "7-5",
+    "root": "voice-3"
+  },
+  {
+    "id": "v83f10352",
+    "who": "tianchu",
+    "text": "外公说，等你们的球馆修好，他想回来，把那一分打完。",
+    "mood": "wave",
+    "chapter": "ch7",
+    "stage": "7-5",
+    "root": "voice-3"
+  },
+  {
+    "id": "va47f449a",
+    "who": "xiaohong",
+    "text": "我们赢了！球馆有救了！",
+    "mood": "cheer",
+    "chapter": "ch7",
+    "stage": "7-5",
+    "root": "voice-3"
+  },
+  {
+    "id": "v2792c795",
+    "who": "laochen",
+    "text": "……评估通知没有变。奖杯，换不来钥匙。",
+    "mood": "think",
+    "chapter": "ch7",
+    "stage": "7-5",
+    "root": "voice-3"
+  },
+  {
+    "id": "vb1528c59",
+    "who": "nar",
+    "text": "倒计时第六天。评估组同意开一场公开说明会，铁力健身也会到场。",
+    "mood": "talk",
+    "chapter": "ch8",
+    "stage": "8-1",
+    "root": "voice-4"
+  },
+  {
+    "id": "vba47edb1",
+    "who": "laochen",
+    "text": "评估看三项：安全、使用、运营。奖杯只能证明我们会打球。",
+    "mood": "point",
+    "chapter": "ch8",
+    "stage": "8-1",
+    "root": "voice-4"
+  },
+  {
+    "id": "va694e401",
+    "who": "xiaohong",
+    "text": "那就把三项都准备好，证据一件一件摆出来。",
+    "mood": "think",
+    "chapter": "ch8",
+    "stage": "8-1",
+    "root": "voice-4"
+  },
+  {
+    "id": "v73a28fa2",
+    "who": "lu",
+    "text": "模型更新：保住球馆的概率，从百分之三涨到了百分之四十一！",
+    "mood": "happy",
+    "chapter": "ch8",
+    "stage": "8-1",
+    "root": "voice-4"
+  },
+  {
+    "id": "ve5bfc816",
+    "who": "laochen",
+    "text": "差的那一大块，是运营。没有钱，修好的灯也会再坏。",
+    "mood": "smile",
+    "chapter": "ch8",
+    "stage": "8-1",
+    "root": "voice-4"
+  },
+  {
+    "id": "v77c6f690",
+    "who": "guoge",
+    "text": "……运营的事，我也许有办法。",
+    "mood": "think",
+    "chapter": "ch8",
+    "stage": "8-1",
+    "root": "voice-4"
+  },
+  {
+    "id": "v80eca9d",
+    "who": "nar",
+    "text": "说明会开始了。评估组的老师翻着材料，抬起头。",
+    "mood": "talk",
+    "chapter": "ch8",
+    "stage": "8-2",
+    "root": "voice-4"
+  },
+  {
+    "id": "v244c34c5",
+    "who": "canglan",
+    "text": "他们问：一九九六年和这次的暴雨夜，球馆都在没有审批的情况下接收了人员。这算不算安全隐患？",
+    "mood": "sad",
+    "chapter": "ch8",
+    "stage": "8-2",
+    "root": "voice-4"
+  },
+  {
+    "id": "vcad1f984",
+    "who": "xiaohong",
+    "text": "……沧澜？",
+    "mood": "think",
+    "chapter": "ch8",
+    "stage": "8-2",
+    "root": "voice-4"
+  },
+  {
+    "id": "v2fa4e415",
+    "who": "canglan",
+    "text": "我……我不知道该怎么回答。外婆开门，是对的吗？",
+    "mood": "sad",
+    "chapter": "ch8",
+    "stage": "8-2",
+    "root": "voice-4"
+  },
+  {
+    "id": "v519249e",
+    "who": "laochen",
+    "text": "我来。我们有当晚的清点记录、出口检查和街道的感谢信。也承认：以后需要一份写清楚的应急预案。",
+    "mood": "talk",
+    "chapter": "ch8",
+    "stage": "8-2",
+    "root": "voice-4"
+  },
+  {
+    "id": "vb0cf13c2",
+    "who": "canglan",
+    "text": "老陈……",
+    "mood": "surprise",
+    "chapter": "ch8",
+    "stage": "8-2",
+    "root": "voice-4"
+  },
+  {
+    "id": "v2f9a568b",
+    "who": "lu",
+    "text": "下一个问题：开放日新手多，打双打时，场地线怎么说明？",
+    "mood": "point",
+    "chapter": "ch8",
+    "stage": "8-2",
+    "root": "voice-4"
+  },
+  {
+    "id": "vcaacfd06",
+    "who": "canglan",
+    "text": "谢谢你们。我刚才……一个人站在那里，脑子一片空白。",
+    "mood": "smile",
+    "chapter": "ch8",
+    "stage": "8-2",
+    "root": "voice-4"
+  },
+  {
+    "id": "v35a86013",
+    "who": "ruibao",
+    "text": "你从来就不是一个人站着。只是以前，你不让我们站过去。",
+    "mood": "talk",
+    "chapter": "ch8",
+    "stage": "8-2",
+    "root": "voice-4"
+  },
+  {
+    "id": "ve6474c7d",
+    "who": "nar",
+    "text": "说明会结束了。评估组只留下一句：“再看看。”",
+    "mood": "talk",
+    "chapter": "ch8",
+    "stage": "8-3",
+    "root": "voice-4"
+  },
+  {
+    "id": "v184dfb21",
+    "who": "canglan",
+    "text": "我以为只要我一直守着，门就不会关。可是今天，我差点让外婆的门变成了一条“隐患”。",
+    "mood": "tired",
+    "chapter": "ch8",
+    "stage": "8-3",
+    "root": "voice-4"
+  },
+  {
+    "id": "v5844d30e",
+    "who": "me",
+    "text": "守门的人，不是只有你。",
+    "mood": "talk",
+    "chapter": "ch8",
+    "stage": "8-3",
+    "root": "voice-4"
+  },
+  {
+    "id": "vbd99e4fa",
+    "who": "canglan",
+    "text": "……陪我打一局吧。我先让你三分。不，五比三，我领先。没有技能，就当平常训练。",
+    "mood": "think",
+    "chapter": "ch8",
+    "stage": "8-3",
+    "root": "voice-4"
+  },
+  {
+    "id": "v31b89739",
+    "who": "mm",
+    "text": "落后的时候，把目标缩小：下一球先回深。",
+    "mood": "point",
+    "chapter": "ch8",
+    "stage": "8-3",
+    "root": "voice-4"
+  },
+  {
+    "id": "ve7aec990",
+    "who": "canglan",
+    "text": "追回来了。……原来落后的时候，最需要的不是更用力，是有人一起数分。",
+    "mood": "smile",
+    "chapter": "ch8",
+    "stage": "8-3",
+    "root": "voice-4"
+  },
+  {
+    "id": "v60720df9",
+    "who": "me",
+    "text": "那以后，分我们一起数。",
+    "mood": "smile",
+    "chapter": "ch8",
+    "stage": "8-3",
+    "root": "voice-4"
+  },
+  {
+    "id": "v455d2193",
+    "who": "canglan",
+    "text": "钥匙也是。",
+    "mood": "happy",
+    "chapter": "ch8",
+    "stage": "8-3",
+    "root": "voice-4"
+  },
+  {
+    "id": "v1490e6d4",
+    "who": "guoge",
+    "text": "我去找了铁力的店长。他们要的其实不是这块地，是会员和曝光。",
+    "mood": "point",
+    "chapter": "ch8",
+    "stage": "8-4",
+    "root": "voice-4"
+  },
+  {
+    "id": "ve0cb8598",
+    "who": "houzi",
+    "text": "你又去找铁力了？",
+    "mood": "surprise",
+    "chapter": "ch8",
+    "stage": "8-4",
+    "root": "voice-4"
+  },
+  {
+    "id": "va90ad2ff",
+    "who": "guoge",
+    "text": "别急。这次我是替我们谈。我做了个方案——让羽毛球和健身，待在同一座球馆里。",
+    "mood": "smile",
+    "chapter": "ch8",
+    "stage": "8-4",
+    "root": "voice-4"
+  },
+  {
+    "id": "vbde24c87",
+    "who": "laochen",
+    "text": "数据我帮他算好了。你们判断一下，哪种说法最站得住。",
+    "mood": "talk",
+    "chapter": "ch8",
+    "stage": "8-4",
+    "root": "voice-4"
+  },
+  {
+    "id": "v3823d6e8",
+    "who": "guoge",
+    "text": "看见没？两边都赚，才叫好投资。以前我是两边下注，这次是让两边都赢。",
+    "mood": "happy",
+    "chapter": "ch8",
+    "stage": "8-4",
+    "root": "voice-4"
+  },
+  {
+    "id": "v5f9b3f9f",
+    "who": "ruibao",
+    "text": "这回的投机，我投你一票。",
+    "mood": "smile",
+    "chapter": "ch8",
+    "stage": "8-4",
+    "root": "voice-4"
+  },
+  {
+    "id": "vc1a61b40",
+    "who": "lu",
+    "text": "从朋友模型看……你这次，满分。",
+    "mood": "think",
+    "chapter": "ch8",
+    "stage": "8-4",
+    "root": "voice-4"
+  },
+  {
+    "id": "v1d10c9b4",
+    "who": "laochen",
+    "text": "评估组同意了：给三天试运营。开放日来了多少人，就是答案。",
+    "mood": "point",
+    "chapter": "ch8",
+    "stage": "8-4",
+    "root": "voice-4"
+  },
+  {
+    "id": "v9611b3fb",
+    "who": "houzi",
+    "text": "三天试运营，人从哪来？我有办法——我的开黑群，三百二十个人。",
+    "mood": "point",
+    "chapter": "ch8",
+    "stage": "8-5",
+    "root": "voice-4"
+  },
+  {
+    "id": "vd9fa1620",
+    "who": "dingding",
+    "text": "他们只会打游戏，谁愿意来打球？",
+    "mood": "think",
+    "chapter": "ch8",
+    "stage": "8-5",
+    "root": "voice-4"
+  },
+  {
+    "id": "v7083eeb2",
+    "who": "houzi",
+    "text": "所以我们赌一把。我用球拍赢你，群里就发集结令。输了，我请全群喝奶茶。",
+    "mood": "smile",
+    "chapter": "ch8",
+    "stage": "8-5",
+    "root": "voice-4"
+  },
+  {
+    "id": "vc9b08eaf",
+    "who": "dingding",
+    "text": "行！这把我不会放水。",
+    "mood": "fist",
+    "chapter": "ch8",
+    "stage": "8-5",
+    "root": "voice-4"
+  },
+  {
+    "id": "vb57d50db",
+    "who": "houzi",
+    "text": "凌风，还是借你的手。闪现留着，关键时刻再交。",
+    "mood": "happy",
+    "chapter": "ch8",
+    "stage": "8-5",
+    "root": "voice-4"
+  },
+  {
+    "id": "ve4cd0c88",
+    "who": "houzi",
+    "text": "赢了！集结令，发！",
+    "mood": "cheer",
+    "chapter": "ch8",
+    "stage": "8-5",
+    "root": "voice-4"
+  },
+  {
+    "id": "v8aae8a63",
+    "who": "nar",
+    "text": "手机响个不停。群里一条接一条：“猴哥都去了？”“我也去！”“有新手教程吗？”",
+    "mood": "talk",
+    "chapter": "ch8",
+    "stage": "8-5",
+    "root": "voice-4"
+  },
+  {
+    "id": "v9acd28a8",
+    "who": "dingding",
+    "text": "……行吧，我也去发。我店里的老顾客群，有两百多个人。",
+    "mood": "smile",
+    "chapter": "ch8",
+    "stage": "8-5",
+    "root": "voice-4"
+  },
+  {
+    "id": "v2a1ade29",
+    "who": "houzi",
+    "text": "看见没，打游戏也不全是浪费时间。这叫社交资源。",
+    "mood": "happy",
+    "chapter": "ch8",
+    "stage": "8-5",
+    "root": "voice-4"
+  },
+  {
+    "id": "v26712a76",
+    "who": "mm",
+    "text": "开黑群、穿线铺、健身房……这座球馆，要热闹起来了！",
+    "mood": "cheer",
+    "chapter": "ch8",
+    "stage": "8-5",
+    "root": "voice-4"
+  },
+  {
+    "id": "vb2f9f5a9",
+    "who": "nar",
+    "text": "倒计时第三天。早上七点，门外已经排起了队。",
+    "mood": "talk",
+    "chapter": "ch9",
+    "stage": "9-1",
+    "root": "voice-4"
+  },
+  {
+    "id": "v505cd437",
+    "who": "canglan",
+    "text": "这么多人？",
+    "mood": "surprise",
+    "chapter": "ch9",
+    "stage": "9-1",
+    "root": "voice-4"
+  },
+  {
+    "id": "v39366d06",
+    "who": "laochen",
+    "text": "开黑群四十一人，穿线铺老顾客二十三人，铁力会员十五人，还有广场舞队的阿姨们。",
+    "mood": "happy",
+    "chapter": "ch9",
+    "stage": "9-1",
+    "root": "voice-4"
+  },
+  {
+    "id": "v9bbc09d2",
+    "who": "guoge",
+    "text": "阿姨们是我请来的。她们说，周末早上能来做体能课。",
+    "mood": "smile",
+    "chapter": "ch9",
+    "stage": "9-1",
+    "root": "voice-4"
+  },
+  {
+    "id": "v83a86f81",
+    "who": "me",
+    "text": "先检查场地，再开门。",
+    "mood": "point",
+    "chapter": "ch9",
+    "stage": "9-1",
+    "root": "voice-4"
+  },
+  {
+    "id": "vfe478204",
+    "who": "canglan",
+    "text": "应急预案上，有三个名字。",
+    "mood": "smile",
+    "chapter": "ch9",
+    "stage": "9-1",
+    "root": "voice-4"
+  },
+  {
+    "id": "va341464",
+    "who": "ranran",
+    "text": "奶茶店也来了，摊位摆在门外——奶茶，依然不准带进场地。",
+    "mood": "smile",
+    "chapter": "ch9",
+    "stage": "9-1",
+    "root": "voice-4"
+  },
+  {
+    "id": "v7ca510a4",
+    "who": "mm",
+    "text": "开门啦！",
+    "mood": "happy",
+    "chapter": "ch9",
+    "stage": "9-1",
+    "root": "voice-4"
+  },
+  {
+    "id": "vd714bcd5",
+    "who": "houzi",
+    "text": "我的群友都在问：“羽毛球的新手教程在哪？”",
+    "mood": "surprise",
+    "chapter": "ch9",
+    "stage": "9-2",
+    "root": "voice-4"
+  },
+  {
+    "id": "vabe136e9",
+    "who": "ranran",
+    "text": "第一课别讲太多。先让他们成功一次。",
+    "mood": "point",
+    "chapter": "ch9",
+    "stage": "9-2",
+    "root": "voice-4"
+  },
+  {
+    "id": "v465218cc",
+    "who": "xingxing",
+    "text": "就像我第一次看星星，先找最亮的那颗。",
+    "mood": "think",
+    "chapter": "ch9",
+    "stage": "9-2",
+    "root": "voice-4"
+  },
+  {
+    "id": "vc0567b",
+    "who": "nar",
+    "text": "一位从开黑群来的男生，第一次把球接过了网。他愣了两秒，大叫一声：“我接到了！”",
+    "mood": "talk",
+    "chapter": "ch9",
+    "stage": "9-2",
+    "root": "voice-4"
+  },
+  {
+    "id": "vc4891b80",
+    "who": "houzi",
+    "text": "这比我第一次拿五杀还响！",
+    "mood": "cheer",
+    "chapter": "ch9",
+    "stage": "9-2",
+    "root": "voice-4"
+  },
+  {
+    "id": "v673f01e5",
+    "who": "ranran",
+    "text": "你看，这就是开门的意义。",
+    "mood": "happy",
+    "chapter": "ch9",
+    "stage": "9-2",
+    "root": "voice-4"
+  },
+  {
+    "id": "vd392d3c5",
+    "who": "lu",
+    "text": "表演赛！我对老陈！我的冷笑话，对他的数据透视！",
+    "mood": "fist",
+    "chapter": "ch9",
+    "stage": "9-3",
+    "root": "voice-4"
+  },
+  {
+    "id": "va35465ae",
+    "who": "laochen",
+    "text": "你确定？我可是记得你所有的冷笑话。",
+    "mood": "smile",
+    "chapter": "ch9",
+    "stage": "9-3",
+    "root": "voice-4"
+  },
+  {
+    "id": "v3f5a87f5",
+    "who": "lu",
+    "text": "……那我就讲新的。",
+    "mood": "surprise",
+    "chapter": "ch9",
+    "stage": "9-3",
+    "root": "voice-4"
+  },
+  {
+    "id": "v5cad396e",
+    "who": "xiaohong",
+    "text": "表演赛之后，我们讲双打：进攻时一前一后，防守时一左一右。",
+    "mood": "point",
+    "chapter": "ch9",
+    "stage": "9-3",
+    "root": "voice-4"
+  },
+  {
+    "id": "v4aaeb30c",
+    "who": "dingding",
+    "text": "还有，先说清楚再配合。别像打团时那样，五个人抢一个人头。",
+    "mood": "talk",
+    "chapter": "ch9",
+    "stage": "9-3",
+    "root": "voice-4"
+  },
+  {
+    "id": "vdfb7ab5e",
+    "who": "mm",
+    "text": "这一局，你来当路先森！",
+    "mood": "point",
+    "chapter": "ch9",
+    "stage": "9-3",
+    "root": "voice-4"
+  },
+  {
+    "id": "v78452cdd",
+    "who": "laochen",
+    "text": "你最后那个冷笑话，我真没听过。",
+    "mood": "happy",
+    "chapter": "ch9",
+    "stage": "9-3",
+    "root": "voice-4"
+  },
+  {
+    "id": "v42e2140f",
+    "who": "lu",
+    "text": "我昨晚现编的。这叫版本更新。",
+    "mood": "happy",
+    "chapter": "ch9",
+    "stage": "9-3",
+    "root": "voice-4"
+  },
+  {
+    "id": "vc4714613",
+    "who": "lu",
+    "text": "老陈……其实你现在打得比我好。",
+    "mood": "shy",
+    "chapter": "ch9",
+    "stage": "9-3",
+    "root": "voice-4"
+  },
+  {
+    "id": "v24dadc3a",
+    "who": "laochen",
+    "text": "好不好不重要。双机热备，一台出问题，另一台顶上。我们是一对。",
+    "mood": "smile",
+    "chapter": "ch9",
+    "stage": "9-3",
+    "root": "voice-4"
+  },
+  {
+    "id": "va035c731",
+    "who": "houzi",
+    "text": "看台上的人都在笑！这表演赛值了！",
+    "mood": "cheer",
+    "chapter": "ch9",
+    "stage": "9-3",
+    "root": "voice-4"
+  },
+  {
+    "id": "v7b30abc7",
+    "who": "guoge",
+    "text": "我那几个健身房的兄弟，打球全靠力气，十个高远九个出界。",
+    "mood": "tired",
+    "chapter": "ch9",
+    "stage": "9-4",
+    "root": "voice-4"
+  },
+  {
+    "id": "vf42c88f3",
+    "who": "guoge",
+    "text": "我以前也一样。直到王瑞教我接杀，朱老师骂我只会等。",
+    "mood": "think",
+    "chapter": "ch9",
+    "stage": "9-4",
+    "root": "voice-4"
+  },
+  {
+    "id": "v5846b11f",
+    "who": "ruibao",
+    "text": "那你来教他们。稳定，也是一种本事。",
+    "mood": "smile",
+    "chapter": "ch9",
+    "stage": "9-4",
+    "root": "voice-4"
+  },
+  {
+    "id": "v31ccf0f8",
+    "who": "guoge",
+    "text": "好。兄弟们，看好了——这不是比谁打得远，是比谁打得准。",
+    "mood": "point",
+    "chapter": "ch9",
+    "stage": "9-4",
+    "root": "voice-4"
+  },
+  {
+    "id": "vac03cd8",
+    "who": "guoge",
+    "text": "十个里，有七个落在后场！比卧推加重还爽。",
+    "mood": "happy",
+    "chapter": "ch9",
+    "stage": "9-4",
+    "root": "voice-4"
+  },
+  {
+    "id": "vf3d63de9",
+    "who": "laochen",
+    "text": "开放日第一天，一百三十七人次。重复签名已经去掉了。",
+    "mood": "talk",
+    "chapter": "ch9",
+    "stage": "9-4",
+    "root": "voice-4"
+  },
+  {
+    "id": "vbe737f0a",
+    "who": "lu",
+    "text": "模型更新：百分之七十九。",
+    "mood": "happy",
+    "chapter": "ch9",
+    "stage": "9-4",
+    "root": "voice-4"
+  },
+  {
+    "id": "va7cc1ddc",
+    "who": "canglan",
+    "text": "别更新了。剩下的，交给明天。",
+    "mood": "smile",
+    "chapter": "ch9",
+    "stage": "9-4",
+    "root": "voice-4"
+  },
+  {
+    "id": "vadb42f4d",
+    "who": "nar",
+    "text": "开放日最后一场。看台上，坐着新朋友、老顾客、阿姨们，还有铁力的店长。",
+    "mood": "talk",
+    "chapter": "ch9",
+    "stage": "9-5",
+    "root": "voice-4"
+  },
+  {
+    "id": "v8e656bb2",
+    "who": "me",
+    "text": "今天不比技能，只比我们练过的东西。",
+    "mood": "point",
+    "chapter": "ch9",
+    "stage": "9-5",
+    "root": "voice-4"
+  },
+  {
+    "id": "v141668a0",
+    "who": "xingxing",
+    "text": "我来当你的对手。这次我不怕输了。",
+    "mood": "happy",
+    "chapter": "ch9",
+    "stage": "9-5",
+    "root": "voice-4"
+  },
+  {
+    "id": "v523270a0",
+    "who": "ranran",
+    "text": "赛后握手，球用拍子轻轻送回对面。新朋友都在看着。",
+    "mood": "point",
+    "chapter": "ch9",
+    "stage": "9-5",
+    "root": "voice-4"
+  },
+  {
+    "id": "v7671f47c",
+    "who": "mm",
+    "text": "输了也有东西带回家，赢了也还有东西要学！",
+    "mood": "cheer",
+    "chapter": "ch9",
+    "stage": "9-5",
+    "root": "voice-4"
+  },
+  {
+    "id": "v925f0bdf",
+    "who": "xingxing",
+    "text": "好球。……你看，我输了，可我在笑。",
+    "mood": "smile",
+    "chapter": "ch9",
+    "stage": "9-5",
+    "root": "voice-4"
+  },
+  {
+    "id": "v91070ee7",
+    "who": "nar",
+    "text": "铁力的店长站起来鼓掌。第二天，他在共享方案上签了字。",
+    "mood": "talk",
+    "chapter": "ch9",
+    "stage": "9-5",
+    "root": "voice-4"
+  },
+  {
+    "id": "v15c7cdda",
+    "who": "laochen",
+    "text": "三天试运营，三百一十二人次。评估组说，最后一天来复查。",
+    "mood": "happy",
+    "chapter": "ch9",
+    "stage": "9-5",
+    "root": "voice-4"
+  },
+  {
+    "id": "v1c035fce",
+    "who": "canglan",
+    "text": "最后一天……也是外婆的生日。",
+    "mood": "wave",
+    "chapter": "ch9",
+    "stage": "9-5",
+    "root": "voice-4"
+  },
+  {
+    "id": "v677ad667",
+    "who": "tianchu",
+    "text": "外公说，档案室里有样东西，该还给你们了。",
+    "mood": "talk",
+    "chapter": "ch10",
+    "stage": "10-1",
+    "root": "voice-5"
+  },
+  {
+    "id": "v91c58e41",
+    "who": "me",
+    "text": "寒星的档案室……比我们的旧多了。",
+    "mood": "think",
+    "chapter": "ch10",
+    "stage": "10-1",
+    "root": "voice-5"
+  },
+  {
+    "id": "v55788a7a",
+    "who": "canglan",
+    "text": "外婆把自己撕了下来……交给了对手。",
+    "mood": "sad",
+    "chapter": "ch10",
+    "stage": "10-1",
+    "root": "voice-5"
+  },
+  {
+    "id": "v776e369f",
+    "who": "tianchu",
+    "text": "外公说，林奶奶那天把这一角塞给他：“误会是我的事，你们别吵。比赛打完，再拼回去。”",
+    "mood": "sad",
+    "chapter": "ch10",
+    "stage": "10-1",
+    "root": "voice-5"
+  },
+  {
+    "id": "ve2ab526e",
+    "who": "tianchu",
+    "text": "他欠一句道歉，欠了三十年。信写好了，一直没敢寄。",
+    "mood": "talk",
+    "chapter": "ch10",
+    "stage": "10-1",
+    "root": "voice-5"
+  },
+  {
+    "id": "v866756d7",
+    "who": "mm",
+    "text": "原来……不是谁都忘了那一球。是大家都在等。",
+    "mood": "sad",
+    "chapter": "ch10",
+    "stage": "10-1",
+    "root": "voice-5"
+  },
+  {
+    "id": "v396df0a1",
+    "who": "me",
+    "text": "那就让它落地吧。合影，我们一起拼回去。",
+    "mood": "smile",
+    "chapter": "ch10",
+    "stage": "10-1",
+    "root": "voice-5"
+  },
+  {
+    "id": "ve5bc1162",
+    "who": "zhu",
+    "text": "一九九六年是十五分制，只有发球方才能得分。十四平，我发球。",
+    "mood": "think",
+    "chapter": "ch10",
+    "stage": "10-2",
+    "root": "voice-5"
+  },
+  {
+    "id": "v9ef24a64",
+    "who": "tianchu",
+    "text": "现在是每球得分制。按哪一版规则打完那一分？",
+    "mood": "talk",
+    "chapter": "ch10",
+    "stage": "10-2",
+    "root": "voice-5"
+  },
+  {
+    "id": "v507f2803",
+    "who": "dingding",
+    "text": "有人还问，为什么我们故事里打七分，电视上却不是？",
+    "mood": "think",
+    "chapter": "ch10",
+    "stage": "10-2",
+    "root": "voice-5"
+  },
+  {
+    "id": "vf18bdf45",
+    "who": "mm",
+    "text": "规则会更新，先标清日期，再来判断。",
+    "mood": "smile",
+    "chapter": "ch10",
+    "stage": "10-2",
+    "root": "voice-5"
+  },
+  {
+    "id": "v840d8433",
+    "who": "zhu",
+    "text": "那就这么定：十四平，按当年的约定，我发球。打到有人领先两分，或者十六分封顶。",
+    "mood": "smile",
+    "chapter": "ch10",
+    "stage": "10-2",
+    "root": "voice-5"
+  },
+  {
+    "id": "v1379e33c",
+    "who": "tianchu",
+    "text": "外公说，他的膝盖不太行了。那一分，让我们替他们打。",
+    "mood": "smile",
+    "chapter": "ch10",
+    "stage": "10-2",
+    "root": "voice-5"
+  },
+  {
+    "id": "vb563cdbd",
+    "who": "zhu",
+    "text": "好。我的发球，交给凌风。",
+    "mood": "happy",
+    "chapter": "ch10",
+    "stage": "10-2",
+    "root": "voice-5"
+  },
+  {
+    "id": "vdcdb3f23",
+    "who": "tianchu",
+    "text": "你第一次和我打的时候，看到引拍就动了。",
+    "mood": "point",
+    "chapter": "ch10",
+    "stage": "10-3",
+    "root": "voice-5"
+  },
+  {
+    "id": "v6d8592b9",
+    "who": "me",
+    "text": "后来才发现，你同一个准备动作，能打出不同的球。",
+    "mood": "smile",
+    "chapter": "ch10",
+    "stage": "10-3",
+    "root": "voice-5"
+  },
+  {
+    "id": "v244ab26f",
+    "who": "tianchu",
+    "text": "变化不是让对手完全看不见，而是推迟他确认信息的时间。",
+    "mood": "talk",
+    "chapter": "ch10",
+    "stage": "10-3",
+    "root": "voice-5"
+  },
+  {
+    "id": "v305a64e0",
+    "who": "mm",
+    "text": "游戏里的三道幻影是表现效果。现实里，还是看身体、拍面和触球。",
+    "mood": "point",
+    "chapter": "ch10",
+    "stage": "10-3",
+    "root": "voice-5"
+  },
+  {
+    "id": "vc6b531a7",
+    "who": "tianchu",
+    "text": "现在，你不只会背三拍的顺序了。",
+    "mood": "happy",
+    "chapter": "ch10",
+    "stage": "10-3",
+    "root": "voice-5"
+  },
+  {
+    "id": "v1470d4e6",
+    "who": "me",
+    "text": "对手站位不一样，计划也要跟着改。",
+    "mood": "talk",
+    "chapter": "ch10",
+    "stage": "10-3",
+    "root": "voice-5"
+  },
+  {
+    "id": "v9a5f39b4",
+    "who": "tianchu",
+    "text": "很好。明天那场交流赛，我可不会因为我们熟了就让球。",
+    "mood": "smile",
+    "chapter": "ch10",
+    "stage": "10-3",
+    "root": "voice-5"
+  },
+  {
+    "id": "vcd3cfdf6",
+    "who": "me",
+    "text": "这次没有幻影，也没有技能？",
+    "mood": "think",
+    "chapter": "ch10",
+    "stage": "10-4",
+    "root": "voice-5"
+  },
+  {
+    "id": "v5c2196ab",
+    "who": "tianchu",
+    "text": "只有你、我和球。你可以挑自己喜欢的角色来打。",
+    "mood": "smile",
+    "chapter": "ch10",
+    "stage": "10-4",
+    "root": "voice-5"
+  },
+  {
+    "id": "va9f33006",
+    "who": "xiaohong",
+    "text": "赛后，先说一个做得好的决定，再说一个下次想改的地方。",
+    "mood": "point",
+    "chapter": "ch10",
+    "stage": "10-4",
+    "root": "voice-5"
+  },
+  {
+    "id": "v78454c35",
+    "who": "mm",
+    "text": "输了也有东西带回家，赢了也还有东西要学。",
+    "mood": "cheer",
+    "chapter": "ch10",
+    "stage": "10-4",
+    "root": "voice-5"
+  },
+  {
+    "id": "v944cb226",
+    "who": "tianchu",
+    "text": "这一场，我也记了很多笔记。",
+    "mood": "smile",
+    "chapter": "ch10",
+    "stage": "10-4",
+    "root": "voice-5"
+  },
+  {
+    "id": "vcb7e463c",
+    "who": "me",
+    "text": "下次交换？",
+    "mood": "happy",
+    "chapter": "ch10",
+    "stage": "10-4",
+    "root": "voice-5"
+  },
+  {
+    "id": "v7d1535a9",
+    "who": "tianchu",
+    "text": "下次先比赛，再交换。",
+    "mood": "wave",
+    "chapter": "ch10",
+    "stage": "10-4",
+    "root": "voice-5"
+  },
+  {
+    "id": "v66830a7e",
+    "who": "nar",
+    "text": "新的约定，写在旧照片的背面。字迹不同，留下名字的人，越来越多。",
+    "mood": "talk",
+    "chapter": "ch10",
+    "stage": "10-4",
+    "root": "voice-5"
+  },
+  {
+    "id": "v7f3f0ae4",
+    "who": "houzi",
+    "text": "复查前一晚，我想再练一次网前。",
+    "mood": "think",
+    "chapter": "ch10",
+    "stage": "10-5",
+    "root": "voice-5"
+  },
+  {
+    "id": "v8e262a98",
+    "who": "dingding",
+    "text": "你要干嘛？",
+    "mood": "surprise",
+    "chapter": "ch10",
+    "stage": "10-5",
+    "root": "voice-5"
+  },
+  {
+    "id": "vbcddf09c",
+    "who": "houzi",
+    "text": "初三那球之后，我一直躲着网前。明天大家都在，我想……先跟它和好。",
+    "mood": "smile",
+    "chapter": "ch10",
+    "stage": "10-5",
+    "root": "voice-5"
+  },
+  {
+    "id": "vcd37d2cf",
+    "who": "ruibao",
+    "text": "低球先搓，高球再扑。等一下，也是主动的选择。",
+    "mood": "point",
+    "chapter": "ch10",
+    "stage": "10-5",
+    "root": "voice-5"
+  },
+  {
+    "id": "v328f5351",
+    "who": "xiaohong",
+    "text": "这次没人喊“必须”。扑不扑，你自己决定。",
+    "mood": "talk",
+    "chapter": "ch10",
+    "stage": "10-5",
+    "root": "voice-5"
+  },
+  {
+    "id": "vc1a5ddc4",
+    "who": "houzi",
+    "text": "……扑下去了。有一个低的，我搓过去了，没硬扑。",
+    "mood": "happy",
+    "chapter": "ch10",
+    "stage": "10-5",
+    "root": "voice-5"
+  },
+  {
+    "id": "v5489f723",
+    "who": "dingding",
+    "text": "这才是你。初中那个手最快的猴子。",
+    "mood": "happy",
+    "chapter": "ch10",
+    "stage": "10-5",
+    "root": "voice-5"
+  },
+  {
+    "id": "vdf73c47",
+    "who": "houzi",
+    "text": "问题不大。以前是假装问题不大，这次是真的不大。",
+    "mood": "smile",
+    "chapter": "ch10",
+    "stage": "10-5",
+    "root": "voice-5"
+  },
+  {
+    "id": "vb27be0af",
+    "who": "xiaohong",
+    "text": "群名我改了：“羽毛球天下第一（四缺零）”。",
+    "mood": "smile",
+    "chapter": "ch10",
+    "stage": "10-5",
+    "root": "voice-5"
+  },
+  {
+    "id": "v2645f7c6",
+    "who": "mm",
+    "text": "四个人的群，今晚聊到了半夜。",
+    "mood": "happy",
+    "chapter": "ch10",
+    "stage": "10-5",
+    "root": "voice-5"
+  },
+  {
+    "id": "ve232d545",
+    "who": "nar",
+    "text": "倒计时最后一天。最早到的人，不再只有沧澜。",
+    "mood": "talk",
+    "chapter": "ch11",
+    "stage": "11-1",
+    "root": "voice-5"
+  },
+  {
+    "id": "vc30b660c",
+    "who": "canglan",
+    "text": "你们怎么都来了？",
+    "mood": "surprise",
+    "chapter": "ch11",
+    "stage": "11-1",
+    "root": "voice-5"
+  },
+  {
+    "id": "v51147b8",
+    "who": "ranran",
+    "text": "值日表上，有我们的名字。",
+    "mood": "smile",
+    "chapter": "ch11",
+    "stage": "11-1",
+    "root": "voice-5"
+  },
+  {
+    "id": "v3b115ce",
+    "who": "guoge",
+    "text": "今天是周四，我的练腿日。我还是来了。",
+    "mood": "tired",
+    "chapter": "ch11",
+    "stage": "11-1",
+    "root": "voice-5"
+  },
+  {
+    "id": "v245684a7",
+    "who": "lu",
+    "text": "还有自动提醒，不过今天没人需要它。",
+    "mood": "point",
+    "chapter": "ch11",
+    "stage": "11-1",
+    "root": "voice-5"
+  },
+  {
+    "id": "vfb0a5128",
+    "who": "me",
+    "text": "先检查场地，再挂营业牌。",
+    "mood": "talk",
+    "chapter": "ch11",
+    "stage": "11-1",
+    "root": "voice-5"
+  },
+  {
+    "id": "vf2827756",
+    "who": "canglan",
+    "text": "我第一次，可以晚来十分钟了。",
+    "mood": "happy",
+    "chapter": "ch11",
+    "stage": "11-1",
+    "root": "voice-5"
+  },
+  {
+    "id": "ve7aba9d2",
+    "who": "xiaohong",
+    "text": "也可以坐下来，完整看我们打一局。",
+    "mood": "smile",
+    "chapter": "ch11",
+    "stage": "11-1",
+    "root": "voice-5"
+  },
+  {
+    "id": "v852d9d8d",
+    "who": "mm",
+    "text": "守护球馆，不是永远不让它改变。是有人愿意一起照顾它。",
+    "mood": "talk",
+    "chapter": "ch11",
+    "stage": "11-1",
+    "root": "voice-5"
+  },
+  {
+    "id": "vccc92e2",
+    "who": "nar",
+    "text": "门口站着一个背着书包的新生，手里攥着开放日的传单。",
+    "mood": "talk",
+    "chapter": "ch11",
+    "stage": "11-2",
+    "root": "voice-5"
+  },
+  {
+    "id": "v272071c2",
+    "who": "me",
+    "text": "挑战书第一条：不会打，也可以报名。",
+    "mood": "point",
+    "chapter": "ch11",
+    "stage": "11-2",
+    "root": "voice-5"
+  },
+  {
+    "id": "v1f1d0ebf",
+    "who": "ruibao",
+    "text": "第二条：包子不能带上场地。",
+    "mood": "happy",
+    "chapter": "ch11",
+    "stage": "11-2",
+    "root": "voice-5"
+  },
+  {
+    "id": "v539f5c8a",
+    "who": "ranran",
+    "text": "第三条：不准拿别人的失误开玩笑。",
+    "mood": "smile",
+    "chapter": "ch11",
+    "stage": "11-2",
+    "root": "voice-5"
+  },
+  {
+    "id": "v910d4d79",
+    "who": "houzi",
+    "text": "第四条：打不好也没关系，问题不大。",
+    "mood": "happy",
+    "chapter": "ch11",
+    "stage": "11-2",
+    "root": "voice-5"
+  },
+  {
+    "id": "vd7555688",
+    "who": "xingxing",
+    "text": "第五条：完成自己的一个小目标，就值得庆祝。",
+    "mood": "talk",
+    "chapter": "ch11",
+    "stage": "11-2",
+    "root": "voice-5"
+  },
+  {
+    "id": "v3fdd324a",
+    "who": "nar",
+    "text": "新生在报名表上写下名字。字很小，旁边画了一只很大的羽毛球。",
+    "mood": "talk",
+    "chapter": "ch11",
+    "stage": "11-2",
+    "root": "voice-5"
+  },
+  {
+    "id": "v12914082",
+    "who": "me",
+    "text": "欢迎。先从接一个球开始。",
+    "mood": "happy",
+    "chapter": "ch11",
+    "stage": "11-2",
+    "root": "voice-5"
+  },
+  {
+    "id": "vd15ac7ad",
+    "who": "mm",
+    "text": "这句话，真耳熟。",
+    "mood": "cheer",
+    "chapter": "ch11",
+    "stage": "11-2",
+    "root": "voice-5"
+  },
+  {
+    "id": "v635072c4",
+    "who": "nar",
+    "text": "复查组到了。朱老师和田楚的外公，坐在场边的同一条长椅上。",
+    "mood": "talk",
+    "chapter": "ch11",
+    "stage": "11-3",
+    "root": "voice-5"
+  },
+  {
+    "id": "v9b29ca51",
+    "who": "zhu",
+    "text": "老田，三十年了。",
+    "mood": "smile",
+    "chapter": "ch11",
+    "stage": "11-3",
+    "root": "voice-5"
+  },
+  {
+    "id": "vccfe64e2",
+    "who": "tianchu",
+    "text": "外公说：“林姐要是在，肯定嫌我们磨蹭。”",
+    "mood": "talk",
+    "chapter": "ch11",
+    "stage": "11-3",
+    "root": "voice-5"
+  },
+  {
+    "id": "vd60ac5a6",
+    "who": "canglan",
+    "text": "外婆的拍子，丁丁的爸爸换好了新握把。今天，它来发这一球。",
+    "mood": "smile",
+    "chapter": "ch11",
+    "stage": "11-3",
+    "root": "voice-5"
+  },
+  {
+    "id": "vc0cb8e37",
+    "who": "dingding",
+    "text": "二十四磅，握把干燥，拍框检查过了。",
+    "mood": "point",
+    "chapter": "ch11",
+    "stage": "11-3",
+    "root": "voice-5"
+  },
+  {
+    "id": "v9752b4e9",
+    "who": "mm",
+    "text": "我……我想起来了。那一夜，我就停在这里，十四平，所有人都看着我。",
+    "mood": "surprise",
+    "chapter": "ch11",
+    "stage": "11-3",
+    "root": "voice-5"
+  },
+  {
+    "id": "ve1813002",
+    "who": "mm",
+    "text": "这一次，让我落地吧！",
+    "mood": "cheer",
+    "chapter": "ch11",
+    "stage": "11-3",
+    "root": "voice-5"
+  },
+  {
+    "id": "v481b07d4",
+    "who": "nar",
+    "text": "最后一球落地。毛毛在地板上弹了一下，安安稳稳地躺住了。",
+    "mood": "talk",
+    "chapter": "ch11",
+    "stage": "11-3",
+    "root": "voice-5"
+  },
+  {
+    "id": "v8ad14388",
+    "who": "mm",
+    "text": "我落地了。三十年，终于落地了。",
+    "mood": "happy",
+    "chapter": "ch11",
+    "stage": "11-3",
+    "root": "voice-5"
+  },
+  {
+    "id": "v36527fb0",
+    "who": "zhu",
+    "text": "好球。这一分，打完了。",
+    "mood": "happy",
+    "chapter": "ch11",
+    "stage": "11-3",
+    "root": "voice-5"
+  },
+  {
+    "id": "v913d9962",
+    "who": "tianchu",
+    "text": "外公在哭。他说，他终于可以把信寄出去了。",
+    "mood": "smile",
+    "chapter": "ch11",
+    "stage": "11-3",
+    "root": "voice-5"
+  },
+  {
+    "id": "v896de84d",
+    "who": "nar",
+    "text": "两位老人站起来，隔着球网握了握手。复查组的老师，在本子上写了很久。",
+    "mood": "talk",
+    "chapter": "ch11",
+    "stage": "11-3",
+    "root": "voice-5"
+  },
+  {
+    "id": "v138ccffd",
+    "who": "nar",
+    "text": "傍晚，球馆门口挂起了彩旗。复查结果，要等明早公布。",
+    "mood": "talk",
+    "chapter": "ch11",
+    "stage": "11-4",
+    "root": "voice-5"
+  },
+  {
+    "id": "v685e2bd8",
+    "who": "houzi",
+    "text": "凌风，最后这场友谊赛，我要认真打。不开玩笑，不说“问题不大”。",
+    "mood": "fist",
+    "chapter": "ch11",
+    "stage": "11-4",
+    "root": "voice-5"
+  },
+  {
+    "id": "vbc682de5",
+    "who": "me",
+    "text": "你认真起来是什么样？",
+    "mood": "surprise",
+    "chapter": "ch11",
+    "stage": "11-4",
+    "root": "voice-5"
+  },
+  {
+    "id": "vdcfbfec3",
+    "who": "houzi",
+    "text": "不知道。两年没认真过了，我也想看看。",
+    "mood": "smile",
+    "chapter": "ch11",
+    "stage": "11-4",
+    "root": "voice-5"
+  },
+  {
+    "id": "v70146a3c",
+    "who": "dingding",
+    "text": "猴子认真模式！截图！不，录像！",
+    "mood": "cheer",
+    "chapter": "ch11",
+    "stage": "11-4",
+    "root": "voice-5"
+  },
+  {
+    "id": "v4378d56",
+    "who": "xiaohong",
+    "text": "这次我不带训练表。我带计分牌。",
+    "mood": "smile",
+    "chapter": "ch11",
+    "stage": "11-4",
+    "root": "voice-5"
+  },
+  {
+    "id": "v59ecd1d0",
+    "who": "houzi",
+    "text": "呼……认真打，原来这么累，又这么爽。",
+    "mood": "tired",
+    "chapter": "ch11",
+    "stage": "11-4",
+    "root": "voice-5"
+  },
+  {
+    "id": "v2cc4ff51",
+    "who": "me",
+    "text": "下次还打？",
+    "mood": "happy",
+    "chapter": "ch11",
+    "stage": "11-4",
+    "root": "voice-5"
+  },
+  {
+    "id": "v6449aa75",
+    "who": "houzi",
+    "text": "下次还打。周三打球，周五开黑。",
+    "mood": "happy",
+    "chapter": "ch11",
+    "stage": "11-4",
+    "root": "voice-5"
+  },
+  {
+    "id": "v9417a722",
+    "who": "nar",
+    "text": "这句话，比奖杯在球馆里留得更久。",
+    "mood": "talk",
+    "chapter": "ch11",
+    "stage": "11-4",
+    "root": "voice-5"
+  },
+  {
+    "id": "v26670776",
+    "who": "nar",
+    "text": "第二天清晨，公告栏上贴出了新的通知。",
+    "mood": "talk",
+    "chapter": "ch11",
+    "stage": "11-5",
+    "root": "voice-5"
+  },
+  {
+    "id": "vd5101a91",
+    "who": "laochen",
+    "text": "“星光体育馆：继续开放，实行共享运营，每季度复查一次。”",
+    "mood": "happy",
+    "chapter": "ch11",
+    "stage": "11-5",
+    "root": "voice-5"
+  },
+  {
+    "id": "vf09d41b2",
+    "who": "lu",
+    "text": "模型更新：百分之一百！……好吧，是“继续开放，定期检查”。",
+    "mood": "cheer",
+    "chapter": "ch11",
+    "stage": "11-5",
+    "root": "voice-5"
+  },
+  {
+    "id": "v1b8cf08f",
+    "who": "guoge",
+    "text": "铁力出维修费，挂个冠名。周末上午的体能课，我来带。",
+    "mood": "smile",
+    "chapter": "ch11",
+    "stage": "11-5",
+    "root": "voice-5"
+  },
+  {
+    "id": "vc3468cdc",
+    "who": "zhu",
+    "text": "这就很好。没有一座球馆，能靠一次胜利永远存在。",
+    "mood": "smile",
+    "chapter": "ch11",
+    "stage": "11-5",
+    "root": "voice-5"
+  },
+  {
+    "id": "vbb3232e3",
+    "who": "canglan",
+    "text": "合影拼好了。外婆在最右边，笑得很好看。",
+    "mood": "happy",
+    "chapter": "ch11",
+    "stage": "11-5",
+    "root": "voice-5"
+  },
+  {
+    "id": "va17b37ae",
+    "who": "me",
+    "text": "这里永远有你的位置。",
+    "mood": "wave",
+    "chapter": "ch11",
+    "stage": "11-5",
+    "root": "voice-5"
+  },
+  {
+    "id": "v88d2b474",
+    "who": "me",
+    "text": "下一球，一起变强。",
+    "mood": "wave",
+    "chapter": "ch11",
+    "stage": "11-5",
+    "root": "voice-5"
+  },
+  {
+    "id": "vd61fb21b",
+    "who": "canglan",
+    "text": "钥匙，现在有七把了。",
+    "mood": "happy",
+    "chapter": "ch11",
+    "stage": "11-5",
+    "root": "voice-5"
+  },
+  {
+    "id": "v6b27df79",
+    "who": "ranran",
+    "text": "奶茶，还是不能带进场地。",
+    "mood": "smile",
+    "chapter": "ch11",
+    "stage": "11-5",
+    "root": "voice-5"
+  },
+  {
+    "id": "v590b3c93",
+    "who": "houzi",
+    "text": "开黑群改名了：“羽毛球天下第一 · 扩展包”。",
+    "mood": "happy",
+    "chapter": "ch11",
+    "stage": "11-5",
+    "root": "voice-5"
+  },
+  {
+    "id": "v3636e3b7",
+    "who": "xiaohong",
+    "text": "训练表我也改了。第一行写着：允许失误。",
+    "mood": "smile",
+    "chapter": "ch11",
+    "stage": "11-5",
+    "root": "voice-5"
+  },
+  {
+    "id": "vfcd0ff44",
+    "who": "xingxing",
+    "text": "天亮了。开门吧！",
+    "mood": "cheer",
+    "chapter": "ch11",
+    "stage": "11-5",
+    "root": "voice-5"
+  },
+  {
+    "id": "v78d6bf87",
+    "who": "mm",
+    "text": "你以为故事结束了？听——又有人在问，能不能借一支球拍。",
+    "mood": "happy",
+    "chapter": "ch11",
+    "stage": "11-5",
+    "root": "voice-5"
+  },
+  {
+    "id": "vc98ab9fd",
+    "who": "me",
+    "text": "当然能。我刚来的时候，也是这样被人接住的。",
+    "mood": "smile",
+    "chapter": "ch11",
+    "stage": "11-5",
+    "root": "voice-5"
+  },
+  {
+    "id": "v47677f87",
+    "who": "nar",
+    "text": "星光回响 · 完。可以回到任意已解锁的章节重温、补星，也可以邀请好友，打出你自己的下一球。",
+    "mood": "talk",
+    "chapter": "ch11",
+    "stage": "11-5",
+    "root": "voice-5"
+  }
+]

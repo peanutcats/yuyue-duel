@@ -1,0 +1,16 @@
+{
+  "digest": "204e40ed027664061f64d1f552413ea5a9f15198d04b30cbcae7e007b68c3ee5",
+  "request_id": "7a3abd6e-179b-94ed-98cf-60b3f4f92297",
+  "usage": {
+    "input_tokens": 34,
+    "output_tokens": 93,
+    "total_tokens": 127,
+    "characters": 63
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yycanglan-a4eb561889b24f5985d096ce0c286c74",
+  "text": "新同学？别站着，帮我把场地清出来。灯管坏了三根，能用的场地只剩一块。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：亲切地招呼同伴。",
+  "who": "canglan"
+}

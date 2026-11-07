@@ -1,0 +1,16 @@
+{
+  "digest": "7f3bd2628292544d8687f2225dd2cb6ec5685657e541c6d45ad88c29f83513db",
+  "request_id": "929b5f18-f876-9781-b462-0501a5a4fbac",
+  "usage": {
+    "input_tokens": 33,
+    "output_tokens": 83,
+    "total_tokens": 116,
+    "characters": 63
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yylu-77a02af0575b449fadd3046da74d049f",
+  "text": "根据过去一个月的使用记录：每周平均来四个人，其中三个是来找厕所的。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：清楚地提醒同伴，强调关键动作。",
+  "who": "lu"
+}

@@ -1,0 +1,16 @@
+{
+  "digest": "55c64e6f8098eda6c7525e20da118caac6b518547d9f4f4de1dab647a181669c",
+  "request_id": "06824a2e-e9e5-9b02-a3d0-cc0492d76f19",
+  "usage": {
+    "input_tokens": 11,
+    "output_tokens": 53,
+    "total_tokens": 64,
+    "characters": 21
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyhouzi-8b1303f4011a48d5a7de5234aa93c44f",
+  "text": "我就说那个徽章不对劲！",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：短暂惊讶，随后像向同伴确认。",
+  "who": "houzi"
+}

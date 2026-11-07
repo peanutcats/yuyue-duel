@@ -1,0 +1,16 @@
+{
+  "digest": "f82c63050fc9c139f51070a66df31f45cb512211068cbd2f02428b6df314917f",
+  "request_id": "8fd943e7-7482-942d-b6ad-45fee5a6ecf4",
+  "usage": {
+    "input_tokens": 29,
+    "output_tokens": 78,
+    "total_tokens": 107,
+    "characters": 55
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyguoge-9c9d4191af904024a507774c10119d97",
+  "text": "欢迎来到我的第二个家。看见那面镜子没？我和它每天见两次面。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "guoge"
+}

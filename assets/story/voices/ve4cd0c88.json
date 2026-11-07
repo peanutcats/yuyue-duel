@@ -1,0 +1,16 @@
+{
+  "digest": "c4cd9c7293d1947d8b67a347a28d35a4bcaf624e7df2bc5c736cde82fdaaf5ce",
+  "request_id": "978dd657-1a42-9180-9427-76df85e9e982",
+  "usage": {
+    "input_tokens": 9,
+    "output_tokens": 42,
+    "total_tokens": 51,
+    "characters": 15
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyhouzi-8b1303f4011a48d5a7de5234aa93c44f",
+  "text": "赢了！集结令，发！",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：高兴而充满干劲，笑意自然。",
+  "who": "houzi"
+}

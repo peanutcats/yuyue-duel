@@ -2,13 +2,13 @@
 (function (G) {
   'use strict';
   const YY = G.YY;
-  const ACTS = ['jump', 'clear', 'drop', 'smash', 'skill'];
+  const ACTS = ['jump', 'clear', 'drop', 'smash', 'skill', 'skill2'];
 
   const KEYMAPS = {
     solo: {
       left: ['KeyA', 'ArrowLeft'], right: ['KeyD', 'ArrowRight'],
       jump: ['KeyW', 'ArrowUp', 'Space'], clear: ['KeyJ', 'KeyZ'], drop: ['KeyK', 'KeyX'], smash: ['KeyL', 'KeyC'],
-      skill: ['KeyI', 'KeyV'],
+      skill: ['KeyI', 'KeyV'], skill2: ['KeyO', 'KeyB'],
     },
     p1: { left: ['KeyA'], right: ['KeyD'], jump: ['KeyW'], clear: ['KeyF'], drop: ['KeyG'], smash: ['KeyH'] },
     p2: {
@@ -34,7 +34,7 @@
       r = YY.clamp(r + this.touchDir, -1, 1);
       return this.netRight ? r : -r; // 转为“向网为正”
     }
-    push(act) { this.queue.push(act); if (act in this.counts) this.counts[act]++; Input.changed(); }
+    push(act, aim) { this.queue.push(aim == null ? act : { btn:act, aim }); if (act in this.counts) this.counts[act]++; Input.changed(); }
     onKey(code) {
       for (const a of ACTS) if ((this.map[a] || []).includes(code)) { this.push(a); return true; }
       return this.map.left.includes(code) || this.map.right.includes(code);
@@ -48,9 +48,11 @@
     onAny: null,
     onChange: null,
     touchResets: [],
+    skillAims: new Map(),
     changed() { if (this.onChange) this.onChange(); },
     releaseAll() {
       this.held.clear();
+      this.skillAims.clear();
       for (const reset of this.touchResets) reset();
       for (const c of this.ctrls) { c.touchDir = 0; c.queue = []; }
       this.changed();
@@ -105,8 +107,8 @@
   };
 
   // ---------- 触屏 ----------
-  const LABELS = { jump: '跳', clear: '高远', drop: '吊球', smash: '扣杀', skill: '技能' };
-  const SUBS = { jump: 'JUMP', clear: '挑球', drop: '放网', smash: '强攻', skill: 'SKILL' };
+  const LABELS = { jump: '跳', clear: '高远', drop: '吊球', smash: '扣杀', skill: '技能', skill2: '技能' };
+  const SUBS = { jump: 'JUMP', clear: '挑球', drop: '放网', smash: '强攻', skill: 'SKILL', skill2: 'SKILL 2' };
   const ICONS = {
     jump: '<path d="m6 12 6-6 6 6M6 18l6-6 6 6"/>',
     clear: '<path d="M4 19C6 5 14 2 20 7m-5-1 5 1-1 5"/>',
@@ -195,7 +197,7 @@
     return pad;
   }
 
-  function makeBtn(ctrl, act, cls, label) {
+  function makeBtn(ctrl, act, cls, label, skillId) {
     const b = document.createElement('button');
     b.type = 'button';
     b.setAttribute('aria-label', label || LABELS[act]);
@@ -207,12 +209,17 @@
       if (e.button !== 0 || pointers.has(e.pointerId)) return;
       pointers.add(e.pointerId);
       try { b.setPointerCapture(e.pointerId); } catch (_) {}
-      ctrl.push(act);
+      if(YY.SKILLS?.[skillId]?.aim){const pos=YY.toApp(e.clientX,e.clientY);Input.skillAims.set(e.pointerId,{id:skillId,player:Input.ctrls.indexOf(ctrl),aim:0,x:pos.x,y:pos.y,cancelled:false});b.title='拖动瞄准，松手释放；拖远取消';}
+      else ctrl.push(act);
       b.classList.add('down');
       buzz(act === 'smash' ? 18 : 8);
     });
+    const aimMove=e=>{const a=Input.skillAims.get(e.pointerId);if(!a)return;const pos=YY.toApp(e.clientX,e.clientY),dx=pos.x-a.x,dy=a.y-pos.y,n=Math.hypot(dx,dy);a.cancelled=n>185;a.aim=n<12?0:{x:dx/Math.max(68,n)*(ctrl.netRight?1:-1),y:dy/Math.max(68,n)};b.style.opacity=a.cancelled?'.4':'1';};
+    b.addEventListener('pointermove',aimMove);
     const up = e => {
       if (!pointers.delete(e.pointerId)) return;
+      aimMove(e);const a=Input.skillAims.get(e.pointerId);Input.skillAims.delete(e.pointerId);b.style.opacity='';
+      if(a && e.type==='pointerup' && !a.cancelled)ctrl.push(act,a.aim || undefined);
       try { if (b.hasPointerCapture(e.pointerId)) b.releasePointerCapture(e.pointerId); } catch (_) {}
       b.classList.toggle('down', pointers.size > 0);
     };
@@ -220,6 +227,7 @@
     b.addEventListener('click', e => { if (e.detail === 0 && !e.pointerType) ctrl.push(act); });
     Input.touchResets.push(() => {
       const ids = [...pointers]; pointers.clear(); b.classList.remove('down');
+      for(const id of ids)Input.skillAims.delete(id);b.style.opacity='';
       for (const id of ids) try { if (b.hasPointerCapture(id)) b.releasePointerCapture(id); } catch (_) {}
     });
     return b;
@@ -237,8 +245,15 @@
       arc.className = 'arc';
       for (const a of ['clear', 'drop', 'smash', 'jump']) arc.appendChild(makeBtn(ctrls[0], a));
       if (opt && opt.skill) {
-        const sb = makeBtn(ctrls[0], 'skill', null, opt.skill);
+        const sb = makeBtn(ctrls[0], 'skill', null, opt.skill, opt.skillId);
+        if (opt.skillId && YY.SkillIcons) sb.querySelector('svg').outerHTML = YY.SkillIcons.svg(opt.skillId);
         sb.style.setProperty('--sk', opt.color || '#ffd23f');
+        arc.appendChild(sb);
+      }
+      if (opt && opt.skill2) {
+        const sb = makeBtn(ctrls[0], 'skill2', null, opt.skill2, opt.skillId2);
+        if (opt.skillId2 && YY.SkillIcons) sb.querySelector('svg').outerHTML = YY.SkillIcons.svg(opt.skillId2);
+        sb.style.setProperty('--sk', opt.color2 || '#ffd23f');
         arc.appendChild(sb);
       }
       root.appendChild(arc);

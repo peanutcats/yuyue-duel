@@ -1,0 +1,16 @@
+{
+  "digest": "1b1908ebbef0f5137c23323a7057a638a515f76691f6dbc201d20191dfb2e67e",
+  "request_id": "97f00ebc-7446-9d24-ac67-8e5a07fdfaca",
+  "usage": {
+    "input_tokens": 10,
+    "output_tokens": 21,
+    "total_tokens": 31,
+    "characters": 18
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yycanglan-a4eb561889b24f5985d096ce0c286c74",
+  "text": "钥匙，现在有七把了。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "canglan"
+}

@@ -1,0 +1,16 @@
+{
+  "digest": "aac692348321aece09433a3b43fb226f8f31b50af8797f8bbc513d67b653613c",
+  "request_id": "afbea820-e0bb-9397-88e3-8f826b96807e",
+  "usage": {
+    "input_tokens": 14,
+    "output_tokens": 42,
+    "total_tokens": 56,
+    "characters": 27
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyme-fe7bb10e54c34773bd5b8380c1b96481",
+  "text": "黑板上终于不只写着第一名了。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "me"
+}

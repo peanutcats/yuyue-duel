@@ -1,0 +1,20 @@
+{
+  "digest": "3bb9d7df259b7ab015b47e7202d4b8f37697031992d1f159d48abb10bde9857f",
+  "file": "ranran-ve76cd45a.wav",
+  "who": "ranran",
+  "name": "冉冉",
+  "text": "我只是陪星星来看看。跑那么远，奶茶会化的。",
+  "mood": "shy",
+  "delivery": "柔和",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：有点不好意思，停顿轻微，自然含蓄。",
+  "request_id": "431b0fd2-d5d0-9825-b49e-c24d2e29d80d",
+  "usage": {
+    "input_tokens": 21,
+    "output_tokens": 44,
+    "total_tokens": 65,
+    "characters": 39
+  },
+  "reused_audition": true,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyranran-3608278c42c041e2add2c5da6d1d2979"
+}

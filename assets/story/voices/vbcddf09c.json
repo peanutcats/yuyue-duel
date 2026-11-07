@@ -1,0 +1,16 @@
+{
+  "digest": "c06f28ec7da4084ab3938b5273ed89c1067d278dc36a839451353cb96ccbe860",
+  "request_id": "50730d6f-07e1-982f-9298-a646837fecc4",
+  "usage": {
+    "input_tokens": 31,
+    "output_tokens": 119,
+    "total_tokens": 150,
+    "characters": 58
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyhouzi-8b1303f4011a48d5a7de5234aa93c44f",
+  "text": "初三那球之后，我一直躲着网前。明天大家都在，我想……先跟它和好。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "houzi"
+}

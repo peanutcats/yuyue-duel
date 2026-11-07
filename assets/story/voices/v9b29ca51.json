@@ -1,0 +1,16 @@
+{
+  "digest": "0cf7ff05f8a19c444abd4445eb666ebeaaf4366fffd34a793f3020ab4cebe898",
+  "request_id": "3d7965ed-704e-920c-bb96-fa321b046bc1",
+  "usage": {
+    "input_tokens": 8,
+    "output_tokens": 26,
+    "total_tokens": 34,
+    "characters": 14
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyzhu-51d3e2230c6d4ee8b71cd80474e27aef",
+  "text": "老田，三十年了。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "zhu"
+}

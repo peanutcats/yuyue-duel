@@ -1,0 +1,16 @@
+{
+  "digest": "37169e4c57aaf12d6fc56b659dcff855ca3447fbaba45124171d3aff6cc3c6c2",
+  "request_id": "6748dd72-7b09-94e9-a624-f1895d38c26e",
+  "usage": {
+    "input_tokens": 18,
+    "output_tokens": 43,
+    "total_tokens": 61,
+    "characters": 34
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yycanglan-a4eb561889b24f5985d096ce0c286c74",
+  "text": "今天第一次，有人陪我发完最后一个球。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "canglan"
+}

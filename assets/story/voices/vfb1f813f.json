@@ -1,0 +1,16 @@
+{
+  "digest": "2ef16129fa530658a862db82b15190cfc0fcbb77c7a1f2658a9b1deb1ec001e2",
+  "request_id": "2aaba7ab-2a89-9ea7-8028-b9d3f273a062",
+  "usage": {
+    "input_tokens": 26,
+    "output_tokens": 76,
+    "total_tokens": 102,
+    "characters": 48
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyguoge-9c9d4191af904024a507774c10119d97",
+  "text": "丁丁，给我穿三十磅。职业选手都穿这么高，越高越厉害。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：清楚地提醒同伴，强调关键动作。",
+  "who": "guoge"
+}

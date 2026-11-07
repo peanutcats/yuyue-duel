@@ -1,0 +1,16 @@
+{
+  "digest": "f334a420001d075c035f04ff304ece075b9ea367d9b79081a039b07b8231eabe",
+  "request_id": "1f0dade1-f3f4-9d0e-ba8a-4c60b6d74211",
+  "usage": {
+    "input_tokens": 26,
+    "output_tokens": 69,
+    "total_tokens": 95,
+    "characters": 49
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yycanglan-a4eb561889b24f5985d096ce0c286c74",
+  "text": "是外婆自己撕的。她从来不肯拍照，我一直以为她是害羞。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：边想边说，停顿有分寸，不拖长。",
+  "who": "canglan"
+}

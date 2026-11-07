@@ -1,0 +1,16 @@
+{
+  "digest": "f1099f1979ffb6e89d3dde987d7d6411dc3b3a298685f6757604734c378b0955",
+  "request_id": "d96b387b-f12c-98e1-b356-bfbff1ee735c",
+  "usage": {
+    "input_tokens": 34,
+    "output_tokens": 67,
+    "total_tokens": 101,
+    "characters": 65
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yynar-9a6555ee9f6e43f0b167a59eec741be0",
+  "text": "手机响个不停。群里一条接一条：“猴哥都去了？”“我也去！”“有新手教程吗？”",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "nar"
+}

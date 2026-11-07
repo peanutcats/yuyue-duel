@@ -1,0 +1,16 @@
+{
+  "digest": "5f692ac1c8311ba55f1d5e03cbc653f440b1ddeefd1bf538808443da421ffa18",
+  "request_id": "6f82ce79-9c62-961f-8fd6-e31e46ab6854",
+  "usage": {
+    "input_tokens": 26,
+    "output_tokens": 74,
+    "total_tokens": 100,
+    "characters": 49
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyguoge-9c9d4191af904024a507774c10119d97",
+  "text": "分散投资嘛。拍子好看是一份收益，能不能打球是另一份。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "guoge"
+}

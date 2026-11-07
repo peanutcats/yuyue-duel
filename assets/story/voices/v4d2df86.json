@@ -1,0 +1,16 @@
+{
+  "digest": "efb30747a6f6137c7d347d431a166e7e69c50c723b9bfca0c40548bec946b34e",
+  "request_id": "9b84e6ae-cd56-9910-9d95-30d2dcfa57ac",
+  "usage": {
+    "input_tokens": 7,
+    "output_tokens": 23,
+    "total_tokens": 30,
+    "characters": 13
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyme-fe7bb10e54c34773bd5b8380c1b96481",
+  "text": "……他就是猴子？",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：短暂惊讶，随后像向同伴确认。",
+  "who": "me"
+}

@@ -1,0 +1,16 @@
+{
+  "digest": "d465db92daef22375ea67dc67ef3fd1062977a3f6d16b8b5234834e59b6204f2",
+  "request_id": "f6838042-041d-9fa1-a84e-0062e4c589fb",
+  "usage": {
+    "input_tokens": 32,
+    "output_tokens": 98,
+    "total_tokens": 130,
+    "characters": 58
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyzhu-51d3e2230c6d4ee8b71cd80474e27aef",
+  "text": "是我。十四平，我发球。我刚抬头看球，林姐就走到网前，说门外有人。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：温和带笑地交谈。",
+  "who": "zhu"
+}

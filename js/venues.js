@@ -9,16 +9,20 @@
 
   /** 屏幕几何：世界坐标 → 屏幕（不含镜像与镜头） */
   YY.geometry = function (W, H, touch) {
-    const bottom = touch ? H * 0.2 : H * 0.06;
+    // 手机横屏：镜头更近、俯角更大，球场呈近宽远窄的透视梯形，人物占画面更大比例
+    const bottom = touch ? H * 0.17 : H * 0.06;
     const top = touch ? Math.max(40, H * 0.08) : Math.max(58, H * 0.11);
-    const sc = Math.min(W / 17.4, (H - bottom - top) / (touch ? 6.4 : 7.4));
+    const sc = Math.min(W / (touch ? 15.2 : 17.4), (H - bottom - top) / (touch ? 5.7 : 7.4));
     const gy = H - bottom - 0.35 * sc;
-    const V = { W, H, sc, gy, cx: W / 2, ox: 0.1 * sc, oy: 0.085 * sc };
+    const V = touch ? { W, H, sc, gy, cx: W / 2, ox: 0.02 * sc, oy: 0.19 * sc, pz: 0.05 }
+      : { W, H, sc, gy, cx: W / 2, ox: 0.1 * sc, oy: 0.085 * sc, pz: 0 };
     V.standTop = gy - 5.8 * sc;
-    V.adTop = gy - 1.3 * sc;
+    V.adTop = gy - (touch ? 1.5 : 1.3) * sc; // 俯角更大时地板更深，广告牌随之后移
     V.adH = 0.55 * sc;
     V.floorTop = V.adTop + V.adH;
-    V.P = (x, y, z) => [V.cx + x * sc + z * V.ox, gy - y * sc + z * V.oy];
+    // 深度 z（+z 靠近镜头）带透视缩放：选手所在的 z=0 平面与旧投影完全一致
+    V.depth = (z) => Math.max(0.3, 1 + z * V.pz);
+    V.P = (x, y, z) => { const k = V.depth(z); return [V.cx + x * sc * k + z * V.ox, gy - y * sc * k + z * V.oy]; };
     return V;
   };
 
@@ -85,7 +89,7 @@
     const rh = (bot - top) / rows;
     const strips = [];
     for (let row = 0; row < rows; row++) {
-      const c = document.createElement('canvas');
+      const c = YY.platform.createCanvas();
       const dpr = V.dpr || 1;
       const h = rh * 1.9;
       c.width = Math.max(1, Math.round(V.W * dpr)); c.height = Math.max(1, Math.round(h * dpr));
@@ -583,7 +587,7 @@
       // 霓虹招牌单独缓存，便于做闪烁
       const sc = V.sc, w = Math.round(sc * 9), h = Math.round(sc * 2.2);
       const dpr = V.dpr || 1;
-      const c = document.createElement('canvas');
+      const c = YY.platform.createCanvas();
       c.width = Math.max(1, w * dpr); c.height = Math.max(1, h * dpr);
       const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
       neonText(g, '羽跃', w * 0.3, h * 0.5, sc * 1.05, 'rgba(255,0,170,A)');
@@ -676,7 +680,7 @@
   /** 场馆缩略图（菜单用） */
   YY.venueThumb = function (id, w, h) {
     const v = YY.VENUES[id];
-    const c = document.createElement('canvas');
+    const c = YY.platform.createCanvas();
     c.width = w; c.height = h;
     const g = c.getContext('2d');
     const V = YY.geometry(w, h, false);
@@ -694,4 +698,4 @@
     if (v.drawFront) v.drawFront(g, fakeR, 2, st);
     return c;
   };
-})(window);
+})(typeof GameGlobal !== 'undefined' ? GameGlobal : typeof window !== 'undefined' ? window : globalThis);

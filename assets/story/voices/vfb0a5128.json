@@ -1,0 +1,16 @@
+{
+  "digest": "203176f52f8d2ba7c90d8a4404f264234496daecfa0898311d296d080e713d83",
+  "request_id": "38328325-f196-9d1b-a008-171aec9990c3",
+  "usage": {
+    "input_tokens": 12,
+    "output_tokens": 44,
+    "total_tokens": 56,
+    "characters": 22
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyme-fe7bb10e54c34773bd5b8380c1b96481",
+  "text": "先检查场地，再挂营业牌。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "me"
+}

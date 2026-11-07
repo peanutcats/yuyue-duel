@@ -1,0 +1,16 @@
+{
+  "digest": "72d9990387ab0d42eec330e717d2e5b39d2467cd9f802113238b03b8848d9f9d",
+  "request_id": "8195e003-404a-9eea-b003-6326f964842b",
+  "usage": {
+    "input_tokens": 11,
+    "output_tokens": 23,
+    "total_tokens": 34,
+    "characters": 20
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yymm-13991994e40b44a7b5af603229af22b3",
+  "text": "这一局，你来当路先森！",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：清楚地提醒同伴，强调关键动作。",
+  "who": "mm"
+}

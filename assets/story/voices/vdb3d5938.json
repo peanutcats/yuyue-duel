@@ -1,0 +1,16 @@
+{
+  "digest": "232e36a6b95441d9486c0e240a53f821df85d2b882145e7d9e460921eea431f3",
+  "request_id": "ae765c22-45a4-947c-99da-714985a2aaef",
+  "usage": {
+    "input_tokens": 19,
+    "output_tokens": 51,
+    "total_tokens": 70,
+    "characters": 35
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yycanglan-a4eb561889b24f5985d096ce0c286c74",
+  "text": "先别猜。能确认的东西，一件一件记下来。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：清楚地提醒同伴，强调关键动作。",
+  "who": "canglan"
+}

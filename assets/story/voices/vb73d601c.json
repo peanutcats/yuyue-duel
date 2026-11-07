@@ -1,0 +1,16 @@
+{
+  "digest": "f1649476d12000b19d885dbcee0da7089d0ee3765201d59e872d7bc82b75c610",
+  "request_id": "dd3ef416-b5ce-9f96-a888-abfb3e0ace6e",
+  "usage": {
+    "input_tokens": 10,
+    "output_tokens": 26,
+    "total_tokens": 36,
+    "characters": 19
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyguoge-9c9d4191af904024a507774c10119d97",
+  "text": "……周四是我的练腿日。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：稍显疲惫，语速放缓但清楚。",
+  "who": "guoge"
+}

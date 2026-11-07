@@ -1,0 +1,16 @@
+{
+  "digest": "57c1a172c5557b20fe676bf61f6d467cf9c6cde68e0c4fbce331998f35ac6670",
+  "request_id": "9bcd61ec-5b4c-9d76-bafd-7b707058cf55",
+  "usage": {
+    "input_tokens": 9,
+    "output_tokens": 26,
+    "total_tokens": 35,
+    "characters": 16
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyme-fe7bb10e54c34773bd5b8380c1b96481",
+  "text": "下一球，一起变强。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：亲切地招呼同伴。",
+  "who": "me"
+}

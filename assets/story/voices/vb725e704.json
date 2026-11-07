@@ -1,0 +1,16 @@
+{
+  "digest": "97bd475b2ec78f6506c77c766154fde7e20cdb031672afa1fd26b7db2a3c14f2",
+  "request_id": "187c0f61-a3bc-9baf-b38d-f6821fe7b717",
+  "usage": {
+    "input_tokens": 12,
+    "output_tokens": 30,
+    "total_tokens": 42,
+    "characters": 22
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyxiaohong-50dc0caa82b447ae85e9bc8b63563bcd",
+  "text": "他递录像，是挑衅，还是……",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：边想边说，停顿有分寸，不拖长。",
+  "who": "xiaohong"
+}

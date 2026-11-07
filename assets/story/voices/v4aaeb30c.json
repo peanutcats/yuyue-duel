@@ -1,0 +1,16 @@
+{
+  "digest": "0e69969571e10a6718bbdb05598d3495c6527115e15fc3cb0e3ce0c896933a05",
+  "request_id": "6a7d1a0f-27b7-9d5f-84b0-112c509150e7",
+  "usage": {
+    "input_tokens": 28,
+    "output_tokens": 72,
+    "total_tokens": 100,
+    "characters": 52
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yydingding-f5dc89dc6e3d4bbbb2d3395d7982e6ee",
+  "text": "还有，先说清楚再配合。别像打团时那样，五个人抢一个人头。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "dingding"
+}

@@ -1,0 +1,16 @@
+{
+  "digest": "08a41f9e5910461374be435b2f1fd4a4034c587394fb5171b5769e2259f7823a",
+  "request_id": "508cf7c6-3f4a-9c48-8e79-1824efc79213",
+  "usage": {
+    "input_tokens": 22,
+    "output_tokens": 41,
+    "total_tokens": 63,
+    "characters": 39
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yynar-9a6555ee9f6e43f0b167a59eec741be0",
+  "text": "营火噼啪作响。没有人看手机，连猴子也没有。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "nar"
+}

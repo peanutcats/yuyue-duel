@@ -1,0 +1,20 @@
+{
+  "digest": "9c7cc1628fd179955e35e0dbcfc5db9e5981efa1bb08f279fec890777aa17a30",
+  "file": "tianchu-v776e369f.wav",
+  "who": "tianchu",
+  "name": "田楚",
+  "text": "外公说，林奶奶那天把这一角塞给他：“误会是我的事，你们别吵。比赛打完，再拼回去。”",
+  "mood": "sad",
+  "delivery": "柔和",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：略感失落，声音放轻，保留完整吐字，不要哭腔。",
+  "request_id": "3b3eefa6-1166-93c6-9ff5-1678835959de",
+  "usage": {
+    "input_tokens": 39,
+    "output_tokens": 107,
+    "total_tokens": 146,
+    "characters": 74
+  },
+  "reused_audition": true,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yytianchu-2bb9df7a40db4ae7bafc77683d53adfb"
+}

@@ -1,0 +1,20 @@
+{
+  "digest": "fd890f20d53406440bad4ab8b699ebefb11124baa7c62effb47eb35bab4ddf94",
+  "file": "xingxing-v1618bace.wav",
+  "who": "xingxing",
+  "name": "星星",
+  "text": "一九九六年，星光杯决赛。票根背面写着：“比赛暂停，请大家去侧门帮忙。”",
+  "mood": "surprise",
+  "delivery": "激动",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：短暂惊讶，随后像向同伴确认。",
+  "request_id": "1d15ef76-201c-9ff1-be79-57f8829462e8",
+  "usage": {
+    "input_tokens": 33,
+    "output_tokens": 84,
+    "total_tokens": 117,
+    "characters": 63
+  },
+  "reused_audition": true,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyxingxing-bf1d887d84034502aa01912d757758a3"
+}

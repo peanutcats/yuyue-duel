@@ -1,0 +1,16 @@
+{
+  "digest": "d85e098d77a99f2dbc438a30f73cdc1ab76a633931c1fa000cfdb3578ce32326",
+  "request_id": "e06ed376-d5ad-9a8d-8484-34ba436af06f",
+  "usage": {
+    "input_tokens": 29,
+    "output_tokens": 101,
+    "total_tokens": 130,
+    "characters": 54
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyhouzi-8b1303f4011a48d5a7de5234aa93c44f",
+  "text": "三天试运营，人从哪来？我有办法——我的开黑群，三百二十个人。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：清楚地提醒同伴，强调关键动作。",
+  "who": "houzi"
+}

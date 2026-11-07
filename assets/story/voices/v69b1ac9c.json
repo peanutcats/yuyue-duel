@@ -1,0 +1,16 @@
+{
+  "digest": "9c8cd9c1c21adf73fbc288841b7378fff90686c244e69e6fd2a7b5c43c4420d2",
+  "request_id": "2c72d5e6-db5c-9346-ab0b-7d47e154dc83",
+  "usage": {
+    "input_tokens": 31,
+    "output_tokens": 77,
+    "total_tokens": 108,
+    "characters": 59
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyxiaohong-50dc0caa82b447ae85e9bc8b63563bcd",
+  "text": "画面里那个年轻的星光选手……戴眼镜，背有点驼。怎么那么像朱老师？",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：清楚地提醒同伴，强调关键动作。",
+  "who": "xiaohong"
+}

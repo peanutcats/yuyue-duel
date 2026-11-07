@@ -1,0 +1,16 @@
+{
+  "digest": "73005293da8f5fbe0846501d059adce9411fb7f8915dbfccc7cfcda85d2d32a4",
+  "request_id": "109f5192-2fa2-91e3-88ac-d9a913f0d4e0",
+  "usage": {
+    "input_tokens": 24,
+    "output_tokens": 74,
+    "total_tokens": 98,
+    "characters": 46
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yydingding-f5dc89dc6e3d4bbbb2d3395d7982e6ee",
+  "text": "他刚才说“重复最容易被抓”。猴子，你初三那球就是——",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：边想边说，停顿有分寸，不拖长。",
+  "who": "dingding"
+}

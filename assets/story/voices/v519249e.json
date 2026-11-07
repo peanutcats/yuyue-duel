@@ -1,0 +1,16 @@
+{
+  "digest": "1139de41f5387e916cd793579c14a41f3b2267b4ae9cf82df216f97671adc0f9",
+  "request_id": "fd6b66cc-0471-9394-ad96-e7e8bb0006bc",
+  "usage": {
+    "input_tokens": 45,
+    "output_tokens": 91,
+    "total_tokens": 136,
+    "characters": 85
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yylaochen-7f836bbf53de430389176c261a0e42e5",
+  "text": "我来。我们有当晚的清点记录、出口检查和街道的感谢信。也承认：以后需要一份写清楚的应急预案。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "laochen"
+}

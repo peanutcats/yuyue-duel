@@ -1,0 +1,16 @@
+{
+  "digest": "182d4ab7ac7a1d293c8978b9039a1a7b89af4001df3e000602f3197bd341a868",
+  "request_id": "b2f616ad-6a83-9f4c-b16f-9dfa85dedeb0",
+  "usage": {
+    "input_tokens": 26,
+    "output_tokens": 53,
+    "total_tokens": 79,
+    "characters": 50
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yynar-9a6555ee9f6e43f0b167a59eec741be0",
+  "text": "第二天，凌风被果哥拉进了一家二十四小时亮灯的健身房。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "nar"
+}

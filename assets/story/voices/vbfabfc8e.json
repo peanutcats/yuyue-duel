@@ -1,0 +1,16 @@
+{
+  "digest": "4864d90bf176277b4f4ec023b7866d0ae96775905a72c180906f7a3d7b602fa7",
+  "request_id": "428f5ff5-8cd2-95ae-9556-15c52a9f72bc",
+  "usage": {
+    "input_tokens": 18,
+    "output_tokens": 33,
+    "total_tokens": 51,
+    "characters": 34
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yynar-9a6555ee9f6e43f0b167a59eec741be0",
+  "text": "那是沧澜第一次，把钥匙交到别人手里。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：自然平实地交谈。",
+  "who": "nar"
+}

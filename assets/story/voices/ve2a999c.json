@@ -1,0 +1,16 @@
+{
+  "digest": "425802bd6402915f93e583dd84783d95b0201c33576e8d8ffcfe0a891f5dea35",
+  "request_id": "0bbd4eb3-8227-9173-8733-9325e4bb90fb",
+  "usage": {
+    "input_tokens": 15,
+    "output_tokens": 31,
+    "total_tokens": 46,
+    "characters": 28
+  },
+  "reused_audition": false,
+  "model": "qwen-audio-3.1-tts-plus",
+  "voice": "qwen-audio-3.1-tts-plus-vd-yyxingxing-bf1d887d84034502aa01912d757758a3",
+  "text": "那十二盏路灯，今天也给你留着。",
+  "instruction": "普通话校园运动群像剧。自然对话，人物之间有距离和温度；短句也有明确语气。避免广告腔、新闻播音腔、过度拖长句尾。本句：轻松高兴，带自然的笑意。",
+  "who": "xingxing"
+}
