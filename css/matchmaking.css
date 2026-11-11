@@ -1,0 +1,101 @@
+/* Broadcast court: cyan perimeter, gold readiness, restrained radar motion. */
+.match-entry { width:100%; display:flex; align-items:center; gap:16px; text-align:left; padding:17px 22px; border:1px solid #7dfcff66; border-radius:16px; margin-bottom:18px; background:linear-gradient(110deg,#12526988,#101d38); }
+.match-entry-icon { width:40px; height:40px; color:var(--cyan); }
+.match-entry b { display:block; font-size:21px; color:var(--cyan); }
+.match-entry small { display:block; margin-top:5px; color:var(--txt2); }
+.match-entry strong { margin-left:auto; color:var(--gold); white-space:nowrap; }
+.match-panel { border-color:#7dfcff44; }
+.match-live { margin-left:auto; color:var(--cyan); font-size:12px; font-weight:800; letter-spacing:1px; }
+.match-live::before { content:""; display:inline-block; width:6px; height:6px; background:var(--cyan); border-radius:50%; margin-right:8px; }
+.match-setup { display:grid; grid-template-columns:.9fr 1.1fr; gap:24px; }
+.match-eyebrow { display:block; font-size:11px; font-weight:800; color:var(--cyan); letter-spacing:2px; margin:0 0 12px; }
+.match-loadout { display:flex; flex-direction:column; align-items:center; padding:18px; border:1px solid var(--line); border-radius:16px; background:radial-gradient(ellipse at 50% 30%,#ffd23f17,transparent 70%); text-align:center; }
+.match-loadout img { width:100px; height:100px; object-fit:contain; }
+.match-loadout h3 { margin:8px 0; font-size:23px; }
+.match-loadout p { font-size:13px; margin:4px 0 10px; color:var(--gold); }
+.match-loadout small { font-size:11px; color:var(--txt2); line-height:1.6; }
+.match-loadout .btn { margin-top:auto; padding:9px 12px; font-size:12px; width:100%; }
+.match-preferences { padding:10px 0; }
+.match-courts { display:flex; gap:10px; margin-bottom:16px; }
+.match-courts button { padding:15px 10px; border:1px solid var(--line); border-radius:12px; text-align:left; flex:1; }
+.match-courts button[aria-pressed=true] { border-color:var(--cyan); background:#7dfcff16; }
+.match-courts b { display:block; font-size:17px; }
+.match-courts small { display:block; color:var(--txt2); font-size:11px; margin-top:6px; }
+.match-option { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 0; border-bottom:1px solid var(--line); font-size:14px; }
+.match-option select { font:inherit; color:#fff; background:#15243a; border:1px solid var(--line); padding:8px; border-radius:8px; }
+.match-option input { width:20px; height:20px; accent-color:var(--cyan); }
+.match-steps { padding-left:20px; color:var(--txt2); font-size:12px; line-height:2; margin:16px 0 0; }
+.match-footer { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-top:20px; }
+.match-footer p { font-size:12px; color:var(--txt2); }
+.match-progress { text-align:center; max-width:660px; }
+.match-progress .ph { margin-bottom:10px; }
+.match-progress .ph h2 { margin-bottom:8px; }
+.match-radar { width:150px; height:140px; position:relative; margin:8px auto 0; display:grid; place-items:center; }
+.match-radar i { position:absolute; width:70px; height:70px; border:1px solid #7dfcff80; border-radius:50%; animation:match-pulse 3s linear infinite; }
+.match-radar i:nth-child(2) { animation-delay:-1s; }
+.match-radar i:nth-child(3) { animation-delay:-2s; }
+.match-radar svg { width:44px; height:44px; color:var(--cyan); transform:rotate(-18deg); }
+@keyframes match-pulse { from { transform:scale(.65); opacity:.9; } to { transform:scale(1.9); opacity:0; } }
+.match-elapsed { font-family:var(--num); font-size:42px; font-variant-numeric:tabular-nums; }
+#matchWaiting,#matchStatusNote { font-size:13px; color:var(--txt2); line-height:1.6; }
+#matchStatusNote { min-height:24px; margin:16px 0; }
+.match-pair { display:grid; grid-template-columns:1fr 60px 1fr; align-items:center; margin:24px 0; }
+.match-pair[hidden],#matchSearch[hidden],#btnMatchAccept[hidden] { display:none; }
+.match-pair img { display:block; width:112px; height:112px; margin:0 auto 12px; }
+.match-pair b { display:block; font-size:18px; }
+.match-pair span { display:block; margin-top:10px; font-size:13px; color:var(--txt2); }
+.match-pair .confirmed { color:#5fe3a1; }
+.match-pair>strong { font:italic 36px var(--num); color:var(--gold); }
+.match-panel button:disabled { opacity:.45; cursor:default; }
+.match-panel button:focus-visible,.match-entry:focus-visible { outline:2px solid var(--gold); outline-offset:3px; }
+.sm .match-setup { gap:14px; }
+.sm .match-loadout { padding:12px; }
+.sm .match-loadout img { width:64px; height:64px; }
+.sm .match-courts button { padding:10px; }
+.short .match-setup { grid-template-columns:1fr 1.4fr; }
+.short .match-option { padding:5px 0; }
+.short .match-steps { line-height:1.6; margin-top:6px; font-size:11px; }
+.short .match-footer { margin-top:8px; }
+.short .match-radar { height:82px; }
+.short .match-radar i { width:45px; height:45px; }
+.short .match-pair { margin:8px 0; }
+.short .match-pair img { width:70px; height:70px; }
+.short #matchStatusNote { margin:8px 0; }
+.short #scr-matchmaking .match-panel { display:grid; grid-template-rows:40px minmax(0,1fr) 42px; gap:8px; height:calc(var(--appH) - 28px); padding:12px 16px; overflow:hidden; }
+.short #scr-matchmaking .ph { margin:0; }
+.short #scr-matchmaking .ph small { display:none; }
+.short #scr-matchmaking .match-setup { min-height:0; }
+.short #scr-matchmaking .match-loadout { display:grid; grid-template-columns:64px minmax(0,1fr); grid-template-rows:16px 32px 28px minmax(24px,1fr) 34px; gap:4px 8px; padding:10px; min-height:0; }
+.short #scr-matchmaking .match-loadout .match-eyebrow { grid-column:1 / -1; margin:0; }
+.short #scr-matchmaking .match-loadout img { grid-column:1; grid-row:2 / 4; }
+.short #scr-matchmaking .match-loadout h3 { grid-column:2; grid-row:2; margin:0; text-align:left; font-size:20px; }
+.short #scr-matchmaking .match-loadout p { grid-column:2; grid-row:3; margin:0; text-align:left; font-size:11px; line-height:1.3; }
+.short #scr-matchmaking .match-loadout small { grid-column:1 / -1; grid-row:4; }
+.short #scr-matchmaking .match-loadout .btn { grid-column:1 / -1; grid-row:5; margin:0; padding:6px; font-size:12px; }
+.short #scr-matchmaking .match-preferences { padding:0; min-height:0; overflow:auto; scrollbar-width:thin; scrollbar-color:#7dfcff55 transparent; }
+.short #scr-matchmaking .match-preferences .match-eyebrow { margin-bottom:6px; }
+.short #scr-matchmaking .match-courts { margin-bottom:6px; }
+.short #scr-matchmaking .match-courts button { padding:8px 10px; }
+.short #scr-matchmaking .match-footer { margin:0; }
+.short #scr-matchmaking .match-footer p { margin:0; }
+.short #scr-matchmaking .match-footer .btn { padding:9px 24px; }
+.short #scr-matching .match-panel { display:grid; grid-template-rows:auto minmax(0,1fr) auto auto; gap:6px; height:calc(var(--appH) - 28px); padding:12px 16px; overflow:hidden; }
+.short #scr-matching .ph { margin:0; }
+.short #scr-matching .ph .match-eyebrow { margin-bottom:6px; }
+.short #scr-matching .ph h2 { margin-bottom:4px; }
+.short #scr-matching #matchSearch:not([hidden]) { display:grid; grid-template-columns:96px auto; grid-template-rows:1fr auto; align-items:center; column-gap:18px; max-width:420px; width:100%; min-height:0; margin:0 auto; }
+.short #scr-matching .match-radar { width:96px; height:82px; margin:0; }
+.short #scr-matching .match-elapsed { text-align:left; }
+.short #scr-matching #matchWaiting { grid-column:1 / -1; margin:4px 0; }
+.short #scr-matching #matchStatusNote { margin:0; min-height:0; }
+.short #scr-matching .match-pair { margin:0; }
+.short #scr-matching .row { margin:0; }
+:where(html.xs:not(.short)) .match-setup { grid-template-columns:1fr; }
+:where(html.xs:not(.short)) .match-loadout { gap:4px; }
+:where(html.xs:not(.short)) .match-loadout .btn { margin-top:10px; }
+:where(html.xs:not(.short)) .match-footer { align-items:stretch; flex-direction:column; gap:6px; }
+:where(html.xs:not(.short)) .match-entry { gap:10px; padding:14px; }
+:where(html.xs:not(.short)) .match-entry strong { font-size:12px; }
+.match-preferences { min-width:0; }
+.match-option select { max-width:70%; }
+@media (prefers-reduced-motion:reduce) { .match-radar i { animation:none; opacity:.35; } }

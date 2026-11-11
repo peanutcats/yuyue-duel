@@ -30,7 +30,7 @@
     netEvents: [],
     tickN: 0,
     resultShown: false,
-    settings: { sound: store.get('sound', true), hint: store.get('hint', true), venue: store.get('venue', 'random'), skills: store.get('skills', true) },
+    settings: { target: store.get('target', 7), music: store.get('music', true), courtMode: store.get('courtMode', '2d'), sound: store.get('sound', true), hint: store.get('hint', true), venue: store.get('venue', 'random'), skills: store.get('skills', true) },
     story: null,
     pickVenue() {
       const v = this.settings.venue;
@@ -107,7 +107,7 @@
         if (go === 'menu' && this.helpFromPause) { this.helpFromPause = false; this.show('pause'); return; }
         this.show(go);
       }));
-      document.querySelectorAll('[data-level]').forEach((b) => b.addEventListener('click', () => { A.click(); this.startAI(b.dataset.level); }));
+      document.querySelectorAll('[data-level]').forEach((b) => b.addEventListener('click', () => { A.click(); this.startAI(b.dataset.level, { opp: $('aiOpponent').value }); }));
       document.querySelectorAll('[data-drill]').forEach((b) => b.addEventListener('click', () => { A.click(); this.startPractice(b.dataset.drill); }));
       document.querySelector('[data-tactics-back]').addEventListener('click', () => { this.startAttract(); this.show('practice'); });
       $('btnLocal').addEventListener('click', () => { A.click(); this.startLocal(); });
@@ -128,6 +128,8 @@
       $('btnRotateLand').addEventListener('click', () => this.goLandscape());
       $('btnLand').addEventListener('click', () => this.toggleLandscape());
       $('btnFull').addEventListener('click', () => this.toggleLandscape());
+      $('optMusic').checked = this.settings.music!==false;
+      $('optMusic').addEventListener('change',e=>{this.settings.music=e.target.checked;store.set('music',e.target.checked);});
       $('optSound').checked = this.settings.sound;
       $('optHint').checked = this.settings.hint;
       $('optSound').addEventListener('change', (e) => { this.settings.sound = A.enabled = e.target.checked; store.set('sound', e.target.checked); });
@@ -234,16 +236,17 @@
       $('btnFull').setAttribute('aria-pressed', String(on));
     },
     inGame() { return this.mode !== 'attract'; },
-    isOnline() { return this.mode === 'host' || this.mode === 'guest'; },
+    isOnline() { return this.mode === 'host' || this.mode === 'guest' || this.mode === 'online'; },
 
     // ---------- 模式 ----------
     reset() {
+      clearTimeout(this.guestResultTimer);this.guestResultTimer=null;
       this.ais = [];
       this.ctrlFor = [null, null];
       this.practice = null;
       this.view = null;
       this.remote = null;
-      this.paused = false;
+      this.paused = false; this.pausedDrawn = false;
       this.resultShown = false;
       this.netEvents = [];
       this.R.mirror = false;
@@ -289,7 +292,7 @@
     startLocal() {
       this.reset();
       this.mode = 'local';
-      this.match = new YY.Match({ names: ['P1 红方', 'P2 蓝方'], firstServer: 0 });
+      this.match = YY.createMatch({ ...YY.matchFormat(this.settings.target), courtMode: this.settings.courtMode, names: ['P1 红方', 'P2 蓝方'],titles:[YY.AIChallenge?.equipped()?.id,null], firstServer: 0 });
       const c1 = new YY.HumanCtrl(YY.KEYMAPS.p1, true);
       const c2 = new YY.HumanCtrl(YY.KEYMAPS.p2, false);
       this.ctrlFor = [c1, c2];
@@ -309,6 +312,7 @@
     },
     again() { this.restart(); },
     quit() {
+      A.storySilence?.();
       if (this.isOnline()) YY.Net.close();
       const story = this.mode === 'story' || this.story;
       this.story = null;
@@ -342,13 +346,16 @@
       N.onClose = () => this.netLost();
       N.onMsg = (d) => this.hostMsg(d);
       N.onStatus = (t) => { $('lobbyStatus').textContent = t; };
+      const pending=N.host(),attempt=N.attempt;
       try {
-        const code = await N.host();
+        const code = await pending;
+        if(N.attempt!==attempt||this.screen!=='lobby')return;
         $('lobbyCode').textContent = code;
         $('lobbyStatus').textContent = '分享房间码或邀请链接，等待好友加入。' +
           '\n微信内打开链接时，请选择右上角「在浏览器打开」。';
         $('btnCopy').classList.remove('hidden');
       } catch (err) {
+        if(err.cancelled||N.attempt!==attempt)return;N.close();
         this.message('无法创建房间', err.message + '。在线对战需要联网；也可以选择「同屏对战」。', 'friend');
       }
     },
@@ -367,7 +374,7 @@
     startHost() {
       this.reset();
       this.mode = 'host';
-      this.match = new YY.Match({ names: ['你', '好友'], firstServer: 0 });
+      this.match = YY.createMatch({ ...YY.matchFormat(this.settings.target), courtMode: this.settings.courtMode, names: ['你', '好友'],titles:[YY.AIChallenge?.equipped()?.id,null], firstServer: 0 });
       this.ctrlFor[0] = this.soloCtrl(true);
       this.remote = { move: 0, counts: [0, 0, 0, 0], queue: [] };
       this.enterGame();
@@ -379,7 +386,8 @@
       this.peerAway = 0;
     },
     hostRestart() {
-      this.match = new YY.Match({ names: ['你', '好友'], firstServer: Math.random() < 0.5 ? 0 : 1 });
+      const peerTitle=this.match?.titles?.[1];
+      this.match = YY.createMatch({ ...YY.matchFormat(this.settings.target), courtMode: this.settings.courtMode, names: ['你', '好友'], titles:[YY.AIChallenge?.equipped()?.id,peerTitle], firstServer: Math.random() < 0.5 ? 0 : 1 });
       this.resultShown = false;
       this.R.clearFx();
       this.show(null);
@@ -387,11 +395,13 @@
     },
     hostMsg(d) {
       if (!d || this.mode !== 'host') return;
+      if(d.t==='title'){if(this.match.courtMode==='3d'&&d.courtVersion!==2){this.netLost('好友版本尚不支持 3D，请双方刷新游戏后重新加入');return;}this.remote.courtReady=true;this.match.titles[1]=YY.titleId(d.title);return;}
       if (d.t === 'away') { this.peerAway = performance.now(); return; }
       if (d.t === 'in') {
         this.peerSeen = performance.now();
         const r = this.remote;
         r.move = YY.clamp(+d.m || 0, -1, 1);
+        r.strafe = YY.clamp(Number(d.z)||0,-1,1); r.target = YY.cleanCourtAim(d.a);
         const acts = ['jump', 'clear', 'drop', 'smash'];
         for (let i = 0; i < 4; i++) {
           const n = d.c[i] - r.counts[i];
@@ -414,10 +424,13 @@
       N.onClose = () => this.netLost();
       N.onMsg = (d) => this.guestMsg(d);
       N.onStatus = (t) => { $('lobbyStatus').textContent = t; };
+      const pending=N.join(code),attempt=N.attempt;
       try {
-        await N.join(code);
+        await pending;
+        if(N.attempt!==attempt||this.screen!=='lobby')return;
         this.startGuest();
       } catch (err) {
+        if(err.cancelled||N.attempt!==attempt)return;
         N.close();
         this.message('无法加入房间', err.message, 'friend');
       }
@@ -434,7 +447,7 @@
       this.R.showBanner('已加入房间', '你在左侧（蓝方）', '#6fbaff', 2);
       $('netInfo').classList.remove('hidden');
       this.sendT = 0;
-      this.watchRoute();
+      this.watchRoute();YY.Net.send({t:'title',courtVersion:2,title:YY.AIChallenge?.equipped()?.id||null});
       this.peerSeen = performance.now(); // 最近一次收到房主快照
       this.peerAway = 0;
     },
@@ -449,6 +462,7 @@
         if (d.longest != null) this.view.longest = d.longest;
         this.guestRtt = d.rtt;
       } else if (d.t === 'restart') {
+        clearTimeout(this.guestResultTimer);this.guestResultTimer=null;
         this.view = new YY.GuestView();
         this.resultShown = false;
         this.R.clearFx();
@@ -489,7 +503,7 @@
       const dt = Math.min(0.05, this.rawDt);
       this.last = now;
       this.netWait = this.netWatch();
-      if (this.isOnline() && now - (this.lastRouteAt || 0) >= 5000) {
+      if ((this.mode === 'host' || this.mode === 'guest') && now - (this.lastRouteAt || 0) >= 5000) {
         YY.Net.detectRoute(); this.lastRouteAt = now;
       }
       if (!this.paused) {
@@ -499,6 +513,7 @@
         if (n >= 12) this.acc = 0;
       }
       this.sendHostSnapshot();
+      this.updateSoundscape(dt);
       this.render(dt);
       requestAnimationFrame((t) => this.frame(t));
     },
@@ -531,6 +546,7 @@
         return;
       }
       const m = this.match;
+      if(this.mode==='host'&&m.courtMode==='3d'&&!this.remote?.courtReady)return;
       if (this.mode === 'host' && this.netWait) {
         // 好友无响应：冻结比赛，丢弃期间的按键，仅保持心跳与快照
         if (this.ctrlFor[0]) this.ctrlFor[0].drain();
@@ -541,10 +557,12 @@
         const c = this.ctrlFor[i];
         if (!c) continue;
         m.inputs[i].move = c.move();
+        if (m.courtMode === '3d') { m.inputs[i].strafe = c.strafe(); }
         for (const a of c.drain()) m.inputs[i].presses.push(typeof a === 'string' ? { btn:a } : a);
       }
       if (this.mode === 'host' && this.remote) {
         m.inputs[1].move = this.remote.move;
+        if (m.courtMode === '3d') { m.inputs[1].strafe = this.remote.strafe || 0; m.inputs[1].target = this.remote.target; }
         const lead = Math.min(0.08, YY.Net.rtt / 2 + 0.03); // 补偿好友端延迟
         for (const a of this.remote.queue) m.inputs[1].presses.push({ btn: a, lead });
         this.remote.queue.length = 0;
@@ -567,11 +585,13 @@
 
 
     playerName(i, m) {
+      if (this.mode === 'online') return i === this.playerIndex ? '你' : '对手';
       if (this.mode === 'ai' || this.mode === 'host') return i === 0 ? '你' : m.names[i];
       if (this.mode === 'guest') return i === 1 ? '你' : '房主';
       return m.names[i];
     },
     isMe(i) {
+      if (this.mode === 'online') return i === this.playerIndex;
       if (this.mode === 'guest') return i === 1;
       if (this.mode === 'local') return true;
       return i === 0;
@@ -580,17 +600,18 @@
 
 
     showResult(m) {
+      if (m !== (this.mode === 'guest' || this.mode === 'online' ? this.view : this.match)) return;
       if (this.resultShown || !this.inGame()) return;
       this.resultShown = true;
       const w = m.winner;
-      const me = this.mode === 'guest' ? 1 : 0;
+      const me = this.mode === 'online' ? this.playerIndex : this.mode === 'guest' ? 1 : 0;
       let title;
       if (this.mode === 'local') title = m.names[w] + ' 获胜！';
       else title = w === me ? '胜利！' : '惜败';
       if (w === me || this.mode === 'local') A.win(); else A.lose();
       $('resTitle').textContent = title;
       $('resTitle').parentElement.classList.toggle('lose', !(w === me || this.mode === 'local'));
-      const order = this.mode === 'guest' ? [1, 0] : [0, 1];
+      const order = me === 1 ? [1, 0] : [0, 1];
       $('resScore').textContent = m.score[order[0]] + ' : ' + m.score[order[1]];
       const la = this.R.lookOf(m, order[0]), lb = this.R.lookOf(m, order[1]);
       $('resAvA').src = this.lookURL(la); $('resAvB').src = this.lookURL(lb);
@@ -612,6 +633,10 @@
       const secs = Math.round((performance.now() - this.started) / 1000);
       $('resTip').textContent = `比赛用时 ${Math.floor(secs / 60)} 分 ${secs % 60} 秒 · 最长回合 ${m.longest || 0} 拍\n` + this.tip(st[me], st[1 - me]);
       $('btnAgain').textContent = this.mode === 'guest' ? '请求再来一局' : '再来一局';
+      const challenge = this.recordAIResult(m);
+      $('resChallenge').classList.toggle('hidden', !challenge);
+      $('resChallenge').classList.toggle('unlocked', !!challenge?.rewards.length);
+      $('resChallengeText').textContent = YY.AIChallenge.resultText(challenge);
       this.show('result');
     },
     lookURL(look) {
@@ -671,6 +696,11 @@
           box.appendChild(b);
         }
       });
+      document.querySelectorAll('.match-format').forEach(box=>{
+        box.innerHTML='<span>赛制</span>'+[7,15,21].map(n=>`<button data-target="${n}" aria-pressed="${YY.matchFormat(this.settings.target).target===n}">${n} 分</button>`).join('')+'<small class="format-note"></small>';
+        box.querySelectorAll('button').forEach(b=>b.onclick=()=>{this.settings.target=Number(b.dataset.target);store.set('target',this.settings.target);sync();A.click();});
+      });
+      const sync=()=>document.querySelectorAll('.match-format').forEach(box=>{box.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',Number(b.dataset.target)===YY.matchFormat(this.settings.target).target));box.querySelector('.format-note').textContent='领先 2 分 · '+YY.matchFormat(this.settings.target).cap+' 分封顶';});sync();
       this.setVenueSetting(this.settings.venue);
       document.querySelectorAll('.ai-face').forEach((el) => { el.style.backgroundImage = `url(${this.lookURL(YY.LOOKS[+el.dataset.look || 1])})`; });
     },
@@ -693,13 +723,13 @@
       $('btnClearMap').addEventListener('click', () => { A.click(); this.show('story'); });
       $('btnStoryReset').addEventListener('click', () => {
         if (!confirm('确定要重置故事进度吗？已解锁的角色、装备和图鉴都会清空。')) return;
-        YY.Profile.reset(); this.storyChap = null; this.renderStory();
+        YY.Profile.resetStory(); this.storyChap = null; this.renderStory();
       });
     },
     renderMenuNotes() {
       const done = YY.STAGES.filter((s) => YY.Profile.stars(s.id) > 0).length;
       const note = $('menuStoryNote');
-      if (note) note.textContent = done === 0 ? '守护星光体育馆 · 解锁角色与装备' : done >= YY.STAGES.length ? '已通关！挑战三星评价' : `进度 ${done} / ${YY.STAGES.length} · 继续冒险`;
+      if (note) note.textContent = done === 0 ? '十六根羽毛 · 听见一个夏天' : done >= YY.STAGES.length ? '已通关！挑战三星评价' : `进度 ${done} / ${YY.STAGES.length} · 继续冒险`;
       const nb = YY.Profile.d.cards.filter((id) => !YY.Profile.d.seen['card:' + id]).length;
       const badge = $('codexBadge');
       if (badge) { badge.textContent = nb; badge.classList.toggle('hidden', nb === 0); }
@@ -767,7 +797,7 @@
       box.classList.toggle('right', !nar && who !== 'mm' && who !== 'me');
       let name = '', col = '#fff';
       if (who === 'mm') { name = '毛毛'; col = '#ffd23f'; }
-      else if (who === 'me') { name = '凌风（你）'; col = YY.LOOKS[0].shirt; }
+      else if (who === 'me') { name = '丁丁（你）'; col = YY.LOOKS[0].shirt; }
       else if (!nar) { const lk = YY.lookOf(who); name = lk.name; col = lk.shirt; }
       box.classList.toggle('staged', !!(d.step && d.step.scene));
       $('dlgName').textContent = name;
@@ -869,12 +899,12 @@
     showStepResult(o) {
       this.stepRes = o;
       this.paused = true;
-      $('stepTitle').textContent = o.win ? '挑战成功！' : '挑战失败';
+      $('stepTitle').textContent = o.win ? '这一段，完成了' : o.canContinue ? '故事继续' : '再接一次';
       $('stepTitle').parentElement.parentElement.classList.toggle('lose', !o.win);
       $('stepStars').innerHTML = [0, 1, 2].map((k) => `<svg class="${k < o.stars ? 'on' : ''}" style="animation-delay:${0.15 + k * 0.18}s"><use href="#i-star"/></svg>`).join('');
       $('stepMain').textContent = o.main;
       $('stepGoals').innerHTML = o.goals.map((g) => `<li class="${g.ok ? 'ok' : ''}"><i>${g.ok ? '✓' : '·'}</i>${g.text}</li>`).join('');
-      $('btnStepNext').classList.toggle('hidden', !o.win);
+      $('btnStepNext').classList.toggle('hidden', !(o.win || o.canContinue));
       $('btnStepRetry').textContent = o.win ? '再来一次（刷新星级）' : '再来一次';
       $('btnStepRetry').classList.toggle('primary', !o.win);
       $('btnStepRetry').classList.toggle('big', !o.win);
@@ -885,8 +915,8 @@
     finishStage() {
       const S = this.story, P = YY.Profile;
       const stars = this.storyStageStars(); this.completeStorySave();
-      const first = !P.stars(S.st.id);
-      P.setStars(S.st.id, Math.max(1, stars));
+      const first = !P.storyStars(S.st.id,S.difficulty);
+      if(S.difficulty!=='challenge')P.setStars(S.st.id, Math.max(1, stars));
       const rw = S.st.rewards || {};
       const items = [];
       for (const id of rw.chars || []) items.push({ kind: 'char', id, isNew: P.unlock('char', id) });
@@ -917,19 +947,22 @@
 
     // ---------- 角色与装备 ----------
     renderLoadout() {
-      const sel = YY.Profile.sel, id = YY.Profile.has('char', sel.char) ? sel.char : 'lingfeng';
-      const c = YY.char(id), sk = YY.SKILLS[c.skill];
+      const opp = $('aiOpponent'), selected = this.aiSetup?.opp || opp.value || 'random';
+      opp.innerHTML = '<option value="random">随机对手</option>' + YY.CHARS.map(c => `<option value="${c.id}">${esc(YY.charName(c.id))}</option>`).join('');
+      opp.value = YY.CHARS.some(c => c.id === selected) ? selected : 'random';
+      const sel = YY.Profile.sel, id = YY.CHARS.some(c=>c.id===sel.char) ? sel.char : 'dingding';
+      const c = YY.char(id), sk = YY.SKILLS[c.skill], carried = YY.Profile.kit(id).map(k=>YY.SKILLS[k].short).join(' + ');
       const gear = [sel.racket, sel.string, sel.shoe].map((g) => YY.gear(g) ? YY.gear(g).name : '').join(' · ');
-      $('loMe').innerHTML = `<img src="${this.charURL(id)}" alt=""><span><b>${YY.charName(id)} <em style="color:${sk.color}">${sk.name}</em></b><small>${gear} · ${YY.Profile.canTune() ? sel.tension : 24} 磅</small></span>`;
+      $('loMe').innerHTML = `<img src="${this.charURL(id)}" alt=""><span><b>${YY.charName(id)} <em style="color:${sk.color}">${carried}</em></b><small>${gear} · ${sel.tension} 磅</small></span>`;
     },
     renderTeam() {
       const P = YY.Profile, sel = P.sel;
-      if (!P.has('char', sel.char)) P.choose('char', 'lingfeng');
+      if (!YY.CHARS.some(c=>c.id===sel.char)) P.choose('char', 'dingding');
       this.gearTab = this.gearTab || 'racket';
       const cl = $('charList');
       cl.innerHTML = '';
       for (const c of YY.CHARS) {
-        const own = P.has('char', c.id);
+        const own = true; // 全角色开放用于练习和自由对战
         const b = document.createElement('button');
         b.className = 'char-btn' + (c.id === sel.char ? ' on' : '') + (own ? '' : ' locked');
         b.innerHTML = `<img src="${this.charURL(c.id)}" alt=""><span>${own ? YY.charName(c.id) : '？？？'}</span>` + (own ? '' : '<svg class="lk"><use href="#i-lock"/></svg>');
@@ -937,13 +970,19 @@
         b.addEventListener('click', () => { A.click(); this.teamPeek = c.id; if (own) P.choose('char', c.id); this.renderTeam(); });
         cl.appendChild(b);
       }
-      const peek = this.teamPeek && !P.has('char', this.teamPeek) ? this.teamPeek : sel.char;
-      const c = YY.char(peek), own = P.has('char', peek), sk = YY.SKILLS[c.skill], lk = YY.lookOf(peek);
+      const peek = sel.char;
+      const c = YY.char(peek), own = true, sk = YY.SKILLS[c.skill], lk = YY.lookOf(peek);
+      const kit=P.kit(peek),pairs=[[c.acts[0],c.acts[1]],[c.acts[0],c.acts[2]],[c.acts[1],c.acts[2]]];
+      this._bodyArt=this._bodyArt||new Map();if(!this._bodyArt.has(peek))this._bodyArt.set(peek,YY.characterIllustration(lk,360,460).toDataURL());
       $('charDetail').innerHTML = own
-        ? `<div class="cd-head" style="--cc:${lk.shirt}"><b>${lk.name}</b><span>${c.title}</span></div><p>${c.bio}</p>` +
-          [c.passive,...c.acts].map(id=>{const skill=YY.SKILLS[id];return `<div class="skill-box" style="--sk:${skill.color}"><b>${YY.SkillIcons.svg(id)}${skill.passive?'被动 · ':''}${skill.name}</b><span>${richHTML(skill.desc)}</span>${skill.detail?`<details class="sk-more"><summary>详细玩法</summary><p>${richHTML(skill.detail).replaceAll('\n','<br>')}</p>${skill.tip?`<p class="sk-tip">应对：${esc(skill.tip)}</p>`:''}</details>`:''}</div>`;}).join('') +
+        ? `<img class="character-keyart" src="${this._bodyArt.get(peek)}" alt="${lk.name}的角色立绘"><div class="cd-head" style="--cc:${lk.shirt}"><b>${lk.name}</b><span>${c.title}</span></div><p>${c.bio}</p>` +
+          `<div class="skill-mode-tabs" role="group" aria-label="技能说明模式"><button data-skill-mode="2d" aria-pressed="${(this.skillInfoMode||this.settings.courtMode||'2d')==='2d'}">2D 横版技能</button><button data-skill-mode="3d" aria-pressed="${(this.skillInfoMode||this.settings.courtMode||'2d')==='3d'}">3D 纵深技能</button></div>` +
+          `<fieldset class="kit-pairs"><legend>携带技能 · 三选二</legend><p>选择一组搭配，按 I / O 或点按技能键使用。</p>${pairs.map((pair,i)=>`<button type="button" data-kit-pair="${i}" aria-pressed="${pair.every(k=>kit.includes(k))}" aria-label="搭配 ${pair.map(k=>YY.SKILLS[k].name).join(' + ')}">${pair.map((k,j)=>`<span><kbd>${j?'O':'I'}</kbd>${YY.SkillIcons.svg(k)}${YY.SKILLS[k].short}</span>`).join('<i>＋</i>')}<b>${pair.every(k=>kit.includes(k))?'已携带':'选择'}</b></button>`).join('')}</fieldset>` +
+          [c.passive,...c.acts].map(id=>{const skill=YY.skillDescription?YY.skillDescription(id,this.skillInfoMode||this.settings.courtMode):YY.SKILLS[id];return `<div class="skill-box" style="--sk:${skill.color}"><b>${YY.SkillIcons.svg(id)}${skill.passive?'被动 · ':''}${skill.name}</b><span>${richHTML(skill.desc)}</span>${skill.detail?`<details class="sk-more"><summary>详细玩法</summary><canvas class="skill-mode-preview" data-skill-preview="${id}" width="600" height="120"></canvas><p>${richHTML(skill.detail).replaceAll('\n','<br>')}</p>${skill.tip?`<p class="sk-tip">应对：${esc(skill.tip)}</p>`:''}</details>`:''}</div>`;}).join('') +
           `<div class="cd-tags">${YY.fxTags(c.fx).map((t) => `<i class="${t.good ? 'g' : 'b'}">${t.text}</i>`).join('') || '<i>各项均衡</i>'}</div>`
         : `<div class="cd-head locked"><b>未解锁角色</b><span>${YY.lockText(c.lock)}</span></div><p>继续推进故事，认识更多伙伴。</p>`;
+      $('charDetail').querySelectorAll('[data-skill-mode]').forEach(b=>b.addEventListener('click',()=>{this.skillInfoMode=b.dataset.skillMode;this.renderTeam();}));
+      $('charDetail').querySelectorAll('[data-kit-pair]').forEach(b=>b.addEventListener('click',()=>{P.setKit(peek,pairs[+b.dataset.kitPair]);this.renderTeam();$('charDetail').querySelector('[data-kit-pair="'+b.dataset.kitPair+'"]').focus({preventScroll:true});}));
       // 装备
       const tabs = $('gearTabs');
       tabs.innerHTML = '';
@@ -957,7 +996,7 @@
       const list = $('gearList');
       list.innerHTML = '';
       if (this.gearTab === 'tension') {
-        const can = P.canTune(), v = can ? sel.tension : 24;
+        const can = true, v = sel.tension;
         list.innerHTML = `<div class="tension ${can ? '' : 'locked'}">
           <div class="tn-top"><b id="tnVal">${v}</b><small>磅（lbs）</small></div>
           <input type="range" id="tnRange" min="${YY.TENSION.min}" max="${YY.TENSION.max}" step="1" value="${v}" ${can ? '' : 'disabled'}>
@@ -973,7 +1012,7 @@
         });
       } else {
         for (const g of YY.GEAR[this.gearTab]) {
-          const own = P.has('gear', g.id), on = sel[this.gearTab] === g.id;
+          const own = true, on = sel[this.gearTab] === g.id; // 自由搭配；故事仍由 storyGear 按解锁替换
           const b = document.createElement('button');
           b.className = 'gear-item' + (on ? ' on' : '') + (own ? '' : ' locked');
           b.innerHTML = `<span class="gi-top"><b>${own ? g.name : '？？？'}</b><small>${own ? g.spec : YY.lockText(g.lock)}</small></span>` +
@@ -1017,25 +1056,41 @@
       if (c) {
         P.d.seen['card:' + c.id] = 1; P.save();
         const cat = YY.CARD_CATS[c.cat];
-        $('codexDetail').innerHTML = `<div class="cx-cat" style="--cc:${cat[1]}">${cat[0]}</div><h3>${c.title}</h3><p>${c.text}</p><div class="cx-mm"><img src="${this.maomaoURL()}" alt=""><span>毛毛说：知道得越多，打得越聪明！</span></div>`;
+        $('codexDetail').innerHTML = `<div class="cx-cat" style="--cc:${cat[1]}">${cat[0]}</div><h3>${c.title}</h3><p>${c.text}</p><p class="note">鹅湾周六课 · 羽球笔记 ${c.num}</p>`;
         const source=YY.KNOWLEDGE_SOURCES[c.source];
         if(source){const ref=document.createElement(source.url?'a':'p');ref.className='note';ref.textContent='知识来源：'+source.name;if(source.url){ref.href=source.url;ref.target='_blank';ref.rel='noopener noreferrer';}$('codexDetail').appendChild(ref);}
-      } else $('codexDetail').innerHTML = '<p class="note">还没有知识卡。去故事模式里，和毛毛一起冒险吧！</p>';
+      } else $('codexDetail').innerHTML = '<p class="note">还没有知识卡。翻开《十六根羽毛》，收集这个夏天的羽球笔记。</p>';
     },
     updateSkillBtn(m) {
-      const b = this._skBtn && this._skBtn.isConnected ? this._skBtn : (this._skBtn = document.querySelector('#touch .t-skill'));
-      if (!b || !m || !m.players) return;
-      const e = Math.round(m.players[0].energy || 0);
-      if (e === this._skE) return;
-      this._skE = e;
-      const kit = this._kit || [];
-      document.querySelectorAll('#touch .t-skill, #touch .t-skill2').forEach((el, i) => {
-        const cost = (YY.SKILLS[kit[i]] || {}).cost || 100;
-        el.style.setProperty('--e', Math.min(100, e / cost * 100) + '%');
-        el.classList.toggle('ready', e >= cost);
+      if (!m?.players) return;
+      document.querySelectorAll('#touch .t-skill, #touch .t-skill2').forEach(el => {
+        const group = el.closest('.court3d-control'), player = this.mode === 'online' ? this.playerIndex : this.mode === 'guest' ? 1 : group?.classList.contains('seat-1') ? 1 : 0;
+        const p = m.players[player], slot = el.classList.contains('t-skill2') ? 1 : 0;
+        const kit = p?.kit?.act || (this.mode === 'local' ? this._kit?.[player] : this._kit) || [];
+        const id = kit[slot], cost = YY.SKILLS[id]?.cost || 100, energy = p?.energy || 0;
+        const again = p && YY.skillRecastReady?.(m,p,id), prepared=p&&YY.skillPrepared?.(m,p,id), short = !again && !prepared && energy < cost;
+        const ready = !prepared && !short && (p?.skillCd || 0) <= (again ? .1 : 0);
+        const key=[id,Math.floor(energy),cost,!!again,!!prepared,YY.skillRecastText?.(m,p,id),short,ready].join(':');
+        if(el._energyState===key)return;el._energyState=key;
+        el.style.setProperty('--e', (again||prepared ? 100 : Math.min(100, energy / cost * 100)) + '%');
+        el.classList.toggle('ready', ready); el.classList.toggle('energy-low', short);
+        const state=YY.skillRecastText?.(m,p,id);
+        el.dataset.energy = (prepared||again)&&state ? state : Math.floor(energy) + '/' + cost;
+        el.removeAttribute('aria-disabled'); // The button remains enabled to explain why the cast is unavailable.
+        el.setAttribute('aria-description', prepared?'已准备，使用普通击球键回球':short ? '能量不足，点击查看所需能量' : again ? '可再次释放，无需能量' : '能量充足');
+        el.title = prepared ? '已准备 · '+state : again ? (id==='yipai'?'再按切换近剪或深剪':'再次释放') : short ? '能量不足 · ' + Math.floor(energy) + '/' + cost : '点按释放';
       });
     },
 
+    queueGuestResult(v) {
+      if(this.mode!=='guest'||this.view!==v||v.phase!=='over'||!v.stats||this.resultShown)return;
+      this.resultShown=true;
+      this.guestResultTimer=setTimeout(()=>{
+        this.guestResultTimer=null;
+        if(this.mode!=='guest'||this.view!==v||v.phase!=='over')return;
+        this.resultShown=false;this.showResult(v);
+      },900);
+    },
     render(dt) {
       const R = this.R;
       if (this.screen === 'dialog' && this.dlg && this.dlg.i >= 0) {
@@ -1044,7 +1099,7 @@
       }
       if (this.mode === 'guest') {
         const v = this.view;
-        v.update();
+        v.update(); this.updateSkillBtn(v);
         for (const e of v.events.splice(0)) this.handleEvent(e, v);
         R.draw(v, {
           rawDt: this.rawDt,
@@ -1055,14 +1110,14 @@
           landHint: this.settings.hint ? [1] : null,
           waitText: this.netWait,
         }, dt);
-        if (v.phase === 'over' && !this.resultShown && v.stats) { this.resultShown = true; setTimeout(() => { this.resultShown = false; this.showResult(v); }, 900); }
+        this.queueGuestResult(v);
         $('netInfo').textContent = YY.Net.statusText(this.guestRtt, this.view.delay);
         $('netInfo').title = YY.Net.diagnostics();
         return;
       }
       const m = this.match;
       const o = { padLeft: 46 };
-      const touch = YY.isTouch();
+      const touch = YY.isTouch(); this.updateSkillBtn(m);
       if (this.mode === 'attract') o.noHud = true;
       else if (this.mode === 'story') {
         const k = this.storyKind;
@@ -1082,7 +1137,6 @@
           else if (k === 'footwork') o.marks = this.practice.marks;
           else if (k === 'serve') { o.zone = this.practice.def.zone; o.meterFor = [0]; o.serveLabel = touch ? '点「吊球」发网前球' : 'K 发网前球（J 为高远）'; }
         }
-        this.updateSkillBtn(m);
       } else if (this.mode === 'practice') {
         o.practice = this.practice;
         o.hintIdx = 0;
@@ -1103,7 +1157,6 @@
           o.landHint = this.settings.hint ? [0] : null;
         }
         if (this.mode === 'host') { $('netInfo').textContent = YY.Net.statusText(); $('netInfo').title = YY.Net.diagnostics(); }
-        if (this.mode === 'ai') this.updateSkillBtn(m);
         if (!touch && m.score[0] + m.score[1] === 0 && m.phase !== 'over' && this.mode !== 'local') o.overlayText = 'A/D 移动 · W 跳 · J 高远 · K 吊球 · L 扣杀 · Esc 暂停';
       }
       if (this.mode === 'host') o.waitText = this.netWait;

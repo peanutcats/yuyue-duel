@@ -1,0 +1,77 @@
+/* Stories share the arena's glass surfaces, gold actions and character colors. */
+#scr-story,.summer-screen{color:#f5f7fc;background:radial-gradient(ellipse at 20% 8%,#36568340,transparent 55%),#070e20d9}
+#scr-story .panel,.summer-panel{background:linear-gradient(145deg,#25385beF,#101c35f5 65%);border:1px solid #7a9acc55;border-radius:22px;box-shadow:0 24px 80px #02071899,inset 0 1px #c4e3ff20;max-height:calc(var(--appH)*.94);color:#f5f7fc}
+#scr-story .panel{width:min(1120px,96%);height:min(760px,calc(var(--appH)*.94));overflow:hidden;padding:0;display:flex;flex-direction:column}
+#scr-story .panel:before,.summer-panel:before{height:2px;background:linear-gradient(90deg,transparent,#ffcf4a,#5fd4ff,transparent);opacity:.75}
+#scr-story .ph,.summer-panel .ph{flex:none;margin:0;padding:19px 25px;border-bottom:1px solid #8daed626;color:#f5f7fc}
+#scr-story .ph h2,.summer-panel h2{font-family:inherit;font-size:26px;font-weight:900;letter-spacing:.03em;font-style:normal;color:#f5f7fc}
+#scr-story .ph small,.summer-panel .ph small{color:#a9bbd7}
+#scr-story .btn,.summer-screen .btn{border:1px solid #89a9d855;border-radius:11px;box-shadow:0 3px #08122b;background:linear-gradient(#354d77,#223454);color:#f5f7fc;font-weight:800}
+#scr-story .btn.primary,.summer-screen .btn.primary{background:linear-gradient(135deg,#ffe48a,#ffcf4a 55%,#ffad1f);color:#111726;border-color:#ffe59a;box-shadow:0 4px #a16a20}
+#scr-story .btn.selected,.summer-screen .btn.selected{background:linear-gradient(130deg,#665a32,#2c3340);border-color:#ffcf4a;color:#ffdc76}
+#scr-story .icon-btn,.summer-screen .icon-btn{background:linear-gradient(#3a507c,#233455);color:#f5f7fc;border:1px solid #8ea7ce55;border-radius:12px;box-shadow:0 3px #09142c}
+#scr-story .star-total{color:#ffcf4a;background:#0c1936;border:1px solid #f8ca4b33;font-weight:800}
+#scr-story .story-wrap{display:grid;grid-template-columns:180px minmax(0,1fr);gap:22px;padding:18px 25px 16px;flex:1;min-height:0;overflow:hidden}
+#scr-story .chap-list{display:flex;flex-direction:column;width:auto;gap:8px;padding:0 4px 0 0;background:none;border:0;min-height:0;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#6e8bb2 transparent}
+#scr-story .chap-btn{display:block;flex-shrink:0;text-align:left;min-height:43px;border-radius:10px;padding:12px 14px;font:800 14px "PingFang SC",sans-serif;color:#bdcee7;border:1px solid #6e8cb13b;background:linear-gradient(140deg,#2b4063,#182944);box-shadow:0 3px #080f2040}
+#scr-story .chap-btn.selected{background:linear-gradient(130deg,#ffdf7a,#ffbc35);color:#172039;border-color:#ffe59a;box-shadow:0 4px #98671955}
+#scr-story .chap-btn:disabled{opacity:.4;cursor:default}
+#scr-story .chap-main{min-width:0;min-height:0;display:flex;flex-direction:column;gap:0}
+#scr-story .chap-head{position:relative;flex:none;border:1px solid #7aa0ce55;border-radius:15px;min-height:155px;padding:43px 25px 21px;background-size:cover;background-position:center 47%;display:flex;flex-direction:column;gap:12px;overflow:hidden;box-shadow:0 8px 20px #030c2344}
+#scr-story .chap-head:before{content:attr(data-caption);position:absolute;top:19px;left:25px;font-size:11px;font-weight:800;letter-spacing:2px;color:#ffcf4a}
+#scr-story #chapTitle{font:900 35px "PingFang SC",sans-serif;color:#f5f7fc;text-shadow:0 3px 15px #03081f}
+#scr-story #chapBlurb{color:#d3e4fa;font:500 13px/1.8 "PingFang SC",sans-serif;max-width:85%}
+#scr-story .stage-list{display:flex;flex-direction:column;gap:10px;padding-top:15px;flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#6e8bb2 transparent}
+#scr-story .stage-card{flex-shrink:0;min-height:84px;padding:17px 85px 14px 72px;display:block;text-align:left;border:1px solid #7d9cc441;background:linear-gradient(130deg,#2b4367,#152640);border-radius:13px;box-shadow:0 4px 12px #030b1d30;color:#f5f7fc;position:relative}
+#scr-story .stage-card:hover{border-color:#ffcf4a88;transform:translateY(-1px)}
+#scr-story .stage-card:before{content:'';position:absolute;left:13px;top:17px;width:43px;height:43px;border-radius:12px;background:#0d1c38;border:1px solid #5fd4ff33}
+#scr-story .stage-card:after{display:none}
+#scr-story .stage-card b{display:inline;font-size:17px;font-weight:800}
+#scr-story .st-no{position:absolute;left:13px;top:29px;width:43px;text-align:center;color:#ffcf4a;font-size:12px}
+#scr-story .st-kind{position:absolute;left:auto;top:auto;right:17px;bottom:15px;width:auto;text-align:right;color:#8faaca;font-size:10px;background:none;padding:0}
+#scr-story .st-desc{display:block;margin-top:8px;color:#adbed7;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#scr-story .st-stars{position:absolute;right:17px;top:20px;color:#ffcf4a;font-size:15px;display:block;margin:0;padding:0}
+#scr-story .stage-card.locked{opacity:.4;filter:none}
+#scr-story .story-foot{border-top:1px solid #809fca30;display:flex;justify-content:space-between;gap:15px;padding:13px 25px;flex:none;margin:0;background:#111d34}
+.story-difficulty{display:flex;gap:8px}.story-difficulty .btn{min-width:65px;padding:7px 14px;font-size:12px}
+#scr-dialog{background:transparent;padding:0}
+#scr-dialog .dlg-box{position:absolute;left:4%;right:4%;width:92%;bottom:4%;max-width:none;transform:none;display:block;margin:0;text-align:left;background:linear-gradient(145deg,#2b4268f2,#0c1731fa);border:1px solid #88abdc77;border-top:2px solid #ffcf4aaa;border-radius:18px;box-shadow:0 16px 44px #02091d99,inset 0 1px #e5f4ff16;padding:22px 29px;min-height:140px;color:#f5f7fc}
+#scr-dialog .dlg-box.right{left:4%;right:4%;transform:none}
+#scr-dialog .dlg-name{display:block;color:var(--dc,#ffcf4a)!important;font:800 16px "PingFang SC",sans-serif;padding:0;margin-bottom:10px;text-shadow:0 1px 5px #050a21}
+#scr-dialog #dlgText{font:500 clamp(16px,2.5vh,20px)/1.8 "PingFang SC",sans-serif;color:#f5f7fc;text-align:left;max-height:calc(var(--appH)*.23);overflow:auto;margin:0 0 12px;white-space:pre-line;text-shadow:none}
+#scr-dialog .dlg-body{width:100%;padding:0;gap:0}#scr-dialog .dlg-next{color:#99aed0;font-size:11px}
+#scr-dialog .dlg-av{display:none}#scr-dialog .dlg-skip{background:linear-gradient(#31486ad9,#162440e8);border:1px solid #7f9fc55a;border-radius:12px;color:#dcecff;top:21px;right:4%;padding:10px 16px;z-index:2}
+#scr-dialog .sixteen-chapter{left:0;right:0;top:0;bottom:0;width:100%;display:flex;align-items:center;border:0!important;border-radius:0;background:linear-gradient(90deg,#060d25ee,#0e204688,#101f3c30);padding:7% 9%;box-shadow:none}
+#scr-dialog .sixteen-chapter #dlgText{font-size:clamp(28px,5vw,63px);color:#f5f7fc;line-height:1.5;max-height:none;font-weight:900;margin:20px 0}
+#scr-dialog .sixteen-chapter .dlg-name{color:#ffcf4a!important;font-size:14px;letter-spacing:3px}
+#scr-dialog .sixteen-chapter:after{content:attr(data-caption);position:absolute;left:9%;bottom:20%;font:700 14px "PingFang SC",sans-serif;color:#bdcfea;border-left:3px solid #ffcf4a;padding-left:13px}
+#scr-dialog .sixteen-chapter .dlg-next{color:#ffcf4a;letter-spacing:2px}
+#scr-dialog .sixteen-intent{border-top-color:#5fd4ff}#scr-dialog .sixteen-intent #dlgText{font-size:26px;color:#bef0ff;letter-spacing:3px}
+#scr-dialog .sixteen-thought #dlgText{font-size:17px;color:#c8b4ef}
+.summer-panel .activity-body{padding:25px 32px;overflow:auto;max-height:calc(var(--appH) - 127px)}
+.summer-panel h3{font:900 29px "PingFang SC",sans-serif;margin:8px 0 24px;color:#f5f7fc}
+.summer-panel p{font:16px/1.9 "PingFang SC",sans-serif;color:#c2cce0;white-space:pre-line}
+.summer-panel .activity-body>.btn{margin:8px 10px 0 0}
+.knowledge-prose{max-width:780px;font-size:19px!important;padding:22px;border:1px solid #6b9bc844;border-left:3px solid #5fd4ff;border-radius:12px;background:#0d1a324d}
+.summer-inspect{display:grid;grid-template-columns:1.4fr 1fr;gap:24px}.inspect-scene img{width:100%;display:block;border:1px solid #91b7dd55;border-radius:13px;box-shadow:0 9px 30px #030b2144}.inspect-options{display:flex;flex-direction:column;gap:9px;max-height:39vh;overflow:auto}.inspect-options .btn{text-align:left;padding:12px 16px;font-size:13px}
+.summer-setup{display:grid;grid-template-columns:1fr 1.1fr;gap:35px}.setup-actors{display:grid;grid-template-columns:1fr 1fr;align-content:start;gap:8px}.setup-options{display:flex;flex-direction:column;gap:9px}.setup-options .btn{padding:12px;text-align:left;font-size:14px}
+.summer-game{position:relative;max-width:1040px;margin:0 auto;touch-action:none;aspect-ratio:2/1;border-radius:16px;overflow:hidden;border:1px solid #668bb855;box-shadow:0 10px 30px #030b2344}.summer-game canvas{width:100%;height:100%;display:block;touch-action:none}.summer-game .game-controls{position:absolute;inset:0;pointer-events:none}.summer-game .game-controls button{position:absolute;pointer-events:auto;user-select:none;touch-action:none;padding:0!important;font-size:clamp(10px,1.3vw,19px);white-space:nowrap}.game-note{text-align:center;font-size:13px!important;margin:10px 0 0;min-height:24px}
+#scr-minigame .summer-panel{width:min(1180px,98%)}#scr-minigame .activity-body{padding:15px 23px}#scr-minigame .ph{padding:12px 24px}
+.journal-tabs{display:flex;gap:9px;margin-bottom:22px}.feather-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:10px}.feather-cell{display:flex;flex-direction:column;align-items:center;border:1px solid #7493bd33;background:linear-gradient(#243858,#13213b);min-height:150px;border-radius:13px;color:#7c94b4;padding:9px 4px;gap:4px}.feather-cell.lit{background:radial-gradient(at 50% 20%,#5b7297,#1b2a45 70%);border-color:#ffcf4a66;color:#f5f7fc;cursor:pointer;box-shadow:0 6px 18px #060d2533}.feather-shape{display:block;width:26px;height:73px;margin:6px 0 15px;background:linear-gradient(115deg,#f1faff 46%,#ffcf4a 48%,#a8d6f3 52%);border-radius:90% 9% 80% 14%;transform:rotate(24deg);font-size:0;border:1px solid #b4e4ff77;filter:drop-shadow(0 0 9px #5fd4ff33)}.feather-cell:not(.lit) .feather-shape{opacity:.25}.feather-cell b{font:800 14px "PingFang SC",sans-serif}.feather-cell small{font-size:10px;min-height:14px;color:#9ab4d6}.cg-gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:21px}.cg-gallery figure{margin:0;padding:7px;background:#172843;border:1px solid #6c91c144;border-radius:13px}.cg-gallery img,.cg-hidden{width:100%;aspect-ratio:16/9;object-fit:cover;background:#0d1a30;border-radius:8px}.cg-gallery figcaption{color:#bfd3eb;font:700 13px "PingFang SC",sans-serif;padding:12px 5px}
+.summer-skill-cycle{position:absolute;top:66px;left:16px;z-index:7;border:1px solid #ffcf4a99;background:#192c49ee;color:#ffcf4a;border-radius:10px;font-size:12px;padding:8px 14px}#touch .story-locked{filter:grayscale(1);opacity:.38;pointer-events:none}
+:where(html.sm) #scr-story .ph,:where(html.sm) .summer-panel .ph{padding:10px 19px}
+:where(html.sm) #scr-story .story-wrap{grid-template-columns:140px minmax(0,1fr);padding:9px 19px 7px;gap:14px}
+:where(html.sm) #scr-story .chap-head{min-height:103px;padding:32px 18px 12px}
+:where(html.sm) #scr-story .chap-head:before{top:12px;left:18px;font-size:9px}
+:where(html.sm) #scr-story #chapTitle{font-size:27px}:where(html.sm) #scr-story #chapBlurb{font-size:11px}
+:where(html.sm) #scr-story .stage-card{min-height:70px;padding:11px 76px 11px 63px}
+:where(html.sm) #scr-story .stage-card:before{left:11px;top:14px;width:38px;height:38px}
+:where(html.sm) #scr-story .st-no{left:11px;top:25px;width:38px}
+:where(html.sm) .summer-panel h3{font-size:24px}:where(html.sm) .summer-panel p{font-size:14px}
+:where(html.sm) .summer-game{width:min(100%,calc(var(--appH)*1.4))}
+:where(html.sm) #scr-dialog .dlg-box{min-height:105px;padding:14px 22px;bottom:3%}
+:where(html.sm) #scr-dialog #dlgText{font-size:16px;line-height:1.6;margin-bottom:5px}
+:where(html.sm) #scr-dialog .sixteen-chapter{bottom:0;padding:6% 9%}
+:where(html.sm) #scr-dialog .sixteen-chapter #dlgText{font-size:39px}
+:where(html.sm) .feather-cell{min-height:96px}:where(html.sm) .feather-shape{height:45px;width:19px;margin:2px 0 8px}
+@media(max-width:600px){.feather-grid{grid-template-columns:repeat(4,1fr)}.summer-inspect{grid-template-columns:1fr}.cg-gallery{grid-template-columns:repeat(2,1fr)}.summer-setup{gap:15px}.summer-panel .activity-body{padding:18px}.summer-panel .btn{font-size:12px}}

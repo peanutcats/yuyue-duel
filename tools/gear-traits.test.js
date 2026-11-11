@@ -127,7 +127,7 @@ test('full AI rallies with every trait gear stay valid and actually trigger the 
     for (const [r0, s0, r1, s1] of sets) {
       const m = new YY.Match({ target: 5, cap: 7, gear: [{ racket: r0, shoe: s0 }, { racket: r1, shoe: s1 }] });
       const bots = [new YY.AI(m, 0, 'hard', 'lingfeng'), new YY.AI(m, 1, 'hard', 'canglan')];
-      for (let n = 0; n < 120 * 240 && m.phase !== 'over'; n++) {
+      for (let n = 0; n < 120 * 600 && m.phase !== 'over'; n++) {
         for (const ai of bots) ai.update(C.DT); m.step(C.DT);
         for (const e of m.events) if (e.type === 'gear') seen.add(e.k);
         m.events.length = 0;

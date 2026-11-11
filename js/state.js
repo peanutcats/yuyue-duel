@@ -8,15 +8,17 @@
   const buffOf = (p) => { const b = p.buff || {}; const k = Object.keys(b).filter((x) => b[x] > 0); return [k.join(','), k.length ? r3(Math.max(...k.map((x) => b[x]))) : 0]; };
   YY.snapshot = function (m, events, now = performance.now() / 1000) {
     return {
-      t: 'st', nt: now, ht: r3(m.time), ph: m.phase, sc: m.score.slice(), sv: m.server, st: r3(m.serveT), sg: m.serving ? 1 : 0,
-      ry: m.rally, w: m.winner, names: m.names, hc: m.hitCount,
+      d3: m.courtMode === '3d' ? { p:m.players.map(p=>[r3(p.z||0),r3(p.vz||0),p.aim3D||null,p.swing?.contact?.z??null,p.input3D||null,p.castPose3D||null]), s:[r3(m.shuttle.z||0),r3(m.shuttle.vz||0)], l:m.landMark?.z??0, pl:m.pred?.hidden?null:m.pred?.landZ??null } : null,
+      rules: {target:m.opt.target, cap:m.opt.cap}, t: 'st', nt: now, ht: r3(m.time), ph: m.phase, sc: m.score.slice(), sv: m.server, st: r3(m.serveT), sg: m.serving ? 1 : 0,
+      ry: m.rally, w: m.winner, names: m.names, hc: m.hitCount, titles:YY.titleIds?YY.titleIds(m.titles):[null,null],
       p: m.players.map((p) => [
         r3(p.x), r3(p.y), r3(p.vx), r3(p.vy), p.onGround ? 1 : 0, Math.round(p.stamina),
         p.swing ? [r3(p.swing.t), KIND.indexOf(p.swing.kind), p.swing.dur, p.swing.serve ? 1 : 0,
-          p.swing.contact ? [r3(p.swing.contact.x), r3(p.swing.contact.y), r3(p.swing.contact.t)] : null, p.swing.style || 0, p.swing.fromStyle || 0, p.swing.fromDur || 0] : 0,
+          p.swing.contact ? [r3(p.swing.contact.x), r3(p.swing.contact.y), r3(p.swing.contact.t)] : null, p.swing.style || 0, p.swing.fromStyle || 0, p.swing.fromDur || 0, p.swing.q ?? null] : 0,
         r3(p.runPhase), r3(p.flash), r3(p.land),
-        p.motion ? [p.motion.speed, p.motion.accel, p.motion.air, p.motion.land, p.motion.split].map(r3) : null,
+        p.motion ? [p.motion.speed, p.motion.accel, p.motion.air, p.motion.land, p.motion.split, p.motion.lateral || 0, p.motion.bank || 0].map(r3) : null,
       ]),
+      stamina: m.players.map(p=>[r3(Math.max(0,p.stamDelay)),p.shotQueue3D ? [p.shotQueue3D.btn,r3(p.shotQueue3D.until)] : null]),
       s: [r3(m.shuttle.x), r3(m.shuttle.y), r3(m.shuttle.vx), r3(m.shuttle.vy), m.shuttle.live ? 1 : 0, m.shuttle.held ? 1 : 0, r3(m.shuttle.speed || 0), m.shuttle.lastHitter, m.shuttle.netHit ? 1 : 0, m.shuttle.crossedNet ? 1 : 0, m.shuttle.shot || 0],
       lm: m.landMark ? [r3(m.landMark.x), m.landMark.inB ? 1 : 0, r3(m.landMark.t)] : 0,
       pl: m.pred && m.shuttle.live && !m.pred.hidden ? r3(m.pred.landX) : null, // 技能藏起的落点，好友端也看不到

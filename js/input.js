@@ -70,7 +70,7 @@
         if (!e.target.closest('input, textarea, [contenteditable="true"]') && e.cancelable) e.preventDefault();
       }, { passive: false });
       G.addEventListener('keydown', (e) => {
-        if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+        if (e.target?.closest?.('input, textarea, select, [contenteditable="true"]')) return;
         if (this.onAny && this.onAny(e)) return;
         this.held.add(e.code);
         let used = false;

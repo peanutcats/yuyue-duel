@@ -41,7 +41,13 @@ test('night sky extra energy is six per two returns and capped per point',()=>{
  for(let i=0;i<8;i++){ball(m);m.afterHit(p,{type:'clear'},.7,{});}
  assert.equal(p.energy,8*3+18);m.resetPoint(false);assert.ok(!p.cnt.starGain);
 });
-// 路先森的新技能及编译标记由 lu-rework.test.js 覆盖；旧复制粘贴与防火墙已移除。
+test('debug needs successful variety; the compile mark lengthens the clone or raises the relayed shot',()=>{
+ const m=game('lu',['fuzhi','jieli']),p=m.players[0];ball(m);m.afterHit(p,{type:'clear'},.8,{});
+ ball(m);m.shuttle.shot='drop';m.afterHit(p,{type:'clear'},.8,{});assert.equal(p.cnt.compile,1);
+ assert.ok(cast(m,'fuzhi'));assert.equal(m.entOf('clone',0).t,11);assert.ok(!p.cnt.compile,'the mark is spent');
+ p.cnt.compile=1;ball(m);Object.assign(m.shuttle,{x:p.x+p.dir*.9,y:C.SHOULDER+.3,vx:-2,vy:0});m.entOf('clone',0).x=p.x+p.dir*2;
+ assert.ok(cast(m,'jieli',{x:0,y:1}));assert.equal(m.shuttle.ctl.q,.9);
+});
 test('wind changes one nearby trajectory and remains available for movement',()=>{
  const m=game('lingfeng',['fengkou','tafeng']),p=m.players[0];cast(m,'fengkou',{x:.5,y:0});const e=m.entOf('wind',0);
  ball(m);Object.assign(m.shuttle,{x:e.x+.1,y:e.y,vx:8,vy:0});m.skShuttle({x:e.x-.1,y:e.y,vx:8,vy:0});assert.equal(e.used,1);const vx=m.shuttle.vx;

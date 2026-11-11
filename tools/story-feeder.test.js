@@ -13,7 +13,7 @@ function load(source) {
 for (const source of ['js']) {
   test(`${source}: first story lesson feeds from the nozzle with time to move and swing`, () => {
     const h = load(source), { YY } = h, C = YY.C;
-    const def = YY.CAMPAIGN[0].stages[0].steps.find(step => step.t === 'drill').def;
+    const def = YY.CAMPAIGN[0].stages[1].steps.find(step => step.t === 'drill').def;
     const m = new YY.Match({ practice: true }), pr = new YY.Practice(m, def);
     for (let i = 0; i <= 100; i++) {
       h.sample(i / 100);
@@ -81,7 +81,7 @@ test('first story lesson can be completed using its displayed cues after a norma
   const h = load('js'), { YY } = h;
   for (let seed = 1; seed <= 8; seed++) {
     vm.runInContext(`Math.random = ((seed) => () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return (seed + .5) / 4294967296; })(${seed})`, h.context);
-    const def = YY.CAMPAIGN[0].stages[0].steps.find(step => step.t === 'drill').def;
+    const def = YY.CAMPAIGN[0].stages[1].steps.find(step => step.t === 'drill').def;
     const m = new YY.Match({ practice: true }), pr = new YY.Practice(m, def);
     let feed = -1, readyAt = 0, swung = false, done = null;
     for (let tick = 0; tick < 120 * 60 && !done; tick++) {

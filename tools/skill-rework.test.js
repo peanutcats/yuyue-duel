@@ -27,12 +27,12 @@ test('field devices survive the end of a point with their countdown paused', () 
   assert.ok(Math.abs(mini.t - t0[0]) < 0.05 && Math.abs(board.t - t0[1]) < 0.05, 'timers do not run between points');
   m.startServe(m.players[0], 'clear', 0.9); for (let i = 0; i < 20 && m.phase !== 'rally'; i++) m.step(C.DT); run(m, 1);
   assert.ok(mini.t < t0[0] - 0.8, 'and resume in the next rally');
-  // 网上的机关（糖网 / 借网）与防火墙也一样
-  const n = M('ranran', 'lu', ['tangqiu', 'jiewang'], ['fanghuo', 'fuzhi']); serve(n, 0, 'clear');
-  cast(n, 0, 'jiewang'); cast(n, 1, 'fanghuo'); const left = [n.players[0].buff.jiewang, n.sk.netUp];
+  // 网上的机关（糖网 / 借网）与复制体也一样
+  const n = M('ranran', 'lu', ['tangqiu', 'jiewang'], ['fuzhi', 'jieli']); serve(n, 0, 'clear');
+  n.addEnt('bow',0,0,C.NET_H,99);cast(n, 0, 'jiewang'); cast(n, 1, 'fuzhi'); const clone = n.entOf('clone', 1), left = [n.players[0].buff.silkReady, clone.t];
   endPoint(n); for (let i = 0; i < 120; i++) n.step(C.DT);
-  assert.ok(Math.abs(n.players[0].buff.jiewang - left[0]) < 0.05 && Math.abs(n.sk.netUp - left[1]) < 0.05);
-  assert.equal(n.players[0].cnt.slings, 2, 'remaining slings are kept');
+  assert.ok(n.entOf('clone', 1) === clone, 'the clone stays for the next rally');
+  assert.ok(Math.abs(clone.t-left[1])<.05);assert.ok(!(n.players[0].buff.silkReady>0),'ribbon charge ends with the rally');
   // 一次性的动作（潮水、长拍）照常在回合结束时收掉
   const w = M('canglan', 'lingfeng'); serve(w, 0, 'clear'); cast(w, 0, 'chaolai'); endPoint(w);
   assert.ok(!w.entOf('wave', 0));
@@ -84,30 +84,30 @@ test('xiaohong: aimed self-toss, guide line and the toss into the reflection boa
   assert.ok(Math.abs(up.vx) < 1.5 && up.vy > 5, 'tap: straight over her head');
   assert.ok(lean.vx > 3, 'drag forward: tossed toward the net');
   assert.ok(Math.hypot(soft.vx, soft.vy) < Math.hypot(lean.vx, lean.vy), 'a short drag is a softer toss');
-  // 辅助线：下一拍沿画好的角度射出；自抛扣杀沿线更重
+  // 辅助线校准保留球路，不再附加自抛重球
   const g = M('xiaohong', 'canglan', ['pingyi', 'zipao']); g.phase = 'rally'; const q = g.players[0]; q.x = -3;
-  assert.ok(cast(g, 0, 'pingyi', { x: 1, y: -.3 })); const line = g.entOf('guide', 0); assert.ok(Math.abs(line.a + Math.atan2(.3, 1)) < 1e-9);
+  assert.ok(cast(g, 0, 'pingyi', { x: 1, y: -.3 })); const line = g.entOf('guide', 0); assert.equal(line.n,2);assert.equal(line.a,undefined);
   assert.equal(g.halfOf(0), C.HALF, 'the court stays the same size');
   Object.assign(g.shuttle, { x: q.x + .5, y: 2.6, live: true, held: false, ctl: null, selfToss: 0 });
   const shot = { type: 'smash', vx: 15, vy: -3 }, ctx = {}; g.skShot(q, shot, ctx);
-  assert.ok(Math.abs(Math.atan2(shot.vy, shot.vx) - line.a) < 1e-9, 'shot along the line');
-  assert.equal(ctx.skill, 'pingyi'); assert.equal(ctx.lever, 1.6); assert.equal(shot.type, 'smash'); assert.ok(!g.entOf('guide', 0), 'used once');
+  const safe=YY.simulate(g.shuttle.x,g.shuttle.y,shot.vx,shot.vy,6,false,false,g.physEnv());assert.ok(!safe.netHit&&safe.landX>0&&safe.landX<C.HALF,'calibrated shot stays legal');
+  assert.equal(ctx.skill,'pingyi');assert.equal(ctx.lever,undefined);assert.equal(shot.type,'smash');assert.equal(g.entOf('guide',0).n,1);
   // 自抛垫进反射板：板子替她把球打出去
   const b = M('xiaohong', 'canglan', ['zipao', 'fanshe']); b.phase = 'rally'; const r = b.players[0]; r.x = -3;
   incoming(b.shuttle, { x: r.x + r.dir * 0.7, y: 1.5, vx: -6, vy: -1, crossedNet: true }); assert.ok(cast(b, 0, 'zipao'));
-  b.addEnt('board', 0, b.shuttle.x + 0.1, b.shuttle.y + 1.0, 12, { n: 2, cool: 0 }); b.events.length = 0; run(b, 0.6);
+  b.addEnt('board', 0, b.shuttle.x + 0.1, b.shuttle.y + 1.0, 12, { n: 2, cool: 0, age:.5 }); b.events.length = 0; run(b, 0.6);
   assert.ok(ev(b, 'skillProc').some(e => e.id === 'fanshe')); assert.equal(b.shuttle.selfToss, -1); assert.ok(b.shuttle.vx > 0, 'out toward the opponent');
 });
 
-test('ranran: the ribbon is aimed, wraps the incoming ball and flings it where she drags', () => {
+test('ranran: the ribbon is aimed, wraps the incoming ball and releases a chosen short return', () => {
   const m = M('ranran', 'canglan', ['hongxian', 'jiewang']); m.phase = 'rally'; const p = m.players[0]; p.x = -3;
   incoming(m.shuttle, { x: -1.2, y: 2.4, vx: -5, vy: 0, crossedNet: true });
   assert.ok(cast(m, 0, 'hongxian', { x: .85, y: .5 })); assert.ok(m.entOf('ribbon', 0));
   let got = false; run(m, 0.5, () => { const c = m.shuttle.ctl; if (c && c.k === 'tether') got = true; });
   assert.ok(got && m.shuttle.ctl && m.shuttle.ctl.k === 'tether', 'the ribbon wraps the ball and pulls it in');
   m.events.length = 0; p.skillCd = 0; assert.ok(cast(m, 0, 'hongxian', { x: .9, y: .2 }));
-  const s = m.shuttle; assert.equal(s.ctl, null); assert.equal(s.lastHitter, 0); assert.ok(s.vx > 8, 'flung toward the opponent');
-  assert.ok(ev(m, 'skillProc').some(e => e.id === 'hongxian' && /随拍甩出/.test(e.label)));
+  const s = m.shuttle; assert.equal(s.ctl, null); assert.equal(s.lastHitter, 0); assert.ok(s.vx>0,'released toward the opponent');const path=YY.simulate(s.x,s.y,s.vx,s.vy,6,false,false,m.physEnv());assert.ok(!path.netHit&&path.landX>0&&path.landX<C.HALF,'short return is legal');
+  assert.ok(ev(m, 'skillProc').some(e => e.id === 'hongxian' && /回旋压短/.test(e.label)));
   assert.ok(ev(m, 'hit').some(e => e.p === 0 && e.skill === 'hongxian'));
   // 丝带过不了网
   const n = M('ranran', 'canglan', ['hongxian', 'jiewang']); n.phase = 'rally'; n.players[0].x = -1; n.shuttle.live = false;
@@ -206,7 +206,7 @@ test('ranran sling, ding devices and guoge leverage give heavy feedback events',
 });
 
 test('AI uses every reworked skill without breaking a match', () => {
-  for (const [id, kit] of [['houzi', ['jindou', 'haomao']], ['lu', ['fuzhi', 'bug']], ['zhu', ['jiezou', 'tingyixia']], ['guoge', ['ganggan', 'qiquan']],
+  for (const [id, kit] of [['houzi', ['jindou', 'haomao']], ['lu', ['fuzhi', 'zangshu']], ['zhu', ['jiezou', 'tingyixia']], ['guoge', ['ganggan', 'qiquan']],
     ['laochen', ['yueqiu', 'shuangji']], ['xingxing', ['xingmen', 'yueliang']], ['ranran', ['jiewang', 'tangqiu']], ['ruibao', ['diban', 'baozi']], ['lingfeng', ['yuyue', 'tafeng']]]) {
     const used = new Set();
     for (let k = 0; k < 3; k++) {

@@ -114,6 +114,61 @@
     ctx.restore();
   }
 
+  /** 确定性的小随机：同一个种子、同一时刻总是同一个值（特效不碰比赛随机数） */
+  const hash = (a, b) => { let x = Math.imul((a | 0) ^ 0x9e3779b9, 0x85ebca6b) ^ Math.imul((b | 0) + 0x632be5ab, 0xc2b2ae35); x ^= x >>> 15; x = Math.imul(x, 0x2c1b3c6d); x ^= x >>> 12; return (x >>> 0) / 4294967296; };
+  const HOLO = '#5fb8ff', DIRTY = '#9dff7a';
+  /** 本机正在操作的选手（脏数据的真身只给他们看） */
+  const viewers = (o) => (o && (o.meterFor || o.landHint)) || [];
+  /** 复制体：全息投影的路先森——原地站着，跟着本体跳跃、挥拍 */
+  function cloneDraw(R, ctx, m, p, e, t) {
+    const look = R.lookOf(m, p.idx), k = R.sc, y = e.y || 0;
+    const q = Object.assign({}, p, { x: e.x, y, vx: 0, onGround: y <= 0.001, swing: e.sw || null, buff: {}, market: null, runPhase: 0,
+      motion: { speed: 0, accel: 0, air: (p.motion && p.motion.air) || 0, land: 0, split: 0 } });
+    const fade = clamp(e.t / 0.6, 0, 1) * clamp(e.age / 0.3, 0, 1), flick = 0.86 + 0.14 * Math.sin(t * 23 + e.id);
+    ctx.save(); ctx.globalAlpha = 0.5 * fade * flick;
+    R.drawCharAt(ctx, q, look, R.charOpts(q, m, { flat: HOLO }));
+    const g = hash(e.id, Math.floor(t * 9)); // 偶尔错位一下：投影信号不稳
+    if (g > 0.72) { ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.22 * fade; ctx.translate((g - 0.86) * k * 0.5, 0); R.drawCharAt(ctx, q, look, R.charOpts(q, m, { flat: '#9ffcff' })); }
+    ctx.restore();
+    // 扫描线
+    const [X] = W(R, e.x, 0), top = R.sy(y + 2.05), bot = R.sy(y), w = k * 0.42;
+    ctx.save(); ctx.globalAlpha = 0.18 * fade; ctx.strokeStyle = '#d8f4ff'; ctx.lineWidth = 1;
+    const off = (t * 26) % 6;
+    for (let Y = top + off; Y < bot; Y += 6) { ctx.beginPath(); ctx.moveTo(X - w, Y); ctx.lineTo(X + w, Y); ctx.stroke(); }
+    ctx.restore();
+  }
+  /** 只有路先森看得到：脏数据球上的数据代码与错位色块 */
+  function dirtyMark(R, ctx, e, t) {
+    const [X, Y] = W(R, e.x, e.y), k = R.sc, glyph = ['0x', 'NaN', '#!', '∅', '0xDEAD', '??'];
+    ctx.save(); ctx.font = font(R, Math.max(9, k * 0.085), 800); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    for (let i = 0; i < 3; i++) {
+      const a = t * 3.2 + i * TAU / 3, r = k * 0.3, gx = X + Math.cos(a) * r, gy = Y + Math.sin(a) * r * 0.7;
+      ctx.globalAlpha = 0.75; ctx.fillStyle = i % 2 ? '#ff6bd6' : DIRTY;
+      ctx.fillText(glyph[Math.floor(hash(e.id + i, Math.floor(t * 6)) * glyph.length)], gx, gy);
+    }
+    ctx.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < 4; i++) {
+      const h1 = hash(e.id * 7 + i, Math.floor(t * 14)), h2 = hash(e.id * 13 + i, Math.floor(t * 14) + 3);
+      ctx.globalAlpha = 0.5; ctx.fillStyle = i % 2 ? 'rgba(255,90,210,.8)' : 'rgba(157,255,122,.8)';
+      ctx.fillRect(X + (h1 - 0.5) * k * 0.4, Y + (h2 - 0.5) * k * 0.28, k * (0.04 + h2 * 0.1), Math.max(2, k * 0.025));
+    }
+    ctx.globalAlpha = 0.9; ctx.strokeStyle = DIRTY; ctx.lineWidth = 1.2; ctx.setLineDash([2, 3]);
+    ctx.beginPath(); ctx.arc(X, Y, k * 0.15, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
+    ctx.restore();
+    tag(R, ctx, '脏数据 ' + (e.n || 0) + '/5', e.x, e.y + 0.42, DIRTY, 0.85);
+  }
+  /** 像素碎屑：脏数据弹起 / 消失时人人可见 */
+  function glitchBurst(R, ctx, e, n, life, spread) {
+    const u = 1 - clamp(e.t / life, 0, 1), k = R.sc;
+    ctx.save(); ctx.globalAlpha = 1 - u;
+    for (let i = 0; i < n; i++) {
+      const a = hash(e.id, i) * TAU, d = (0.15 + hash(i, e.id) * 0.85) * spread * (0.3 + u), [X, Y] = W(R, e.x + Math.cos(a) * d, e.y + Math.abs(Math.sin(a)) * d * 0.8 + u * 0.2);
+      ctx.fillStyle = i % 3 === 0 ? '#ff6bd6' : i % 3 === 1 ? DIRTY : '#e8fff0';
+      const sz = k * (0.03 + hash(i * 3, e.id) * 0.05) * (1 - u * 0.5); ctx.fillRect(X - sz / 2, Y - sz / 2, sz, sz);
+    }
+    ctx.restore();
+  }
+
   /** 果哥头顶的钱包：金币数 + 装备档；负债时变红；押注时旁边叠一摞筹码 */
   function wallet(R, ctx, p, t) {
     const a = p.market, debt = YY.marketDebt(a.coins), st = YY.marketStyle(a), k = R.sc;
@@ -254,6 +309,25 @@
             tag(R, ctx, '标志桶 · 跳过去', e.x, 1.08, '#ff8f3a', 0.9);
             break;
           }
+          case 'clone': { // 复制体脚下的投影台
+            const fade = clamp(e.t / 0.6, 0, 1), [X, Y] = W(R, e.x, 0);
+            floorOval(R, ctx, e.x, 0.46, `rgba(95,184,255,${0.16 * fade})`, `rgba(95,184,255,${0.7 * fade})`, 1.6);
+            ctx.save(); ctx.strokeStyle = `rgba(200,240,255,${0.7 * fade})`; ctx.lineWidth = 1.4; ctx.setLineDash([4, 6]); ctx.lineDashOffset = -t * 30;
+            ctx.beginPath(); ctx.ellipse(X, Y, k * 0.3, k * 0.085, 0, 0, TAU); ctx.stroke(); ctx.restore();
+            break;
+          }
+          case 'cloneHop': { // 复制体托底：地面亮一圈，箭头往上
+            const u = 1 - clamp(e.t / 0.7, 0, 1);
+            floorOval(R, ctx, e.x, 0.2 + u * 0.6, null, `rgba(95,184,255,${1 - u})`, 3);
+            tag(R, ctx, '复制体托底', e.x, 0.55 + u * 0.4, HOLO, 1 - u * u);
+            break;
+          }
+          case 'dirtyHop': { // 脏数据落地乱弹：地面闪一下错位像素
+            const u = 1 - clamp(e.t / 0.6, 0, 1);
+            floorOval(R, ctx, e.x, 0.16 + u * 0.35, null, `rgba(157,255,122,${0.8 * (1 - u)})`, 2);
+            glitchBurst(R, ctx, Object.assign({}, e, { y: 0.05 }), 9, 0.6, 0.6);
+            break;
+          }
           case 'appoint': { // 预约的半场 + 投影脚下
             const H = m.sk && m.sk.half ? m.sk.half[e.o] : C.HALF, a = e.zone ? [0.2, 3.3] : [3.3, H];
             floorBand(R, ctx, p.side * a[0], p.side * a[1], `rgba(143,240,220,${e.armed ? 0.16 : 0.07})`);
@@ -282,19 +356,7 @@
             if (!fly) tag(R, ctx, '香蕉皮', x, 0.4, '#ffd84a', 0.8);
             break;
           }
-          case 'bug': { // Bug：贴地爬
-            const [X, Y] = W(R, e.x, 0.06), r = k * 0.1, f = Math.sign((m.players[1 - e.o].x - e.x) || 1) * (R.mirror ? -1 : 1);
-            floorOval(R, ctx, e.x, 0.16, 'rgba(0,0,0,0.25)');
-            ctx.save(); ctx.translate(X, Y);
-            ctx.strokeStyle = '#1b2a3a'; ctx.lineWidth = Math.max(1.5, k * 0.018);
-            for (let i = -1; i <= 1; i++) for (const sg of [-1, 1]) { const w = Math.sin(R.time * 30 + i * 2 + sg) * r * 0.25; ctx.beginPath(); ctx.moveTo(i * r * 0.5, 0); ctx.lineTo(i * r * 0.5 + w, sg * r * 0.9); ctx.stroke(); }
-            ctx.fillStyle = '#e8364f'; ctx.beginPath(); ctx.ellipse(0, -r * 0.2, r * 1.0, r * 0.62, 0, 0, TAU); ctx.fill();
-            ctx.fillStyle = '#1b2a3a'; ctx.beginPath(); ctx.arc(f * r * 0.95, -r * 0.25, r * 0.38, 0, TAU); ctx.fill();
-            ctx.fillStyle = '#fff'; ctx.font = font(R, k * 0.08, 900); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('404', -f * r * 0.1, -r * 0.2);
-            ctx.restore();
-            tag(R, ctx, 'BUG · 跳起来踩', e.x, 0.42, '#bfe8ff', 0.85);
-            break;
-          }
+
 
         }
       }
@@ -322,12 +384,7 @@
         ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.quadraticCurveTo(mid[0], mid[1], c2[0], c2[1]); ctx.stroke(); ctx.restore();
       }
       // 网带上的蝴蝶结
-      for (const e of m.ents) if (e.k === 'bow') {
-        const [X, Y] = R.P(0, C.NET_H, e.z || 0), r = k * 0.07;
-        ctx.fillStyle = '#ff8fbf'; ctx.strokeStyle = '#c2457f'; ctx.lineWidth = 1;
-        for (const sgn of [-1, 1]) { ctx.beginPath(); ctx.moveTo(X, Y); ctx.lineTo(X + sgn * r * 1.6, Y - r); ctx.lineTo(X + sgn * r * 1.6, Y + r); ctx.closePath(); ctx.fill(); ctx.stroke(); }
-        ctx.beginPath(); ctx.arc(X, Y, r * 0.45, 0, TAU); ctx.fill();
-      }
+      for(const e of m.ents)if(e.k==='bow'){const [X,Y]=R.P(0,C.NET_H,e.z||0);YY.CharacterArt.butterfly(ctx,X,Y,k*.1,t);}
       for (const p of m.players) {
         const b = p.buff || {};
         if (b.tangqiu > 0) { // 糖球挂网：网带变成糖浆
@@ -366,10 +423,34 @@
             ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = 'rgba(255,226,122,0.85)'; star(ctx, X, Y, r, 4, 0.35); ctx.fill(); ctx.restore();
             break;
           }
-          case 'firewall': {
-            const [X,Y]=W(R,0,2.0); ctx.save();ctx.strokeStyle='#4fe0ff';ctx.fillStyle='rgba(40,170,220,.16)';ctx.lineWidth=2;
-            ctx.fillRect(X-k*.22,Y-k*.6,k*.44,k*1.2);ctx.setLineDash([4,5]);ctx.strokeRect(X-k*.22,Y-k*.6,k*.44,k*1.2);ctx.restore();
-            tag(R,ctx,'过滤 ×1 · '+Math.ceil(e.t)+'s',0,2.9,'#8fefff',.85);break;
+          case 'clone': {
+            if (!p) break;
+            cloneDraw(R, ctx, m, p, e, t);
+            timer(R, ctx, e.x, (e.y || 0) + 2.3, 0.15, e.t / (e.T || 8), HOLO);
+            tag(R, ctx, '复制体 ' + Math.ceil(e.t) + 's', e.x, (e.y || 0) + 2.68, HOLO, 0.85);
+            break;
+          }
+          case 'cloneFx': { // 复制体出现 / 击球 / 消失：一道扫描光柱和散开的 0、1
+            const life = e.hit ? 0.35 : 0.6, u = 1 - clamp(e.t / life, 0, 1), [X] = W(R, e.x, 0), top = R.sy((e.y || 0) + 2.3), bot = R.sy(e.y || 0);
+            ctx.save(); ctx.globalCompositeOperation = 'lighter';
+            const w = k * (e.hit ? 0.25 : 0.5) * (e.out ? 1 - u * 0.8 : 0.4 + u * 0.6);
+            const gr = ctx.createLinearGradient(X - w, 0, X + w, 0); gr.addColorStop(0, 'rgba(95,184,255,0)'); gr.addColorStop(.5, `rgba(180,230,255,${0.45 * (1 - u)})`); gr.addColorStop(1, 'rgba(95,184,255,0)');
+            ctx.fillStyle = gr; ctx.fillRect(X - w, top, w * 2, bot - top);
+            ctx.font = font(R, Math.max(9, k * 0.1), 800); ctx.textAlign = 'center'; ctx.fillStyle = `rgba(200,240,255,${1 - u})`;
+            for (let i = 0; i < 8; i++) { const hx = (hash(e.id, i) - 0.5) * k * 1.1, hy = bot - hash(i, e.id) * (bot - top) - u * k * 0.5; ctx.fillText(i % 2 ? '1' : '0', X + hx, hy); }
+            ctx.restore();
+            break;
+          }
+          case 'relayArc': { // 接力协议：传球路线 + 到达点
+            const fade = clamp(e.t / 0.3, 0, 1), col = colOf('jieli');
+            ctx.save(); ctx.strokeStyle = col; ctx.globalAlpha = 0.75 * fade; ctx.lineWidth = Math.max(2, k * 0.03); ctx.setLineDash([5, 6]); ctx.lineDashOffset = -t * 45;
+            ctx.beginPath(); e.pts.forEach((q, i) => { const [X, Y] = W(R, q[0], q[1]); i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); }); ctx.stroke(); ctx.setLineDash([]);
+            const [X, Y] = W(R, e.x, e.y), pu = 0.5 + 0.5 * Math.sin(t * 10);
+            ctx.globalAlpha = fade; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(X, Y, k * (0.2 + 0.05 * pu), 0, TAU); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(X - k * .32, Y); ctx.lineTo(X - k * .13, Y); ctx.moveTo(X + k * .13, Y); ctx.lineTo(X + k * .32, Y); ctx.moveTo(X, Y - k * .32); ctx.lineTo(X, Y - k * .13); ctx.moveTo(X, Y + k * .13); ctx.lineTo(X, Y + k * .32); ctx.stroke();
+            ctx.restore();
+            if (viewers(o).includes(e.o)) tag(R, ctx, e.high ? (e.to === 'self' ? '自垫 · 准备击球' : '起跳扣杀点') : '快传到位 · 击球', e.x, e.y + 0.5, col, 0.95 * fade);
+            break;
           }
           case 'wind': { // 风口：一列流动的箭头
             const dir = Math.sign(e.push) * (R.mirror ? -1 : 1), [X] = W(R, e.x, 0);
@@ -384,14 +465,14 @@
           }
           case 'gust': { const [X, Y] = W(R, e.x, e.y); ctx.save(); ctx.globalAlpha = clamp(e.t / 0.5, 0, 1); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(X, Y, k * (0.5 - e.t) * 1.2, 0, TAU); ctx.stroke(); ctx.restore(); break; }
           case 'board': { // 几何反射板：旋转的晶体棱镜；编号 = 弹射顺序，虚线 = 线路
-            const mine = m.ents.filter(q => q.k === 'board' && q.o === e.o).sort((u, v) => u.id - v.id), idx = mine.indexOf(e), next = mine[idx + 1];
+            const mine = m.ents.filter(q => q.k === 'board' && q.o === e.o && q.n>0).sort((u, v) => u.id - v.id), idx = mine.indexOf(e), next = mine[idx + 1];
             const [X, Y] = W(R, e.x, e.y), r = k * 0.34, hot = e.hitT == null || m.time == null ? 0 : clamp(1 - (m.time - e.hitT) / .5, 0, 1);
             if (next) { // 线路：流动的箭头虚线
               const [NX, NY] = W(R, next.x, next.y);
               ctx.save(); ctx.strokeStyle = 'rgba(255,170,120,.55)'; ctx.lineWidth = Math.max(1.5, k * .025); ctx.setLineDash([5, 7]); ctx.lineDashOffset = -t * 30;
               ctx.beginPath(); ctx.moveTo(X, Y); ctx.lineTo(NX, NY); ctx.stroke(); ctx.restore();
             }
-            ctx.save(); ctx.translate(X, Y);
+            ctx.save(); ctx.translate(X, Y);ctx.globalAlpha=e.age<(e.warm??.45)?.35+.5*e.age/(e.warm||.45):1;
             ctx.globalCompositeOperation = 'lighter';
             const gl = ctx.createRadialGradient(0, 0, 0, 0, 0, r * (2 + hot)); gl.addColorStop(0, `rgba(255,140,80,${.32 + hot * .5})`); gl.addColorStop(1, 'rgba(255,140,80,0)');
             ctx.fillStyle = gl; ctx.fillRect(-r * 3, -r * 3, r * 6, r * 6);
@@ -407,7 +488,7 @@
             ctx.fillStyle = '#3a1206'; ctx.font = font(R, Math.max(10, k * .2), 900); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String(idx + 1), 0, 1);
             for (let i = 0; i < 2; i++) { ctx.fillStyle = i < e.n ? '#ffe0a0' : 'rgba(255,255,255,.18)'; ctx.beginPath(); ctx.arc((i - .5) * r * .5, r * 1.02, Math.max(2.2, k * .035), 0, TAU); ctx.fill(); }
             ctx.restore();
-            if (idx === mine.length - 1) tag(R, ctx, mine.length > 1 ? '弹射线路 ×' + mine.length : '反射板', e.x, e.y + .7, c, .85);
+            if(idx===mine.length-1){const target=-p.side*(e.target??4.2);floorOval(R,ctx,target,.42,'rgba(255,170,100,.08)','rgba(255,185,130,.65)',1.4);tag(R,ctx,e.age<(e.warm??.45)?'反射板 · 准备中':'定点回球 · '+e.n+'次',e.x,e.y+.65,c,.85);}
             break;
           }
           case 'shards': {
@@ -507,7 +588,7 @@
           }
           case 'gateFlash': { const [X, Y] = W(R, e.x, e.y); ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = `rgba(201,168,255,${clamp(e.t / 0.5, 0, 1) * 0.7})`; ctx.beginPath(); ctx.arc(X, Y, k * 0.5 * (1.2 - e.t), 0, TAU); ctx.fill(); ctx.restore(); break; }
           case 'pole': { // 伸缩长拍：伸长的拍杆 + 拍头
-            const [HX, HY] = W(R, p.x + p.dir * 0.25, p.y + 1.35), [X, Y] = W(R, e.x, e.y), ang = Math.atan2(Y - HY, X - HX);
+            const pose=YY.charPose(p,R.time,R.charOpts(p,m)),head=YY.CharacterArt?.mechanical(m,p)?.head||[e.x,e.y], [HX, HY] = W(R, p.x + p.dir * pose.W[0], p.y + pose.W[1]), [X, Y] = W(R, head[0], head[1]), ang = Math.atan2(Y - HY, X - HX);
             ctx.save(); ctx.lineCap = 'round';
             ctx.strokeStyle = '#d9fff0'; ctx.lineWidth = Math.max(2, k * 0.03); ctx.beginPath(); ctx.moveTo(HX, HY); ctx.lineTo(X, Y); ctx.stroke();
             ctx.strokeStyle = '#2fd38a'; ctx.lineWidth = Math.max(3, k * 0.045); // 伸缩节
@@ -530,11 +611,15 @@
             ends.forEach(([X, Y], i) => racketHead(ctx, X, Y, Math.atan2(Y - CY, X - CX), k, e.hit && e.hit.k === i ? '#ffffff' : c, !!(e.hit && e.hit.k === i)));
             break;
           }
-          case 'yoyo': { // 悠悠球拍：球线 + 旋转的拍头
-            const [HX, HY] = W(R, p.x + p.dir * 0.2, p.y + 1.5), [X, Y] = W(R, e.x, e.y);
-            ctx.save(); ctx.strokeStyle = 'rgba(232,255,247,0.8)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(HX, HY); ctx.lineTo(X, Y); ctx.stroke(); ctx.restore();
-            racketHead(ctx, X, Y, (R.time || 0) * (e.ph === 2 ? -16 : 16), k, c, false);
-            if (e.ph < 2 && (o && o.landHint || []).includes(e.o)) tag(R, ctx, '再按：拉回', e.x, e.y + 0.45, c, 0.85);
+          case 'yoyo': {
+            const [HX,HY]=W(R,p.x+p.dir*.2,p.y+1.5),[X,Y]=W(R,e.x,e.y),carry=e.ph===3;
+            ctx.save();ctx.strokeStyle=carry?'#efd499':'#97cdbd';ctx.lineWidth=carry?1.8:1;ctx.beginPath();ctx.moveTo(HX,HY);ctx.quadraticCurveTo((HX+X)/2,(HY+Y)/2+(carry?0:k*.23),X,Y);ctx.stroke();
+            YY.CharacterArt.flywheel(ctx,X,Y,k*.28,e.spin||e.age*14,e.ph,e.charge||0);ctx.restore();
+            if(!e.released&&(o?.landHint||[]).includes(e.o))tag(R,ctx,carry?'金窗再按 · 张弦弹射':e.ph<2?'飞轮守点 · 再按召回':'回收中',e.x,e.y+.65,c,.85);break;
+          }
+          case 'atelier': {
+            const [X,Y]=W(R,e.x,e.y);YY.CharacterArt.burst(ctx,X,Y,k*.8,e.age,e.sid,R.quality);
+            if(e.sid==='tangqiu'&&e.to!=null){const [TX,TY]=W(R,e.to,.12);ctx.save();ctx.globalAlpha*=clamp(e.t/.3,0,1)*.7;YY.CharacterArt.ribbon(ctx,[X,Y],[TX,TY],t,k*.045);ctx.restore();}
             break;
           }
           case 'wokArc': { // 回锅再炒：折返的弧线
@@ -553,6 +638,19 @@
             const tr = fakeTrail(R, e), sp = Math.hypot(e.vx, e.vy);
             if (tr.length > 2) R.drawTrail(ctx, tr, e.kind, false);
             R.drawShuttle(ctx, { x: e.x, y: Math.max(0.07, e.y), vx: e.vx, vy: e.vy, live: true, speed: sp, shot: e.kind });
+            break;
+          }
+          case 'dirty': { // 脏数据球：对手看到的和真球一模一样（拖尾、落点圈）；只有路先森看得到数据代码
+            const tr = fakeTrail(R, e), sp = Math.hypot(e.vx, e.vy);
+            if (tr.length > 2) R.drawTrail(ctx, tr, e.kind, false);
+            R.drawShuttle(ctx, { x: e.x, y: Math.max(0.07, e.y), vx: e.vx, vy: e.vy, live: true, speed: sp, shot: e.kind });
+            if (viewers(o).includes(e.o)) dirtyMark(R, ctx, e, t);
+            break;
+          }
+          case 'dirtyPop': { // 脏数据清除：碎成像素
+            glitchBurst(R, ctx, e, 16, 0.7, 0.9);
+            const u = 1 - clamp(e.t / 0.7, 0, 1);
+            tag(R, ctx, '数据已清除', e.x, e.y + 0.45 + u * 0.3, DIRTY, 1 - u * u);
             break;
           }
           case 'splash': { // 水花
@@ -600,25 +698,10 @@
             break;
           }
           case 'shadow': ghostOf(R, ctx, m, p, e.x, e.y, clamp(e.t / 0.55, 0, 1) * 0.38, '#9ff0ff'); break;
-          case 'ribbon': { // 冉冉的红丝带：一条飘动的缎带，头上一个蝴蝶结
-            const ox = e.ox ?? p.x + p.dir * 0.3, oy = e.oy ?? p.y + 1.45, [AX, AY] = W(R, ox, oy), [X, Y] = W(R, e.x, e.y);
-            const L = Math.hypot(X - AX, Y - AY) || 1, nx = -(Y - AY) / L, ny = (X - AX) / L;
-            ctx.save(); ctx.lineCap = 'round';
-            for (const [w, col] of [[k * 0.09, 'rgba(255,77,122,0.25)'], [k * 0.045, '#ff4d7a'], [k * 0.015, '#ffc2d4']]) {
-              ctx.strokeStyle = col; ctx.lineWidth = Math.max(1.2, w); ctx.beginPath();
-              for (let i = 0; i <= 14; i++) { const u = i / 14, wv = Math.sin(u * 9 - t * 14) * k * 0.08 * Math.sin(u * Math.PI); const x = AX + (X - AX) * u + nx * wv, y = AY + (Y - AY) * u + ny * wv; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
-              ctx.stroke();
-            }
-            ctx.fillStyle = '#ff4d7a'; ctx.strokeStyle = '#fff0f4'; ctx.lineWidth = 1.2; // 蝴蝶结
-            for (const sg of [-1, 1]) { ctx.beginPath(); ctx.moveTo(X, Y); ctx.lineTo(X + sg * k * 0.14, Y - k * 0.08); ctx.lineTo(X + sg * k * 0.14, Y + k * 0.08); ctx.closePath(); ctx.fill(); ctx.stroke(); }
-            ctx.beginPath(); ctx.arc(X, Y, k * 0.04, 0, TAU); ctx.fill();
-            ctx.restore();
-            if (e.ph === 1 && s.ctl && s.ctl.k === 'tether') {
-              timer(R, ctx, s.x, s.y, 0.24, s.ctl.t / 1.6, '#ff4d7a');
-              if ((o && o.landHint || []).includes(e.o)) tag(R, ctx, '拖动再按：选方向甩出', s.x, s.y + 0.55, '#ff8fb0', 0.95);
-              else tag(R, ctx, '红丝牵住了', s.x, s.y + 0.55, '#ff8fb0', 0.9);
-            }
-            break;
+          case 'ribbon': {
+            const a=W(R,e.ox??p.x+p.dir*.3,e.oy??p.y+1.45),b=W(R,e.x,e.y);
+            YY.CharacterArt.ribbon(ctx,a,b,t,k*.045);YY.CharacterArt.butterfly(ctx,...b,k*.14,t);
+            if(e.ph===1&&s.ctl?.k==='tether'){timer(R,ctx,s.x,s.y,.25,s.ctl.t,'#ff4d7a');if((o?.landHint||[]).includes(e.o))tag(R,ctx,'再按压短 · 后拖挑长',s.x,s.y+.55,'#ffc2dc',.9);}break;
           }
           case 'bunFly': { // 飞行中的大肉包
             const [X, Y] = W(R, e.x, e.y), r = k * 0.3;
@@ -656,24 +739,18 @@
             if (e.n) tag(R, ctx, '×' + e.n + ' 加速', e.x, e.y + 0.5, '#ffb36a', 1 - u);
             break;
           }
-          case 'guide': { // 辅助线：量角器 + 一条长长的虚线（对手也看得见）
-            const pl = p, ox = pl.x + pl.dir * 0.6, oy = pl.y + C.SHOULDER + 0.2, a = e.auto ? null : e.a, len = 5.5;
-            const ex = a == null ? ox + pl.dir * len : ox + Math.cos(a) * len * pl.dir, ey = a == null ? oy : Math.max(0, oy + Math.sin(a) * len);
-            const [X, Y] = W(R, ox, oy), [EX, EY] = W(R, ex, ey);
-            ctx.save(); ctx.globalAlpha = 0.85 * clamp(e.t / 0.5, 0, 1); ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = Math.max(2, k * 0.03); ctx.setLineDash(a == null ? [3, 9] : [10, 6]); ctx.lineDashOffset = -t * 30;
-            ctx.beginPath(); ctx.moveTo(X, Y); ctx.lineTo(EX, EY); ctx.stroke(); ctx.setLineDash([]);
-            const rr = k * 0.42, base = (pl.dir * (R.mirror ? -1 : 1)) > 0 ? 0 : Math.PI; // 量角器半圆
-            ctx.strokeStyle = 'rgba(255,210,63,0.75)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(X, Y, rr, base - Math.PI / 2, base + Math.PI / 2, base !== 0); ctx.stroke();
-            for (let d = -60; d <= 60; d += 15) { const q = base === 0 ? -d * Math.PI / 180 : Math.PI + d * Math.PI / 180; ctx.beginPath(); ctx.moveTo(X + Math.cos(q) * rr * .82, Y + Math.sin(q) * rr * .82); ctx.lineTo(X + Math.cos(q) * rr, Y + Math.sin(q) * rr); ctx.stroke(); }
-            ctx.restore();
-            tag(R, ctx, a == null ? '辅助线 · 自动' : '辅助线 ' + Math.round(a * 180 / Math.PI) + '°', ox, oy + 0.75, '#ffd23f', 0.9);
-            break;
+          case 'guide': { // 小型量角器与两个校准点，不再横贯球场
+            const ox=p.x+p.dir*.55,oy=p.y+C.SHOULDER+.15,[X,Y]=W(R,ox,oy),r=k*.34;
+            ctx.save();ctx.globalAlpha=.8;ctx.strokeStyle='#ffda69';ctx.lineWidth=1.4;
+            ctx.beginPath();ctx.arc(X,Y,r,-2.7,.7);ctx.stroke();
+            for(let i=0;i<7;i++){const a=-2.7+i*.55;ctx.beginPath();ctx.moveTo(X+Math.cos(a)*r*.82,Y+Math.sin(a)*r*.82);ctx.lineTo(X+Math.cos(a)*r,Y+Math.sin(a)*r);ctx.stroke();}
+            for(let i=0;i<2;i++){ctx.fillStyle=i<(e.n??2)?'#ffdf7c':'#555d70';ctx.beginPath();ctx.arc(X+(i-.5)*9,Y-r-7,2.5,0,TAU);ctx.fill();}ctx.restore();
+            if((o?.landHint||[]).includes(e.o))tag(R,ctx,'稳拍 ×'+(e.n??2)+(p.cnt?.calibrate?' · 反射+1':''),ox,oy+.65,'#ffdc75',.9);break;
           }
-          case 'lineFlash': { // 沿辅助线射出的一道光
-            const u = clamp(e.t / 0.7, 0, 1), [X, Y] = W(R, e.x, e.y), [EX, EY] = W(R, e.x + Math.cos(e.a) * 4 * e.d, e.y + Math.sin(e.a) * 4);
-            ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = `rgba(255,220,90,${u})`; ctx.lineWidth = Math.max(2, k * 0.08 * u); ctx.lineCap = 'round';
-            ctx.beginPath(); ctx.moveTo(X, Y); ctx.lineTo(EX, EY); ctx.stroke(); ctx.restore();
-            break;
+          case 'lineFlash': {
+            const u=clamp(e.t/.45,0,1),[X,Y]=W(R,e.x,e.y),[EX,EY]=W(R,e.x+Math.cos(e.a)*1.2*e.d,e.y+Math.sin(e.a)*1.2);
+            ctx.save();ctx.strokeStyle=e.corrected?'#ffdf7c':'#b6f5d7';ctx.globalAlpha=u;ctx.lineWidth=2;
+            ctx.beginPath();ctx.arc(X,Y,k*(.13+(1-u)*.34),0,TAU);ctx.stroke();ctx.setLineDash([4,5]);ctx.beginPath();ctx.moveTo(X,Y);ctx.lineTo(EX,EY);ctx.stroke();ctx.restore();break;
           }
           case 'pane': { // 冻结窗格：带表格线的冰窗；冻住球后结霜
             const h = e.half || 0.62, [X0, Y0] = W(R, e.x - h, e.y + h), [X1, Y1] = W(R, e.x + h, e.y - h);
@@ -809,6 +886,9 @@
       const t = R.time, k = R.sc, s = m.shuttle, sk = m.sk || {};
       const humans = o && o.landHint ? o.landHint : [];
       FX.aim(R,ctx,m,o);
+      for(const p of m.players)if(p.buff?.silkReady>0){const [X,Y]=W(R,p.x,p.y+2.15);YY.CharacterArt.butterfly(ctx,X,Y,k*.13,t);tag(R,ctx,p.cnt.ribbon?.deep?'蝶弓 · 挑长':'蝶弓 · 压短',p.x,p.y+2.48,'#ffc2dc',.85);}
+      if(s.live&&s.silkShot){const [X,Y]=W(R,s.x,s.y);YY.CharacterArt.butterfly(ctx,X,Y-k*.19,k*.1,t);}
+
       FX.tossHint(R, ctx, m, humans);
       if (s.live && s.bun) { // 超大肉包球：真球裹在包子里；包子越鼓说明吸收的力量越多
         const bz = s.bun, st = bz.st || 0, swell = 1 + Math.min(0.35, st / 60), [X, Y] = W(R, s.x, s.y), r = k * 0.38 * swell, jit = st > 12 ? Math.sin(R.time * 60) * 1.5 : 0;
@@ -819,14 +899,14 @@
         tag(R, ctx, (st > 3 ? '蓄力 ' + Math.round(st * 3.6) + ' km/h' : '大肉包 · 慢') + (mine ? (s.lastHitter===bz.o?' · 再按拆包':' · 先亲手回球') : ''), s.x, s.y + 0.7 * swell, colOf('baozi'), 0.95);
       }
       for (const p of m.players) {
-        const b = p.buff || {}, cnt = p.cnt || {};
+        const b = p.buff || {}, cnt = p.cnt || {},yoyoBusy=s.ctl?.k==='yoyo'&&s.ctl.o===p.idx||s.live&&s.selfToss===p.idx&&s.tossSkill==='youyou';
         if (p.market) wallet(R, ctx, p, t);
         if (b.grab > 0) tag(R, ctx, '弯腰捡红包…', p.x, p.y + 2.3, '#ff7a6a', 0.95);
-        if(cnt.calibrate) tag(R,ctx,'校准 ×1',p.x,p.y+2.8,'#ffb02e',.8);
+        if(cnt.calibrate&&!m.ents?.some(e=>e.k==='guide'&&e.o===p.idx)) tag(R,ctx,'反射 +1',p.x,p.y+2.8,'#ffb02e',.8);
         if(cnt.compile) tag(R,ctx,'编译 ×1',p.x,p.y+2.8,'#7fd6ff',.8);
         if(b.rocketReady>0) tag(R,ctx,'火箭推进就绪',p.x,p.y+2.5,'#ffcf5a',.9);
         if(b.teacherCalm>0) tag(R,ctx,'稳住 · 下一拍',p.x,p.y+2.6,'#8ff0b0',.8);
-        if(b.overclock>0) tag(R,ctx,'机械过载',p.x,p.y+2.4,'#7dffcf',.85);
+        if(b.overclock>0&&!yoyoBusy) tag(R,ctx,'机械过载',p.x,p.y+2.4,'#7dffcf',.85);
         if(b.bunSteam>0) tag(R,ctx,'蒸汽蓄力',p.x,p.y+2.4,'#ffd28a',.85);
         if(b.vineStrike>0) {
           ctx.save();ctx.strokeStyle='#b3ff82';ctx.globalAlpha=.6;ctx.lineWidth=2;
@@ -838,7 +918,6 @@
           ctx.fillStyle = color; YY.rr(ctx, X - w / 2, Y, w * clamp(u, 0, 1), h, h / 2); ctx.fill();
           if (label) tag(R, ctx, label, p.x, p.y + 2.55, color, 0.9);
         };
-        if (cnt.clip) tag(R, ctx, '📋 ' + (YY.SHOT_NAMES[cnt.clip.type] || '球路') + ' · 待粘贴', p.x, p.y + 2.6, colOf('fuzhi'), 0.95);
         if (cnt.combo > 0 && b.jiezou > 0) tag(R, ctx, '节拍 ' + ['', '一', '二、一', '一、二、一'][cnt.combo], p.x, p.y + 2.6, colOf('jiezou'), 0.95);
         if (b.xingmen > 0) { // 星门已开：入口跟在她拍前
           const [X, Y] = W(R, p.x + p.dir * 0.9, p.y + 2.0), r = k * 0.28;
@@ -867,10 +946,10 @@
           tag(R, ctx, '重力翻转 · 耗能', p.x, p.y + 2.45, '#ffe27a', 0.9);
         }
         if (cnt.streak >= 2 && p.kit && p.passive === 'liansha') tag(R, ctx, '🔥 ' + cnt.streak + ' 连杀', p.x, p.y + 2.75, '#ffb347', 0.95);
-        if (cnt.recall && !cnt.recall.done && humans.includes(p.idx)) { // 箭头按屏幕方向画：反向移动 = 网向 -ref，换算到屏幕是 -ref·dir
+        if (!yoyoBusy && cnt.recall && !cnt.recall.done && humans.includes(p.idx)) { // 箭头按屏幕方向画：反向移动 = 网向 -ref，换算到屏幕是 -ref·dir
           tag(R, ctx, '再按回收 · +6', p.x, p.y + 2.3, colOf('jixie'), 0.9);
         }
-        if (b.shoushi > 0) tag(R, ctx, '收招', p.x, p.y + 2.3, '#b8ffde', 0.8);
+        if (b.shoushi > 0&&!yoyoBusy&&!cnt.recall) tag(R, ctx, '收招', p.x, p.y + 2.3, '#b8ffde', 0.8);
 
         if (b.tripped > 0) tag(R, ctx, '绊到了', p.x, p.y + 2.3, '#ff8a95', 0.9);
         if (b.prone > 0) tag(R, ctx, '起身中', p.x, 0.9, '#ffb199', 0.9);
@@ -939,7 +1018,8 @@
     // 自抛之后：本机小红看到最佳扣杀点
     tossHint(R, ctx, m, humans) {
       const s = m.shuttle, pr = m.pred;
-      if (!s.live || s.ctl || s.tossSkill !== 'zipao' || !humans.includes(s.selfToss) || !pr || !pr.pts) return;
+      if(s.live&&!s.ctl&&s.tossSkill==='youyou'&&humans.includes(s.selfToss)){const p=m.players[s.selfToss];tag(R,ctx,'接回了 · 自己挥拍',p.x,p.y+2.7,'#b8ffde',.9);return;}
+      if (!s.live || s.ctl || s.tossSkill!=='zipao' || !humans.includes(s.selfToss) || !pr || !pr.pts) return;
       const p = m.players[s.selfToss], el = (m.time || 0) - (pr.t0 ?? m.time ?? 0);
       const pt = pr.pts.find(q => q.t > el && q.vy < 0 && q.y < p.y + C.SHOULDER + 1.1 + (p.onGround ? 0.9 : 0));
       if (!pt) return;
@@ -978,8 +1058,8 @@
     foot: 'yihan', drop: 'dishui', sign: 'qiandao', coin: 'jihui', crumbs: 'baozi', wokArc: 'huiguo',
     pole: 'shensuo', spin: 'xuanpai', yoyo: 'youyou', ghost: 'shuizhong', afterimg: 'jindou', appoint: 'yueqiu', star: 'yekong', wind: 'fengkou', board: 'fanshe',
     moon: 'yueliang', gate: 'xingmen', vine: 'dangteng', mini: 'haomao', cone: 'biaozhi',
-    firewall:'fanghuo', pool: 'chaolai', ripplePool: 'chaolai', ribbon: 'hongxian', bunFly: 'baozi', wall: 'diban', steam: 'diban', guide: 'pingyi', lineFlash: 'pingyi', pane: 'shuangji', iceShard: 'shuangji', replace: 'yati', replaceHit: 'yati',
-    coins: 'jihui', packet: 'jiepan', chips: 'ganggan', jail: 'jihui', whirl: 'yuyue', splash: 'jingxiang', rewind: 'huichao', gale: 'yuyue', quake: 'diban', peel: 'haomao', bug: 'bug',
+    clone: 'fuzhi', cloneFx: 'fuzhi', cloneHop: 'fuzhi', relayArc: 'jieli', dirty: 'zangshu', dirtyPop: 'zangshu', dirtyHop: 'zangshu', pool: 'chaolai', ripplePool: 'chaolai', ribbon: 'hongxian', bunFly: 'baozi', wall: 'diban', steam: 'diban', guide: 'pingyi', lineFlash: 'pingyi', pane: 'shuangji', iceShard: 'shuangji', replace: 'yati', replaceHit: 'yati',
+    coins: 'jihui', packet: 'jiepan', chips: 'ganggan', jail: 'jihui', whirl: 'yuyue', splash: 'jingxiang', rewind: 'huichao', gale: 'yuyue', quake: 'diban', peel: 'haomao',
   };
   /** 假球的拖尾：第一次出现时借用真球当前的拖尾，之后自己累积，看不出先后 */
   function fakeTrail(R, e) {
@@ -991,5 +1071,385 @@
     for (const id in all) if (R.time - all[id].seen > 1) delete all[id];
     return tr;
   }
+  // 新角色的装置以不同轮廓表达状态，低画质与联机端共用这些矢量。
+  const nGround=FX.ground,nAir=FX.air,nTop=FX.top;
+  const nc=e=>YY.SKILLS[e.sid]?.color||({springReady:'#64d7c6',splitBurst:'#a7f4df',curveFx:'#a7f4df',returnSeal:'#f09881'}[e.sid])||'#e9b866';
+  FX.ground=function(R,g,m,o,dt){nGround.call(this,R,g,m,o,dt);
+    for(const e of m.ents||[]){if(e.k!=='newskill')continue;const k=R.sc,c=nc(e),[x,y]=W(R,e.x,0);g.save();g.strokeStyle=c;g.fillStyle=c;g.lineWidth=2;
+      if(e.sid==='jibei'){
+        const h=e.height||0,top=R.sy(h),w=k*1.15;
+        floorOval(R,g,e.x,1.25,'#402b1944','#d3a15e88',1);
+        g.fillStyle='#65482e';g.strokeStyle='#b78a53';g.beginPath();g.moveTo(x-w,y);g.lineTo(x-w*.88,top+5);g.lineTo(x+w*.88,top+5);g.lineTo(x+w,y);g.closePath();g.fill();g.stroke();
+        for(let i=-3;i<=3;i++){const xx=x+i*w*.25;g.strokeStyle='#f3d69c';g.lineWidth=k*.055;g.beginPath();g.moveTo(xx,y-2);g.quadraticCurveTo(xx-k*.12,top+(y-top)*.5,xx,top+7);g.stroke();g.fillStyle='#d7b47d';g.beginPath();g.ellipse(xx,top+5,k*.095,k*.055,0,0,TAU);g.fill();}
+        g.fillStyle='#e8ce9a';g.strokeStyle='#fff0c8';g.lineWidth=2;g.beginPath();g.ellipse(x,top,w,k*.16,0,0,TAU);g.fill();g.stroke();
+        g.strokeStyle='#8c663d';g.lineWidth=1.2;for(let i=0;i<3;i++){g.beginPath();g.ellipse(x,top,w*(.3+i*.23),k*(.05+i*.035),0,0,TAU);g.stroke();}
+        timer(R,g,e.x,h+.2,.16,e.t/e.T,c);tag(R,g,(e.raised?'高台 1.25m':'降台接低球')+' · '+Math.ceil(e.t)+'s',e.x,h+.55,c);
+      }
+      if(['fossilFx','splitBurst'].includes(e.sid)){g.globalAlpha=clamp(e.t/.4,0,1);floorOval(R,g,e.x,.4+e.age*2,null,c,3);}
+      g.restore();
+    }
+  };
+  FX.air=function(R,g,m,o,dt){nAir.call(this,R,g,m,o,dt);
+    for(const e of m.ents||[]){if(e.k!=='newskill')continue;const p=m.players[e.o];if(!p)continue;const k=R.sc,c=nc(e),[x,y]=W(R,p.x,p.y+1.2),d=R.sx(p.x+p.dir)>x?1:-1;g.save();g.strokeStyle=c;g.fillStyle=c;g.lineWidth=Math.max(1.5,k*.025);
+      if(e.sid==='yimo'){
+        const beat=Math.sin((R.time||0)*9),span=e.boost?1.55:1.35;
+        g.save();g.globalAlpha=.95;g.strokeStyle='#f9dd9c';g.lineWidth=2;
+        for(const side of[-1,1]){
+          const elbowX=x+side*k*.48,elbowY=y-k*(.42+beat*.12),tipX=x+side*k*span,tipY=y-k*(.2+beat*.24);
+          g.fillStyle='#ae6c36bb';g.beginPath();g.moveTo(x,y+k*.15);g.quadraticCurveTo(elbowX,elbowY-k*.2,tipX,tipY);g.lineTo(elbowX,y+k*.33);g.closePath();g.fill();g.stroke();
+          for(let i=0;i<9;i++){const u=i/9,fx=elbowX+(tipX-elbowX)*u,fy=elbowY+(tipY-elbowY)*u,len=k*(.5-.25*u);g.fillStyle=i%2?'#e2a94f':'#ffdd91';g.beginPath();g.moveTo(fx,fy);g.quadraticCurveTo(fx+side*k*.12,fy+len*.4,fx-side*k*.08,fy+len);g.quadraticCurveTo(fx-side*k*.14,fy+len*.5,fx-side*k*.1,fy+.02);g.closePath();g.fill();g.stroke();}
+          g.strokeStyle='#fff5d7';g.beginPath();g.moveTo(x,y);g.lineTo(elbowX,elbowY);g.lineTo(tipX,tipY);g.stroke();
+        }
+        // Streamlined tail fan and three bright fossil marks identify the boosted flight.
+        for(let i=-1;i<=1;i++){g.fillStyle='#e0ad60';g.beginPath();g.moveTo(x-d*k*.15,y+k*.2);g.lineTo(x-d*k*(.55+i*.12),y+k*(.85+i*.1));g.lineTo(x-d*k*.4,y+k*.25);g.closePath();g.fill();}
+        g.restore();tag(R,g,(e.boost?'化石猎航':'始祖鸟猎航')+' '+('◆'.repeat(e.n||0))+' · '+e.t.toFixed(1)+'s',p.x,p.y+2.7,c);
+      }
+      if(e.sid==='wingBurst'||e.sid==='diveFx'){
+        g.globalAlpha=clamp(e.t/.5,0,1);for(let i=0;i<7;i++){const xx=x-d*k*(.2+i*.12+e.age),yy=y+(i-3)*k*.14;g.fillStyle=i%2?'#f9d88c':'#c98d40';g.beginPath();g.ellipse(xx,yy,k*.16,k*.035,-.5*d,0,TAU);g.fill();}g.globalAlpha=1;
+      }
+      if(e.sid==='weichui'||e.sid==='tailFx'){
+        const u=e.sid==='weichui'?clamp(e.age/.6,0,1):e.charge,angle=e.sid==='weichui'?2.6+u*.5:-1.4+e.age*10;
+        let px=x,py=y;for(let i=1;i<=7;i++){const a=angle-i*.1,xx=x+Math.cos(a)*k*i*.25*d,yy=y+Math.sin(a)*k*i*.17;g.beginPath();g.moveTo(px,py);g.lineTo(xx,yy);g.stroke();g.fillStyle='#f7e8c2';g.beginPath();g.arc(xx,yy,k*(i===7?.2:.05),0,TAU);g.fill();g.stroke();px=xx;py=yy;}
+        if(e.sid==='weichui'){timer(R,g,p.x,p.y+2.3,.3,u,c);tag(R,g,'骨尾 '+(u>=1?'就绪':'蓄力')+' · 普通击球触发',p.x,p.y+2.85,c);}
+      }
+      if(e.sid==='jieli_jump'){
+        for(const side of [-1,1]){g.beginPath();g.moveTo(x+side*k*.15,y+k*.15);for(let j=0;j<6;j++)g.lineTo(x+side*k*.15+(j%2?1:-1)*k*.05,y+k*(.15+j*.13));g.stroke();}
+        const turn=Math.sin(e.age*9);g.globalAlpha=.45;g.beginPath();g.ellipse(x,y+k*.2,k*.7,k*.2,turn*.45,0,TAU*1.7);g.stroke();
+      }
+      if(e.sid==='dianbu'){floorOval(R,g,p.x,.65,null,c,1.5);timer(R,g,p.x,.2,.2,e.t/e.T,c);}
+      if(e.sid==='bianpai'){
+        const sign=e.mode>0?-1:1;g.lineWidth=2;
+        g.beginPath();g.moveTo(x+d*k*.4,y-k*.18);g.quadraticCurveTo(x+d*k*.95,y-sign*k*.55,x+d*k*1.02,y+sign*k*.38);g.stroke();
+        g.beginPath();g.moveTo(x+d*k*.87,y+sign*k*.22);g.lineTo(x+d*k*1.02,y+sign*k*.38);g.lineTo(x+d*k*1.14,y+sign*k*.2);g.stroke();
+        for(let i=0;i<e.n;i++){g.beginPath();g.arc(x+d*k*(.5+i*.2),y+k*.52,2.3,0,TAU);g.fill();}
+      }
+      if(FX.officeSkill(e.sid)){
+        FX.officeReady(g,e,x,y-k*.58,clamp(k/38,.72,1.15));
+        FX.officeCast(g,e,x+d*k*.25,y,clamp(k/38,.72,1.15),d);
+      }
+      if(e.sid==='returnSeal')FX.officeSeal(g,x+d*k*.22,y-k*.18,clamp(k/38,.75,1.15),e.age,e.combo);
+      if(['curveFx'].includes(e.sid)){
+        g.globalAlpha=clamp(e.t/.5,0,1);g.beginPath();g.arc(x,y,k*(.35+e.age),-.8,2.5);g.stroke();
+      }
+      if(FX.filmSkill(e.sid))FX.filmReady(g,e,x,y-k*.66,clamp(k/38,.72,1.16));
+      g.restore();
+    }
+  };
+  const officeIds=['tongqin','gongwei','jiaban'];
+  FX.officeSkill=id=>officeIds.includes(id);
+  FX.officeReady=function(g,e,x,y,k){
+    const i=officeIds.indexOf(e.sid),c=YY.SKILLS[e.sid].color;
+    g.save();g.translate(x+(i-1)*k*22,y);g.scale(k,k);
+    g.fillStyle='#142d38ee';g.strokeStyle=c+'a0';g.lineWidth=.75;
+    YY.rr(g,-9,-11,18,23,3);g.fill();g.stroke();
+    YY.SkillIcons?.draw(g,e.sid,0,-2.5,14,c);
+    for(let j=0;j<2;j++){g.fillStyle=j<e.n?c:'#38515e';YY.rr(g,-6+j*7,6,5,2.6,1);g.fill();}
+    g.globalAlpha=.55;g.fillStyle=c;g.fillRect(-6,10,12*clamp(e.t/e.T,0,1),.8);g.restore();
+  };
+  FX.officeCast=function(g,e,x,y,k,dir=1){
+    const u=clamp(e.age/.62,0,1);if(u>=1)return;
+    const c=YY.SKILLS[e.sid].color;
+    g.save();g.translate(x+dir*u*12,y-8*Math.sin(Math.PI*u));g.scale(k,k);g.globalAlpha*=Math.sin(Math.PI*u)*.88;
+    if(e.sid==='tongqin'){
+      g.strokeStyle=c;g.lineWidth=1.5;g.beginPath();g.arc(0,0,10+u*8,-2.7,-.2);g.stroke();
+      g.beginPath();g.moveTo(dir*6,-11);g.lineTo(dir*1,-15);g.lineTo(dir*7,-18);g.stroke();
+    }else{
+      g.rotate(dir*(u-.5)*.7);
+      const w=e.sid==='jiaban'?12:7;
+      g.fillStyle='#fff8e9';g.strokeStyle='#9ebfbb';g.lineWidth=.8;
+      g.beginPath();g.moveTo(dir*12,0);g.lineTo(-dir*10,-w);g.lineTo(-dir*4,0);g.lineTo(-dir*10,w);g.closePath();g.fill();g.stroke();
+      g.strokeStyle='#d0b77f';g.beginPath();g.moveTo(dir*12,0);g.lineTo(-dir*4,0);g.stroke();
+    }g.restore();
+  };
+  FX.officeSeal=function(g,x,y,k,age,combo){
+    const u=clamp(age/.42,0,1);if(u>=1)return;
+    g.save();g.translate(x,y-9*u);g.rotate(-.16+.06*u);g.scale(k*(.82+.18*Math.sin(Math.PI*u)),k);
+    g.globalAlpha*=Math.min(1,u*10)*(1-u)*.9;
+    g.fillStyle='#301f28df';g.strokeStyle=combo?'#ffe3b1':'#f9a08a';g.lineWidth=1.1;
+    YY.rr(g,-15,-9,30,18,2);g.fill();g.stroke();
+    g.strokeStyle='#d46c59';g.lineWidth=.65;g.strokeRect(-12.5,-6.5,25,13);
+    g.font='800 10px '+YY.FONT;g.textAlign='center';g.textBaseline='middle';g.fillStyle='#ffe8d5';g.fillText('退回',0,.7);
+    g.restore();
+  };
+  FX.officePulse=function(g,p,x,y,k,now){
+    const st=p.cnt?.nv,age=now-(st?.dispatchAt??-99);if(age<0||age>.38)return;
+    const a=1-age/.38;
+    g.save();g.translate(x,y);g.scale(k,k);g.globalAlpha*=a*.62;g.strokeStyle='#f4cca1';g.lineWidth=1.5;
+    g.beginPath();g.arc(0,0,7+age*27,-1.5,.8);g.stroke();
+    for(const side of[-1,1]){g.beginPath();g.moveTo(side*(20-age*24),-4);g.lineTo(side*(14-age*16),0);g.lineTo(side*(20-age*24),4);g.stroke();}
+    g.restore();
+  };
+  // Faceted paper, shared by the native canvas and both court projections.
+  // The cork remains at the origin; decorative wings never move the hitbox.
+  FX.paperBody=function(g,x,y,angle,k,state,flight){
+    const wing=state.wing,span=.45+wing*1.4,bank=.08*Math.sin((x+y)*.04)*wing;
+    g.save();g.translate(x,y);g.rotate(angle+bank);g.scale(k,k);
+    const face=(pts,fill,stroke='#f9f5e7')=>{
+      g.beginPath();for(let i=0;i<pts.length;i++)i?g.lineTo(...pts[i]):g.moveTo(...pts[i]);g.closePath();
+      g.fillStyle=fill;g.fill();if(stroke){g.strokeStyle=stroke;g.lineWidth=.075;g.stroke();}
+    };
+    const wake=g.createLinearGradient(-5,0,.2,0);wake.addColorStop(0,'#8bdad900');wake.addColorStop(1,flight.paper.dart?'#8bdad955':'#f1d8a145');
+    face([[.15,0],[-4.8,-.12],[-2.2,-.52],[-.5,-.2]],wake,null);
+    g.save();g.globalAlpha*=.23;face([[.1,.22],[-1.9,span+.22],[-1.24,.32]],'#0b1d30',null);g.restore();
+    face([[.23,0],[-1.95,-span],[-1.38,-.08]],'#fffaf0');
+    face([[.23,0],[-1.38,.11],[-1.95,span]],'#cbded8');
+    face([[.23,0],[-1.8,0],[-1.38,.11]],'#6b9a9d','#d8f2eb');
+    face([[.23,0],[-1.38,-.08],[-1.8,0]],'#e7dec5','#fff4d3');
+    g.strokeStyle='#84a9a6';g.lineWidth=.045;g.beginPath();g.moveTo(-.2,-.05);g.lineTo(-1.7,-span*.72);g.moveTo(-.2,.05);g.lineTo(-1.7,span*.72);g.stroke();
+    if(wing>.22){
+      g.save();g.globalAlpha*=wing*.65;g.strokeStyle='#607d83';g.lineWidth=.038;
+      for(const side of[-1,1])for(let i=0;i<3;i++){const yy=side*(.38+i*.18);g.beginPath();g.moveTo(-1.44,yy);g.lineTo(-1.12+i*.08,yy*.76);g.stroke();}
+      g.restore();
+    }
+    if(flight.office&YY.OFFICE_FLIGHT.return){g.fillStyle='#d16c5b';g.fillRect(-1.2,-.15,.25,.3);g.strokeStyle='#ffe8cb';g.lineWidth=.035;g.strokeRect(-1.16,-.11,.17,.22);}
+    const cork=g.createRadialGradient(-.06,-.06,0,0,0,.21);cork.addColorStop(0,'#fffce7');cork.addColorStop(1,'#d7b681');
+    g.fillStyle=cork;g.beginPath();g.arc(0,0,.2,0,TAU);g.fill();g.strokeStyle='#fff6d5';g.lineWidth=.045;g.stroke();
+    g.restore();
+  };
+  const filmIds=['sanbu','yipai','jingmo'];
+  FX.filmSkill=id=>filmIds.includes(id);
+  FX.filmReady=function(g,e,x,y,k){
+    const i=filmIds.indexOf(e.sid),c=YY.SKILLS[e.sid].color;
+    g.save();g.translate(x+(i-1)*k*23,y);g.scale(k,k);
+    g.fillStyle='#142238e8';g.fillRect(-9,-10,18,22);
+    YY.SkillIcons?.draw(g,e.sid,0,-2,13,c);
+    if(e.sid==='yipai'&&e.mode){
+      g.strokeStyle='#f7e4b4';g.lineWidth=1.3;g.beginPath();
+      g.moveTo(-2,6-e.mode*2);g.lineTo(0,6+e.mode*2);g.lineTo(2,6-e.mode*2);g.stroke();
+    }
+    for(let j=0;j<2;j++){g.fillStyle=j<e.n?c:'#3e4b60';g.fillRect(-6+j*7,9,5,1.6);}
+    g.restore();
+  };
+  FX.filmMeter=function(g,p,x,y,k,now){
+    const st=p.cnt?.nv||{},lit=st.filmFlash>now;
+    g.save();g.translate(x,y);g.scale(k,k);
+    for(let i=0;i<2;i++){
+      const u=-10+i*11;
+      g.fillStyle=lit?'#ffe9b1':(st.frames||0)>i?'#c8d9ef':'#23334b';
+      g.strokeStyle='#8faac6';g.lineWidth=.75;g.fillRect(u,-3,8,6);g.strokeRect(u,-3,8,6);
+      g.fillStyle='#293b52';for(const dx of [1,5])g.fillRect(u+dx,-2.25,1.4,1.1);
+    }
+    g.restore();
+  };
+  FX.filmBall=function(g,m,project,k){
+    const s=m.shuttle,f=s.nf,slow=m.ents.find(e=>e.sid==='sanbu'&&e.active),bits=YY.FILM_EDIT;
+    if(!s.live||s.hide||s.veil>0||s.ctl||(!slow&&!f?.edit)||!bits)return;
+    const a=project(s.x,s.y,s.z||0);
+    const b=project(s.x+s.vx*.03,s.y+s.vy*.03,(s.z||0)+(s.vz||0)*.03);
+    g.save();g.translate(a.x,a.y);g.scale(k,k);g.lineWidth=1.6;
+    if(slow){
+      const life=clamp((slow.until-m.time)/1.45,0,1),w=16+3*life;
+      g.strokeStyle='#aed5ff';g.lineCap='round';
+      for(const dx of [-1,1])for(const dy of [-1,1]){
+        g.beginPath();g.moveTo(dx*w,dy*(w-7));g.lineTo(dx*w,dy*w);g.lineTo(dx*(w-7),dy*w);g.stroke();
+      }
+      g.globalAlpha=.66;g.beginPath();g.moveTo(-10,w+5);g.lineTo(-10+20*life,w+5);g.stroke();g.globalAlpha=1;
+    }
+    if(f?.edit){
+      g.rotate(Math.atan2(b.y-a.y,b.x-a.x));
+      if(f.edit&bits.replay){
+        g.strokeStyle='#efdeab';g.globalAlpha=.76;g.strokeRect(-16,-6,11,12);
+        g.beginPath();for(const y of [-4,4]){g.moveTo(-14,y);g.lineTo(-12,y);g.moveTo(-9,y);g.lineTo(-7,y);}g.stroke();
+      }
+      if(f.edit&bits.cut){
+        const rate=YY.editCutRate(f,m.time),shift=rate>1?9:5;
+        g.strokeStyle='#8fd9ff';g.lineWidth=rate>1?2.1:1.4;
+        for(let i=0;i<(rate>1?3:2);i++){
+          const x=-20-i*shift;g.globalAlpha=.92-i*.24;g.beginPath();
+          g.moveTo(x-4,-5);g.lineTo(x,0);g.lineTo(x-4,5);g.stroke();
+        }
+      }
+    }
+    g.restore();
+  };
+  FX.top=function(R,g,m,o,dt){nTop.call(this,R,g,m,o,dt);
+    const f=m.shuttle.nf;
+    if(f&&(f.spin||f.curve||f.dive)&&m.shuttle.live){const [x,y]=W(R,m.shuttle.x,m.shuttle.y),k=R.sc;g.save();g.strokeStyle=f.curve?'#80e6cf':'#b6d5ff';g.lineWidth=2;
+      if(f.dive){g.strokeStyle=f.dive===2?'#ffb04f':'#ffe5a8';const d=m.shuttle.vx>0?1:-1;g.lineWidth=f.dive===2?3:2;for(let i=0;i<3;i++){g.beginPath();g.moveTo(x-d*k*(.2+i*.2),y-(i-1)*5);g.lineTo(x-d*k*(.8+i*.2),y-(i-1)*10);g.stroke();}}
+      if(f.curve||f.spin){const dir=Math.sign(m.shuttle.vx)||1;for(let i=0;i<3;i++){g.globalAlpha=.7-i*.18;g.beginPath();g.ellipse(x-dir*k*i*.2,y+Math.sin(m.time*22-i)*k*.06,k*(.17+i*.035),k*.1,m.time*8-i*.7,.3,TAU*.86);g.stroke();}}
+
+      g.restore();
+    }
+    FX.filmBall(g,m,(x,y)=>{const a=W(R,x,y);return{x:a[0],y:a[1]};},clamp(R.sc/38,.72,1.22));
+    for(const p of m.players){const st=p.cnt?.nv||{};
+      if(p.kit?.passive==='shihua'){const [x,y]=W(R,p.x,p.y+2.3);g.save();for(let i=0;i<3;i++){g.fillStyle=(st.samples||0)&(1<<i)?'#f8d38d':'#463b2e';g.fillRect(x-18+i*13,y,9,5+i*3);}g.restore();}
+      if((st.spin||0)>0){const [x,y]=W(R,p.x-p.dir*.45,p.y+1);g.save();g.strokeStyle='#a7f4df';g.lineWidth=2.5;for(let i=0;i<st.spin;i++){g.beginPath();g.arc(x,y,R.sc*(.16+i*.09),-.7,2.8);g.stroke();}g.restore();}
+      if(p.kit?.passive==='gongxiu'&&m.skillsOn){const[x,y]=W(R,p.x+p.dir*.25,p.y+1.35);FX.officePulse(g,p,x,y,clamp(R.sc/38,.72,1.2),m.time);}
+      if(p.kit?.passive==='lvyue'&&m.skillsOn){const[x,y]=W(R,p.x-p.dir*.48,p.y+.45);FX.filmMeter(g,p,x,y,clamp(R.sc/38,.72,1.2),m.time);}
+    }
+  };
+
+  // Club visuals share projections between 2D and 3D and never mutate match state.
+  FX.clubPlayer=function(g,p,x,y,scale,time){
+    const st=p.cnt?.club;if(!st)return;
+    const list=Object.entries(st.ready||{}).filter(([,e])=>e.t>0);
+    g.save();g.translate(x,y);g.scale(scale,scale);
+    list.forEach(([id,e],i)=>{
+      const sk=YY.SKILLS[id],cx=(i-(list.length-1)/2)*83;
+      const label=id==='luokuan'?(e.mode==='net'?'贴网':'压线'):id==='kongjie'?(e.t<=(e.hot?1.3:.8)?'压哨！':e.t.toFixed(1)+'s'):id==='kuorong'?e.height+'m':id==='ouzhou'?(e.second?'可换手'+(e.steps>1?' ×2':''):'切入'):id==='rongzai'?'接球反压':id==='gongdan'?'托球余 '+e.n+' 次':'下一拍';
+      g.fillStyle='#101b2bea';YY.rr(g,cx-40,-13,80,29,8);g.fill();
+      g.strokeStyle=e.hot?'#ffd681':sk.color;g.lineWidth=e.hot||id==='kongjie'&&e.t<=.8?2:1;g.stroke();
+      YY.SkillIcons?.draw(g,id,cx-27,0,17);
+      g.font='600 10px '+YY.FONT;g.textAlign='left';g.textBaseline='middle';g.fillStyle=sk.color;g.fillText(sk.short,cx-14,-4);
+      g.font='9px '+YY.FONT;g.fillStyle='#e5e9df';g.fillText(label,cx-14,7);
+      g.fillStyle=sk.color;g.fillRect(cx-31,14,62*clamp(e.t/sk.dur,0,1),1.5);
+    });
+    const meter=st.inkBlind?.t>0?'墨涌致盲 '+st.inkBlind.t.toFixed(1)+'s':st.overload?.n>0?'过载 '+st.overload.n+' 拍':st.cache?'缓存 '+st.cache:null;
+    if(meter){g.font='600 10px '+YY.FONT;g.textAlign='center';g.fillStyle=st.overload?'#ffae7e':'#c7e6db';g.fillText(meter,0,list.length?29:0);}
+    if(p.kit?.passive==='moyun'){
+      const y=list.length?43:16,n=st.inkReady?2:st.inkCount||0;
+      for(let i=0;i<2;i++){g.fillStyle=i<n?'#cbd2ed':'#243246';g.strokeStyle='#a8b4ce';g.lineWidth=.8;g.beginPath();g.moveTo(-12+i*12,y-5);g.bezierCurveTo(-19+i*12,y+3,-7+i*12,y+7,-12+i*12,y-5);g.fill();g.stroke();}
+      g.textAlign='left';g.fillStyle='#dae0f2';g.font='600 9px '+YY.FONT;g.fillText(st.inkReady?'下拍附墨':'墨涌 '+n+'/2',15,y+1);
+    }
+    if(p.kit?.passive==='qiuyou'){
+      const y=list.length?34:9;g.font='600 9px '+YY.FONT;g.textAlign='center';
+      ['突破','空接','节奏'].forEach((label,i)=>{const on=st.hot||(st.styleBits||0)&(1<<i);g.fillStyle=on?'#eeb86b':'#283342';YY.rr(g,-48+i*34,y-8,31,17,4);g.fill();g.fillStyle=on?'#261d13':'#9babb8';g.fillText(label,-32+i*34,y+1);});
+      if(st.hot){g.fillStyle='#ffe2a3';g.font='700 10px '+YY.FONT;g.fillText('热手 · 下一招强化',0,y+23);}
+    }
+    g.restore();
+  };
+  // Soft density lobes and slowly sheared wisps form a cloud volume. There is
+  // no opaque plane, hard rectangular fill or repeating outlined cloud icon.
+  FX.clubFog=function(g,m,p,e,project,spatial){
+    const side=-p.side,H=m.halfOf(1-p.idx),h=e.height,age=Math.max(0,m.time-(e.at??m.time-1));
+    const fade=clamp(age/.35,0,1)*clamp(e.t/.55,0,1),clock=m.time*.18;
+    const mist=(x,y,z,rx,ry,alpha,tone)=>{
+      const q=project(x,y,z);g.save();g.translate(q.x,q.y);g.scale(q.k*rx,q.k*ry);
+      const fill=g.createRadialGradient(-.16,-.08,.08,0,0,1);fill.addColorStop(0,`rgba(${tone},${alpha})`);fill.addColorStop(.48,`rgba(${tone},${alpha*.6})`);fill.addColorStop(1,`rgba(${tone},0)`);
+      g.fillStyle=fill;g.fillRect(-1,-1,2,2);g.restore();
+    };
+    g.save();g.globalAlpha*=fade;
+    for(let layer=0;layer<3;layer++)for(let i=0;i<7;i++){
+      const u=(i+.5)/7,x=side*(.2+u*(H-.4)),sway=Math.sin(clock+layer*1.9+i*.83);
+      const y=h+.22+layer*.63+sway*.1,z=spatial?Math.sin(i*1.7+layer)*1.75:0;
+      const opacity=(layer===0?.36:.24)*(1-Math.abs(u-.5)*.35),tone=layer===1?'168,191,214':layer===0?'137,167,195':'115,145,177';
+      mist(x,y,z,spatial?1.65:.75+(i%3)*.13,(spatial?.42:.3)+layer*.13,opacity,tone);
+      if(spatial)mist(x,y+.12,-z,1.45,.36+layer*.12,opacity*.65,tone);
+      if(layer===0)mist(x,y+.13,z,.5,.12,.17,'222,237,240');
+    }
+    // Thin light catches the lower fog edge; true height remains readable.
+    const edge=(z,alpha)=>{
+      g.beginPath();for(let i=0;i<=34;i++){const u=i/34,x=side*(.15+u*(H-.3)),q=project(x,h+Math.sin(u*10+clock)*.025,z);if(i)g.lineTo(q.x,q.y);else g.moveTo(q.x,q.y);}
+      g.strokeStyle=`rgba(209,232,241,${alpha})`;g.lineWidth=1;g.stroke();
+    };
+    edge(spatial?-2.55:0,.36);if(spatial)edge(2.55,.16);
+    for(let i=0;i<4;i++){
+      const base=h+.48+i*.35;g.beginPath();
+      for(let j=0;j<=24;j++){const u=j/24,q=project(side*(.25+u*(H-.5)),base+Math.sin(u*9-clock*(1+i*.2)+i)*.12,spatial?Math.cos(i)*1.3:0);if(j)g.lineTo(q.x,q.y);else g.moveTo(q.x,q.y);}
+      g.strokeStyle=i%2?'#b9d8ec18':'#dfedf422';g.lineWidth=1.1;g.stroke();
+    }
+    const q=project(side*(H-.2),h+.18,spatial?-2.65:0);g.font='600 10px '+YY.FONT;g.textAlign='center';g.fillStyle='#dcecf4';g.fillText('雾线 '+h.toFixed(2)+' m',q.x,q.y);
+    g.restore();
+  };
+  FX.clubTiming=function(g,m,project,viewer){
+    if(!m.skillsOn||m.phase!=='rally')return;
+    for(const p of m.players){
+      if(viewer!=null&&viewer!==p.idx||p.kit?.passive!=='moyun'||YY.clubHintHidden?.(m,p.idx))continue;
+      const cue=p.cnt?.club?.timing,s=m.shuttle;if(!cue||s.lastHitter===p.idx||!s.live||s.netHit||s.held||s.ctl||p.swing?.hit||p.cooldown>0)continue;
+      const until=cue.pressAt-m.time;if(until<-.1||until>.55)continue;
+      const q=project(cue.x,cue.y,cue.z),k=clamp(q.k/42,.75,1.25),ready=until<.045&&until>-.06,closing=clamp(until/.45,0,1);
+      const color=ready&&cue.stable?'#d8f9d8':cue.stable?'#e4c8a2':'#aab6cf';
+      g.save();g.translate(q.x,q.y);g.scale(k,k);g.globalAlpha=.9;g.strokeStyle=color;g.lineWidth=ready?2.3:1.3;
+      g.beginPath();g.arc(0,0,10,0,TAU);g.stroke();g.globalAlpha=.62;g.beginPath();g.arc(0,0,10+closing*17,-Math.PI*.5,Math.PI*1.5);g.stroke();
+      g.globalAlpha=1;for(let i=0;i<4;i++){const a=i*Math.PI/2;g.beginPath();g.moveTo(Math.cos(a)*15,Math.sin(a)*15);g.lineTo(Math.cos(a)*19,Math.sin(a)*19);g.stroke();}
+      const label=ready?(cue.stable?'挥拍':'站稳挥拍'):cue.stable?'等环合拢':'先稳住站位';
+      g.font='600 10px '+YY.FONT;g.textAlign='center';g.textBaseline='middle';const w=g.measureText(label).width+14;g.fillStyle='#102033dc';YY.rr(g,-w/2,24,w,18,8);g.fill();g.fillStyle=color;g.fillText(label,0,33);g.restore();
+    }
+  };
+  FX.clubCourt=function(g,m,project,spatial){
+    if(!m.skillsOn)return;
+    const line=(a,b,c,w=1)=>{const p=project(...a),q=project(...b);g.strokeStyle=c;g.lineWidth=w;g.beginPath();g.moveTo(p.x,p.y);g.lineTo(q.x,q.y);g.stroke();};
+    const polygon=(points,fill,stroke)=>{g.beginPath();points.forEach((a,i)=>{const p=project(...a);if(i)g.lineTo(p.x,p.y);else g.moveTo(p.x,p.y);});g.closePath();g.fillStyle=fill;g.fill();if(stroke){g.strokeStyle=stroke;g.lineWidth=1;g.stroke();}};
+    g.save();
+    for(const p of m.players){const st=p.cnt?.club;if(!st)continue;const r=st.ready||{};
+      if(r.kuorong?.t>0)FX.clubFog(g,m,p,r.kuorong,project,spatial);
+      if(r.gongdan?.t>0){const e=r.gongdan,c=project(e.x,e.y,e.z),k=c.k;g.save();g.translate(c.x,c.y);g.globalAlpha=e.warm>0?.4:.9;g.strokeStyle='#fbc77e';g.fillStyle='#172b39bb';g.lineWidth=2;YY.rr(g,-k*.55,-k*.5,k*1.1,k*.67,4);g.fill();g.stroke();g.strokeRect(-k*.2,-k*.32,k*.4,k*.3);g.beginPath();g.ellipse(0,k*.18,k*.5,k*.12,0,0,TAU);g.stroke();g.lineWidth=1;for(let i=-2;i<=2;i++){g.beginPath();g.moveTo(i*k*.16,k*.21);g.lineTo(i*k*.11,k*.52);g.stroke();}g.restore();line([e.x,0,e.z],[e.x,e.y-.7,e.z],'#fbc77e66',2);}
+      if(r.rongzai?.t>0||st.counterFx){const q=project(p.x,p.y+1.1,p.z||0),k=q.k,pulse=st.counterFx?1-st.counterFx.t/st.counterFx.T:0;g.save();g.translate(q.x,q.y);g.strokeStyle='#b5ead6';g.lineWidth=1.8;g.globalAlpha=.7;for(let i=0;i<3;i++){g.beginPath();g.ellipse(0,0,k*(.4+pulse*.35),k*(.65+pulse*.25),0,i*TAU/3+.2,i*TAU/3+1.5);g.stroke();}g.strokeStyle='#ffd2a1';g.lineWidth=3;for(let i=0;i<(st.cache||0);i++){g.beginPath();g.moveTo(k*.4,-k*.26+i*k*.22);g.lineTo(k*.53,-k*.12+i*k*.22);g.stroke();}g.restore();}
+      const risk=r.luokuan;if(risk?.t>0){if(risk.mode==='net'){line([0,C.NET_H+.06,-2.5],[0,C.NET_H+.06,2.5],'#f39baaaa',2);if(!spatial){const q=project(0,C.NET_H+.1,0);g.strokeStyle='#f39baa';g.beginPath();g.arc(q.x,q.y,8,0,TAU);g.stroke();}}else{const H=m.halfOf(1-p.idx);if(spatial)line([p.dir*H,.02,-2.59],[p.dir*H,.02,2.59],'#f39baaaa',2.5);else{const q=project(p.dir*H,0,0);g.fillStyle='#f39baaaa';g.fillRect(q.x-3,q.y-3,6,8);}}}
+    }
+    g.restore();
+  };
+  // Racket-local wet strings and gravity-driven drops. Both model renderers
+  // call this at the real racket head; animation never consumes match RNG.
+  FX.inkRacket=function(g,x,y,scale,time,angle=0){
+    g.save();g.translate(x,y);g.scale(scale,scale);
+    const pulse=.5+.5*Math.sin(time*4);
+    g.save();g.rotate(angle);g.fillStyle='#0a1125ed';g.strokeStyle='#b9c7e5';g.lineWidth=.9;
+    g.beginPath();g.ellipse(0,0,6.5,4.5,0,0,TAU);g.fill();g.stroke();
+    g.strokeStyle='#d9e7ff';g.globalAlpha=.7+pulse*.3;g.lineWidth=.8;g.beginPath();g.ellipse(-1,-1,4.5,2.6,-.15,Math.PI,TAU-.35);g.stroke();
+    g.fillStyle='#b9d4f4';g.beginPath();g.ellipse(2,-1.2,1.3,.65,-.3,0,TAU);g.fill();g.restore();
+    for(let i=0;i<5;i++){
+      const u=((time*1.35+i*.217)%1+1)%1,drop=clamp((u-.28)/.72,0,1),dx=(i-2)*2.7+Math.sin(i*2.1)*.5,dy=3+drop*drop*27;
+      g.globalAlpha=(1-drop*.85)*.95;g.fillStyle='#0a1429';g.strokeStyle='#afbfdd';g.lineWidth=.65;
+      if(u<.42){g.beginPath();g.moveTo(dx,1);g.quadraticCurveTo(dx+.6,4,dx,dy+2);g.strokeStyle='#15223c';g.lineWidth=1.6;g.stroke();g.strokeStyle='#afbfdd';g.lineWidth=.65;}
+      const r=(1.1+(i%2)*.35)*(.55+Math.min(1,u/.22)*.45);
+      g.beginPath();g.moveTo(dx,dy-r*1.6);g.bezierCurveTo(dx-r*1.6,dy+r,dx+r*1.6,dy+r,dx,dy-r*1.6);g.fill();g.stroke();
+      g.fillStyle='#d3e1fb';g.beginPath();g.ellipse(dx-.3,dy,r*.23,r*.4,0,0,TAU);g.fill();
+    }g.restore();
+  };
+  FX.clubInkSplash=function(g,m,project){
+    if(!m.skillsOn)return;
+    for(const owner of m.players){const b=owner.cnt?.club?.inkBurst;if(!b||b.t<=0)continue;
+      const u=clamp(1-b.t/b.T,0,1),q=project(b.x,b.y,b.z),floor=project(b.x,.03,b.z),k=q.k,spread=b.r*(1-(1-u)**3);
+      g.save();g.globalAlpha*=Math.min(1,(1-u)*2.6);
+      g.fillStyle='#0a122863';g.beginPath();g.ellipse(floor.x,floor.y,floor.k*spread,floor.k*spread*.18,0,0,TAU);g.fill();
+      // The burst is centred on the actual airborne fuse position, not the floor.
+      g.strokeStyle='#cfddf3';g.lineWidth=1.5;g.globalAlpha*=.65;g.beginPath();g.ellipse(q.x,q.y,k*spread,k*spread*.8,0,0,TAU);g.stroke();g.globalAlpha/=.65;
+      const core=k*(.16+.43*Math.sin(Math.PI*u));g.fillStyle='#0b1428e8';g.strokeStyle='#94aaca';g.lineWidth=1.1;
+      g.beginPath();for(let j=0;j<=40;j++){const a=j/40*TAU,r=core*(1+.16*Math.sin(a*7+u*6));g.lineTo(q.x+Math.cos(a)*r,q.y+Math.sin(a)*r*.8);}g.closePath();g.fill();g.stroke();
+      for(let i=0;i<18;i++){
+        const a=i*2.39996,vertical=1-2*(i+.5)/18,radial=Math.sqrt(1-vertical*vertical),v=project(b.x+Math.cos(a)*radial*spread,Math.max(.04,b.y+vertical*spread-u*u*.45),b.z+Math.sin(a)*radial*spread),r=Math.max(1.5,v.k*(.035+(i%3)*.013)*(1-u*.55));
+        if(u<.5){g.strokeStyle='#17263da8';g.lineWidth=r*.8;g.beginPath();g.moveTo(q.x,q.y);g.quadraticCurveTo((q.x+v.x)/2,v.y-10,v.x,v.y);g.stroke();}
+        g.fillStyle=i%3?'#101a30':'#20314c';g.strokeStyle='#b6c9e2';g.lineWidth=.8;g.beginPath();g.ellipse(v.x,v.y,r,r*(1.3+Math.sin(Math.PI*u)),a*.16,0,TAU);g.fill();g.stroke();
+        g.fillStyle='#d1e3f8';g.beginPath();g.ellipse(v.x-r*.25,v.y-r*.4,r*.22,r*.45,-.3,0,TAU);g.fill();
+      }
+      g.font='600 10px '+YY.FONT;g.textAlign='center';g.fillStyle='#e0eaff';g.fillText('墨涌',q.x,q.y-core-12);g.restore();
+    }
+  };
+  FX.clubScreen=function(g,m,viewer,W,H){
+    const b=YY.clubInkBlind?.(m,viewer);if(!b)return;
+    const age=b.T-b.t,fade=clamp(age/.1,0,1)*clamp(b.t/.35,0,1);
+    g.save();g.globalAlpha*=fade;
+    const ink=g.createRadialGradient(W*.48,H*.52,H*.12,W*.5,H*.5,Math.max(W,H)*.65);
+    ink.addColorStop(0,'rgba(3,7,17,.83)');ink.addColorStop(.6,'rgba(2,5,13,.95)');ink.addColorStop(1,'rgba(0,2,8,.98)');g.fillStyle=ink;g.fillRect(0,0,W,H);
+    g.fillStyle='#050a16';g.strokeStyle='#34415a70';g.lineWidth=1.5;
+    for(let i=0;i<9;i++){
+      const x=W*(.08+((i*37)%83)/100),y=H*(.18+((i*23)%60)/100),r=H*(.11+(i%3)*.045);
+      g.beginPath();for(let j=0;j<=32;j++){const a=j/32*TAU,rr=r*(1+.13*Math.sin(a*5+i)+.08*Math.sin(a*9));g.lineTo(x+Math.cos(a)*rr,y+Math.sin(a)*rr*.63);}g.closePath();g.fill();g.stroke();
+    }
+    g.textAlign='center';g.textBaseline='middle';g.fillStyle='#d7dfec';g.font='600 '+clamp(H*.036,12,22)+'px '+YY.FONT;g.fillText('墨涌 · 黑暗致盲',W*.5,H*.39);
+    g.fillStyle='#9aa9c2';g.font=clamp(H*.027,10,16)+'px '+YY.FONT;g.fillText(b.t.toFixed(1)+' 秒 · 仍可移动与挥拍',W*.5,H*.46);
+    g.restore();
+  };
+  FX.clubBall=function(g,m,project,vision={}){
+    const s=m.shuttle;if(vision.hidden||!s.live||s.hide||s.veil>0)return;
+    const f=s.clubShot;if(!f)return;const q=project(s.x,s.y,s.z||0),k=clamp(q.k/42,.65,1.3);
+    g.save();g.translate(q.x,q.y);g.scale(k,k);if(vision.ghost)g.globalAlpha*=.25;
+    if(f.load){g.strokeStyle='#ffc08a';g.lineWidth=2;g.beginPath();g.arc(0,0,11,m.time*7,m.time*7+4.7);g.stroke();for(let i=0;i<3;i++){const a=m.time*4+i*TAU/3;g.save();g.rotate(a);g.beginPath();g.moveTo(13,-3);g.lineTo(16,0);g.lineTo(13,3);g.stroke();g.restore();}}
+    if(f.hide){g.strokeStyle='#e9cadb';g.lineWidth=1.2;g.setLineDash([2,4]);g.beginPath();g.arc(0,0,12,0,TAU);g.stroke();}
+    if(f.ink){
+      const v=project(s.x-s.vx*.04,s.y-s.vy*.04,(s.z||0)-(s.vz||0)*.04),angle=Math.atan2(v.y-q.y,v.x-q.x),pulse=.5+.5*Math.sin(m.time*9);
+      g.setLineDash([]);const halo=g.createRadialGradient(0,0,2,0,0,19+pulse*3);halo.addColorStop(0,'#14243cb0');halo.addColorStop(.55,'#aec9f333');halo.addColorStop(1,'#afceff00');g.fillStyle=halo;g.beginPath();g.arc(0,0,19+pulse*3,0,TAU);g.fill();
+      g.save();g.rotate(angle);g.strokeStyle='#c1d3ef';g.lineWidth=.9;
+      for(let i=0;i<7;i++){const age=((m.time*2+i*.143)%1+1)%1,x=7+age*35,y=Math.sin(i*2.4+age*4)*(2+age*5);g.globalAlpha=(1-age)*.9;g.fillStyle='#101c33';g.beginPath();g.ellipse(x,y,3.2*(1-age*.65),1.8,Math.sin(i),0,TAU);g.fill();g.stroke();}g.restore();
+      g.fillStyle='#0b152a';g.strokeStyle='#d5e3fc';g.lineWidth=1.3;g.beginPath();g.arc(0,0,5.5,0,TAU);g.fill();g.stroke();g.fillStyle='#b6d1f7';g.beginPath();g.ellipse(-1.4,-2,1.8,.9,-.4,0,TAU);g.fill();
+      g.strokeStyle='#b9cde9';g.lineWidth=1.3+pulse*.6;for(let i=0;i<3;i++){const a=m.time*1.4+i*TAU/3;g.beginPath();g.arc(0,0,13,a,a+1.2);g.stroke();}
+      g.fillStyle='#e1ebff';g.font='600 9px '+YY.FONT;g.textAlign='center';g.fillText('回击爆墨',0,-20);
+    }
+    if(f.counter){g.setLineDash([]);g.strokeStyle='#aaf4d4';g.lineWidth=2;g.beginPath();g.arc(0,0,10,-1.1,1.1);g.stroke();g.strokeStyle='#ffe1b2';for(let i=0;i<2;i++){g.beginPath();g.moveTo(-14-i*7,-5);g.lineTo(-8-i*7,0);g.lineTo(-14-i*7,5);g.stroke();}}
+    g.restore();
+  };
+  const clubTop=FX.top;
+  FX.top=function(R,g,m,o,dt){clubTop.call(this,R,g,m,o,dt);if(!m.skillsOn)return;
+    const project=(x,y)=>({x:R.sx(x),y:R.sy(y),k:R.sc});
+    FX.clubBall(g,m,project,R.clubVision);
+    FX.clubInkSplash(g,m,project);
+    FX.clubTiming(g,m,project,o.labels?.[0]&&o.labels?.[1]?null:R.mirror?1:0);
+    for(const p of m.players){const st=p.cnt?.club,shadow=st?.silhouette;
+      if(shadow){g.save();g.globalAlpha=.25*clamp(shadow.t/.6,0,1);const ghost={...p,...shadow,swing:null,vx:0,vy:0,runPhase:0};R.drawCharAt(g,ghost,R.lookOf(m,p.idx),R.charOpts(ghost,m,{flat:'#dca6c1'}));g.restore();}
+      if(st?.decoy){const d=st.decoy;g.save();g.globalAlpha*=clamp(d.t/.13,0,1);R.drawShuttle(g,d);if(d.t<.18){g.fillStyle='#ebb5d1';const q=project(d.x,d.y);for(let i=0;i<6;i++){const a=i*TAU/6+m.time;g.beginPath();g.ellipse(q.x+Math.cos(a)*15,q.y+Math.sin(a)*13,4,2,a,0,TAU);g.fill();}}g.restore();}
+      const[x,y]=W(R,p.x,p.y+2.35);FX.clubPlayer(g,p,x,Math.max(90,y),clamp(R.sc/42,.7,1.05),m.time);
+    }
+  };
   YY.SkillFX = FX;
 })(typeof GameGlobal !== 'undefined' ? GameGlobal : typeof window !== 'undefined' ? window : globalThis);

@@ -5,35 +5,26 @@
     const YY = G.YY, C = YY.C, A = YY.Audio;
     const setTimeout = schedule || ((fn, ms) => G.setTimeout(fn, ms));
     const rgbOf = (hex) => [1, 3, 5].map((i) => parseInt((hex + '000000').slice(i, i + 2), 16) || 255).join(',');
-    // 装置完成回球时的弹字
-    /** 器械特性触发时给自己的小字提示（移动类特性只有地板特效，不打字，避免刷屏） */
-const GEAR_POP = { pressReady: '压后再杀 · 下一拍跳杀更快', press: '压后再杀！', tide: (e) => '长回合呼吸 +' + e.n + ' 体力', third: '第三种答案', counter: '借势反抽', calm: '稳住呼吸' };
-const GEAR_POP_COL = { pressReady: '#ff9a72', press: '#ff7a52', tide: '#8ff0ff', third: '#ffe08a', counter: '#a9ffd4', calm: '#a6d4ec' };
-const SKILL_POP = {
-      yuyue: '鱼跃救球！', fanshe: '反射！', diban: '地板开球！', huiguo: '回锅再炒！', yueliang: '月下回旋！',
-      xingmen: '星门穿越！', shensuo: '长拍暴击！', xuanpai: '旋风斩！', youyou: '悠悠回击！', yueqiu: '预约兑现！', shuangji: '冻住了！', jiewang: '借网弹射！', haomao: '小猴出手！',
-      fuzhi: 'Ctrl+V！', jiezou: '一、二、一！', tingyixia: '看准了，走！',
-    };
-    // 释放台词（不配音，只飘字）
-    const SKILL_QUOTES = {
-      yuyue: ['扑过去！'], tafeng: ['再踩一脚'], fengkou: ['起风了'], chaolai: ['潮来了，地上有水'], tongyin: ['同饮一潮'], huichao: ['潮水退回去'],
-      fanshe: ['入射角等于反射角'], zipao: ['自己喂自己'], pingyi: ['两点确定一条直线'], tangqiu: ['糖网挂好了'], hongxian: ['红丝带，去！'], jiewang: ['借你的网一用'],
-      diban: ['地板开球！', '墙都给你立好了'], huiguo: ['回锅！'], baozi: ['尝尝我的大肉包', '先存着，待会儿还你'], yueliang: ['月亮借你看看'], xingmen: ['星星连成门'], zhongli: ['重力换班', '星星会往下掉'],
-      shensuo: ['长！'], xuanpai: ['转起来'], youyou: ['悠——回来'], jindou: ['筋斗云——起！', '俺老猴来也'], dangteng: ['喔——！'], haomao: ['去吧，小的们'],
-      fuzhi: ['Ctrl+C'], fanghuo: ['防火墙已开启'], bug: ['这不是 Bug，是特性'], yati: ['Ctrl+H，全部替换'], yueqiu: ['老位置，约好了'], shuangji: ['冻结窗格'],
-      ganggan: ['这一分我押了！'], jiepan: ['红包雨！'], qiquan: ['一掷千金！'], jingxiang: ['看清楚了吗？'], meida: ['美的你'], shuizhong: ['水中捞月'],
-      jiezou: ['一、二、一！跟着我'], biaozhi: ['绕过去'], tingyixia: ['停一下，看站位'],
-    };
     return {
       ...YY.storyActions,
+      updateSoundscape(dt) {
+        if(!YY.Soundtrack)return;
+        A.venue=this.R?.venueId;
+        A.musicEnabled=this.settings.music!==false;
+        A.musicScene?.(YY.Soundtrack.scene(this));
+        A.updateMusic?.(dt);
+      },
       /** 我方出战配置：故事模式只能用已解锁的器械；其他模式器械自由搭配 */
       myLoadout(avoid, as) {
       const free = this.mode !== 'story';
       const pack = (id, forced, gear = free ? YY.Profile.gear(id) : YY.Profile.storyGear(id)) => ({ id, gear, stats: YY.buildStats(Object.assign({ char: id }, gear)), skill: YY.skillSet(id, YY.Profile.kit(id)), look: YY.lookOf(id), forced });
-      if (as && YY.CHARS.some(c => c.id === as)) return pack(as, true); // 剧情指定上场的队友：保留自己的装备
+      if (as && (YY.CHARS.some(c => c.id === as) || YY.STORY_NPCS?.[as])) return pack(as, true);
       let id = YY.Profile.sel.char;
-      if (!YY.Profile.has('char', id)) id = 'lingfeng';
-      if (id === avoid) return pack(id === 'lingfeng' ? 'canglan' : 'lingfeng'); // 与对手同一角色时换人（带上替补自己的器械搭配）
+      if (!YY.CHARS.some(c => c.id === id) || (!free && !YY.Profile.has('char', id))) id = YY.CHARS.find(c => free || YY.Profile.has('char', c.id))?.id || 'dingding';
+      if (!free && id === avoid) {
+        const alternate = YY.CHARS.find(c => c.id !== avoid && (free || YY.Profile.has('char', c.id)));
+        if (alternate) id = alternate.id;
+      }
       return pack(id);
     },
       oppLoadout(id, mix, kit) {
@@ -55,20 +46,26 @@ const SKILL_POP = {
       const fixed = setup && YY.CHARS.some((c) => c.id === setup.opp) ? setup.opp : null;
       const mine = this.myLoadout(fixed);
       const pool = YY.CHARS.filter((c) => c.id !== mine.id);
-      const oppId = fixed && fixed !== mine.id ? fixed : pool[Math.floor(Math.random() * pool.length)].id;
+      const oppId = fixed || pool[Math.floor(Math.random() * pool.length)].id;
       const opp = this.oppLoadout(oppId, true, fixed === oppId ? setup.kit : null);
       const skills = this.settings.skills;
-      this.match = new YY.Match({
-        names: ['你', opp.look.name + ' · ' + lv.name], firstServer: 0,
+      this.match = (YY.createMatch || (o => new YY.Match(o)))({
+        ...YY.matchFormat(this.settings.target), courtMode: this.settings.courtMode, names: ['你', opp.look.name + ' · ' + lv.name], firstServer: 0,titles:[YY.AIChallenge?.equipped()?.id,null],
         looks: [mine.look, opp.look], stats: [mine.stats, opp.stats], gear: [mine.gear, opp.gear], skills: skills ? [mine.skill, opp.skill] : null,
       });
-      this.ais = [new YY.AI(this.match, 1, this.level, opp.id)];
+      this.ais = [(YY.createAI || ((m,...args) => new YY.AI(m,...args)))(this.match, 1, this.level, opp.id)];
+      YY.AIChallenge?.begin(this.match, opp.id, this.level);
       this.ctrlFor[0] = this.soloCtrl(true, skills ? mine.skill.act : null);
       this.enterGame();
-      const style = YY.AI_STYLES[opp.id];
+      const style = YY.AI_STYLES[opp.id] || {name:'自由切磋',weakness:'回位调整，观察来球，寻找击球时机。'};
       const oppKit = skills ? ' · 携带 ' + opp.skill.act.map(k => YY.SKILLS[k].name).join('、') : '';
       this.R.showBanner(opp.look.name + ' · ' + style.name, style.weakness + oppKit, '#ffd23f', 3.3);
+      const title = YY.AIChallenge?.equipped();
+      if (title) this.R.showTitleIntro(title, mine.look.name);
     },
+      recordAIResult(m) { return YY.AIChallenge?.finish(m, this.mode) || null; },
+      openAIChallenges(back = 'ai') { this.challengeBack = back; this.challengeLevel = this.challengeLevel || 'nightmare'; this.show('challenges'); },
+      challengeAI(char, level) { this.startAI(level, { opp: char, kit: null }); },
       startPractice(drill) {
       this.reset();
       this.mode = 'practice';
@@ -110,34 +107,23 @@ const SKILL_POP = {
     },
       handleEvent(e, m) {
       const R = this.R;
+      R.matchNotice?.(e,m,{mine:this.isMe(e.p)||this.mode==='local',practice:this.mode==='practice'});
+      if(m.courtMode==='3d') R.spatialEvent?.(e,m);
       const P = m.players;
       switch (e.type) {
         case 'hit': {
+          if (R.titleIntro && !e.feed) { R.titleIntro = null; R.banner = null; }
           if (e.feed) { A.hit(0.5, false, e); break; }
           const smash = e.shot === 'smash' || e.shot === 'halfsmash';
           A.hit(e.q, smash || e.shot === 'kill', e);
           R.hitFx(e); R.gearHit?.(e, m);
           const p = P[e.p];
-          if (smash) {
-            R.popText((e.shot === 'halfsmash' ? '点杀 ' : '扣杀 ') + Math.round(e.speed * 3.6 * C.SPEED_DISPLAY) + ' km/h', e.x, e.y + 0.3, '#ffb347', e.shot === 'halfsmash' ? 1.05 : 1.35, 1.2);
-          } else if (!e.serve || this.isMe(e.p)) {
-            const col = e.q >= 0.85 ? '#7dffb0' : e.q >= 0.6 ? '#ffffff' : e.q >= 0.35 ? '#ffd23f' : '#ff9b7b';
-            const show = this.isMe(e.p) || e.q >= 0.85 || e.weak;
-            if (show) R.popText(e.name + (e.label ? ' · ' + e.label : ''), p.x, p.y + 2.25, col, 0.75, 1.0);
-          }
-          if (e.reason && this.isMe(e.p)) R.popText(e.reason + ' → ' + e.name, p.x, p.y + 2.75, '#ff9b7b', 0.7, 1.4);
-          if (e.save) { R.popText('漂亮接杀！', p.x, p.y + 2.8, '#5cf2ff', 1.1, 1.3); }
-          else if (e.lowSave) R.popText('极限救球！', p.x, p.y + 2.8, '#5cf2ff', 1.0, 1.2);
           if (e.skill && YY.SKILLS[e.skill]) { // 装置 / 技能完成的回球
-            const sk = YY.SKILLS[e.skill], pop = SKILL_POP[e.skill] || sk.name;
-            R.popText(pop, e.x, e.y + 0.5, sk.color, e.device ? 1.1 : 0.95, 1.0);
+            const sk = YY.SKILLS[e.skill];
             R.burst(e.x, e.y, e.device ? 14 : 9, rgbOf(sk.color), 4.5, 0.04);
             if (e.big || e.skill === 'haomao' || e.skill === 'diban' || e.skill === 'xuanpai') R.shake = Math.max(R.shake || 0, e.big ? 1 : 0.8);
             if (e.big) R.ring?.(e.x, e.y, rgbOf(sk.color), 0.4, 0.7, false);
           }
-          if (e.shot === 'kill') { R.popText('扑球！', e.x, e.y + 0.6, '#ff6b6b', 1.25, 1.0); }
-          else if (e.shot === 'tumble' && (this.isMe(e.p) || e.q >= 0.85)) R.popText('搓球', e.x, e.y + 0.5, '#d2b4ff', 0.9, 0.9);
-          if (e.tumbled && this.isMe(e.p)) R.popText('球在翻滚，难处理！', p.x, p.y + 3.2, '#d2b4ff', 0.75, 1.1);
           // 震动反馈按球路分级：重杀/扑球最重，发力球与平抽中等，吊、搓、放网只轻点一下
           if (this.isMe(e.p) && this.hitHaptic) this.hitHaptic(YY.hitWeight ? YY.hitWeight(e) : smash || e.shot === 'kill' ? 'heavy' : e.q >= 0.85 ? 'medium' : null);
           break;
@@ -149,51 +135,48 @@ const SKILL_POP = {
           const look = R.lookOf(m, e.p);
           if (this.mode === 'story' && this.storyX && e.p === 0) this.storyX.skill = (this.storyX.skill || 0) + 1;
           if (sk.stealth && !this.isMe(e.p)) break; // 幻术类：对手看不到也听不到释放特写，只能看球
+          R.characterSkill?.(e);
           A.skill(e.id);
           R.skillCutIn(look, sk, (e.p === 0) !== R.mirror);
           // 发动反馈收在选手脚下：少量贴地火花 + 地面光环，不在半空炸开挡住来球
           R.burst(p.x, p.y + 0.5, 12, rgbOf(sk.color), 3.2, 0.04);
           R.ring(p.x, 0, rgbOf(sk.color), 0.5, 0.5, true);
-          const line = SKILL_QUOTES[e.id];
-          if (line) R.popText(line[Math.floor(m.time) % line.length], p.x, p.y + 2.9, '#ffffff', 0.55, 1.2);
+
           break;
         }
-        case 'skillFail': if (this.isMe(e.p)) { const p = P[e.p]; R.popText(e.label, p.x, p.y + 2.6, '#ff9b7b', 0.75, 1.1); } break;
+        case 'skillMotion': R.characterSkill?.(e); if(e.id==='shensuo')A.swing?.('smash');else A.skill?.(e.id); break;
+        case 'skillFail': break;
         case 'beat': A.blip?.(); break;
         case 'quake': R.shake = Math.max(R.shake || 0, 1.1); R.dust?.(e.x, 8); A.floor?.(); break;
         case 'slip': R.dust?.(P[e.p].x, 6); break;
         case 'fakeHit': A.hit?.(0.6, 0.5); R.burst(e.x, e.y, 10, '159,240,255', 5, 0.03); break;
-        case 'skillProc': {
-          const p = P[e.p], sk = YY.SKILLS[e.id]; if (!p) break;
-          // tip：看懂了 / 运行日志 —— 只给本人看，字小但停留更久
-          if (e.tip) { if (this.isMe(e.p) || this.mode === 'local') R.popText(e.label, p.x, p.y + 3.2, sk ? sk.color : '#ffd23f', 0.7, 2.6); break; }
-          R.popText(e.label, p.x, p.y + 2.9, sk ? sk.color : '#ffd23f', 0.95, 1.2); A.ready?.(); break;
-        }
+        case 'dirtyBounce': A.hit?.(0.3, false, { shot: 'block' }); R.dust?.(e.x, 3); break; // 脏数据落地乱弹
+        case 'skillProc': if(e.inkBurst)A.skill?.('moyun');else A.ready?.(); break;
         case 'blink': {
           const p = P[e.p];
           R.burst(e.from, 1, 18, '255,179,71', 5, 0.04); R.burst(e.to, 1, 22, '255,179,71', 6, 0.05);
-          R.popText(e.swap ? '换位！' : e.undo ? 'Ctrl+Z' : '闪现！', e.to, p.y + 2.5, '#ffb347', 1.0, 0.9);
+
           break;
         }
-        case 'skillReady': if (this.isMe(e.p)) { A.ready(); R.popText('技能就绪！按 ' + (YY.isTouch() ? '技能键' : 'I / O'), P[e.p].x, P[e.p].y + 2.6, '#ffd23f', 0.8, 1.4); } break;
+        case 'skillReady': if(this.isMe(e.p))A.ready(); break;
         case 'pdone': if (this.mode === 'story') setTimeout(() => this.stepDone(e), 900); break;
         case 'tacticsDone': if (this.mode === 'story') setTimeout(() => this.stepDone({win:true,ok:3,att:e.attempts}),900); else setTimeout(() => this.finishTactics(), 1500); break;
         case 'swing': A.swing(e.btn); break;
-        case 'whiff': { const p = P[e.p]; if (this.isMe(e.p) || this.mode === 'practice') R.popText(e.label, p.x, p.y + 2.3, '#ff7b7b', 0.8, 1.1); break; }
+        case 'step': A.step?.(e); break;
+        case 'whiff': break;
         case 'net': A.net(); R.netFx(e); break;
         case 'gear': { // 器械特性：特效人人可见，文字只提示自己（关键时刻）
           R.gearFx?.(e, m);
-          const p = P[e.p], lbl = GEAR_POP[e.k];
-          if (p && lbl && (this.isMe(e.p) || this.mode === 'local')) R.popText(typeof lbl === 'function' ? lbl(e) : lbl, p.x, p.y + 2.55, GEAR_POP_COL[e.k] || '#bfefff', 0.62, 1.0);
           break;
         }
         case 'jump': A.jump(); R.dust(P[e.p].x, 5); break;
         case 'land': A.land?.(); R.dust(P[e.p].x, 3); break;
-        case 'tired': if (this.isMe(e.p)) R.popText(e.low ? '体力告急 · 步伐与挥拍变慢' : '体力不足 · 跳不高', P[e.p].x, P[e.p].y + 2.3, '#ff9b7b', 0.75, 1.3); break;
+        case 'tired': if(this.isMe(e.p)&&e.low)A.tired?.(); break;
         case 'turn': R.skid?.(P[e.p], e.v); break;
-        case 'read': R.popText('预判！', P[e.p].x, P[e.p].y + 2.3, '#ffd23f', 0.8, 1.0); break;
+        case 'read': break;
         case 'serveReady': R.trail = []; R.lastWinner = -1; break;
         case 'point': {
+          if (m.winner >= 0) this.recordAIResult(m);
           A.floor();
           R.landFx(e.x, e.inB);
           const meWon = this.isMe(e.winner) && this.mode !== 'local';
@@ -215,10 +198,11 @@ const SKILL_POP = {
         case 'pland': A.floor(); R.landFx(e.x, e.inB); break;
         case 'pres': if (e.ok) A.success?.(); break;
         case 'over': {
+          this.recordAIResult(m);
           A.whistle();
           const meWin = this.mode === 'local' || this.isMe(e.winner);
           R.victoryFx(e.winner, m, this.mode === 'local' ? this.playerName(e.winner, m) + ' 获胜' : meWin ? '胜利！' : this.playerName(e.winner, m) + ' 获胜');
-          if (this.mode === 'story') { setTimeout(() => this.stepDone({ win: e.winner === 0 }), 1500); break; }
+          if (this.mode === 'story') { const story=this.story;setTimeout(() => {if(this.mode==='story'&&this.story===story&&this.match===m)this.stepDone({win:e.winner===0});},1500);break; }
           setTimeout(() => this.showResult(m), 1200);
           break;
         }
@@ -246,12 +230,17 @@ const SKILL_POP = {
       if (!S) return;
       const step = S.st.steps[S.i];
       if (!step) { this.finishStage(); return; }
+      if (!YY.storyCondition(step.when, S.ctx)) { this.nextStep(); return; }
       this.saveStoryCheckpoint(S.resume && S.resume.index===S.i ? {line:S.resume.line,activity:S.resume.activity}:{});
-      if (['dialog','quiz','pick','inspect','board','lab'].includes(step.t)) {
+      if (['dialog','cinema','card','pick','inspect','minigame','loadout','relay'].includes(step.t)) {
         if (this.mode !== 'attract') this.startAttract(S.st.chapter.venue);
         else if (this.R.venueId !== S.st.chapter.venue) this.R.setVenue(S.st.chapter.venue);
       }
-      if (step.t === 'dialog') this.playDialog(step.lines.map(l=>[l[0],YY.storyText(l[1],S.ctx),l[2],l[3]]), () => this.nextStep(), step);
+      if (step.t === 'dialog') this.playDialog(step.lines.map(l=>[l[0],YY.storyText(l[1],S.ctx),l[2],l[3],l[4]]), () => this.nextStep(), step);
+      else if (step.t === 'cinema') this.playCinema(step);
+      else if (step.t === 'card') this.playKnowledge(step);
+      else if (step.t === 'minigame') this.playMinigame(step);
+      else if (step.t === 'loadout' || step.t === 'relay' || step.as === 'choose' || step.gear && !step.setupDone) this.startStorySetup(step);
       else if (step.t === 'quiz') this.playQuiz(step);
       else if (step.t === 'pick') this.playPick(step);
       else if (step.t === 'inspect') this.playInspect(step);
@@ -265,7 +254,8 @@ const SKILL_POP = {
         const step = d && d.step;
         if (!step || !step.scene || !YY.SCENES) return null;
         const i = Math.min(d.i < 0 ? 0 : d.i, step.lines.length - 1), line = step.lines[i];
-        return { scene: step.scene, cast: YY.storyCast(step, i), who: line[0], mood: line[2] || null, action:line[3], lineKey:step.uid+':'+i, talking, mm: step.lines.some((l) => l[0] === 'mm') };
+        const meta=line[4]||{};
+        return { scene: step.scene, cast: step.intro?[]:YY.storyCast(step, i), who: line[0], mood: line[2] || null, action:line[3], lineKey:step.uid+':'+i, talking, ...meta, intent:line[2]==='intent'?line[1]:null };
       },
       nextStep() { if (!this.story) return; this.story.i++; this.runStep(); },
       startChallenge(step) {
@@ -276,14 +266,14 @@ const SKILL_POP = {
       this.storyX = { dropWin: 0, smashWin: 0, clearWin: 0, outs: 0, skill: 0, maxDown: 0 };
       this.storyDark = null;
       this.storyStep = step;
-      const venue = step.venue || S.st.chapter.venue;
+      const venue = step.venue || (step.field==='league'?'leaguecourt':step.field==='memory'?'memorycourt':step.field==='reality'?'rivercourt':step.field==='empty'?'emptycourt':S.st.chapter.venue);
       if (step.t === 'match') {
         const opp = this.oppLoadout(step.opp);
         const mine = this.myLoadout(step.opp, this.storyAs(step));
         const env = step.env ? Object.assign({}, step.env) : S.ctx.env ? Object.assign({}, S.ctx.env) : null;
         this.match = new YY.Match({
           names: ['你', opp.look.name], firstServer: 0, target: step.target || 7, cap: step.cap || 11,
-          looks: [mine.look, opp.look], stats: [mine.stats, opp.stats], gear: [mine.gear, null], skills: step.skills===false?null:[mine.skill, opp.skill], env,
+          looks: [mine.look, opp.look], stats: [mine.stats, opp.stats], gear: [mine.gear, null], skills: step.skills===false?null:[mine.skill, step.oppSkills===false?{passive:null,act:[]}:opp.skill], env,
         });
         if(step.startScore) this.match.score=[...step.startScore];
         if (step.oppEnergy && this.match.skillsOn) this.match.players[1].energy = step.oppEnergy;
@@ -292,10 +282,11 @@ const SKILL_POP = {
         if (plan.tuning) ai.L = { ...ai.L, ...plan.tuning };
         ai.storySkillInterval = plan.skillInterval;
         this.ais = [ai];
+        this.storyRuntime = new YY.StoryMatch(this, step);
         this.ctrlFor[0] = this.soloCtrl(true, step.skills===false?null:mine.skill.act);
         if (step.dark) this.storyDark = { flash: 0, t: 3 };
         this.enterGame(venue);
-        this.R.showBanner(`${opp.look.name} · ${YY.STORY_DIFFICULTIES[difficulty].name}`, (mine.forced ? `本场由你操控${mine.look.name} · ` : '') + (step.rule || YY.AI_STYLES[opp.id].weakness), '#ffd23f', 3.6);
+          this.R.showBanner(`${opp.look.name} · ${YY.STORY_DIFFICULTIES[difficulty].name}`, `操控${mine.look.name} · ` + (step.rule || YY.AI_STYLES[opp.id]?.weakness || '球落地之前，谁都不知道。'), '#c6d9b4', 3.6);
       } else {
         const mine = this.myLoadout(null, this.storyAs(step));
         this.match = new YY.Match({ names: ['你', '发球机'], practice: true, looks: [mine.look, null], stats: [mine.stats, null], gear: [mine.gear, null] });
@@ -311,7 +302,7 @@ const SKILL_POP = {
     },
       /** 剧情指定的上场角色：固定角色，或来自本关“谁上场”的选择 */
       storyAs(step) {
-      if (!step.as) return null;
+      if (!step.as) return 'dingding';
       if (step.as !== 'pick') return step.as;
       const key = step.asKey, pick = this.story.st.steps.find(s => s.t === 'pick' && s.key === key);
       const value = this.story.ctx.choices?.[key] || YY.Profile.d.campaign.choices[key];
@@ -340,17 +331,25 @@ const SKILL_POP = {
         win: !!res.win, ok: res.ok, att: res.att, st: m.stats[0], score: m.score, longest: m.longest,
         x: this.storyX, pickOk: this.story.ctx.pickOk,
       };
-      const goals = (step.stars || []).map((g) => ({ text: g.text, ok: r.win && !!g.test(r) }));
-      const stars = r.win ? (goals.length ? 1 + goals.filter((g) => g.ok).length : 3) : 0;
+      const goals = this.storyRuntime && step.t==='match' ? this.storyRuntime.goals(r) : (step.stars || []).map((g) => ({ text: g.text, ok: r.win && !!g.test(r) }));
+      const lossAllowed=step.t==='match'&&step.allowLoss!==false;
+      let stars = r.win ? (goals.length ? 1 + goals.filter((g) => g.ok).length : 3) : (lossAllowed?1:0);
+      const predictionBroken=r.win && step.prediction!=null && step.prediction<50;
+      if(predictionBroken)stars=Math.min(3,stars+1);
+      const canContinue=r.win || lossAllowed;
+      this.story.ctx.lastWin=r.win;
+      if(!r.win){const failures=YY.Profile.d.campaign.failures;failures[this.story.st.id]=(failures[this.story.st.id]||0)+1;YY.Profile.save();}
       let main;
       if (step.t === 'match') main = `比分 ${m.score[0]} : ${m.score[1]} · 对手 ${m.names[1]}`;
       else main = `成功 ${res.ok} / ${res.att} ${this.practice.goal.unit || '球'} · 目标 ${this.practice.goal.need}`;
+      if(predictionBroken)main+=' · 预测被打破';
+      if(!r.win&&canContinue)main+=' · 没接住也没关系，故事继续';
       if (r.win) A.win(); else A.lose();
-      this.showStepResult({ win: r.win, stars, main, goals: [{ text: step.t === 'match' ? '赢下比赛' : `完成目标（${this.practice.goal.need} 次成功）`, ok: r.win }].concat(goals) });
+      this.showStepResult({ win: r.win, canContinue, stars, main, goals: [{ text: step.t === 'match' ? '亲手打完这一段' : `完成目标（${this.practice.goal.need} 次成功）`, ok: canContinue }].concat(goals) });
     },
       stepContinue() {
       const S = this.story;
-      if (!S || !this.stepRes?.win) return;
+      if (!S || !(this.stepRes?.win || this.stepRes?.canContinue)) return;
       S.stars.push(this.bestStoryStep(this.stepRes.stars));
       this.stepRes = null;
       this.paused = false;
@@ -361,9 +360,9 @@ const SKILL_POP = {
       if (!S) return;
       this.stepRes = null;
       this.paused = false;
-      const step = S.st.steps[S.i];
+      const step = this.storyStep || S.st.steps[S.i];
       if (step.t === 'quiz') this.playQuiz(step);
-      else if(['inspect','board','lab'].includes(step.t)) this.runStep();
+      else if(['inspect','minigame','cinema','card','loadout','relay'].includes(step.t)) this.runStep();
       else this.startChallenge(step);
     },
       clearNext() { if (this.clearNextId) this.startStage(this.clearNextId); else this.show('story'); },

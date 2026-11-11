@@ -1,154 +1,67 @@
-/* Shared story activities, checkpointing and teaching diagrams. */
-(function (G) {
-  'use strict';
-  const YY=G.YY, C=YY.C;
-  YY.STORY_DIFFICULTIES = {
-    story: { name: '故事难度', tip: '对手反应较慢、扣杀较少，适合练习' },
-    challenge: { name: '挑战难度', tip: '对手反应更快、进攻更积极 · 星级单独记录' },
-  };
-  YY.storyAI = function (step, difficulty) {
-    const level = YY.AI_LEVELS[step.level] ? step.level : 'normal';
-    if (difficulty === 'challenge') return { level, tuning: null, skillInterval: 0 };
-    const rank = { easy:0, normal:1, boss:2, hard:3, nightmare:4 }[level] || 0;
-    // 保持角色、器材和物理一致，仅降低判断、侵略性与技能频率。
-    return { level, skillInterval: 9-rank*.7, tuning: {
-      react: .52-rank*.035, err: .95-rank*.065, timing: .07-rank*.005,
-      recover: .55+rank*.04, recDelay: .38-rank*.025, smash: .06+rank*.035,
-      tactical: .15+rank*.035, read: 0, brain: 0, judgeOut: .35+rank*.055,
-      serveQ: .6+rank*.025, longServe: .8, name:'故事陪练',
-    } };
-  };
-  const defaults = { promise:'训练要有计划，也要允许失误。',houzi:'这次别一个人扛着。',encourage:'先打深，我们有时间。',guoge:'说清楚，你到底站哪边？',lineup:'猴子',future:'新手友好开放日',ending:'这里永远有你的位置。' };
-  YY.storyText = (text, ctx) => text.replace(/\{(\w+)\}/g, (_,key) => ctx?.choices?.[key] || YY.Profile.d.campaign?.choices?.[key] || defaults[key] || '');
-  YY.voiceKey = (who,text) => { let h=2166136261; for(const c of who+'|'+text) h=Math.imul(h^c.charCodeAt(0),16777619); return 'v'+(h>>>0).toString(16); };
-  YY.STORY_DEFAULTS = defaults;
-  YY.LABS = {
-    arc: { title:'三条弧线', hint:'保持出球点一致，试完三种弧线，再选择能争取较多回位时间的一种。', target:2, labels:['平快','中等弧线','高远弧线'], notes:['飞得快，给双方的准备时间少。','弧线居中，可以比较时间与深度。','较高的弧线延长滞空，为回位争取时间。'], setups:[{angle:18,speed:15},{angle:40,speed:16},{angle:62,speed:18}] },
-    tension: { title:'三种试拍感觉', hint:'为初学者选择更容易稳定回球的设定。图示使用游戏模型，不是现实穿线推荐。', target:0, labels:['宽容设定','均衡设定','精细设定'], notes:['游戏模型中的容错范围较大，更适合先练稳定击球。','要求与容错居中，可在稳定后试用。','模型的容错较小，并不意味着一定更好。'], setups:[{angle:52,speed:16,tolerance:.7},{angle:52,speed:16,tolerance:.5},{angle:52,speed:16,tolerance:.3}] },
-    air: { title:'只改变空气阻力', hint:'出球角度、速度保持相同。选择阻力较小、同样出球飞得更远的一种。', target:2, labels:['阻力较大','常规阻力','阻力较小'], notes:['球减速更明显，落点较近。','这是对照组，用来比较变化。','球减速较少，落点更远。现实选球仍要现场试打。'], setups:[{angle:55,speed:17,drag:.115},{angle:55,speed:17,drag:.08},{angle:55,speed:17,drag:.055}] },
-  };
-  YY.labTrajectory = (experiment,index) => { const set=YY.LABS[experiment].setups[index]; const a=set.angle*Math.PI/180; return YY.simulate(-4.5,1.8,set.speed*Math.cos(a),set.speed*Math.sin(a),8,true,false,{drag:set.drag??C.DRAG}); };
-  YY.storyActions = {
-    setStoryDifficulty(value) {
-      if (!YY.STORY_DIFFICULTIES[value]) return;
-      YY.Profile.d.campaign.difficulty = value; YY.Profile.save();
-      this.ui?.reset(); this.renderStory?.();
-    },
-    resumeStoryCheckpoint() {
-      const cp=YY.Profile.d.campaign.checkpoint;
-      if(!cp || !YY.stage(cp.stage))return;
-      this.setStoryDifficulty(cp.difficulty==='challenge'?'challenge':'story');this.startStage(cp.stage);
-    },
-    saveStoryCheckpoint(extra) {
-      const s=this.story;if(!s)return;
-      const cp={version:1,stage:s.st.id,index:s.i,stars:s.stars,ctx:s.ctx,difficulty:s.difficulty,...extra};
-      YY.Profile.d.campaign.checkpoint=JSON.parse(JSON.stringify(cp));YY.Profile.save();
-    },
-    storyLine() {
-      const d=this.dlg;if(!d || d.i<0 || d.i>=d.lines.length)return;
-      const line=d.lines[d.i];
-      this.saveStoryCheckpoint({line:d.i});
-      if(line[3])YY.Audio.storyAction?.(line[3]);
-      if(this.settings.voice!==false)YY.Audio.voiceLine?.(line[0],line[1]);
-    },
-    repeatStoryVoice() { const d=this.dlg;if(d&&this.settings.voice!==false)YY.Audio.voiceLine?.(d.lines[d.i][0],d.lines[d.i][1]); },
-    toggleStoryVoice() { this.settings.voice=this.settings.voice===false;this.saveSettings?.();if(this.settings.voice===false)YY.Audio.stopVoice?.();else this.repeatStoryVoice(); },
-    rememberChoice(step,index) {
-      if(!step.key || !step.o[index])return;
-      const c=step.o[index];this.story.ctx.choices=this.story.ctx.choices||{};
-      this.story.ctx.choices[step.key]=c.reply || c.label;
-      YY.Profile.d.campaign.choices[step.key]=c.reply || c.label;this.saveStoryCheckpoint();
-    },
-    bestStoryStep(stars) {
-      const s=this.story;if(!s)return stars;
-      const key=s.st.id+':'+s.i, best=YY.Profile.d.campaign[s.difficulty==='challenge'?'challengeBest':'best'];
-      best[key]=Math.max(best[key]||0,stars);YY.Profile.save();return best[key];
-    },
-    storyStageStars() {
-      const s=this.story, best=YY.Profile.d.campaign[s.difficulty==='challenge'?'challengeBest':'best'];
-      const values=s.st.steps.map((step,i)=> ['dialog','pick'].includes(step.t)?null:best[s.st.id+':'+i]).filter(v=>v!=null);
-      return Math.max(1,Math.min(3,values.length?Math.round(values.reduce((a,b)=>a+b,0)/values.length):3));
-    },
-    completeStorySave() {
-      const s=this.story,c=YY.Profile.d.campaign;
-      if(s?.difficulty==='challenge') c.challengeStages[s.st.id]=Math.max(c.challengeStages[s.st.id]||0,this.storyStageStars());
-      c.checkpoint=null;YY.Profile.save();
-    },
-    playInspect(step) {
-      const cp=YY.Profile.d.campaign.checkpoint;
-      this.activity={step,found:cp?.activity?.found?.filter(id=>step.items.some(item=>item.id===id))||[],selected:null};this.show('inspect');
-    },
-    inspectItem(id) {
-      const a=this.activity,item=a?.step.items.find(it=>it.id===id);if(!item)return;
-      a.selected=id;if(!a.found.includes(id))a.found.push(id);
-      if(item.clue&&!YY.Profile.d.campaign.clues.includes(item.clue))YY.Profile.d.campaign.clues.push(item.clue);
-      YY.Audio.storyAction?.('paper');this.saveStoryCheckpoint({activity:{found:a.found}});
-    },
-    finishInspect() { const a=this.activity;if(!a||a.found.length!==a.step.items.length)return;this.activity=null;this.activityDone(3,'全部线索已记录'); },
-    playBoard(step) { this.activity={step,index:0,right:0,selected:null};this.show('board'); },
-    boardAnswer(index) { const a=this.activity;if(!a||a.selected!=null)return;const c=a.step.cases[a.index];if(!c.options[index])return;a.selected=index;if(index===c.answer){a.right++;YY.Audio.success?.();}else YY.Audio.click(); },
-    boardNext() { const a=this.activity;if(!a||a.selected==null)return;if(a.index+1<a.step.cases.length){a.index++;a.selected=null;}else {const stars=1+Math.round(2*a.right/a.step.cases.length);this.activity=null;this.activityDone(stars,`图示判断 ${a.right}/${a.step.cases.length} · 看懂解析即可继续`);} },
-    playLab(step) { this.activity={step,experiment:step.experiment,selected:0,tried:[],results:{},result:null,age:0,note:''};this.show('lab'); },
-    labSelect(i) { const a=this.activity;if(!a||!YY.LABS[a.experiment]?.setups[i])return;a.selected=i;a.result=null;a.note=''; },
-    labTry() { const a=this.activity;if(!a)return;a.result=a.results[a.selected]||(a.results[a.selected]=YY.labTrajectory(a.experiment,a.selected));a.age=0;if(!a.tried.includes(a.selected))a.tried.push(a.selected);a.note=YY.LABS[a.experiment].notes[a.selected];YY.Audio.hit(.7,false,{serve:true}); },
-    finishLab() { const a=this.activity;if(!a)return;const def=YY.LABS[a.experiment];if(a.tried.length<3){a.note='先把三种设置都试一次，再比较。';return;}if(a.selected!==def.target){a.note='再比较一次：'+def.hint;return;}this.activity=null;this.activityDone(3,'完成三组对照实验，找到适合当前目标的设置'); },
-    activityDone(stars,main) {
-      this.storyStep=this.story.st.steps[this.story.i];
-      this.showStepResult({win:true,stars,main,goals:[{text:'完成观察与学习',ok:true}]});
-    },
-  };
-  // Field is drawn in real aspect ratio from overhead for line/rule activities.
-  // 数据图：'chart:标题|标签=数值,标签=数值'（老陈的表格题）
-  YY.drawDataChart=function(g,picture,x,y,w,h,reveal) {
-    const [title,body]=picture.slice(6).split('|'),rows=(body||'').split(',').map(r=>{const [k,v]=r.split('=');return [k,Number(v)||0];});
-    const max=Math.max(1,...rows.map(r=>r[1])),top=46,bottom=h-34,bw=Math.min(70,(w-40)/rows.length*.62);
-    g.save();g.translate(x,y);g.fillStyle='#14233a';g.fillRect(0,0,w,h);
-    g.fillStyle='#f3cf86';g.font='bold 14px sans-serif';g.textAlign='left';g.fillText(title,14,26);
-    g.strokeStyle='rgba(255,255,255,.18)';g.lineWidth=1;for(let i=0;i<=4;i++){const yy=bottom-(bottom-top)*i/4;g.beginPath();g.moveTo(18,yy);g.lineTo(w-14,yy);g.stroke();}
-    const best=rows.reduce((a,r,i)=>r[1]>rows[a][1]?i:a,0);
-    rows.forEach(([k,v],i)=>{const cx=20+(w-34)*(i+.5)/rows.length,bh=(bottom-top)*v/max;
-      g.fillStyle=reveal&&i===best?'#ffd45c':['#6fe3d0','#6cb5f5','#ff8a7a','#c7a6ff','#7dffb0'][i%5];g.fillRect(cx-bw/2,bottom-bh,bw,bh);
-      g.fillStyle='#edf3ff';g.font='12px sans-serif';g.textAlign='center';g.fillText(k,cx,bottom+16);g.font='bold 12px sans-serif';g.fillText(String(v),cx,bottom-bh-6);});
-    g.fillStyle='rgba(255,255,255,.6)';g.font='11px sans-serif';g.textAlign='left';g.fillText('老陈整理 · 游戏内统计示意',10,h-6);g.restore();
-  };
-  YY.drawLessonBoard=function(g,picture,x,y,w,h,reveal) {
-    if(typeof picture==='string'&&picture.startsWith('chart:'))return YY.drawDataChart(g,picture,x,y,w,h,reveal);
-    g.save();g.translate(x,y);
-    g.fillStyle='#132c31';g.fillRect(0,0,w,h);
-    const cw=Math.min(w*.8,(h-40)*6.1/13.4),ch=cw*13.4/6.1,left=(w-cw)/2,right=left+cw,top=(h-ch)/2-6,bottom=top+ch,mid=(top+bottom)/2,inner=cw*.46/6.1;
-    const X=u=>left+u*cw,Y=u=>top+u*ch,short=1.98/13.4,back=.76/13.4;
-    const line=(x1,y1,x2,y2,col='#e3efdf',lw=1.5)=>{g.strokeStyle=col;g.lineWidth=lw;g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();};
-    g.strokeStyle='#e3efdf';g.lineWidth=2;g.strokeRect(left,top,right-left,bottom-top);
-    line(left+inner,top,left+inner,bottom);line(right-inner,top,right-inner,bottom);
-    line(left,mid,right,mid,'#ffd665',3);
-    for(const z of [.5-short,.5+short,back,1-back])line(left,Y(z),right,Y(z));
-    line(w/2,top,w/2,Y(.5-short));line(w/2,Y(.5+short),w/2,bottom);
-    const pawn=(px,py,color,label)=>{g.fillStyle=color;g.beginPath();g.arc(px,py,Math.max(6,w*.022),0,Math.PI*2);g.fill();g.font='bold 12px sans-serif';g.textAlign='center';g.fillStyle='#fff';g.fillText(label,px,py-13);};
-    const dot=(px,py)=>{g.fillStyle='#ffdd59';g.beginPath();g.arc(px,py,6,0,Math.PI*2);g.fill();if(reveal){g.strokeStyle='#ffdd59';g.lineWidth=2;g.beginPath();g.arc(px,py,12,0,Math.PI*2);g.stroke();}};
-    let py=.23;
-    if(picture==='opponent-front')py=.42;
-    if(picture==='opponent-middle')py=.3;
-    pawn(X(.5),Y(py),'#e16d78','对手');pawn(X(picture==='doubles-defense'||picture==='doubles-middle'?.27:.5),Y(.75),'#60cfff','你');
-    if(picture==='line-in')dot(left+inner,Y(.7));
-    else if(['singles-out','doubles-in'].includes(picture))dot(left+inner*.45,Y(.7));
-    else if(picture==='doubles-serve-long')dot(X(.75),Y(.97));
-    else if(picture==='singles-serve')dot(X(.75),Y(.82));
-    else if(picture==='serve-foot')pawn(left+inner,Y(.73),'#60cfff','脚踩线');
-    else if(picture==='serve-even'||picture==='serve-odd'){g.fillStyle='rgba(255,220,90,.18)';g.fillRect(picture==='serve-even'?w/2:left+inner,Y(.5+short),cw/2-inner,bottom-Y(.5+short));}
-    else if(picture==='doubles-attack'){pawn(X(.5),Y(.59),'#60cfff','搭档');}
-    else if(picture==='doubles-defense'||picture==='doubles-middle'){pawn(X(.73),Y(.75),'#60cfff','搭档');}
-    else dot(X(.48),Y(.61));
-    g.fillStyle='rgba(255,255,255,.72)';g.font='11px sans-serif';g.textAlign='left';g.fillText('俯视示意 · 黄色横线为球网',10,h-8);g.restore();
-  };
-  YY.drawLab=function(g,a,x,y,w,h) {
-    g.save();g.translate(x,y);g.fillStyle='#101e32';g.fillRect(0,0,w,h);
-    const sx=v=>w*.08+(v+7)/16*w*.84,sy=v=>h*.86-v/7*h*.75;
-    g.strokeStyle='#8faabd';g.beginPath();g.moveTo(10,sy(0));g.lineTo(w-10,sy(0));g.stroke();
-    g.strokeStyle='#ffd45c';g.lineWidth=3;g.beginPath();g.moveTo(sx(0),sy(0));g.lineTo(sx(0),sy(1.55));g.stroke();
-    for(const i of a.tried){const r=a.results[i];g.strokeStyle=['#72d8c0','#6cb5f5','#ffd45c'][i];g.lineWidth=i===a.selected?3:1;g.globalAlpha=i===a.selected?1:.4;g.beginPath();r.pts.forEach((p,j)=>j?g.lineTo(sx(p.x),sy(p.y)):g.moveTo(sx(p.x),sy(p.y)));g.stroke();}
-    g.globalAlpha=1;
-    if(a.result){const pts=a.result.pts,pt=pts.find(p=>p.t>=a.age)||pts[pts.length-1];if(pt){g.fillStyle='#fff3b2';g.beginPath();g.arc(sx(pt.x),sy(pt.y),5,0,Math.PI*2);g.fill();}g.fillStyle='#edf3ff';g.font='12px sans-serif';g.fillText(`滞空 ${a.result.t.toFixed(2)} 秒 · 飞行距离 ${(a.result.landX+4.5).toFixed(1)} 米`,12,20);}
-    if(a.experiment==='tension'){const tol=YY.LABS.tension.setups[a.selected].tolerance;g.strokeStyle='#72d8c0';g.lineWidth=2;g.beginPath();g.arc(w*.83,h*.3,tol*35,0,Math.PI*2);g.stroke();g.font='12px sans-serif';g.fillStyle='#dce8f6';g.fillText('模型容错圈',w*.7,h*.54);}
-    g.fillStyle='#bdc9da';g.font='11px sans-serif';g.textAlign='left';g.fillText('简化模型 · 固定出球点 · 各组轨迹可叠加比较',10,h-8);g.restore();
-  };
+/* 十六根羽毛 · shared narrative state, choices, checkpointing and field rules. */
+(function(G){
+ 'use strict';const Y=G.YY;
+ Y.STORY_DIFFICULTIES={story:{name:'故事难度',tip:'慢一点，接住这一拍 · 剧情战失利也能继续'},challenge:{name:'挑战难度',tip:'完整对手强度 · 星级分别记录'}};
+ Y.storyAI=function(step,difficulty){const level=Y.AI_LEVELS[step.level]?step.level:'normal';if(difficulty==='challenge'&&!step.gentle)return{level,tuning:null,skillInterval:0};const rank={easy:0,normal:1,boss:2,hard:3,nightmare:4}[level]||0;return{level,skillInterval:step.gentle?0:9-rank*.7,tuning:{react:step.gentle?.48:.52-rank*.035,err:step.gentle?.1:.95-rank*.065,timing:.07-rank*.005,recover:.55+rank*.04,recDelay:.38-rank*.025,smash:step.gentle?0:.06+rank*.035,tactical:step.gentle?0:.15+rank*.035,read:0,brain:0,judgeOut:.35+rank*.055,serveQ:.75,longServe:.8,name:'鹅湾陪练'}};};
+ Y.storyText=text=>String(text);
+ Y.STORY_DEFAULTS={};
+ const npc=(id,name,base,opts={})=>({id,title:name,fx:{},passive:null,acts:[],portrait:{...Y.lookOf(base),name,...opts}});
+ Y.STORY_NPCS={
+  bobo:npc('bobo','波波','dingding',{glasses:'round',hair:'messy',shirt:'#e5b452',shirt2:'#936634',panel:'#f3ce83',racket:'#ffcf4a',num:'09'}),
+  miaomiao:npc('miaomiao','苗苗','ruibao',{shirt:'#50c4d4',shirt2:'#24768d',panel:'#a7e7f3',hair:'pony',hairC:'#172c48',hairHi:'#365a7a',racket:'#78e7eb',num:'16',buff:true}),
+  nan:npc('nan','老南','zhu',{shirt:'#314b7a',shirt2:'#192d50',panel:'#6d91c4',hair:'gray',hairC:'#b6c7e0',hairHi:'#eff6ff',glasses:null,whistle:false,num:'96',racket:'#a8d8f5'}),
+  academy:npc('academy','南岸学员','xiaohong',{shirt:'#57c9eb',shirt2:'#287d9e',panel:'#bde8ff',num:'NA',glasses:null}),
+  provincial:npc('provincial','省赛对手','ruibao',{shirt:'#9c88ed',shirt2:'#60518e',panel:'#c9c1f5',num:'22'}),
+  ruima:npc('ruima','瑞妈','ranran',{hair:'pony',shirt:'#dc856a',shirt2:'#985048',panel:'#f0b499',num:'',blush:0}),
+  wangba:npc('wangba','王爸','zhu',{shirt:'#7297bf',shirt2:'#415e89',whistle:false,num:'',glasses:'rect'}),
+  grandma:npc('grandma','外婆','zhu',{shirt:'#aa90c5',shirt2:'#6a558a',hair:'gray',whistle:false,num:''}),
+  goose:npc('goose','大将军','ruibao',{shirt:'#e9e2cc',shirt2:'#bebda0',num:''}),
+ };
+ for(const id of ['bobo','miaomiao','nan'])Y.STORY_NPCS[id]=Y.char(id);
+ Y.FEATHER_PEOPLE=[['ruibao','一个包子','1-2'],['houzi','一个猴头','1-3'],['bobo','一只恐龙','1-4'],['xiaohong','一个直角','2-3'],['xingxing','一颗星','2-4'],['zhu','一只哨子','3-2'],['canglan','一滴水','4-2'],['lingfeng','一个脚印','4-3'],['lu','</>','5-2'],['laochen','一个勾','5-3'],['guoge','一个 ¥','6-2'],['miaomiao','一只鹅','8-2'],['ranran','蝴蝶结','2-2'],['tianchu','水里的月亮','9-5'],['nan','打开的罐子','11-1'],['dingding','这根，我想说出来','11-5']];
+ Y.storyCondition=(when,ctx)=>!when||(when.choice?(ctx.choices?.[when.choice]||Y.Profile.d.campaign.choices[when.choice])===when.value:when.outcome===ctx.lastWin);
+ Y.storyActions={
+  setStoryDifficulty(value){if(!Y.STORY_DIFFICULTIES[value])return;Y.Profile.d.campaign.difficulty=value;Y.Profile.save();this.ui?.reset();this.renderStory?.();},
+  resumeStoryCheckpoint(){const cp=Y.Profile.d.campaign.checkpoint;if(cp&&Y.stage(cp.stage)){this.setStoryDifficulty(cp.difficulty);this.startStage(cp.stage);}},
+  saveStoryCheckpoint(extra){const s=this.story;if(!s)return;Y.Profile.d.campaign.checkpoint=JSON.parse(JSON.stringify({version:1,stage:s.st.id,index:s.i,stars:s.stars,ctx:s.ctx,difficulty:s.difficulty,...extra}));Y.Profile.save();},
+  storyLine(){
+   const d=this.dlg;if(!d||d.i<0||d.i>=d.lines.length)return;const line=d.lines[d.i],meta=line[4]||{};this.saveStoryCheckpoint({line:d.i});
+   if(this.ui?.scroll)this.ui.scroll['dialog-text']=0;
+   if(meta.cg&&!Y.Profile.d.campaign.gallery.includes(meta.cg)){Y.Profile.d.campaign.gallery.push(meta.cg);Y.Profile.save();}
+   if(meta.silent)Y.Audio.storySilence?.();else if(line[3])Y.Audio.storyAction?.(line[3]);
+   if(line[2]==='intent')Y.Audio.storyAction?.('intent');
+   if(this.story.st.id==='11-5'&&line[1]==='我喜欢你。')Y.Audio.storyTheme?.(16);
+  },
+  playCinema(step){const ch=this.story.st.chapter;const lines=[['nar',step.title,'chapter',null,{title:ch.title,caption:step.caption,intro:true}]];this.playDialog(lines,()=>this.nextStep(),{...step,lines});Y.Audio.storyTheme?.(Math.min(16,2+Y.STORY.indexOf(ch)));},
+  playKnowledge(step){const c=Y.card(step.card);if(!c)return this.nextStep();this.knowledge=c;this.show('knowledge');Y.Profile.unlock('card',c.id);},
+  finishKnowledge(){this.knowledge=null;this.nextStep();},
+  rememberChoice(step,index){if(!step.key||!step.o[index])return;const c=step.o[index],value=c.reply||c.label;this.story.ctx.choices[step.key]=value;Y.Profile.d.campaign.choices[step.key]=value;this.saveStoryCheckpoint();},
+  bestStoryStep(stars){const s=this.story;if(!s)return stars;const key=s.st.id+':'+s.i,best=Y.Profile.d.campaign[s.difficulty==='challenge'?'challengeBest':'best'];best[key]=Math.max(best[key]||0,stars);Y.Profile.save();return best[key];},
+  storyStageStars(){const s=this.story,best=Y.Profile.d.campaign[s.difficulty==='challenge'?'challengeBest':'best'];const values=s.st.steps.map((step,i)=>['dialog','pick','cinema','card','loadout'].includes(step.t)?null:best[s.st.id+':'+i]).filter(v=>v!=null);return Math.max(1,Math.min(3,values.length?Math.round(values.reduce((a,b)=>a+b,0)/values.length):3));},
+  completeStorySave(){const s=this.story,c=Y.Profile.d.campaign;if(s?.difficulty==='challenge')c.challengeStages[s.st.id]=Math.max(c.challengeStages[s.st.id]||0,this.storyStageStars());if(s?.st.feather&&!c.feathers.includes(s.st.feather))c.feathers.push(s.st.feather);if(s?.st.id==='11-5')c.ending=true;c.checkpoint=null;Y.Profile.save();},
+  playInspect(step){const cp=Y.Profile.d.campaign.checkpoint;this.activity={step,found:cp?.activity?.found?.filter(id=>step.items.some(it=>it.id===id))||[],selected:null};this.show('inspect');},
+  inspectItem(id){const a=this.activity,item=a?.step.items.find(it=>it.id===id);if(!item)return;a.selected=id;if(!a.found.includes(id))a.found.push(id);if(item.clue&&!Y.Profile.d.campaign.clues.includes(item.clue))Y.Profile.d.campaign.clues.push(item.clue);Y.Audio.storyAction?.('paper');this.saveStoryCheckpoint({activity:{found:a.found}});},
+  finishInspect(){const a=this.activity;if(!a||a.found.length!==a.step.items.length)return;this.activity=null;this.activityDone(3,'都记住了。走吧。');},
+  activityDone(stars,main){this.storyStep=this.story.st.steps[this.story.i];this.showStepResult({win:true,stars,main,goals:[{text:'这一段，亲手完成',ok:true}]});},
+  startStorySetup(step){
+   const ids=step.players||Y.CHARS.filter(c=>Y.Profile.has('char',c.id)).map(c=>c.id),relay=step.t==='relay';
+   this.storySetup={step,ids,actor:step.as&&step.as!=='choose'?step.as:ids[0]||'dingding',relay,lineup:(Y.Profile.d.campaign.relay||[]).filter(id=>ids.includes(id)&&id!=='dingding').slice(0,7)};
+   if(relay&&!this.storySetup.lineup.length)this.storySetup.lineup=ids.filter(id=>!['dingding','zhu'].includes(id)).slice(0,7);
+   this.show('storysetup');
+  },
+  setupActor(id){const s=this.storySetup;if(s?.ids.includes(id))s.actor=id;},
+  setupGear(cat,dir=1){const s=this.storySetup;if(!s)return;const g=Y.Profile.storyGear(s.actor),choices=(Y.GEAR[cat]||[]).filter(item=>!item.lock||Y.Profile.has('gear',item.id));if(cat==='tension'){Y.Profile.unlock('feat','tension');Y.Profile.setGear(s.actor,cat,Math.max(20,Math.min(30,g.tension+dir)));}else{const at=choices.findIndex(item=>item.id===g[cat]);if(choices.length)Y.Profile.setGear(s.actor,cat,choices[(at+dir+choices.length)%choices.length].id);}},
+  setupKit(){const s=this.storySetup;if(s)Y.Profile.cycleKit(s.actor);},
+  setupRelay(id){const s=this.storySetup;if(!s?.relay||id==='dingding'||!s.ids.includes(id))return;const at=s.lineup.indexOf(id);if(at>=0)s.lineup.splice(at,1);else if(s.lineup.length<7)s.lineup.push(id);},
+  finishStorySetup(){
+   const s=this.storySetup;if(!s)return;this.storySetup=null;
+   if(s.step.t==='loadout'){this.nextStep();return;}
+   const step={...s.step,t:'match',as:s.actor,setupDone:true};
+   if(s.step.opp==='other')step.opp=s.ids.find(id=>id!==s.actor);
+   if(s.relay){step.relay=[...s.lineup,'dingding'];step.as=step.relay[0];Y.Profile.d.campaign.relay=[...s.lineup];Y.Profile.save();}
+   this.startChallenge(step);
+  },
+  cycleStorySkills(){const runtime=this.match?.story;if(!runtime||!runtime.step.training)return;const id=runtime.actors[0],act=Y.Profile.cycleKit(id),p=this.match.players[0];p.kit={passive:Y.char(id).passive,act:[...act]};p.passive=p.kit.passive;this.ctrlFor[0]=this.soloCtrl(true,act);this.ui?.layoutControls();runtime.say('现在携带：'+act.map(k=>Y.SKILLS[k].name).join(' + '),4);},
+  continueStoryExhibition(){const runtime=this.match?.story;if(runtime?.progressReady)runtime.finish(false,{target:true});},
+ };
 })(typeof GameGlobal!=='undefined'?GameGlobal:typeof window!=='undefined'?window:globalThis);

@@ -172,7 +172,7 @@
       g.fillStyle = ban; g.fillRect(0, by, W, sc * 0.3);
       g.fillStyle = 'rgba(255,255,255,0.92)';
       g.font = `900 ${Math.round(sc * 0.2)}px ${FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle';
-      for (let i = 0; i < 4; i++) g.fillText(i % 2 ? 'YUYUE OPEN · 羽跃杯' : '羽跃杯 · 全国羽毛球公开赛', W * (0.125 + i * 0.25), by + sc * 0.155);
+      g.fillText('羽跃杯', W * 0.5, by + sc * 0.155);
       // 两侧挂旗
       for (const [x, col] of [[W * 0.04, '#ff4b55'], [W * 0.96, '#2f9bff']]) {
         g.fillStyle = col;
@@ -303,18 +303,6 @@
         ctx.fillStyle = on ? '#fff' : st.led.color;
         ctx.font = `italic 900 ${Math.round(h * 0.62)}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         for (let i = 0; i < 3; i++) ctx.fillText(st.led.text, R.W * (0.17 + i * 0.33), V.adTop + h / 2);
-      } else {
-        const words = [['羽跃对决', '#ffd23f'], ['YUYUE DUEL', '#ffffff'], ['SMASH!', '#ff4b55'], ['调动 · 空当 · 抓机会', '#7dfcff'], ['羽跃杯公开赛', '#ffffff']];
-        ctx.font = `italic 900 ${Math.round(h * 0.5)}px ${FONT}`; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
-        const gap = R.W * 0.26;
-        const off = (t * 50) % (gap * words.length);
-        for (let i = -1; i < words.length * 2; i++) {
-          const x = i * gap - off;
-          if (x > R.W || x < -gap) continue;
-          const w = words[((i % words.length) + words.length) % words.length];
-          ctx.fillStyle = w[1];
-          ctx.fillText(w[0], x, V.adTop + h / 2);
-        }
       }
       // LED 点阵质感
       ctx.fillStyle = 'rgba(0,0,0,0.35)';
@@ -591,7 +579,7 @@
       c.width = Math.max(1, w * dpr); c.height = Math.max(1, h * dpr);
       const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
       neonText(g, '羽跃', w * 0.3, h * 0.5, sc * 1.05, 'rgba(255,0,170,A)');
-      neonText(g, 'DUEL', w * 0.72, h * 0.52, sc * 0.95, 'rgba(0,240,255,A)', `italic 900 ${sc * 0.95}px ${NUMF}`);
+      neonText(g, '对决', w * 0.72, h * 0.52, sc * 0.95, 'rgba(0,240,255,A)');
       st.sign = { c, w, h };
       const r = rng(9);
       const top = V.standTop + sc * 0.4, bot = V.adTop;
@@ -661,21 +649,77 @@
         ctx.fillStyle = p.s < 0.5 ? 'rgba(0,240,255,0.5)' : 'rgba(255,0,170,0.5)';
         ctx.fillRect(q[0], q[1], 2, 2);
       }
-      // LED 条
-      ctx.font = `italic 900 ${Math.round(V.adH * 0.5)}px ${NUMF}`; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
-      const msg = 'YUYUE DUEL  ✦  SMASH  ✦  羽跃对决  ✦  ';
-      const w = ctx.measureText(msg).width;
-      const off = (t * 70) % w;
-      ctx.fillStyle = `rgba(0,240,255,${0.55 + st.pulse * 0.3})`;
-      ctx.save(); ctx.beginPath(); ctx.rect(0, V.adTop, R.W, V.adH); ctx.clip();
-      for (let x = -off; x < R.W; x += w) ctx.fillText(msg, x, V.adTop + V.adH / 2);
-      ctx.restore();
       ctx.globalCompositeOperation = 'source-over';
     },
   };
 
-  YY.VENUES = { arena, sunset, neon };
-  YY.VENUE_IDS = ['arena', 'sunset', 'neon'];
+  const outdoors = {
+    bamboo:{id:'bamboo',name:'竹影溪谷',desc:'竹海与溪流 · 轻盈木琴',sky:'#112c35',top:'#729c85',floor:'#183e3d',court:'#3e8574',near:'#306658',rim:'#cfebac',light:'#dff4be'},
+    harbor:{id:'harbor',name:'蓝湾码头',desc:'帆影与潮汐 · 海风律动',sky:'#123d5c',top:'#a2c9c6',floor:'#243e50',court:'#267c95',near:'#22667e',rim:'#ffdb9c',light:'#ffe5b3'},
+    aurora:{id:'aurora',name:'极光雪境',desc:'雪山与极光 · 空灵电子',sky:'#101e39',top:'#265967',floor:'#263f55',court:'#376d89',near:'#2b5876',rim:'#b5fae3',light:'#b5fae3'}
+  };
+  // Shared scenery keeps the same landmarks in the side and depth cameras.
+  YY.paintLandscape=function(g,id,W,H,time=0){
+    const c=outdoors[id];if(!c)return;
+    g.save();g.beginPath();g.rect(0,0,W,H);g.clip();
+    const sky=g.createLinearGradient(0,0,0,H);sky.addColorStop(0,c.sky);sky.addColorStop(1,c.top);g.fillStyle=sky;g.fillRect(0,0,W,H);
+    const disc=(x,y,r,col)=>{g.fillStyle=col;g.beginPath();g.arc(x,y,r,0,Math.PI*2);g.fill();};
+    if(id==='bamboo'){
+      disc(W*.69,H*.24,H*.12,'#e1ecc4');
+      for(let layer=0;layer<3;layer++){
+        g.fillStyle=['#3e6664','#305452','#244645'][layer];g.beginPath();g.moveTo(0,H);
+        for(let x=0;x<=W+10;x+=10)g.lineTo(x,H*(.48+layer*.13)-Math.sin(x/W*9+layer*2)*H*.12-Math.sin(x/W*19+layer)*H*.035);
+        g.lineTo(W,H);g.closePath();g.fill();
+      }
+      g.fillStyle='#86bdb140';g.beginPath();g.ellipse(W*.53,H*.94,W*.36,H*.12,0,0,Math.PI*2);g.fill();
+      for(let i=0;i<30;i++){
+        const x=(i/29)*W,w=3+(i%3)*1.8,y=H*(.08+(i*13%11)/28);g.strokeStyle=i%2?'#153d38':'#1c4941';g.lineWidth=w;
+        g.beginPath();g.moveTo(x,H);g.quadraticCurveTo(x+8,y+H*.2,x-7,y);g.stroke();
+        for(let k=0;k<5;k++){const yy=y+k*(H-y)/5;g.strokeStyle='#79a37d77';g.lineWidth=1;g.beginPath();g.moveTo(x-w,yy);g.lineTo(x+w,yy);g.stroke();
+          if(k<3)for(const side of[-1,1]){g.fillStyle=i%2?'#254f41':'#386847';g.beginPath();g.ellipse(x+side*14,yy-5,22,3,-side*.5,0,Math.PI*2);g.fill();}
+        }
+      }
+      for(const x of[W*.12,W*.88]){g.strokeStyle='#604b37';g.lineWidth=4;g.beginPath();g.moveTo(x,H);g.lineTo(x,H*.62);g.stroke();disc(x,H*.65,9,'#f4ce86');disc(x,H*.65,4,'#fff4c2');}
+    }else if(id==='harbor'){
+      disc(W*.75,H*.27,H*.14,'#ffe0a7');
+      g.fillStyle='#24627a';g.fillRect(0,H*.61,W,H*.39);
+      for(let i=0;i<26;i++){g.strokeStyle=i%2?'#b9d9d35c':'#174a6580';g.lineWidth=1;g.beginPath();const x=((i*137)%991)/991*W,yy=H*(.65+(i%7)*.05);g.moveTo(x,yy);g.lineTo(x+W*.04,yy);g.stroke();}
+      for(const [x,k]of[[W*.24,1],[W*.66,.65],[W*.87,.45]]){
+        g.fillStyle='#163c50';g.beginPath();g.moveTo(x-25*k,H*.72);g.lineTo(x+28*k,H*.72);g.lineTo(x+17*k,H*.76);g.lineTo(x-17*k,H*.76);g.closePath();g.fill();
+        g.strokeStyle='#d5d2b9';g.lineWidth=2;g.beginPath();g.moveTo(x,H*.73);g.lineTo(x,H*(.73-.42*k));g.stroke();
+        g.fillStyle='#f5ebcc';g.beginPath();g.moveTo(x+3,H*(.73-.4*k));g.lineTo(x+3,H*.69);g.lineTo(x+39*k,H*.69);g.closePath();g.fill();
+      }
+      for(const x of[W*.05,W*.45]){g.strokeStyle='#2c5261';g.lineWidth=4;g.beginPath();g.moveTo(x,H*.64);g.lineTo(x,H*.32);g.lineTo(x+W*.13,H*.32);g.moveTo(x,H*.38);g.lineTo(x+W*.08,H*.24);g.lineTo(x+W*.13,H*.32);g.stroke();g.lineWidth=1;g.beginPath();g.moveTo(x+W*.12,H*.32);g.lineTo(x+W*.12,H*.55);g.stroke();}
+      g.strokeStyle='#2a3d49';g.lineWidth=2;g.beginPath();g.moveTo(0,H*.08);g.quadraticCurveTo(W*.5,H*.42,W,H*.08);g.stroke();
+      for(let i=0;i<15;i++){const u=(i+.5)/15;disc(W*u,H*(.08+.68*u*(1-u)),3,'#ffe4a5');}
+    }else{
+      for(let i=0;i<65;i++)disc(((i*137)%997)/997*W,((i*71)%257)/257*H*.65,i%5===0?1.4:.65,'#d5fff0a0');
+      for(let k=0;k<3;k++){
+        const glow=g.createLinearGradient(0,0,0,H*.7);glow.addColorStop(0,'#6dffd100');glow.addColorStop(.5,k%2?'#a5b9ff55':'#65e9c866');glow.addColorStop(1,'#77e8dc00');
+        g.fillStyle=glow;g.beginPath();for(let i=0;i<=40;i++){const x=i/40*W,y=H*(.27+k*.08+Math.sin(i*.14+k)*.14);i?g.lineTo(x,y):g.moveTo(x,y);}for(let i=40;i>=0;i--)g.lineTo(i/40*W,H*(.05+k*.07+Math.sin(i*.14+k)*.14));g.closePath();g.fill();
+      }
+      for(let k=0;k<2;k++){g.fillStyle=k?'#36546a':'#4f7282';g.beginPath();g.moveTo(0,H);for(let i=0;i<10;i++)g.lineTo(i*W/8,H*(i%2?.85:.4+k*.13));g.lineTo(W,H);g.closePath();g.fill();}
+      g.fillStyle='#c0e0e0';for(let i=0;i<5;i++){const x=i*W/4;g.beginPath();g.moveTo(x-22,H*.64);g.lineTo(x,H*.4);g.lineTo(x+26,H*.65);g.lineTo(x+7,H*.6);g.lineTo(x-5,H*.58);g.closePath();g.fill();}
+      const x=W*.84;g.fillStyle='#182d48';g.fillRect(x-25,H*.74,50,H*.26);g.beginPath();g.arc(x,H*.74,25,Math.PI,Math.PI*2);g.fill();g.strokeStyle='#a7e7e4';g.lineWidth=2;g.beginPath();g.moveTo(x,H*.74);g.lineTo(x+20,H*.54);g.stroke();
+    }
+    g.restore();
+  };
+  function outdoor(c){return {...c,glossy:.06,shadow:{skew:.3,len:1.2,alpha:.3},
+    paintFar(g,V){YY.paintLandscape(g,c.id,V.W,V.floorTop);},
+    paintNear(g,V){g.fillStyle=c.floor;g.fillRect(0,V.floorTop,V.W,V.H-V.floorTop);court(g,V,c.floor,c.court,'#edf5d9',true);},
+    init(){return {};},
+    drawFar(g,R,t){
+      const H=R.V.floorTop,W=R.W;g.save();g.beginPath();g.rect(0,0,W,H);g.clip();
+      const count=R.quality===0?7:18;
+      for(let i=0;i<count;i++){
+        const x=((i*127.3+t*(c.id==='aurora'?9:17))%(W+30))-15,y=H*(.12+((i*37)%71)/100)+Math.sin(t+i)*4;
+        g.fillStyle=c.id==='aurora'?'#defff080':c.id==='bamboo'?'#bfdb8a66':'#f2e2c666';g.beginPath();g.ellipse(x,y,c.id==='bamboo'?4:1.4,c.id==='bamboo'?1.1:1.4,Math.sin(t+i),0,Math.PI*2);g.fill();
+      }g.restore();
+    }
+  };}
+  YY.VENUES = { arena, sunset, neon, ...Object.fromEntries(Object.entries(outdoors).map(([id,c])=>[id,outdoor(c)])) };
+  YY.VENUE_IDS = YY.MATCH_VENUES.slice();
+
 
   /** 场馆缩略图（菜单用） */
   YY.venueThumb = function (id, w, h) {

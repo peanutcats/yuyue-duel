@@ -7,6 +7,28 @@
   const FONT = YY.FONT, NUMF = YY.NUMF;
   const rr = YY.rr;
 
+  // One shared policy for 2D, 3D and the native canvas. Routine strokes stay visual.
+  YY.matchNotice=function(e,{mine=false,practice=false}={}){
+    const id=e.type==='hit'?e.skill:e.id,sk=YY.SKILLS?.[id];let text,color=sk?.color||'#ffd23f';
+    if(e.type==='hit'&&sk&&!e.feed){
+      if(id==='gongxiu')return null;
+      const bits=YY.FILM_EDIT;
+      text=bits&&e.edit?[e.edit&bits.lens?'慢镜':null,e.edit&bits.replay?'复映':null,e.edit&bits.cut?'快进':null].filter(Boolean).join(' → '):sk.name;
+      const office=YY.OFFICE_FLIGHT;
+      if(office&&e.office)text=[e.office&office.return?'退回':null,e.office&office.dart?'纸镖':null,e.office&office.glide?'滑翔':null].filter(Boolean).join(' · ')||null;
+    }
+    else if(e.type==='skill'&&sk&&(!sk.stealth||mine))text=sk.name;
+    else if(e.type==='skillProc'){
+      if(e.tip&&!mine)return null;
+      if(sk&&e.label===sk.name+' · 就绪')return null;
+      text=e.label;
+    }else if(e.type==='skillFail'&&mine){text=e.label;color='#ff9b7b';}
+    else if(e.type==='whiff'&&mine){text=practice?e.label:'挥空';color='#ff9b7b';}
+    else if(e.type==='tired'&&e.low&&mine){text='体力告急';color='#ff9b7b';}
+    if(!text)return null;
+    return{text,color,life:e.tip?1.6:1.05,key:e.type+':'+(id||text)};
+  };
+
   /** 跑动时的日常步伐痕迹（很淡）：[类型, 颜色] */
   const STEP_FX = { sh_light: ['streak', '120,230,240'], sh_butterfly: ['petal', '#ffc4d8'], sh_moon: ['moon', '225,232,248'] };
   /** 果哥各档装备的特效颜色：c 主色，hot 高光（-1 负债入狱） */
@@ -165,7 +187,7 @@
     sy(y) { return this.gy - y * this.sc; }
     P(x, y, z) { x += this.netOff || 0; const k = this.V && this.V.depth ? this.V.depth(z) : 1; return [this.cx + (this.mirror ? -x : x) * this.sc * k + z * this.ox, this.gy - y * this.sc * k + z * this.oy]; }
 
-    clearFx() { this.emotes = []; this.emoteMood = [null, null]; this.gearPulse = [{}, {}]; this.gearT = [0, 0]; this.marketFxState = [{},{}]; this.marketSeed = 1907; this.trail = []; this.parts = []; this.texts = []; this.banner = null; this.lines = []; this.columns = []; this.ghosts = [[], []]; this.lastWinner = -1; this.scoreSeen = null; }
+    clearFx() { this.staminaDisplay=[]; this.noticeAt={}; this.court3D = null; this.titleIntro = null; this.emotes = []; this.emoteMood = [null, null]; this.gearPulse = [{}, {}]; this.gearT = [0, 0]; this.marketFxState = [{},{}]; this.marketSeed = 1907; this.trail = []; this.parts = []; this.texts = []; this.characterCasts = []; this.banner = null; this.lines = []; this.columns = []; this.ghosts = [[], []]; this.lastWinner = -1; this.scoreSeen = null; }
 
     /** 固定物理步之间只插值显示；绝不把绘制坐标写回比赛。 */
     capture(m) {
@@ -179,7 +201,7 @@
       view.players = m.players.map((p, i) => {
         const a = old.players[i];
         if (Math.hypot(p.x-a.x,p.y-a.y) > .6) return p; // 闪现、换位等技能不用插值穿场
-        const q = { ...p, x: lerp(a.x,p.x,u), y: lerp(a.y,p.y,u), vx: lerp(a.vx,p.vx,u), vy: lerp(a.vy,p.vy,u), runPhase: lerp(a.runPhase,p.runPhase,u) };
+        const q = { ...p, x: lerp(a.x,p.x,u), y: lerp(a.y,p.y,u), z: lerp(a.z||0,p.z||0,u), vx: lerp(a.vx,p.vx,u), vy: lerp(a.vy,p.vy,u), runPhase: lerp(a.runPhase,p.runPhase,u) };
         if (p.motion && a.motion) { q.motion = {}; for (const key of Object.keys(p.motion)) q.motion[key] = lerp(a.motion[key] || 0, p.motion[key], u); }
         if (p.swing && a.swing && p.swing.t >= a.swing.t && p.swing.style === a.swing.style && p.swing.contact === a.swing.contact)
           q.swing = { ...p.swing, t: lerp(a.swing.t,p.swing.t,u) };
@@ -187,7 +209,7 @@
       });
       const s = m.shuttle, a = old.shuttle;
       if (s.live === a.live && s.held === a.held && s.ver === a.ver && s.netHit === a.netHit && !s.ctl && Math.hypot(s.x-a.x,s.y-a.y) < 1.5)
-        view.shuttle = { ...s, x: lerp(a.x,s.x,u), y: lerp(a.y,s.y,u) };
+        view.shuttle = { ...s, x: lerp(a.x,s.x,u), y: lerp(a.y,s.y,u), z: lerp(a.z||0,s.z||0,u) };
       return view;
     }
 
@@ -228,11 +250,40 @@
     impact(x, y, color, size, life) { this.add({ type: 'star', x, y, life: life || 0.22, t: 0, size, color, vx: 0, vy: 0, g: 0, rot: Math.random() * 0.8 }); }
     ring(x, y, color, size, life, floor) { this.add({ type: floor ? 'fring' : 'ring', x, y, life, t: 0, size, color, vx: 0, vy: 0, g: 0 }); }
     glow(x, y, color, size, life) { this.add({ type: 'glow', x, y, life, t: 0, size, color, vx: 0, vy: 0, g: 0 }); }
+    matchNotice(e,m,opt) {
+      if(m.courtMode==='3d')return;
+      const p=m.players[e.p],n=YY.matchNotice(e,opt);if(!p||!n)return;
+      this.noticeAt=this.noticeAt||{};const key=e.p+':'+n.key;
+      if(m.time-(this.noticeAt[key]??-99)<.85)return;
+      this.noticeAt[key]=m.time;this.texts=this.texts.filter(t=>t.owner!==e.p);
+      this.popText(n.text,p.x,p.y+2.25,n.color,.7,n.life);
+      this.texts[this.texts.length-1].owner=e.p;
+    }
     popText(text, x, y, color, size, life) {
       this.texts.push({ text, x, y, color: color || '#fff', size: size || 1, life: life || 1.1, t: 0 });
       if (this.texts.length > 8) this.texts.shift();
     }
     showBanner(text, sub, color, life) { this.banner = { text, sub: sub || '', color: color || '#ffffff', t: 0, life: life || 1.7 }; }
+    showTitleIntro(title,name){this.titleIntro={title,name,t:0,life:1.8};}
+    drawTitleIntro(ctx,dt){if(this.titleIntro){this.titleIntro.t+=dt;if(this.titleIntro.t>=this.titleIntro.life)this.titleIntro=null;}}
+    /** 荣誉放在比分牌两翼，字号和徽记随屏幕缩放，不遮挡比赛中心。 */
+    drawMatchTitles(ctx,m,bx,by,bw,bh,centerWidth,u){
+      const room=(bw-centerWidth)/2-14,h=clamp(u*.72,17,23),size=clamp(h*.5,9,12),order=this.mirror?[1,0]:[0,1];
+      if(room<65)return;this.titleBounds=[];
+      for(let j=0;j<2;j++){
+        const i=order[j],title=YY.AIChallenge?.title(m.titles?.[i]);if(!title)continue;
+        ctx.save();ctx.font=`700 ${size}px ${FONT}`;const w=Math.min(room,150,ctx.measureText(title.name).width+h+13),x=j?bx+bw-w-3:bx+3,y=by+bh+7;
+        this.titleBounds.push({player:i,x,y,w,h});ctx.fillStyle='#101b31dd';rr(ctx,x,y,w,h,7);ctx.fill();
+        ctx.strokeStyle=title.color+'66';ctx.lineWidth=.8;ctx.stroke();
+        const cx=x+h*.52,cy=y+h*.5,r=h*.23;
+        ctx.strokeStyle=title.color;ctx.fillStyle=title.color;ctx.lineWidth=1.3;
+        ctx.beginPath();ctx.moveTo(cx-r,cy-r*.5);ctx.lineTo(cx-r*.65,cy+r*.6);ctx.lineTo(cx+r*.65,cy+r*.6);ctx.lineTo(cx+r,cy-r*.5);ctx.lineTo(cx+r*.36,cy-r*.13);ctx.lineTo(cx,cy-r);ctx.lineTo(cx-r*.36,cy-r*.13);ctx.closePath();ctx.fill();
+        ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(title.name,x+h,y+h*.5+.3,w-h-8);
+        if(title.legend&&m.phase!=='rally'){ctx.globalAlpha=.25+.35*Math.sin(this.time*1.8)**2;ctx.fillStyle='#fff1ce';ctx.fillRect(x+w-5,y+4,1.5,1.5);}
+        if(this.titleIntro&&i===0){const alpha=Math.sin(Math.PI*Math.min(1,this.titleIntro.t/this.titleIntro.life))*.55;ctx.globalAlpha=alpha;ctx.strokeStyle=title.color;rr(ctx,x-1,y-1,w+2,h+2,8);ctx.stroke();}
+        ctx.restore();
+      }
+    }
     kick(amount, x, y) {
       this.cam.kick = Math.max(this.cam.kick, amount);
       this.cam.fx = this.sx(x); this.cam.fy = this.sy(y);
@@ -242,17 +293,19 @@
     hitFx(e) {
       const smash = e.shot === 'smash';
       if (e.feed) { this.burst(e.x, e.y, 5, '255,255,255', 2.5); return; }
+      if(!e.serve&&e.q<.4){this.burst(e.x,e.y,4,'255,169,128',2.4,.024);this.impact(e.x,e.y,'255,176,137',.32,.14);this.feathers(e.x,e.y,2);return;}
       const vx = e.vx || 0, vy = e.vy || 0;
       this.hitPulse = 1; this.hitShot = e.shot;
       if (smash || e.shot === 'kill') {
         const col = e.fire ? '255,140,40' : e.shot === 'kill' ? '255,90,90' : '255,190,90';
         this.burst(e.x, e.y, 22, col, 9, 0.05);
         this.jet(e.x, e.y, vx, vy, 18, '255,240,200', 14, 0.5);
-        this.impact(e.x, e.y, '255,230,170', 1.1, 0.26);
+        this.impact(e.x, e.y, '255,230,170', e.highSmash?1.35:1.1, 0.22);
+        if(e.highSmash)this.jet(e.x,e.y,vx,vy,8,'255,250,225',19,.23);
         this.glow(e.x, e.y, '255,200,120', 1.6, 0.35);
         this.ring(e.x, e.y, '255,220,160', 0.35, 0.4);
         this.feathers(e.x, e.y, 4);
-        this.shake = e.shot === 'kill' ? 0.65 : 0.8; this.flash = 0.12; this.flashCol = '255,235,210';
+        this.shake = e.shot === 'kill' ? 0.6 : e.highSmash ? .95 : .72; this.flash = e.highSmash ? .075 : .045; this.flashCol = '255,235,210';
         this.kick(1, e.x, e.y);
         this.lines.push({ x: this.sx(e.x), y: this.sy(e.y), t: 0, life: 0.22 });
         this.venueEvent('smash');
@@ -933,7 +986,7 @@
         const x = clamp(pt.x, 22, this.W-22), y = bounds.y+bounds.h+14;
         ctx.fillStyle = 'rgba(7,15,29,.9)'; rr(ctx,x-25,y-10,50,42,12); ctx.fill();
         ctx.fillStyle = '#fff2ac'; ctx.beginPath(); ctx.moveTo(x,y-6);ctx.lineTo(x-7,y+5);ctx.lineTo(x+7,y+5);ctx.closePath();ctx.fill();
-        ctx.font = `bold ${Math.round(11*this.hudK)}px ${FONT}`; ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(s.y.toFixed(1)+'m',x,y+20);
+        ctx.font = `bold ${Math.round(11*this.hudK)}px ${FONT}`; ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(s.y.toFixed(1)+'米',x,y+20);
       } else {
         ctx.beginPath();ctx.rect(0,0,this.W,bounds.y+bounds.h+30);ctx.clip();
         this.applyCam(1);
@@ -1012,14 +1065,22 @@
       return 'play';
     }
 
+    characterSkill(e) {
+      const casts=this.characterCasts||(this.characterCasts=[]);
+      casts[e.p]={id:e.id,start:this.time,stage:e.stage};
+    }
     charOpts(p, m, extra) {
+      const cast=this.characterCasts?.[p.idx];
+      const action=cast&&YY.CharacterArt?YY.CharacterArt.action(cast.id,this.time-cast.start):null;
+      const art=YY.CharacterArt?.profile(this.lookOf(m,p.idx));
       const pulse = this.gearPulse && this.gearPulse[p.idx];
       const shoePulse = clamp(((pulse?.shoe || 0)-this.time)/.45,0,1), racketPulse = clamp(((pulse?.racket || 0)-this.time)/.45,0,1);
       const s = m.shuttle;
-      const gx = (s.x - p.x) * p.dir, gyv = s.y - (p.y + 1.6);
+      const unseen=YY.clubHintHidden?.(m,p.idx),gx = unseen?1:(s.x - p.x) * p.dir, gyv = unseen?0:s.y - (p.y + 1.6);
       const L = Math.hypot(gx, gyv) || 1;
-      const o = Object.assign({ shoePulse, racketPulse, time: this.time, mood: this.moodOf(p, m), gazeX: gx / L, gazeY: gyv / L, spring: [this.springs[p.idx].x, this.springs[p.idx].y], f: (this.mirror ? -1 : 1) * p.dir, glow: Math.max(0, p.flash || 0) * 4 }, extra || {});
-      if (s.live && !s.netHit && s.lastHitter !== p.idx && p.swing && !p.swing.contact && !s.ctl) {
+      const o = Object.assign({ identity:YY.CharacterArt?.motionFor(p,this.lookOf(m,p.idx)), mechanical:YY.CharacterArt?.mechanical(m,p), shoePulse, racketPulse, action, art, quality:this.quality, time: this.time, mood: this.moodOf(p, m), gazeX: gx / L, gazeY: gyv / L, spring: [this.springs[p.idx].x, this.springs[p.idx].y], f: (this.mirror ? -1 : 1) * p.dir, glow: Math.max(0, p.flash || 0) * 4 }, extra || {});
+      o.inkReady=YY.clubInkReady?.(m,p);
+      if (!unseen && s.live && !s.netHit && s.lastHitter !== p.idx && p.swing && !p.swing.contact && !s.ctl) {
         const lead = clamp(C.SW_SWEET - p.swing.t, 0, .08);
         const x = s.x + s.vx * lead, y = s.y + s.vy * lead - .5 * C.G * lead * lead;
         if (p.side*x > C.SHUTTLE_R && Math.hypot(x-p.x,y-p.y-C.SHOULDER)<1.5) o.aim={x,y};
@@ -1103,7 +1164,7 @@
         const tt = sw.t - i * 0.012;
         if (tt < 0) break;
         const q = Object.assign({}, p, { swing: Object.assign({}, sw, { t: tt }) });
-        pts.push(YY.racketHead(YY.charPose(q, this.time, { mood: 'play' })));
+        pts.push(YY.racketHead(YY.charPose(q, this.time, { mood: 'play', identity:YY.CharacterArt?.motionFor(p,look) })));
       }
       if (pts.length < 3) return;
       ctx.save();
@@ -1114,7 +1175,7 @@
       const smash = sw.style === 'smash' || (!sw.style && sw.dur > 0.4);
       // 拍风按技术动作区分：重杀橙色宽弧，平抽青色短平，吊/搓/放网细而淡
       const st = sw.style, soft = st === 'net' || st === 'tumble' || st === 'block' || st === 'drop';
-      const col = smash || st === 'kill' || st === 'halfsmash' ? '255,170,70' : st === 'drive' || st === 'push' ? '140,230,255' : st === 'tumble' ? '210,180,255' : look.swoosh || (look.hair === 'spiky' ? '255,130,130' : '120,220,255');
+      const col = sw.q!=null&&sw.q<.4 ? '255,170,133' : sw.q>=.85 ? '190,255,218' : smash || st === 'kill' || st === 'halfsmash' ? '255,170,70' : st === 'drive' || st === 'push' ? '140,230,255' : st === 'tumble' ? '210,180,255' : look.swoosh || (look.hair === 'spiky' ? '255,130,130' : '120,220,255');
       const width = smash ? 0.22 : st === 'kill' || st === 'halfsmash' || st === 'clear' || st === 'lift' ? 0.17 : soft ? 0.07 : 0.13;
       for (let i = 1; i < pts.length; i++) {
         const u = 1 - i / pts.length;
@@ -1126,6 +1187,7 @@
     }
 
     drawShuttle(ctx, s) {
+      if(s.hide||s.veil>0)return;
       const k = this.sc;
       const X = this.sx(s.x), Y = this.sy(s.y);
       const spd = s.speed || 0;
@@ -1140,6 +1202,11 @@
       else ang = Math.atan2(-s.vy, this.mirror ? -s.vx : s.vx);
       if (s.live && s.shot === 'tumble' && Math.abs(s.x) < 1.2) ang += this.time * 28; // 搓球：翻着跟头过网
       const R = C.SHUTTLE_R * k; // 球头半径与碰撞一致
+      if(s.live&&s.nf?.paper&&YY.SkillFX?.paperBody){
+        const state=YY.paperAero(s.x,s.nf.paper);
+        YY.SkillFX.paperBody(ctx,X,Y,ang,clamp(k*.17,5.2,10),state,s.nf);
+        return;
+      }
       const sz = R / 3;
       if (s.live && spd > 14) {
         ctx.globalCompositeOperation = 'lighter';
@@ -1257,6 +1324,7 @@
     }
 
     drawHint(ctx, m, idx, h, full) {
+      if(this.clubVision?.hidden||YY.clubHintHidden?.(m,idx))return;
       const k = this.sc;
       if (h.landX != null && Math.sign(h.landX) === m.players[idx].side) {
         const a = this.P(h.landX, 0, 0);
@@ -1331,7 +1399,7 @@
       ctx.fillStyle = body; rr(ctx, X - 0.38 * k, Y - 0.95 * k, 0.76 * k, 0.8 * k, 0.12 * k); ctx.fill();
       ctx.fillStyle = '#1b2036'; rr(ctx, X - 0.26 * k, Y - 0.78 * k, 0.52 * k, 0.22 * k, 0.05 * k); ctx.fill();
       ctx.fillStyle = '#5cff9d'; ctx.font = `bold ${Math.round(0.13 * k)}px ${NUMF}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText('FEED', X, Y - 0.67 * k);
+      ctx.fillText('发球机', X, Y - 0.67 * k);
       const tube = ctx.createLinearGradient(0, Y - 1.8 * k, 0, Y - 0.95 * k);
       tube.addColorStop(0, 'rgba(220,235,255,0.5)'); tube.addColorStop(1, 'rgba(160,180,220,0.35)');
       ctx.fillStyle = tube; rr(ctx, X - 0.14 * k, Y - 1.85 * k, 0.28 * k, 0.9 * k, 0.1 * k); ctx.fill();
@@ -1596,7 +1664,7 @@
         ctx.beginPath(); ctx.arc(ax, ay, ar, 0, Math.PI * 2); ctx.clip();
         ctx.drawImage(this.portraitOf(this.lookOf(m, i)), ax - ar, ay - ar, ar * 2, ar * 2);
         ctx.restore();
-        ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+        ctx.strokeStyle = YY.AIChallenge?.title(m.titles?.[i])?.color||'#fff'; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.arc(ax, ay, ar, 0, Math.PI * 2); ctx.stroke();
         if (m.skillsOn && p.skill) this.drawEnergy(ctx, p, ax, ay, ar);
         const nx = left ? ax + ar + 10 : ax - ar - 10;
@@ -1607,7 +1675,11 @@
         const sw = Math.max(46, Math.min(bw * 0.19, W / 2 - cw / 2 - (left ? nx - bx : bx + bw - nx) - 24 + bx)), sh = Math.max(5, u * 0.24);
         const sx0 = left ? nx : nx - sw, sy0 = by + bh * 0.62;
         ctx.fillStyle = 'rgba(0,0,0,0.45)'; rr(ctx, sx0, sy0, sw, sh, sh / 2); ctx.fill();
-        const r = clamp(p.stamina / C.STAM_MAX, 0, 1);
+        const r = clamp(p.stamina / C.STAM_MAX, 0, 1), state=YY.staminaState(p);
+        const history=this.staminaDisplay||(this.staminaDisplay=[]),last=history[i]||{value:r,t:this.time};
+        const ghost=Math.max(r,last.value-Math.max(0,this.time-last.t)*.36);history[i]={value:ghost,t:this.time};
+        ctx.fillStyle='#ffe8c188';const gw=sw*ghost;if(gw>.2)ctx.fillRect(left?sx0:sx0+sw-gw,sy0,gw,sh);
+
         // 绿：状态充沛（无惩罚）；黄：开始疲劳（移动、挥拍、发力逐渐下降）；红：体力透支
         const col = p.stamina >= C.STAM_FRESH ? ['#5cffa8', '#1fc77a'] : p.stamina >= C.STAM_FRESH * 0.45 ? ['#ffd96b', '#ffa53d'] : ['#ff7a7a', '#e2384a'];
         if (p.stamina < C.STAM_FRESH * 0.45 && (m.phase === 'rally' || m.phase === 'serve')) {
@@ -1618,11 +1690,13 @@
         const sg = ctx.createLinearGradient(0, sy0, 0, sy0 + sh);
         sg.addColorStop(0, col[0]); sg.addColorStop(1, col[1]);
         ctx.fillStyle = sg;
-        const fw = Math.max(sh, sw * r);
-        rr(ctx, left ? sx0 : sx0 + sw - fw, sy0, fw, sh, sh / 2); ctx.fill();
+        const fw = Math.max(0, sw * r);
+        if(fw>.2){rr(ctx, left ? sx0 : sx0 + sw - fw, sy0, fw, sh, Math.min(sh/2,fw/2)); ctx.fill();}
         const need = C.STAM_FRESH / C.STAM_MAX; // 刻度：低于此处开始疲劳
         ctx.fillStyle = 'rgba(255,255,255,0.85)';
         ctx.fillRect(left ? sx0 + sw * need : sx0 + sw - sw * need, sy0 - 2, 1.5, sh + 4);
+        ctx.font=`600 ${Math.max(9,u*.35)}px ${FONT}`;ctx.fillStyle=state.color;
+        ctx.fillText(Math.round(state.value)+' · '+state.label,left?sx0:sx0+sw,sy0+sh+Math.max(7,u*.28));
         const sx = W / 2 + (left ? -1 : 1) * cw * 0.27;
         const age = this.time - this.scorePop[i];
         const pop = age < 0.5 ? 1 + Math.sin((age / 0.5) * Math.PI) * 0.4 : 1;
@@ -1661,6 +1735,7 @@
       ctx.fillStyle = chipBg; rr(ctx, W / 2 - tw / 2 - 12, cy, tw + 24, fs + 10, (fs + 10) / 2); ctx.fill();
       ctx.fillStyle = chipCol; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText(chip, W / 2, cy + (fs + 10) / 2);
+      this.drawMatchTitles(ctx,m,bx,by,bw,bh,tw+24,u);
       if (m.rally >= 3 && m.phase === 'rally') {
         const txt = `回合 ${m.rally}`;
         const w2 = ctx.measureText(txt).width;
@@ -1818,7 +1893,7 @@
         g.fillStyle = gr; g.fillRect(X - r1 / sc, Y - r1 / sc, (r1 * 2) / sc, (r1 * 2) / sc);
       };
       const s = m.shuttle, k = this.sc;
-      hole(this.sx(s.x), this.sy(s.y), k * 0.25, k * (s.live ? 1.9 : 1.2), 1);
+      if(!this.clubVision?.hidden&&!s.hide&&!(s.veil>0))hole(this.sx(s.x), this.sy(s.y), k * 0.25, k * (s.live ? 1.9 : 1.2), 1);
       for (const p of m.players) hole(this.sx(p.x), this.sy(p.y + 1), k * 0.3, k * 1.25, 0.75);
       g.globalCompositeOperation = 'source-over';
       ctx.drawImage(cv, 0, 0, w, h, 0, 0, w * sc, h * sc);
@@ -1957,6 +2032,7 @@
     draw(m, o, dt) {
       o = o || {};
       m = this.interpolate(m, o.alpha);
+      this.clubVision=YY.clubVisibility?.(m,o.labels?.[0]&&o.labels?.[1]?null:this.mirror?1:0)||{};
       this.poseCache = new Map();
       this.time += dt;
       // 自动画质：只统计正常帧（后台节流 / 卡顿帧不算），持续偏慢才降级，恢复流畅后再升回
@@ -1995,6 +2071,8 @@
       }
       // 镜像假球带着一模一样的落点提示：提示不再能替你分辨真假
       if (o.landHint && m.ents) for (const e of m.ents) if (e.k === 'fake' && e.lx != null) for (const i of o.landHint) if (e.o !== i) this.drawHint(ctx, m, i, { landX: e.lx }, false);
+      // 脏数据球也带着和真球一样的落点圈（只给被骗的一方；朝自己半场飞来时才画）
+      if (o.landHint && m.ents) for (const e of m.ents) if (e.k === 'dirty' && e.lx != null) for (const i of o.landHint) if (e.o !== i && m.players[i] && Math.sign(e.lx) === m.players[i].side) this.drawHint(ctx, m, i, { landX: e.lx }, false);
 
       const humans = m.players.filter((p) => !(m.practice && !m.tutorial && p.idx === 1));
       for (const p of humans) {
@@ -2021,17 +2099,20 @@
 
       if (YY.SkillFX && m.ents) YY.SkillFX.ground(this, ctx, m, o, dt);
       this.marketFx(m,dt);
-      this.marketBall(m,dt);
+      if(!this.clubVision.hidden)this.marketBall(m,dt);
       for(const p of humans)this.drawMarketAura(ctx,p);
       for (const p of humans) this.drawShadow(ctx, p);
       this.gearSteps(m, dt);
       this.drawColumns(ctx, dt);
+      YY.SkillFX?.clubCourt?.(ctx,m,(x,y)=>({x:this.sx(x),y:this.sy(y),k:this.sc}),false);
       this.drawNet(ctx);
       if (YY.SkillFX && m.ents) YY.SkillFX.net(this, ctx, m, o, dt);
       this.netWob = Math.max(0, this.netWob - dt * 1.8);
 
       const s = m.shuttle;
-      if (!(dt > 0)) { /* 暂停时拖尾保持原样（镜像假球的拖尾同样只在时间推进时更新） */ }
+      if(this.clubVision.hidden||s.hide||s.veil>0)this.trail=[];
+      if(this.clubVision.hidden||s.hide||s.veil>0){}
+      else if (!(dt > 0)) { /* 暂停时拖尾保持原样（镜像假球的拖尾同样只在时间推进时更新） */ }
       else if (s.live) {
         this.trail.push({ x: s.x, y: s.y, v: s.speed || 0 });
         if (this.trail.length > 22) this.trail.shift();
@@ -2068,9 +2149,9 @@
       this.trailFire = false;
       this.trailKind = s.live ? s.shot : null;
       if (this.ballFx === 6) this.trailFire = true; else if (this.ballFx) this.trailKind = 'mk' + this.ballFx; // 果哥打出的球
-      this.drawTrail(ctx);
+      if(!this.clubVision.hidden){ctx.save();if(this.clubVision.ghost)ctx.globalAlpha*=.24;this.drawTrail(ctx);ctx.restore();}
       if (YY.SkillFX && m.ents) YY.SkillFX.air(this, ctx, m, o, dt);
-      this.drawShuttle(ctx, s);
+      if(!this.clubVision.hidden){ctx.save();if(this.clubVision.ghost)ctx.globalAlpha*=.24;this.drawShuttle(ctx, s);ctx.restore();}
       if (YY.SkillFX && m.ents) YY.SkillFX.top(this, ctx, m, o, dt);
       this.drawParts(ctx, dt);
       if (m.phase === 'serve' && !m.serving && o.meterFor && o.meterFor.includes(m.server)) this.drawServeMeter(ctx, m, o.serveLabel);
@@ -2084,18 +2165,22 @@
       if (m.env && m.env.wind) this.drawWind(ctx, m.env.wind, dt);
       if (v.drawFront && this.quality) v.drawFront(ctx, this, this.time, this.vst, dt);
       this.drawSpeedLines(ctx, dt);
+      YY.SkillFX?.clubScreen?.(ctx,m,o.labels?.[0]&&o.labels?.[1]?null:this.mirror?1:0,this.W,this.H);
       if (!o.noHud) {
         ctx.save();
-        const hb = this.scoreboardBounds(), high = [s,...(m.ents||[]).filter(e=>e.k==='fake')].some(q=>{
+        const hb = this.scoreboardBounds(), high = [s,...(m.ents||[]).filter(e=>e.k==='fake'||e.k==='dirty')].some(q=>{
           const pt=this.screenPoint(q.x,q.y);
           return pt.x>hb.x-22 && pt.x<hb.x+hb.w+22 && pt.y>0 && pt.y<hb.y+hb.h+22;
         });
-        if (!o.dark && s.live && !s.hide && !(s.veil>0) && high) ctx.globalAlpha=.28;
+        if (!this.clubVision.hidden && !o.dark && s.live && !s.hide && !(s.veil>0) && high) ctx.globalAlpha=.28;
         if (o.practice) this.drawPracticeHUD(ctx, o.practice);
         else this.drawScoreboard(ctx, m);
         ctx.restore();
       }
-      this.drawBanner(ctx, dt);
+      if (this.titleIntro) {
+        if (this.banner) this.banner.t += dt;
+        this.drawTitleIntro(ctx, dt);
+      } else this.drawBanner(ctx, dt);
       this.drawCutIn(ctx, dt, m);
       if (o.waitText) {
         const fs = clamp(Math.round(this.H * 0.032), 14, 24);
@@ -2124,9 +2209,9 @@
         ctx.fillText(o.overlayText, this.W / 2, y + (fs + 12) / 2);
       }
       if (!o.dark) {
-        this.drawHighShuttle(ctx,m);
+        if(!this.clubVision.hidden){ctx.save();if(this.clubVision.ghost)ctx.globalAlpha*=.24;this.drawHighShuttle(ctx,m);ctx.restore();}
         // 镜像假球同样优先显示，不能用 HUD 遮挡泄露哪只是真球。
-        for(const e of m.ents||[]) if(e.k==='fake') this.drawHighShuttle(ctx,m,
+        for(const e of m.ents||[]) if(e.k==='fake'||e.k==='dirty') this.drawHighShuttle(ctx,m,
           {x:e.x,y:e.y,vx:e.vx,vy:e.vy,live:true,held:false,shot:e.kind||s.shot,speed:Math.hypot(e.vx,e.vy)},this.fakeTrails?.[e.id]||[]);
       }
     }

@@ -27,21 +27,22 @@
   /** 同浏览器多标签页的回环连接（仅用于调试联机逻辑） */
   function loopConn(code, role, onReady) {
     const bc = new BroadcastChannel('yuyue-loop-' + code);
-    const h = {};
+    const h = {};let closed=false;
     const conn = {
       open: false,
       on(ev, f) { h[ev] = f; },
       send(d) { bc.postMessage({ from: role, d }); },
-      close() { if (!conn.open) return; conn.open = false; bc.postMessage({ from: role, bye: 1 }); bc.close(); if (h.close) h.close(); },
+      close() { if(closed)return;closed=true;const wasOpen=conn.open;conn.open=false;if(wasOpen)bc.postMessage({from:role,bye:1});bc.close();if(wasOpen&&h.close)h.close(); },
     };
     bc.onmessage = (e) => {
+      if(closed)return;
       const m = e.data;
       if (m.from === role) return;
       if (m.hello) {
         if (!conn.open) { conn.open = true; if (role === 'host') bc.postMessage({ from: role, hello: 1 }); onReady(conn); if (h.open) h.open(); }
         return;
       }
-      if (m.bye) { conn.open = false; bc.close(); if (h.close) h.close(); return; }
+      if (m.bye) { closed=true;conn.open = false; bc.close(); if (h.close) h.close(); return; }
       if (h.data) h.data(m.d);
     };
     if (role === 'guest') bc.postMessage({ from: role, hello: 1 });
@@ -59,7 +60,10 @@
     });
   }
 
+  const cancelled=()=>Object.assign(new Error('连接已取消'),{cancelled:true});
   const Net = (YY.Net = {
+    attempt:0,cancelConnect:null,
+    checkAttempt(n){if(n!==this.attempt)throw cancelled();},
     peer: null, conn: null, role: null, code: null, rtt: 0.1,
     onMsg: null, onOpen: null, onClose: null, onStatus: null,
     ice: null, iceExp: 0, turn: 'unknown', route: null,
@@ -94,6 +98,7 @@
       if (!pc || !pc.getStats) return null;
       try {
         const stats = await pc.getStats();
+        if(this.conn?.peerConnection!==pc)return null;
         let pair = null;
         stats.forEach((r) => { if (r.type === 'transport' && r.selectedCandidatePairId) pair = stats.get(r.selectedCandidatePairId); });
         if (!pair) stats.forEach((r) => { if (r.type === 'candidate-pair' && r.state === 'succeeded' && (r.nominated || r.selected)) pair = r; });
@@ -115,77 +120,70 @@
     },
     status(t) { if (this.onStatus) this.onStatus(t); },
     async host() {
-      this.role = 'host';
-      if (YY.NET_CONFIG.loopback) {
-        this.code = genCode();
-        loopConn(this.code, 'host', (c) => { this.conn = c; this.bindLoop(c); if (this.onOpen) this.onOpen(); });
+      this.close();const attempt=this.attempt;this.role='host';
+      if(YY.NET_CONFIG.loopback){
+        this.code=genCode();
+        this.conn=loopConn(this.code,'host',c=>{if(attempt!==this.attempt){c.close();return;}this.bindLoop(c);if(this.onOpen)this.onOpen();});
         return this.code;
       }
-      await this.load();
-      this.status('正在连接…');
-      await this.getIce();
-      this.status('正在创建房间…');
-      return new Promise((resolve, reject) => {
-        const tryOpen = (n) => {
-          const code = genCode();
-          const peer = new G.Peer(YY.NET_CONFIG.prefix + code, this.peerOpts());
-          this.peer = peer;
-          peer.on('open', () => { this.code = code; resolve(code); });
-          peer.on('error', (err) => {
-            if (err.type === 'unavailable-id' && n < 4) { peer.destroy(); tryOpen(n + 1); }
-            else if (!this.code) reject(new Error(errText(err)));
-            else this.status('连接错误：' + errText(err));
+      await this.load();this.checkAttempt(attempt);this.status('正在连接…');
+      await this.getIce();this.checkAttempt(attempt);this.status('正在创建房间…');
+      return new Promise((resolve,reject)=>{
+        this.cancelConnect=()=>reject(cancelled());
+        const tryOpen=n=>{
+          if(attempt!==this.attempt)return;
+          const code=genCode(),peer=new G.Peer(YY.NET_CONFIG.prefix+code,this.peerOpts());this.peer=peer;
+          peer.on('open',()=>{if(attempt!==this.attempt||this.peer!==peer)return;this.cancelConnect=null;this.code=code;resolve(code);});
+          peer.on('error',err=>{
+            if(attempt!==this.attempt||this.peer!==peer)return;
+            if(err.type==='unavailable-id'&&n<4){peer.destroy();tryOpen(n+1);}
+            else if(!this.code){this.cancelConnect=null;reject(new Error(errText(err)));}
+            else this.status('连接错误：'+errText(err));
           });
-          peer.on('connection', (conn) => {
-            if (this.conn && this.conn.open) { conn.on('open', () => { conn.send({ t: 'full' }); setTimeout(() => conn.close(), 300); }); return; }
+          peer.on('connection',conn=>{
+            if(attempt!==this.attempt||this.peer!==peer){conn.close();return;}
+            if(this.conn?.open){conn.on('open',()=>{conn.send({t:'full'});setTimeout(()=>conn.close(),300);});return;}
             this.bind(conn);
           });
-          peer.on('disconnected', () => { if (!this.conn) try { peer.reconnect(); } catch (_) {} });
+          peer.on('disconnected',()=>{if(attempt===this.attempt&&this.peer===peer&&!this.conn)try{peer.reconnect();}catch(_){}});
         };
         tryOpen(0);
       });
     },
     async join(code) {
-      this.role = 'guest';
-      code = code.toUpperCase().trim();
-      if (YY.NET_CONFIG.loopback) {
-        return new Promise((resolve, reject) => {
-          loopConn(code, 'guest', (c) => { this.conn = c; this.bindLoop(c); resolve(); });
-          setTimeout(() => { if (!this.conn) reject(new Error('回环模式：找不到房间')); }, 3000);
+      this.close();const attempt=this.attempt;this.role='guest';code=String(code||'').toUpperCase().trim();
+      if(YY.NET_CONFIG.loopback){
+        return new Promise((resolve,reject)=>{
+          const timer=setTimeout(()=>{if(attempt!==this.attempt)return;this.cancelConnect=null;const conn=this.conn;this.conn=null;conn?.close();reject(new Error('回环模式：找不到房间'));},3000);
+          this.cancelConnect=()=>{clearTimeout(timer);reject(cancelled());};
+          this.conn=loopConn(code,'guest',c=>{if(attempt!==this.attempt){c.close();return;}clearTimeout(timer);this.cancelConnect=null;this.bindLoop(c);resolve();});
         });
       }
-      await this.load();
-      this.status('正在连接…');
-      await this.getIce();
-      this.status('正在加入房间…');
-      return new Promise((resolve, reject) => {
-        const peer = new G.Peer(undefined, this.peerOpts());
-        this.peer = peer;
-        let done = false;
-        peer.on('open', () => {
-          const conn = peer.connect(YY.NET_CONFIG.prefix + code, { reliable: true, serialization: 'json' });
-          this.bind(conn, () => { done = true; resolve(); });
-          this.status('已找到房间，正在连接房主…');
-          const fail = (msg) => { if (!done) { done = true; reject(new Error(msg)); } };
-          const NAT = YY.netFailText(this.turn);
-          // 监听 ICE 失败，给出明确原因
-          const watchIce = setInterval(() => {
-            const pc = conn.peerConnection;
-            if (done) { clearInterval(watchIce); return; }
-            if (pc && pc.iceConnectionState === 'failed') { clearInterval(watchIce); fail(NAT); }
-          }, 300);
-          setTimeout(() => {
-            clearInterval(watchIce);
-            const pc = conn.peerConnection;
-            fail(pc && pc.remoteDescription ? NAT : '连接超时：房主没有响应，请确认房间码或让房主重新创建房间');
-          }, 15000);
+      await this.load();this.checkAttempt(attempt);this.status('正在连接…');
+      await this.getIce();this.checkAttempt(attempt);this.status('正在加入房间…');
+      return new Promise((resolve,reject)=>{
+        const peer=new G.Peer(undefined,this.peerOpts());this.peer=peer;
+        let done=false,watchIce=null,timer=null;
+        const finish=error=>{if(done)return;done=true;clearInterval(watchIce);clearTimeout(timer);if(attempt===this.attempt)this.cancelConnect=null;error?reject(error):resolve();};
+        this.cancelConnect=()=>finish(cancelled());
+        // Include signalling startup in the timeout; a peer that never opens
+        // must not leave the lobby waiting forever.
+        timer=setTimeout(()=>finish(new Error('连接超时：房主没有响应，请确认房间码或让房主重新创建房间')),15000);
+        peer.on('open',()=>{
+          if(done||attempt!==this.attempt)return;
+          const conn=peer.connect(YY.NET_CONFIG.prefix+code,{reliable:true,serialization:'json'});
+          this.bind(conn,()=>finish());this.status('已找到房间，正在连接房主…');
+          watchIce=setInterval(()=>{
+            if(done||attempt!==this.attempt){clearInterval(watchIce);return;}
+            if(conn.peerConnection?.iceConnectionState==='failed')finish(new Error(YY.netFailText(this.turn)));
+          },300);
         });
-        peer.on('error', (err) => { if (!done) reject(new Error(errText(err))); else this.status('连接错误：' + errText(err)); });
+        peer.on('error',err=>{if(attempt!==this.attempt)return;if(!done)finish(new Error(errText(err)));else this.status('连接错误：'+errText(err));});
       });
     },
     bind(conn, cb) {
       this.conn = conn;
-      conn.on('open', () => { this.lastRecv = performance.now(); if (cb) cb(); if (this.onOpen) this.onOpen(); });
+      conn.on('open', () => { if(this.conn!==conn)return;this.lastRecv = performance.now(); if (cb) cb(); if (this.onOpen) this.onOpen(); });
       this.bindLoop(conn);
       conn.on('error', () => {});
       // ICE 断开（对方掉线、切网络）时，DataChannel 的 close 可能迟迟不触发，由 App 的心跳超时兜底
@@ -193,13 +191,14 @@
     bindLoop(conn) {
       this.lastRecv = performance.now();
       conn.on('data', (d) => {
+        if(this.conn!==conn)return;
         this.lastRecv = performance.now();
         if (d && d.t === 'ping') { conn.send({ t: 'pong', ts: d.ts }); return; }
         if (d && d.t === 'pong') { this.rtt = this.rtt * 0.7 + ((performance.now() - d.ts) / 1000) * 0.3; return; }
         if (d && d.t === 'ka') return; // 心跳
         if (this.onMsg) this.onMsg(d);
       });
-      conn.on('close', () => { const c = this.conn; this.conn = null; if (c && this.onClose) this.onClose(); });
+      conn.on('close', () => { if(this.conn!==conn)return;this.conn=null;if(this.onClose)this.onClose(); });
     },
     /** 距离上次收到对方任何消息的秒数 */
     idle() { return this.conn ? (performance.now() - (this.lastRecv || 0)) / 1000 : 0; },
@@ -235,6 +234,7 @@
       }
     },
     close() {
+      this.attempt++;const cancel=this.cancelConnect;this.cancelConnect=null;if(cancel)cancel();
       clearTimeout(this.flushTimer); this.flushTimer = null; this.pending = {}; this.queuedBytes = 0;
       this.route = null; this.iceRtt = null; this.protocol = null; this.rtt = 0.1;
       const c = this.conn; this.conn = null;
@@ -278,8 +278,9 @@
   const buffOf = (p) => { const b = p.buff || {}; const k = Object.keys(b).filter((x) => b[x] > 0); return [k.join(','), k.length ? r3(Math.max(...k.map((x) => b[x]))) : 0]; };
   YY.snapshot = function (m, events) {
     return {
+      d3: m.courtMode === '3d' ? { p:m.players.map(p=>[r3(p.z||0),r3(p.vz||0),p.aim3D||null,p.swing?.contact?.z??null,p.input3D||null,p.castPose3D||null]), s:[r3(m.shuttle.z||0),r3(m.shuttle.vz||0)], l:m.landMark?.z??0, pl:m.pred?.hidden?null:m.pred?.landZ??null } : null,
       t: 'st', nt: performance.now() / 1000, ht: r3(m.time), ph: m.phase, sc: m.score.slice(), sv: m.server, st: r3(m.serveT), sg: m.serving ? 1 : 0,
-      ry: m.rally, w: m.winner, names: m.names, hc: m.hitCount,
+      ry: m.rally, w: m.winner, names: m.names, hc: m.hitCount, titles:YY.titleIds?YY.titleIds(m.titles):[null,null],
       p: m.players.map((p) => [
         r3(p.x), r3(p.y), r3(p.vx), r3(p.vy), p.onGround ? 1 : 0, Math.round(p.stamina),
         p.swing ? [r3(p.swing.t), KIND.indexOf(p.swing.kind), p.swing.dur, p.swing.serve ? 1 : 0,
@@ -304,7 +305,7 @@
     constructor() {
       this.players = [0, 1].map((i) => ({ idx: i, side: i ? 1 : -1, dir: i ? -1 : 1, x: i ? 2.8 : -2.3, y: 0, vx: 0, vy: 0, onGround: true, stamina: 100, swing: null, runPhase: 0, flash: 0, land: 0 }));
       this.shuttle = { x: -1.9, y: 0.95, vx: 0, vy: 0, live: false, held: true, netHit: false, crossedNet: false, speed: 0, lastHitter: -1 };
-      this.score = [0, 0]; this.server = 0; this.phase = 'serve'; this.serveT = 0; this.serving = null; this.rally = 0;
+      this.titles=[null,null];this.score = [0, 0]; this.server = 0; this.phase = 'serve'; this.serveT = 0; this.serving = null; this.rally = 0;
       this.opt = { target: 7, cap: 11 }; this.names = ['房主', '你']; this.practice = false; this.time = 0;
       this.landMark = null; this.pred = null; this.hint = null; this.winner = -1;
       this.buf = []; this.clockOff = null; this.stats = null; this.longest = 0;
@@ -351,6 +352,7 @@
       const reset = a.ph !== b.ph && b.ph === 'serve';
       this.time = L(a.ht, b.ht);
       this.renderStamp = L(stamp(a), stamp(b));
+      if (cur.rules) Object.assign(this.opt, cur.rules);
       this.phase = cur.ph; this.score = cur.sc; this.server = cur.sv;
       this.serveT = a.ph === b.ph ? L(a.st, b.st) : cur.st; this.serving = cur.sg ? {} : null;
       this.rally = cur.ry; this.winner = cur.w;
@@ -363,13 +365,14 @@
         const sameSwing = pa[6] && pb[6] && pb[6][0] >= pa[6][0] && pa[6][1] === pb[6][1];
         p.swing = sw ? {
           t: sameSwing ? L(pa[6][0], pb[6][0]) : sw[0], kind: KIND[sw[1]] || 'over', dur: sw[2], serve: !!sw[3],
-          contact: sw[4] ? { x: sw[4][0], y: sw[4][1], t: sw[4][2] } : null, style: sw[5] || null, fromStyle: sw[6] || null, fromDur: sw[7] || null, // 技术动作（旧服务器没有该字段）
+          contact: sw[4] ? { x: sw[4][0], y: sw[4][1], t: sw[4][2] } : null, style: sw[5] || null, fromStyle: sw[6] || null, fromDur: sw[7] || null, q: sw[8] ?? undefined, // 技术动作（旧服务器没有该字段）
         } : null;
         p.runPhase = reset ? pc[7] : L(pa[7], pb[7]); p.flash = pc[8]; p.land = pc[9];
+        p.stamDelay=cur.stamina?.[i]?.[0]||0; const queued=cur.stamina?.[i]?.[1];p.shotQueue3D=Array.isArray(queued)?{btn:queued[0],until:queued[1]}:null;
         p.motion = null;
         if (pc[10]) {
           p.motion = {};
-          ['speed', 'accel', 'air', 'land', 'split'].forEach((key, k) => {
+          ['speed', 'accel', 'air', 'land', 'split', 'lateral', 'bank'].slice(0, pc[10].length).forEach((key, k) => {
             const blend = !reset && pa[10] && pb[10] && pa[4] === pb[4] && Math.abs(pb[10][k] - pa[10][k]) < .1;
             p.motion[key] = blend ? L(pa[10][k], pb[10][k]) : pc[10][k];
           });
@@ -396,6 +399,9 @@
       }
       // 技能装置、规则改动（短场 / 平移 / 防火墙…）、受控球与完整状态
       if (YY.skUnpack) YY.skUnpack(this, a.k, cur === a ? a.k : b.k, u);
+      this.courtMode=cur.d3?'3d':'2d';
+      if(cur.d3){const d=cur.d3;for(let i=0;i<2;i++){this.players[i].z=!reset&&a.d3&&b.d3?L(a.d3.p[i][0],b.d3.p[i][0]):d.p[i][0];this.players[i].vz=d.p[i][1];this.players[i].aim3D=d.p[i][2];this.players[i].input3D=d.p[i][4];this.players[i].castPose3D=d.p[i][5];if(this.players[i].swing?.contact&&d.p[i][3]!=null)this.players[i].swing.contact.z=d.p[i][3];}s.z=sameFlight&&a.d3&&b.d3?L(a.d3.s[0],b.d3.s[0]):d.s[0];s.vz=d.s[1];s.space3D=true;if(this.landMark)this.landMark.z=d.l;if(this.pred)this.pred.landZ=d.pl;}
+      this.titles=YY.titleIds?YY.titleIds(cur.titles):[null,null];
       if (cur.ch && YY.lookOf) { if (this.chars !== cur.ch.join()) { this.chars = cur.ch.join(); this.looks = cur.ch.map((id) => YY.lookOf(id)); this.charIds = cur.ch.slice(); } }
       while (this.pendingEvents.length && this.pendingEvents[0].t <= this.renderStamp) {
         this.events.push(...this.pendingEvents.shift().events);

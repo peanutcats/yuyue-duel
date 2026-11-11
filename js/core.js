@@ -4,7 +4,20 @@
 (function (G) {
   'use strict';
   const YY = (G.YY = G.YY || {});
-  YY.PHYSICS_VERSION = 6;
+  YY.PHYSICS_VERSION = 24;
+  // Free matches use these presets; story and training retain their own goals.
+  YY.SCORE_RULES = Object.freeze({7: 11, 15: 21, 21: 30});
+  YY.matchFormat = value => {
+    const target = [7, 15, 21].includes(Number(value)) ? Number(value) : 7;
+    return {target, cap: YY.SCORE_RULES[target]};
+  };
+  YY.MATCH_VENUES = ['arena', 'sunset', 'neon', 'bamboo', 'harbor', 'aurora'];
+  YY.hitTier = q => q >= .85 ? 'perfect' : q < .4 ? 'strained' : 'normal';
+  YY.staminaState = p => {
+    const value = Math.max(0, Math.min(100, p.stamina ?? 100));
+    const recovering = value < 99.5 && p.onGround && Math.hypot(p.vx || 0, p.vz || 0) < .6 && !p.swing && !p.shotQueue3D && (p.stamDelay || 0) <= 0;
+    return {value, recovering, low: value < 30, color: value < 30 ? '#ff927b' : value < 60 ? '#ffd37a' : '#79e4bd', label: recovering ? '恢复中' : value < 30 ? '疲劳' : value < 60 ? '调整呼吸' : '体力充沛'};
+  };
 
   // Host services are supplied by the browser or the WeChat entry point.
   YY.platform = YY.platform || {
@@ -46,7 +59,7 @@
     STAM_TURN: 4.5,     // 全速急停折返一次的消耗
     STAM_LUNGE: 3,      // 跑动中弓步够球 / 下手救低球
     STAM_POWER: 2,      // 高远、挑球、推后场等发力球（后场再加一点）
-    STAM_REST: 7,       // 回合中站稳（基本不动）每秒恢复
+    STAM_REST: 8.5,       // 回合中站稳（基本不动）每秒恢复
     STAM_MOVE_REGEN: 1.2, // 回合中移动、发球准备时每秒恢复
     STAM_POINT: 34,     // 每分结束后恢复量（不是回满）
     STAM_FRESH: 60,     // 高于此值没有疲劳惩罚
@@ -54,9 +67,11 @@
     SW_W0: 0.035,       // 挥拍有效窗口起点
     SW_W1: 0.205,       // 挥拍有效窗口终点
     SW_SWEET: 0.11,     // 最佳击球时刻
-    SW_DUR: 0.3,        // 普通挥拍总时长（含收拍）
-    SW_SMASH_DUR: 0.44, // 重杀保留完整随挥，但更快衔接回位
-    SW_BUFFER: 0.13,    // 收拍将结束时，短暂保留最近一次击球按键
+    SW_DUR: 0.34,        // 普通挥拍总时长（含收拍）
+    SW_SMASH_DUR: 0.48, // 重杀保留完整随挥，但更快衔接回位
+    SWING_COST: 2.8, SWING_POWER_COST: 3.8, SWING_MISS_COST: 1.2,
+    SW_RECOVER: .05, SW_MISS_RECOVER: .14,
+    SW_BUFFER: 0.09,    // 收拍将结束时，短暂保留最近一次击球按键
     JUMP_BUFFER: 0.14,  // 即将落地 / 落地缓冲期间保留一次起跳输入
     SMASH_MIN_Y: 2.45,  // 扣杀最低击球点
 
@@ -119,6 +134,23 @@
 
   /** 推进一步羽毛球物理；返回 'net' | 'floor' | null。
    * env（可选）：{ drag: 阻力系数（高原空气稀薄更小）, wind: 水平风速 m/s（+x 吹向右场） } */
+  // Rotation develops through the net. Live flight and prediction share this field.
+  YY.curveWeight = function(x, curve) {
+    const u = YY.clamp((x * curve.dir + .35) / 1.8, 0, 1);
+    return .12 + .88 * u * u * (3 - 2 * u);
+  };
+  // Folded paper changes drag and lift along the real flight. Keeping the
+  // stages spatial makes simulation, prediction and both camera modes agree.
+  YY.paperAero = function(x,paper) {
+    if(!paper)return {drag:1,gravity:1,wing:0,fold:0};
+    const smooth=(a,b,v)=>{const u=YY.clamp((v-a)/(b-a),0,1);return u*u*(3-2*u);};
+    const d=x*paper.dir;
+    const open=paper.glide?smooth(.08,.62,d):0;
+    const fold=paper.glide?smooth(paper.foldAt,paper.foldAt+.64,d):0;
+    const wing=open*(1-fold);
+    return {drag:(paper.dart?.46:1)*(1-.3*wing)+fold*1.65,
+      gravity:1-.78*wing+.68*fold,wing,fold};
+  };
   YY.stepShuttle = function (s, dt, env) {
     s.stepTime = 0;
     if (!Number.isFinite(dt) || dt <= 0) return null;
@@ -130,16 +162,19 @@
     const ceil = env && env.ceil; // 重力翻转的球最高飘到这里，悬停等着落
     let remaining = dt, result = null;
     while (remaining > 1e-10) {
-      const g = gFar && s.x * gFar.side > 0 ? g0 * gFar.m : g0;
+      const aero=env?.paper?YY.paperAero(s.x+s.vx*Math.min(remaining,C.DT)*.5,env.paper):null;
+      const g = (gFar && s.x * gFar.side > 0 ? g0 * gFar.m : g0)*(aero?.gravity??1);
       const rx = s.vx - wind, speed = Math.hypot(rx, s.vy);
       // Midpoint integration preserves ballistic motion without drag and is
       // substantially less step-size dependent than the previous Euler update.
       // Small substeps also prevent strong drag from reversing the velocity.
-      const h = Math.min(remaining, C.DT, 0.2 / Math.max(1e-9, drag * speed));
-      const k = drag * speed;
-      const mx = s.vx - k * rx * h / 2, my = s.vy + (-g - k * s.vy) * h / 2;
-      const mk = drag * Math.hypot(mx - wind, my);
-      const vx = s.vx - mk * (mx - wind) * h, vy = s.vy + (-g - mk * my) * h;
+      const air=drag*(aero?.drag??1);
+      const h = Math.min(remaining, C.DT, 0.2 / Math.max(1e-9, air * speed));
+      const spin=env?.curve ? env.curve.lift * env.curve.dir * YY.curveWeight(s.x, env.curve) : YY.clamp(Number(env?.spin)||0,-1.5,1.5);
+      const k = air * speed;
+      const mx = s.vx + (-k * rx-spin*s.vy) * h / 2, my = s.vy + (-g - k * s.vy+spin*rx) * h / 2;
+      const mk = air * Math.hypot(mx - wind, my);
+      const vx = s.vx + (-mk * (mx - wind)-spin*my) * h, vy = s.vy + (-g - mk * my+spin*(mx-wind)) * h;
       const px = s.x, py = Math.max(C.SHUTTLE_R, s.y);
       const x = px + mx * h, y = py + my * h;
       const floor = y <= C.SHUTTLE_R ? clampFraction((py - C.SHUTTLE_R) / Math.max(1e-12, py - y)) : null;
