@@ -1,7 +1,7 @@
 /* Web 入口：赛前模式选择、教学、房主模式同步。 */
 (function(G){
   'use strict';const Y=G.YY,A=G.App;if(!A)return;
-  A.setCourtMode=function(mode){this.settings.courtMode=Y.cleanCourtMode(mode);try{localStorage.setItem('yuyue.courtMode',JSON.stringify(this.settings.courtMode));}catch(_){}document.querySelectorAll('[data-court-mode]').forEach(b=>{const on=b.dataset.courtMode===this.settings.courtMode;b.classList.toggle('on',on);b.setAttribute('aria-pressed',String(on));});document.querySelectorAll('.court3d-note').forEach(p=>p.hidden=this.settings.courtMode!=='3d');};
+  A.setCourtMode=function(mode){this.settings.courtMode=Y.cleanCourtMode(mode);try{Y.platform.setStorage('yuyue.courtMode',JSON.stringify(this.settings.courtMode));}catch(_){}document.querySelectorAll('[data-court-mode]').forEach(b=>{const on=b.dataset.courtMode===this.settings.courtMode;b.classList.toggle('on',on);b.setAttribute('aria-pressed',String(on));});document.querySelectorAll('.court3d-note').forEach(p=>p.hidden=this.settings.courtMode!=='3d');};
   for(const id of['ai','friend']){
     const panel=document.querySelector('#scr-'+id+' .panel');if(!panel)continue;
     const choice=document.createElement('div');choice.className='court-mode-picker';choice.setAttribute('role','group');choice.setAttribute('aria-label','对战模式');

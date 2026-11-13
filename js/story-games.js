@@ -110,10 +110,10 @@
   if(a.game==='baozi')return[{id:'left',text:'←',x:46,y:379,w:108,h:61},{id:'right',text:'→',x:164,y:379,w:108,h:61},{id:'jump',text:'垫步 · 空格',x:720,y:379,w:188,h:61}];
   return[{id:'ruibao',text:a.team.ruibao?'✓ 瑞宝藏好了':'瑞宝留在阴影',x:55,y:13,w:213,h:43},{id:'houzi',text:a.team.houzi?'✓ 猴子关麦了':'让猴子关闭直播',x:281,y:13,w:213,h:43},...['left','up','down','right'].map((id,i)=>({id,text:{left:'←',up:'↑',down:'↓',right:'→'}[id],x:462+i*113,y:426,w:101,h:43}))];
  };
- Y.drawStoryGame=function(g,a,x,y,w,h){
+ Y.drawStoryGame=function(g,a,x,y,w,h,theme){
   const sx=w/CW,sy=h/CH;g.save();g.translate(x,y);g.scale(sx,sy);g.beginPath();g.rect(0,0,CW,CH);g.clip();
-  const box=(x,y,w,h,c,stroke)=>{Y.rr(g,x,y,w,h,5);g.fillStyle=c;g.fill();if(stroke){g.strokeStyle=stroke;g.lineWidth=2;g.stroke();}},text=(s,x,y,size=22,c='#f5f7fc',align='left')=>{g.font=`500 ${size}px "PingFang SC","Microsoft YaHei",sans-serif`;g.fillStyle=c;g.textAlign=align;g.textBaseline='middle';g.fillText(s,x,y);},line=(points,c='#dbcca8',width=2)=>{g.beginPath();points.forEach((p,i)=>i?g.lineTo(...p):g.moveTo(...p));g.strokeStyle=c;g.lineWidth=width;g.stroke();},oval=(x,y,rx,ry,c)=>{g.beginPath();g.ellipse(x,y,rx,ry,0,0,TAU);g.fillStyle=c;g.fill();};
-  if(!a.backdrop){const cv=Y.platform.createCanvas();cv.width=CW;cv.height=CH;Y.paintStoryArt(cv.getContext('2d'),({stringing:'stringing',baozi:'bakery',sorting:'goosefarm',stealth:'warehouse'})[a.game],0,0,CW,CH);a.backdrop=cv;}g.drawImage(a.backdrop,0,0);box(0,0,CW,CH,'#08142cba');
+  const box=(x,y,w,h,c,stroke)=>{Y.rr(g,x,y,w,h,5);g.fillStyle=c;g.fill();if(stroke){g.strokeStyle=stroke;g.lineWidth=2;g.stroke();}},text=(s,x,y,size=22,c='#f5f7fc',align='left')=>{if(theme)c=({'#f5f7fc':theme.text,'#c2cce0':theme.sub,'#ffcf4a':theme.gold,'#5fd4ff':theme.cyan,'#a6c6e5':theme.sub,'#9eb8d9':theme.dim,'#d9eeff':theme.text,'#acbdd6':theme.dim})[c]||c;g.font=`500 ${size}px "PingFang SC","Microsoft YaHei",sans-serif`;g.fillStyle=c;g.textAlign=align;g.textBaseline='middle';g.fillText(s,x,y);},line=(points,c='#dbcca8',width=2)=>{g.beginPath();points.forEach((p,i)=>i?g.lineTo(...p):g.moveTo(...p));g.strokeStyle=c;g.lineWidth=width;g.stroke();},oval=(x,y,rx,ry,c)=>{g.beginPath();g.ellipse(x,y,rx,ry,0,0,TAU);g.fillStyle=c;g.fill();};
+  if(!a.backdrop){const cv=Y.platform.createCanvas();cv.width=CW;cv.height=CH;Y.paintStoryArt(cv.getContext('2d'),({stringing:'stringing',baozi:'bakery',sorting:'goosefarm',stealth:'warehouse'})[a.game],0,0,CW,CH);a.backdrop=cv;}g.drawImage(a.backdrop,0,0);box(0,0,CW,CH,theme?theme.bg+'ba':'#08142cba');
   if(a.game==='stringing'){
    for(let i=0;i<16;i++)line([[i*67,0],[i*67,480]],'#5fd4ff15',1);
    oval(448,211,158,180,'#86b1d4');oval(448,211,147,169,'#142845');g.strokeStyle='#e2f3ff';g.lineWidth=8;g.stroke();line([[450,391],[458,475]],'#ffc94c',16);
@@ -124,7 +124,7 @@
    text(tie?'收尾':a.n<a.pulls/2?'先竖':'再横',97,109,37);text(tie?'轻拉 · 打结':(a.n+1)+' / '+a.pulls+' 组',97,156,22,'#a6c6e5');
    const by=199,bx=694,bw=205,target=a.step.tension||24;
    text(tie?'收结力度':'目标张力',697,87,17,'#9eb8d9');text(tie?'轻拉半秒':target+' 磅',697,128,tie?33:45);
-   box(bx,by,bw,16,'#0b142b');
+   box(bx,by,bw,16,theme?.panelBot||'#0b142b');
    if(tie){box(bx+.4/1.6*bw,by,.65/1.6*bw,16,'#41bb95');const px=bx+a.tieTime/1.6*bw;line([[px,by-9],[px,by+30]],'#fff0ac',3);text(a.holding?a.tieTime.toFixed(1)+' 秒':'绿区松开，完成收尾',bx,by+58,23,'#d9eeff');g.strokeStyle='#ffcf4a';g.lineWidth=4;g.beginPath();g.ellipse(448,378,24,12,0,0,TAU);g.stroke();}
    else{box(bx+(target-1-18)/15*bw,by,bw*2/15,16,'#41bb95');const px=bx+(a.force-18)/15*bw;line([[px,by-9],[px,by+30]],'#fff0ac',3);text(a.force.toFixed(1)+' lb',bx,by+58,26,a.force>30?'#ff5d6c':'#d9eeff');}
    for(let i=0;i<3;i++){const active=tie?2:a.n<a.pulls/2?0:1;box(77+i*103,430,91,27,i===active?'#ffcf4a':'#233b59');text(['竖线成组','横线交织','轻拉打结'][i],122+i*103,444,14,i===active?'#172039':'#acbdd6','center');}
@@ -144,8 +144,8 @@
    const scan=2.06+Math.sin(a.t*.61)*.82;g.beginPath();g.moveTo(822,56);g.arc(822,56,780,scan-.2,scan+.2);g.closePath();g.fillStyle='#ffcf4a38';g.fill();oval(822,56,13,13,'#fff0b9');
    box(844,76,56,88,'#287e9a');text('后门',872,104,17,'#e4faff','center');oval(a.player.x,a.player.y,15,15,a.alarm>0?'#ff5d6c':'#ffcf4a');oval(a.player.x,a.player.y-4,7,8,'#f1c8a7');oval(a.player.x,a.player.y-10,8,4,'#24374f');if(a.coverAt(a.player)){g.strokeStyle='#5fd4ff';g.lineWidth=1.5;g.beginPath();g.arc(a.player.x,a.player.y,23,0,TAU);g.stroke();}line([[65,462],[405,462]],'#365477',3);line([[65,462],[65+340*clamp((a.player.x-91)/760,0,1),462]],'#5fd4ff',3);text(a.coverAt(a.player)?'阴影中 · 等灯扫过':'移动中 · 找下一处阴影',232,438,17,'#c2d8ec','center');if(a.target){g.strokeStyle='#5fd4ff88';g.beginPath();g.arc(a.target.x,a.target.y,9,0,TAU);g.stroke();}if(a.alarm>0){box(0,0,960,480,'#ff5d6c22');text('回到阴影',480,200,42,'#ffd1d5','center');}
   }
-  if(!a.started){box(0,0,960,480,'#070f24d9');text({stringing:'先竖，后横。别绷得太紧。',baozi:'一笼包子的早高峰',sorting:'一根也不能混',stealth:'手电扫过来之前'}[a.game],480,157,41,'#f5f7fc','center');text({stringing:'成组穿线 → 张力校准 → 轻拉收结。空格可代替拖动。',baozi:'三张小订单，各送三个。听“接！”垫步，追着金色落点接。',sorting:'看弯曲方向和缺口，抽检一根，整组四根归入同一个筐。',stealth:'点地面移动。货架的阴影能藏住你，先照顾好队友。'}[a.game],480,221,21,'#c2cce0','center');}
-  if(a.done){box(0,0,960,480,'#0a1633e8');text({stringing:'嗒。线穿好了。',baozi:'三单送完，热气还在。',sorting:'十六根，都在。',stealth:'后门开着。'}[a.game],480,155,47,'#ffcf4a','center');text(a.game==='baozi'?'接住 '+a.caught+' 个 · 完美垫步 '+a.perfect+' 次':'失误 '+a.errors+' 次 · 每一次重来都算数',480,222,22,'#c2cce0','center');}
+  if(!a.started){box(0,0,960,480,theme?theme.bg+'e9':'#070f24d9');text({stringing:'先竖，后横。别绷得太紧。',baozi:'一笼包子的早高峰',sorting:'一根也不能混',stealth:'手电扫过来之前'}[a.game],480,157,41,'#f5f7fc','center');text({stringing:'成组穿线 → 张力校准 → 轻拉收结。空格可代替拖动。',baozi:'三张小订单，各送三个。听“接！”垫步，追着金色落点接。',sorting:'看弯曲方向和缺口，抽检一根，整组四根归入同一个筐。',stealth:'点地面移动。货架的阴影能藏住你，先照顾好队友。'}[a.game],480,221,21,'#c2cce0','center');}
+  if(a.done){box(0,0,960,480,theme?theme.bg+'e8':'#0a1633e8');text({stringing:'嗒。线穿好了。',baozi:'三单送完，热气还在。',sorting:'十六根，都在。',stealth:'后门开着。'}[a.game],480,155,47,'#ffcf4a','center');text(a.game==='baozi'?'接住 '+a.caught+' 个 · 完美垫步 '+a.perfect+' 次':'失误 '+a.errors+' 次 · 每一次重来都算数',480,222,22,'#c2cce0','center');}
   g.restore();return{x,y,w,h};
  };
  Object.assign(Y.storyActions,{

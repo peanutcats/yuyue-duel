@@ -67,7 +67,7 @@
  // Original instrumental score. No speech synthesis or retired voice assets.
  const A=Y.Audio;let score=null,epoch=0;const foley=new Set();
  A.storySilence=function(){epoch++;if(score){score.pause();score.src='';score=null;}};
- A.storyTheme=function(count){this.storySilence();if(!this.enabled)return;score=new Audio('assets/story/sixteen/audio/summer-'+Math.max(2,Math.min(16,Math.ceil(count/2)*2))+'.wav');score.volume=.32;score.play().catch(()=>{});};
+ A.storyTheme=function(count){this.storySilence();if(!this.enabled||!this.musicEnabled)return;score=new Audio('assets/story/sixteen/audio/summer-'+Math.max(2,Math.min(16,Math.ceil(count/2)*2))+'.wav');score.volume=.32;score.play().catch(()=>{});};
  A.storyAction=function(name){if(!this.enabled)return;if(['clamp','enter','intent','snap','bun','prediction','river','goose'].includes(name)){const audio=new Audio('assets/story/sixteen/audio/story-'+name+'.wav');audio.volume=.28;foley.add(audio);audio.onended=()=>foley.delete(audio);audio.play().catch(()=>foley.delete(audio));}else if(this.ok()){if(name==='paper')this.burst(1800,1,.17,.035);else if(name==='rain')this.burst(1200,1,.8,.025);else this.tone(330,.09,.035,'triangle');}};
  document.addEventListener('visibilitychange',()=>{if(document.hidden){A.storySilence();for(const a of foley)a.pause();foley.clear();app.storyGame?.cancel();}});
  G.addEventListener('blur',()=>app.storyGame?.cancel());

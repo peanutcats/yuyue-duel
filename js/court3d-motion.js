@@ -76,10 +76,11 @@
     const weight=shot?.weight||0,act=Y.CharacterArt?.acting(opt.look),rest=1-(shot?.weight||0),glide=(p.cnt?.ribbon?.dash?Math.sin(Math.PI*(1-p.cnt.ribbon.dash.t/.3)):0)||p.cnt?.nv?.movePose?.w||(p.cnt?.club?.dash?Math.sin(Math.PI*clamp(1-p.cnt.club.dash.t/.27,0,1)):0),turn=p.cnt?.nv?.turnPose||0;
     const lateral=((hit?.z??s.z??p.z)-p.z)*p.dir;
     const backhand=1-smooth((lateral+.36)/.44),hand=backhand>.5?-1:1;
-    const root=[p.x,p.y,p.z],toWorld=(x,y,z,yaw=0)=>[
+    const spinAngle=!p.onGround?(p.cnt?.nv?.turnAngle||0):0;
+    const root=[p.x,p.y,p.z],toWorld=(x,y,z,yaw=spinAngle)=>[
       p.x+p.dir*(x*Math.cos(yaw)-z*Math.sin(yaw)),p.y+y,p.z+p.dir*(x*Math.sin(yaw)+z*Math.cos(yaw))
     ];
-    const rotate=v=>[p.dir*v[0],v[1],p.dir*v[2]];
+    const rotate=v=>[p.dir*(v[0]*Math.cos(spinAngle)-v[2]*Math.sin(spinAngle)),v[1],p.dir*(v[0]*Math.sin(spinAngle)+v[2]*Math.cos(spinAngle))];
     const incomingYaw=sw?Math.atan2(lateral,Math.max(1.8,((hit?.x??s.x)-p.x)*p.dir))*.2*weight:0;
     const torsoYaw=clamp(incomingYaw+turn*.55+(!sw&&action?action.yaw*action.e:0)+(shot?.chestYaw||0)*.65*lerp(1,-.65,backhand),-.9,.9);
     const pelvisYaw=clamp(turn*.2+(shot?.hipYaw||0)*.4*lerp(1,-.65,backhand),-.27,.27);
@@ -118,7 +119,7 @@
         z=side*(width+.015*tuck);
       }
       z=side*Math.max(.15,side*z);
-      feet.push(toWorld(x,y,z,pelvisYaw));rolls.push(step.roll*stride);
+      feet.push(toWorld(x,y,z,pelvisYaw+spinAngle));rolls.push(step.roll*stride);
     }
     const [F1,F2]=feet;
     // Mirror the pelvis and feet together. Separate knee poles keep knees over
@@ -184,7 +185,7 @@
       const u=p.buff.dive>0?1:.65;for(const v of[H1,H2,S1,S2,N,hd,E,E2,W,W2,headR]){v[0]+=forward[0]*(v[1]-p.y)*.6*u;v[2]+=forward[2]*(v[1]-p.y)*.6*u;v[1]=p.y+(v[1]-p.y)*.4;}
       racketAxis=norm(sub(headR,W));
     }
-    const result={face:shot?.face||1,H1,H2,S1,S2,K1,K2,F1,F2,W,E,W2,E2,hd,N,headR,racketAxis,forward,across,stanceForward,stanceAcross,footRoll:rolls,hand,backhand,style,torsoYaw,pelvisYaw,power,reach,run,phase,near:p.side<0,armStretch:arm.stretch,pose:{Rk:Math.atan2(racketAxis[1],racketAxis[0]),motion:shot}};
+    const result={spinAngle,face:shot?.face||1,H1,H2,S1,S2,K1,K2,F1,F2,W,E,W2,E2,hd,N,headR,racketAxis,forward,across,stanceForward,stanceAcross,footRoll:rolls,hand,backhand,style,torsoYaw,pelvisYaw,power,reach,run,phase,near:p.side<0,armStretch:arm.stretch,pose:{Rk:Math.atan2(racketAxis[1],racketAxis[0]),motion:shot}};
     if(sw?.fromStyle&&sw.contact&&(sw.fromStyle!==style||sw.fromDur!==sw.dur)&&st<sw.contact.t+.075){
       const previous=Y.courtPose3D({...p,swing:{...sw,style:sw.fromStyle,dur:sw.fromDur||sw.dur,fromStyle:null}},m,time,opt),u=smooth((st-sw.contact.t)/.075);
       for(const key of['H1','H2','S1','S2','K1','K2','F1','F2','W','E','W2','E2','hd','N','headR'])result[key]=mix(previous[key],result[key],u);

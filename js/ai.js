@@ -98,7 +98,7 @@
     canglan: { name: '耐心拉锯', tip: '深高远过渡，体力充足才进攻', weakness: '提前上网，抢他的保守过渡球', clear: 1.9, drop: .8, smash: .6, jump: .65, home: .35, delay: .04, read: .8, reserve: 55 },
     xiaohong: { name: '抢点强攻', tip: '抢高点连杀，主动前压', weakness: '接杀挡网，利用他重杀后的回位空当', clear: .65, drop: .75, smash: 2.6, jump: 1.35, home: -.15, delay: .25, read: .55 },
     ranran: { name: '网前牵制', tip: '偏爱轻吊与网前球，守在前场', weakness: '深高远压后场，再突然吊网前', clear: .7, drop: 2.8, smash: .35, jump: .35, home: -.65, delay: .07, read: .7 },
-    ruibao: { name: '稳守反击', tip: '接杀稳住，多打高远等待失误', weakness: '连续前后调动，别只用蛮力扣杀', clear: 2, drop: 1.1, smash: .45, jump: .4, home: .25, delay: .1, read: .7, reserve: 50 },
+    ruibao: { name: '锅台连携', tip: '地板起锅选长短，回锅保馅后连续反攻', weakness: '提早截击回旋球，调动两侧，跳过地面震波', clear: 2, drop: 1.1, smash: .45, jump: .4, home: .25, delay: .05, read: .8, reserve: 35 },
     xingxing: { name: '追网抢攻', tip: '吊球后跟进，抢网前高球', weakness: '等她前压，再推挑到后场', clear: .8, drop: 2.1, smash: .85, jump: .65, home: -.45, delay: 0, read: .8 },
     dingding: { name: '快节奏调动', tip: '前后交替，偏爱平快球路', weakness: '高远拉长节奏，等他提前前压', clear: 1.3, drop: 1.4, smash: .7, jump: .75, home: -.15, delay: 0, read: .9 },
     lu: { name: '后场突袭', tip: '先高远稳住，再突然点杀', weakness: '贴网短球让他离开舒服的后场', clear: 1.5, drop: .65, smash: 1.5, jump: .8, home: .6, delay: .14, read: .65 },
@@ -157,11 +157,12 @@
         return true;
       }
       if(this.blindClub){this.blindClub=false;this.plan=null;this.reactAt=m.time+this.L.react*.35;this.react3D=this.reactAt;}
-      const d=m.players[1-this.i].cnt?.club?.decoy;
+      const d=this.opponent().cnt?.club?.decoy;
       if(d&&this.clubDecoyHit!==m.hitCount){this.clubDecoyHit=m.hitCount;if(Math.random()>.3+this.L.read*.5)this.clubBait={x:p.side*clamp(p.side*(d.x+d.vx*.3),.7,6.2),z:clamp(d.z+(d.vz||0)*.3,-2.5,2.5),until:m.time+.16+(.8-this.L.read)*.12};}
       if(d&&this.clubBait?.until>m.time){if(m.courtMode==='3d')this.moveTo3D(this.clubBait.x,this.clubBait.z,.85);else this.moveTo(this.clubBait.x,.15);return true;}
       return false;
     }
+    opponent() { const p=this.m.players[1-this.i];return YY.teacherApparent?.(this.m,p,this.i)||p; }
     update(dt) {
       const m = this.m, p = this.p, s = m.shuttle, L = this.L;
       const inp = m.inputs[this.i];
@@ -176,7 +177,7 @@
           this.lastServeT = m.serveT;
           if (m.serveT < this.serveWait) return;
           if (!this.serveBtn) {
-            const o = m.players[1 - this.i], od = Math.abs(o.x);
+            const o = this.opponent(), od = Math.abs(o.x);
             // 战术发球：接发站得靠后就发网前，压得靠前就发后场
             if (Math.random() < L.brain * 0.8) this.serveBtn = od > 3.05 ? 'drop' : od < 2.6 ? 'clear' : Math.random() < 0.5 ? 'clear' : 'drop';
             else this.serveBtn = Math.random() < clamp(L.longServe + this.style.home * .3, .15, .85) ? 'clear' : 'drop';
@@ -201,7 +202,7 @@
           if (m.entsOf('shadow').some(e => e.o !== this.i)) this.reactAt += 0.05; // 残影晃了一下
           this.resid = gauss() * L.err * (0.3 + Math.min(1, s.speed / 18) * 0.5);
           // 体能管理：聪明的对手只在体力富余、或对手已失位时才起跳重杀
-          const o = m.players[1 - this.i], open = o.slow > 0 || !o.onGround || Math.abs(o.x) < 2.6 || o.stamina < 30;
+          const o = this.opponent(), open = o.slow > 0 || !o.onGround || Math.abs(o.x) < 2.6 || o.stamina < 30;
           const reserve = Math.max(this.style.reserve || 0, L.brain * (open ? 22 : 48));
           this.wantSmash = toss || (Math.random() < clamp(L.smash * this.style.jump, 0, .95) && p.stamina >= reserve);
         } else this.setHome();
@@ -338,7 +339,7 @@
      * 返回按键（可同时设定 this.shotMod 改变球路细节）；没有明确机会时返回 null，交给常规判断。
      */
     brainShot(pl) {
-      const m = this.m, p = this.p, L = this.L, o = m.players[1 - this.i];
+      const m = this.m, p = this.p, L = this.L, o = this.opponent();
       if (m.sk && m.sk.netUp > 0.2) return 'clear';
       if (m.ents && m.ents.length) return null; // 场上有技能装置：交给原有的针对逻辑
       const oD = Math.abs(o.x), oV = o.vx * o.dir; // oV > 0：对手正在向网前移动
@@ -385,7 +386,7 @@
 
     basicShot(pl) {
       const m = this.m, p = this.p, L = this.L;
-      const opp = m.players[1 - this.i];
+      const opp = this.opponent();
       const oppD = Math.abs(opp.x);
       const d = Math.abs(pl.x != null ? pl.x : p.x);
       const myLast = m.history[this.i].slice(-2);
@@ -450,7 +451,7 @@
     }
     /** 发球前押注：先保留下一分的基本流动资金，不在负债时盲目加注。 */
     thinkPre() {
-      const m = this.m, p = this.p, o = m.players[1 - this.i];
+      const m = this.m, p = this.p, o = this.opponent();
       if (this.storySkillInterval && m.time < (this.storySkillAt ?? this.storySkillInterval)) return;
       if (this.preDone === m.score.join()) return;
       this.preDone = m.score.join();
@@ -461,7 +462,7 @@
 
     /** 何时发动技能：先处理正在进行中的第二段，再按每个技能的使用时机判断 */
     thinkSkill(incoming) {
-      const m = this.m, p = this.p, s = m.shuttle, pl = this.plan, o = m.players[1 - this.i], b = p.buff, c = s.ctl;
+      const m = this.m, p = this.p, s = m.shuttle, pl = this.plan, o = this.opponent(), b = p.buff, c = s.ctl;
       const has = (id) => p.kit.act.includes(id);
       const planGap=pl?Math.hypot(pl.standX-p.x,m.courtMode==='3d'?(pl.standZ??p.z)-p.z:0):0;
       // 先准备、正常挥拍；二段移动拥有数秒窗口。
@@ -528,17 +529,20 @@
       }
       // 水中月：过网后挑个时机变轨
       if (m.entOf('ripple', this.i)) return this.castId('shuizhong', o.side*o.x > 3.2 ? 1 : -1);
+      // Outlet choices are committed on the press, before the ball changes lane.
+      const cookAim=()=>{const x=o.side*o.x>3.3?1:-1;if(m.courtMode==='3d'){m.inputs[this.i].move=x;m.inputs[this.i].strafe=clamp(((o.z||0)>0?-1.6:1.6)-(s.z||0),-1,1)*.55;}return{x,y:0};};
+      if(s.slam?.o===this.i&&s.slam.n>0&&!s.slam.outlet&&has('diban'))return this.castId('diban',cookAim());
       // 回锅再炒：对手已经在落点等好、或者压上来抢截，就趁他碰到之前收回来
       if (s.wok && s.wok.o === this.i && !s.wok.used && s.lastHitter === this.i && !c) {
         const gap = m.racketGap(o, s.x, s.y), lx = m.pred ? m.pred.landX : s.x;
         const ready = Math.abs(o.x - (lx - o.dir * 0.6)) < 0.8 || (o.side * o.x < 2.2 && o.side * lx > 3.2);
-        if (gap > 1.7 && gap < 3.4 && ready) return this.castId('huiguo');
+        if(gap>1.7&&(gap<3.8&&ready||s.crossedNet&&this.SL.combo&&(s.bun||s.cookShot?.kind==='diban')))return this.castId('huiguo');
       }
       // 超大肉包球：自己的球飞到对面开始下落、对手已经站定，就把吸收的动能放出去
       if (s.bun && s.bun.o === this.i && s.live) {
-        if (incoming && this.SL.combo && has('diban') && !m.castCheck(p,'diban')) return this.castId('diban');
+        if(incoming&&this.SL.combo&&has('diban')&&m.panContact(p)&&!b.panReady) return this.castId('diban');
         const gap = m.racketGap(o, s.x, s.y);
-        if (s.lastHitter === this.i && s.crossedNet && gap > 1.6 && (s.bun.st > 6 || s.bun.t < .6) && m.bunFling(p)) return this.castId('baozi');
+        if(s.lastHitter===this.i&&!c&&gap>1.7&&m.time-(s.hitAt||0)>.12&&(s.crossedNet||s.bun.t<2)&&m.bunFling(p))return this.castId('baozi',cookAim());
       }
       // 伸缩长拍：拍头碰到球就出手
       const pole = m.entOf('pole', this.i);
@@ -607,9 +611,9 @@
           return !m.entOf('clone', this.i) && (lost ? close(1.6) : pl && pl.band === 'low' && close(1.2) && p.stamina > 35 && once('jieli', .35));
         },
         zangshu: () => afterHit && !s.crossedNet && m.time - (s.hitAt || 0) < 0.35 && once('zangshu', .6),
-        diban: () => incoming && s.crossedNet && p.onGround && s.y > 0.5 && s.y < 2.2 && close(1.3) && pl && pl.band !== 'none' && pl.band !== 'smash' && (o.side * o.x < 2.2 || o.side * o.x > 3.8) && once('diban', 0.4), // 对手站位偏了才用
-        huiguo: () => afterHit && !s.crossedNet && p.onGround && p.stamina>40 && (s.bun || cat === 'clear' || cat === 'drop') && pred && Math.abs(o.x-pred.landX)<1.8 && m.time-(s.hitAt||0)<.45 && once('huiguo',.5),
-        baozi: () => !s.bun && ((incoming && s.crossedNet && lost && s.y > .8) || afterHit && !s.crossedNet && m.time - (s.hitAt || 0) < 0.3 && (s.speed > 12 || cat === 'clear') && once('baozi', 0.5)), // 救球，或包住自己的重球蓄力
+        diban:()=>!b.panReady&&!s.slam&&(incoming&&landMine&&close(3.5)||s.selfToss===this.i)&&once('diban',.7),
+        huiguo:()=>!b.wokReady&&!s.wok&&!c&&(incoming&&landMine||afterHit&&!s.crossedNet)&&(s.bun||s.cookShot||once('huiguo',.6)),
+        baozi:()=>!b.bunReady&&!s.bun&&!m.entOf('bunFly',this.i)&&(incoming&&landMine&&s.y>.7||afterHit&&!s.crossedNet)&&once('baozi',.7),
         yueliang: () => incoming && landMine && !!this.moonAim(),
         xingmen: () => incoming && pl && pl.band !== 'none' && once('xingmen', .6),
         zhongli: () => !(b.gravOn > 0) && s.live && s.grav && !s.ctl && p.energy > 30 && (
@@ -622,7 +626,7 @@
         haomao: () => afterHit && !m.entOf('mini', this.i) && (p.stamina < 55 || Math.abs(p.x) > 3.5 || once('haomao', .4)),
         yati: () => afterHit && (cat === 'clear' || s.y > 2.6 || (this.oppZones || []).filter(z => !z).length >= 2) && once('yati', 0.5), // 送了高球、对手要进攻时
         yueqiu: () => afterHit && once('yueqiu', 0.4),
-        shuangji: () => (incoming && lost && s.crossedNet) || (afterHit && cat === 'drop' && once('shuangji', 0.3)),
+        shuangji: () => afterHit && Math.abs(o.vx)>1.3 && once('shuangji',.65) || incoming && once('shuangji',.3),
         // 果哥：有余钱、自己占优时押注；对手站稳在地上时撒红包；拿到能压的机会球前开金砖
         ganggan: () => !!p.market && !p.market.bet && afterHit && p.market.coins > 240 && o.stamina < 45 && once('ganggan', .45),
         jiepan: () => !!p.market && afterHit && o.onGround && p.market.coins >= (this.SL.combo ? 90 : 160) && once('jiepan', .45),
@@ -630,9 +634,9 @@
         jingxiang: () => afterHit && Math.abs(s.x - s.hitX) < 2.2 && s.y > 1.2,
         meida: () => incoming && s.crossedNet && pl && pl.band !== 'smash' && pl.band !== 'none' && s.y < 2.2 && close(1.4) && p.stamina > 30 && p.onGround,
         shuizhong: () => afterHit && (cat === 'clear' || cat === 'drop'),
-        jiezou: () => (incoming && pl && pl.band !== 'none' && once('jiezou', 0.35)) || (afterHit && once('jiezou2', 0.2)),
+        jiezou: () => p.onGround && ((incoming && once('jiezou', .5)) || afterHit && once('jiezou2', .25)),
         biaozhi: () => afterHit && (cat === 'drop' || cat === 'clear') && o.onGround,
-        tingyixia: () => incoming && s.crossedNet && pl && pl.band !== 'smash' && pl.band !== 'none' && close(1.5) && once('tingyixia', 0.5),
+        tingyixia: () => (incoming && pl && pl.band!=='none' || afterHit) && once('tingyixia',.6),
       };
       const zs = this.oppZones || [], front = zs.filter(Boolean).length * 2 > zs.length;
       const r3 = () => [1, 0, -1][Math.floor(Math.random() * 3)];
@@ -685,7 +689,8 @@
     skillAim(id, fallback) {
       const m=this.m,p=this.p,s=m.shuttle;
       let v=id==='yueliang'?this.moonAim():this.devAims?.[id];
-      if(['fanshe','shuangji'].includes(id)) {
+      if(id==='shuangji')return undefined;
+      if(id==='fanshe') {
         const t=m.skillTarget(p,id,{manual:false}), range=id==='fanshe'?3.3:4.2;
         return {x:((t.x-p.x)*p.dir+gauss()*this.SL.precision)/range,y:(t.y-p.y-1.35+gauss()*this.SL.precision)/range};
       }
@@ -748,7 +753,7 @@
         }
         if (p.stamina < 30) h = YY.lerp(h, 3.1, 0.6);
       }
-      const market=m.players[1-this.i].market;
+      const market=this.opponent().market;
       if(market && market.tier>=4 && market.coins>0) h=YY.lerp(h,3.5,.35); // 对手装备好：退后一点防重杀
       h = YY.lerp(Math.abs(p.x), h, L.recover);
       this.homeD = clamp(h, 1.2, 5.5);

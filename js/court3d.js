@@ -179,7 +179,8 @@
       let lateral=d.strafe;
       const locked = M0.fix || p.buff.prone > 0 || p.cnt.vine || ['over','point'].includes(this.phase) || (this.phase==='serve'&&p.idx===this.server);
       if(locked)lateral=0;
-      const accel=(p.onGround?(lateral?C.ACCEL*(lateral*oldVz<-.4?1.12:1):C.DECEL):C.AIR_ACCEL)*p.st.accel*M0.accel*(.6+.4*vig);
+      const ice=this.iceAt(p),grip=ice?(Math.abs(lateral)<.05||lateral*oldVz<0?.14:.32):1;
+      const accel=grip*(p.onGround?(lateral?C.ACCEL*(lateral*oldVz<-.4?1.12:1):C.DECEL):C.AIR_ACCEL)*p.st.accel*M0.accel*(.6+.4*vig);
       const slow=p.slow>0?1-.4*clamp(p.slow/.22,0,1):1;
       p.vz=locked?0:oldVz+clamp(lateral*this.maxSpeed(p,M0)*slow-oldVz,-accel*dt,accel*dt);
       const move=inp.move;inp.move=d.move;
@@ -303,6 +304,10 @@
     }
     rePred(hidden) {
       const s=this.shuttle, ctl=s.ctl;
+      if(s.slam&&!s.crossedNet&&!s.netHit&&!ctl){
+        const c=s.slam,p=this.players[c.o],path=Y.slamPath(s.x,s.y,s.vx,s.vy,{side:p.side,walls:this.wallsOf(c.o),boost:c.steam?1.25:1.18,floor:c.floor,env:this.physEnv()});
+        this.pred={...path,landZ:s.z,pts:path.pts.map(q=>({...q,z:s.z,vz:0})),t0:this.time,hidden:hidden??false};return;
+      }
       const src=ctl&&['freeze','warp'].includes(ctl.k)?{...s,vx:ctl.vx,vy:ctl.vy,vz:finite(ctl.vz,s.vz)}:s;
       this.pred={...Y.simulate3D(src,this.physEnv()),t0:this.time+(ctl?.t||0),hidden:hidden??this.hintHidden()};
     }
@@ -327,7 +332,7 @@
       this._skillAim3D=manual||replayAim?.y?raw:null;
       const baseAim=manual?{x:raw.y,y:['weichui','bianpai','yipai'].includes(id)?raw.y*.55:.3}:0;
       const length=typeof baseAim==='object'?Math.max(1,Math.hypot(baseAim.x,baseAim.y)):1;
-      const result=super.useSkill(p,slot,{aim:typeof baseAim==='object'?{x:baseAim.x/length,y:baseAim.y/length}:0});
+      const result=super.useSkill(p,slot,{aim:typeof baseAim==='object'?{x:baseAim.x/length,y:baseAim.y/length}:0,...(pr?.cookTarget?{cookTarget:pr.cookTarget}:{})});
       if(result || before!==p.energy || this.eid!==old) {
         const mobility=['yuyue','tafeng','jindou','shihua','shuizhong'];
         if(mobility.includes(id)) {
@@ -342,6 +347,12 @@
     }
     skillTarget(p,id,v) {
       const at=super.skillTarget(p,id,v),raw=this._skillAim3D;
+      if(id==='shuangji'){
+        const o=this.players[1-p.idx],half=1.4,H=this.halfOf(o.idx);
+        if(raw)at.x=o.side*clamp(o.side*o.x+raw.y*2.7,half+.25,H-half-.2);
+        this._skillZ3D=clamp(raw?o.z+raw.x*2.5:o.z,-2.59+1.05,2.59-1.05);
+        return at;
+      }
       if(!raw){if(this.shuttle.live&&this.shuttle.lastHitter!==p.idx){const q=this.pred?.pts?.find(q=>q.t>this.time-(this.pred.t0||0)+.25&&q.x*p.side>.6&&q.y>.8&&q.y<3.8);if(q){this._skillZ3D=clamp(q.z,-WIDTH,WIDTH);return{x:q.x,y:q.y};}}return at;}
       at.x=p.side*clamp(p.side*p.x-finite(raw.y)*3.5,.65,this.halfOf(p.idx)-.35);
       let closest=null;
@@ -352,7 +363,7 @@
     skControl(dt) {
       const s=this.shuttle,c=s.ctl;
       if(!c)return;
-      if(this._ctl3D!==c){this._ctl3D=c;c.z0=s.z;c.vz=finite(c.vz,s.vz);if(c.k==='relay'){const cl=this.entOf('clone',c.o);c.toZ=c.to==='clone'?finite(cl?.z):finite(this.players[c.o]?.z);}if(c.k==='wok')c.toZ=finite(this.players[c.o]?.z);}
+      if(this._ctl3D!==c){this._ctl3D=c;c.z0=s.z;c.vz=finite(c.vz,s.vz);if(c.k==='relay'){const cl=this.entOf('clone',c.o);c.toZ=c.to==='clone'?finite(cl?.z):finite(this.players[c.o]?.z);}if(c.k==='wok')c.toZ??=finite(this.players[c.o]?.z);}
       const p=this.players[c.o];
       super.skControl(dt);
       if(s.ctl===c){

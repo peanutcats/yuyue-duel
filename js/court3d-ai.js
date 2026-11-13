@@ -41,7 +41,7 @@
         const t=this.plan.tContact-m.time;
         if(this.plan.jumpAt&&m.time>=this.plan.jumpAt&&p.onGround&&p.stamina>22){inp.presses.push({btn:'jump'});this.plan.jumpAt=null;}
         if(!this.fired3D&&t<=.11+lv.timing&&t>-.18&&this.plan.band!=='none'){
-          const o=m.players[1-this.i],depth=Math.abs(o.x),cross=clamp(-Math.sign(o.z||p.z||1)*(1.8+Math.random()*.5),-2.35,2.35);
+          const o=this.opponent(),depth=Math.abs(o.x),cross=clamp(-Math.sign(o.z||p.z||1)*(1.8+Math.random()*.5),-2.35,2.35);
           let btn=depth>3.7?'drop':'clear';
           if((!p.onGround||s.y>2.25)&&Math.random()<lv.smash)btn='smash';
           if(Math.random()>lv.tactical)btn=Y.pick({clear:5,drop:3,smash:2});

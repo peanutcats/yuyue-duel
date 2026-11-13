@@ -80,6 +80,7 @@
         line(g,[[-.3,.3],[-.25,.02],[-.16,-.12]],t.hot,.018);
         core(g,-.19,.03,.07,t,time);
       }else if(tier===4){
+        for(const sign of[-1,1]){g.save();g.globalAlpha=.6;plate(g,hex(-.35,.2+sign*.33,.21,Math.PI/6),'#aaffdc12',t.light,.022);g.restore();}
         for(let i=0;i<3;i++){
           const y=.32-i*.17,shift=Math.sin(time*2+i)*.02;
           plate(g,[[-.13,y+.04],[-.38-shift,y+.13],[-.48-shift,y-.02],[-.26,y-.1]],t.metal,t.light);
@@ -92,10 +93,10 @@
         ellipse(g,x,y,.33,.43,t.dark,.075);
         ellipse(g,x,y,.33,.43,t.plate,.033);
         ellipse(g,x,y,.27,.36,t.light,.018,.25);
-        ellipse(g,x,y,.36,.16,t.hot,.014,time*.8);
+        ellipse(g,x,y,.56,.19,t.hot,.018,time*.8);
         core(g,x,y,.12,t,time);
         for(let i=0;i<3;i++){
-          const a=time*.9+i*TAU/3,xx=x+Math.cos(a)*.34,yy=y+Math.sin(a)*.43;
+          const a=time*.9+i*TAU/3,xx=x+Math.cos(a)*.48,yy=y+Math.sin(a)*.56;
           plate(g,hex(xx,yy,.062,a),t.dark,t.hot,.014);disk(g,xx,yy,.022,t.light);
         }
         plate(g,[[-.14,-.22],[-.43,-.33],[-.48,-.45],[-.18,-.33]],t.plate,t.light);
@@ -123,7 +124,13 @@
     torso(g,P,look){
       const tier=look.marketTier,t=THEMES[tier];if(!t)return;
       g.save();g.translate(...P.H);g.rotate(-P.lean);
-      const width=tier===3?.18:.23;
+      if(tier===3){
+        line(g,[[-.15,.48],[.12,.03]],t.dark,.09);line(g,[[-.15,.48],[.12,.03]],t.light,.025);
+        plate(g,[[-.15,.5],[-.26,.54],[-.22,.65],[-.09,.57]],t.plate,t.light,.014);
+        plate(g,[[.05,.16],[.22,.19],[.19,-.02],[.08,-.06]],t.metal,t.light,.014);
+        core(g,-.04,.29,.06,t,0);g.restore();return;
+      }
+      const width=tier===4?.29:tier===5?.18:.25;
       plate(g,[[-width,0],[-width-.025,.35],[-.16,.52],[.15,.53],[width+.02,.34],[width,.02],[.06,-.06]],metal(g,-width,.5,width,0,t),t.dark,.02);
       plate(g,[[-width,.34],[-.12,.47],[.15,.47],[width,.34],[.05,.24],[-.08,.25]],t.plate,t.light,.013);
       plate(g,[[-.12,.25],[.1,.25],[.14,.07],[.05,.01],[-.14,.06]],t.dark,t.metal,.018);
@@ -139,7 +146,7 @@
       const tier=look.marketTier,t=THEMES[tier];if(!t)return;
       const dx=to[0]-from[0],dy=to[1]-from[1],L=Math.hypot(dx,dy);
       g.save();g.translate(...from);g.rotate(Math.atan2(dy,dx));
-      const w=kind==='shin'?.065:kind==='shoulder'?.10:.066;
+      const w=kind==='shin'?(tier===4?.095:.065):kind==='shoulder'?(tier===3?.055:tier===4?.155:.115):tier===4?.085:.06;
       const end=kind==='shoulder'?Math.min(L,.18):L*.83,start=kind==='shoulder'?-.045:L*.13;
       plate(g,[[start,-w],[end-.025,-w*.78],[end+.035,-w*.4],[end,.055],[start+.02,w],[start-.03,w*.5]],metal(g,0,-w,0,w,t),t.dark,.016);
       line(g,[[start+.018,-w*.7],[end-.015,-w*.55],[end,.002]],t.light,.016);
@@ -153,6 +160,7 @@
       plate(g,[[-.11,.015],[.015,.05],[.1,.015],[.21,.01],[.21,-.015],[-.11,-.02]],t.dark,t.light,.012);
       line(g,[[-.115,-.045],[.17,-.045],[.22,-.025]],t.hot,.018);
       for(let i=0;i<3;i++)line(g,[[.01+i*.035,.04],[.03+i*.035,.015]],t.plate,.012);
+      if(tier===4){plate(g,[[-.1,.1],[-.12,.28],[.04,.31],[.1,.09]],t.metal,t.light,.016);ellipse(g,.03,-.09,.23,.035,t.light,.016);}
       if(tier>=4){ellipse(g,-.07,.015,.042,.042,t.light,.013);disk(g,-.07,.015,.017,t.hot);}
       if(tier===5){ellipse(g,.03,-.085,.19,.025,t.light,.013);}
       if(tier===6){
@@ -169,32 +177,33 @@
       line(g,[[.14,.013],[.38*(P.rs||1),.013]],t.light,.014);
       for(let i=0;i<3;i++)line(g,[[.02+i*.035,-.028],[.04+i*.035,.025]],t.light,.009);
       g.restore();g.save();g.translate(...center);g.rotate(P.Rk);g.scale(1,P.face||1);
-      glow(g,0,0,.29*pulse,t.rgb);
-      const r=tier===3?.19:tier===4?.21:.24;
-      if(tier===3 || tier===4){
-        const pts=tier===3?[[.22,0],[.12,.14],[-.1,.15],[-.2,.06],[-.2,-.06],[-.1,-.15],[.12,-.14]]:hex(0,0,r);
-        plate(g,pts,t.dark,t.plate,.025);g.save();path(g,pts);g.clip();
-        for(let i=-3;i<=3;i++){line(g,[[-r,i*.045],[r,i*.045+.08]],t.light,.006);line(g,[[i*.055,-r],[i*.055-.06,r]],t.hot,.005);}
-        g.restore();path(g,pts);g.strokeStyle=t.light;g.lineWidth=.013;g.stroke();
-        for(const side of [-1,1])plate(g,[[-.12,side*.14],[.12,side*.14],[.18,side*.2],[-.12,side*.22],[-.22,side*.1]],t.plate,t.light,.012);
-        if(tier===4)ellipse(g,0,0,.27,.22,t.light,.012,time*.9,.2,Math.PI*1.7);
-      }else{
-        ellipse(g,0,0,r,r*.83,t.dark,.075);ellipse(g,0,0,r,r*.83,t.plate,.04);
-        ellipse(g,0,0,r*.8,r*.66,t.light,.02,0,time*2,time*2+TAU*.8);
-        ellipse(g,0,0,r*.64,r*.5,t.hot,.012,-time*1.5);
-        for(let i=0;i<4;i++){
-          g.save();g.rotate(i*Math.PI/2+(tier===5?time*.3:0));
-          plate(g,[[.17,-.05],[.27,-.07],[.32,0],[.25,.06],[.17,.05]],t.metal,t.light,.012);
-          line(g,[[.24,-.025],[.28,0],[.24,.025]],t.hot,.012);g.restore();
-        }
-        core(g,0,0,.06,t,time);
-        if(tier===6){
-          plate(g,[[-.22,-.09],[-.42,-.13],[-.3,-.025],[-.22,.025]],t.plate,t.light);
-          plate(g,[[-.22,.09],[-.42,.13],[-.3,.025],[-.22,-.025]],t.plate,t.light);
-          line(g,[[-.13,0],[.13,0]],t.hot,.013);
-        }
-      }
+      A.weaponFace(g,look,time,pulse);
       g.restore();return true;
+    },
+    weaponFace(g,look,time=0,pulse=1){
+      const tier=look.marketTier,t=THEMES[tier];if(!t)return;
+      glow(g,0,0,.36*pulse,t.rgb);
+      if(tier===3){
+        // A long asymmetrical carbon edge, visibly unlike the shield and rings.
+        plate(g,[[-.3,-.045],[.36,-.02],[.18,.13],[-.19,.16],[-.31,.08]],t.dark,t.plate,.022);
+        plate(g,[[-.26,-.04],[.36,-.02],[.13,-.105],[-.18,-.08]],t.light,t.hot,.014);
+        line(g,[[-.2,.08],[.1,.07],[.25,0]],t.hot,.018);
+      }else if(tier===4){
+        plate(g,hex(0,0,.3,Math.PI/6),t.metal,t.plate,.032);
+        plate(g,hex(0,0,.23,Math.PI/6),t.dark,t.light,.018);
+        for(let i=0;i<6;i++){const a=i*TAU/6;plate(g,hex(Math.cos(a)*.15,Math.sin(a)*.15,.067,Math.PI/6),t.metal,t.light,.009);}
+        core(g,0,0,.07,t,time);ellipse(g,0,0,.33,.33,t.light,.012,0,time,time+TAU*.65);
+      }else if(tier===5){
+        ellipse(g,0,0,.29,.29,t.plate,.035);ellipse(g,0,0,.22,.22,t.light,.018);
+        ellipse(g,0,0,.34,.13,t.hot,.014,time*.85);
+        for(let i=0;i<3;i++){const a=time*1.4+i*TAU/3,x=Math.cos(a)*.3,y=Math.sin(a)*.3;plate(g,hex(x,y,.06,a),t.dark,t.hot,.013);disk(g,x,y,.02,t.light);}
+        line(g,[[-.22,0],[.22,0]],t.light,.014);core(g,0,0,.05,t,time);
+      }else{
+        plate(g,[[-.32,-.1],[.14,-.16],[.43,0],[.14,.16],[-.32,.1],[-.22,0]],metal(g,-.3,0,.4,0,t),t.plate,.024);
+        plate(g,[[-.12,-.07],[.31,0],[-.12,.07],[0,0]],t.light,t.hot,.014);
+        for(const sign of[-1,1])plate(g,[[-.12,sign*.13],[-.34,sign*.28],[-.34,sign*.1],[.12,sign*.08]],t.metal,t.light,.018);
+        g.save();g.translate(-.25,0);g.rotate(-Math.PI/2);flame(g,0,0,.06,.27,t,time);g.restore();
+      }
     },
     visor(g,P,look){
       const tier=look.marketTier,t=THEMES[tier];if(!t)return;

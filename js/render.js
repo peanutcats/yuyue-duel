@@ -80,12 +80,15 @@
     }
 
     // ---------- 尺寸与缓存 ----------
-    resize() {
-      const vp = YY.viewport ? YY.viewport() : YY.platform.viewport();
+    resize(viewport) {
+      // The native host measures once for the canvas, UI and touch transform.
+      // Quality changes reuse that measurement while a share sheet is closing.
+      if (viewport) this.hostViewport = viewport;
+      const vp = this.hostViewport || (YY.viewport ? YY.viewport() : YY.platform.viewport());
       const W = Math.max(vp.W, 160), H = Math.max(vp.H, 120); // 隐藏 / 零尺寸窗口下也能初始化
       // 像素预算：渲染开销与画布像素数成正比（高分屏 / Windows 缩放下画布可达 800 万像素）
       const budget = this.quality ? 2.4e6 : 1.15e6;
-      const dpr = Math.max(0.7, Math.min(YY.platform.viewport().dpr || 1, 2, Math.sqrt(budget / (W * H))));
+      const dpr = Math.max(0.7, Math.min(vp.dpr || 1, 2, Math.sqrt(budget / (W * H))));
       this.W = W; this.H = H; this.dpr = dpr;
       this.cv.width = Math.round(W * dpr);
       this.cv.height = Math.round(H * dpr);
@@ -252,7 +255,7 @@
     glow(x, y, color, size, life) { this.add({ type: 'glow', x, y, life, t: 0, size, color, vx: 0, vy: 0, g: 0 }); }
     matchNotice(e,m,opt) {
       if(m.courtMode==='3d')return;
-      const p=m.players[e.p],n=YY.matchNotice(e,opt);if(!p||!n)return;
+      const p=m.players[e.p],n=YY.matchNotice(e,opt);if(!p||!n||YY.teacherAlpha?.(m,p,this.mirror?1:0)===0)return;
       this.noticeAt=this.noticeAt||{};const key=e.p+':'+n.key;
       if(m.time-(this.noticeAt[key]??-99)<.85)return;
       this.noticeAt[key]=m.time;this.texts=this.texts.filter(t=>t.owner!==e.p);
@@ -273,7 +276,7 @@
       for(let j=0;j<2;j++){
         const i=order[j],title=YY.AIChallenge?.title(m.titles?.[i]);if(!title)continue;
         ctx.save();ctx.font=`700 ${size}px ${FONT}`;const w=Math.min(room,150,ctx.measureText(title.name).width+h+13),x=j?bx+bw-w-3:bx+3,y=by+bh+7;
-        this.titleBounds.push({player:i,x,y,w,h});ctx.fillStyle='#101b31dd';rr(ctx,x,y,w,h,7);ctx.fill();
+        this.titleBounds.push({player:i,x,y,w,h});ctx.fillStyle=this.hudTheme()?.panelBot||'#101b31dd';rr(ctx,x,y,w,h,this.uiTheme?3:7);ctx.fill();
         ctx.strokeStyle=title.color+'66';ctx.lineWidth=.8;ctx.stroke();
         const cx=x+h*.52,cy=y+h*.5,r=h*.23;
         ctx.strokeStyle=title.color;ctx.fillStyle=title.color;ctx.lineWidth=1.3;
@@ -498,6 +501,7 @@
     /** 移动：脚印、汗珠、拖鞋、急停、离子光痕、磁悬浮、反重力、火箭喷射 */
     marketFx(m,dt) {
       for(const p of m.players){
+        if(YY.teacherConcealed?.(m,p))continue;
         const key=this.marketKey(p),state=this.marketFxState[p.idx];
         if(state.tier!==key){
           this.parts=this.parts.filter(q=>q.marketOwner!==p.idx);
@@ -773,6 +777,7 @@
     gearSteps(m, dt) {
       if (!(dt > 0)) return;
       for (const p of m.players) {
+        if(YY.teacherConcealed?.(m,p))continue;
         const sh = p.gear && p.gear.s, i = p.idx;
         if(p.market && this.marketKey(p)!==2){this.gearT[i]=0;continue;} // 果哥：装备档自己管脚下的特效
         if (!sh || !STEP_FX[sh] || !p.onGround || Math.abs(p.vx || 0) < 3.2) { this.gearT[i] = 0; continue; }
@@ -971,9 +976,8 @@
         y: this.sy(y) * c.z + c.py * (1-c.z) + this.shy };
     }
     scoreboardBounds() {
-      const u = clamp(Math.round(this.H * .043 * this.hudK), 15, 30);
-      const w = Math.min(this.W * .64, 660), h = u * 2.15 + Math.max(10*this.hudK,u*.42)*2 + 42;
-      return { x: (this.W-w)/2, y: 8, w, h };
+      const b=this.scoreboardLayout();
+      return {x:b.x,y:b.y,w:b.w,h:b.h+54};
     }
     /** 顶部高球优先于 HUD；仅重绘顶部区域，不改变球的位置与碰撞半径。 */
     drawHighShuttle(ctx, m, s=m.shuttle, trail=this.trail) {
@@ -1416,7 +1420,7 @@
       const k = this.sc;
       const X = this.sx(p.x), Y = this.sy(2.6);
       const w = 1.8 * k, h = Math.max(10, 0.17 * k);
-      ctx.fillStyle = 'rgba(6,8,24,0.7)';
+      ctx.fillStyle = this.hudTheme()?.panelBot||'rgba(6,8,24,0.7)';
       rr(ctx, X - w / 2 - 5, Y - h / 2 - 5, w + 10, h + 10, (h + 10) / 2); ctx.fill();
       ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 1; ctx.stroke();
       const g = ctx.createLinearGradient(X - w / 2, 0, X + w / 2, 0);
@@ -1434,8 +1438,8 @@
         const fs = Math.round(Math.max(11, 0.18 * k) * this.hudK);
         ctx.font = `bold ${fs}px ${FONT}`;
         const tw = ctx.measureText(label).width;
-        ctx.fillStyle = 'rgba(6,8,24,0.75)'; rr(ctx, X - tw / 2 - 10, Y - h / 2 - fs - 18, tw + 20, fs + 10, (fs + 10) / 2); ctx.fill();
-        ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillStyle = this.hudTheme()?.panelBot||'rgba(6,8,24,0.75)'; rr(ctx, X - tw / 2 - 10, Y - h / 2 - fs - 18, tw + 20, fs + 10, (fs + 10) / 2); ctx.fill();
+        ctx.fillStyle = this.hudTheme()?.text||'#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText(label, X, Y - h / 2 - fs / 2 - 13);
       }
     }
@@ -1623,128 +1627,68 @@
     }
 
     // ---------- HUD ----------
+    hudTheme(){
+      if(!this.uiTheme)return null;
+      if(this.hudThemeKey!==this.venueId||this.hudThemeBase!==this.uiTheme){this.hudThemeKey=this.venueId;this.hudThemeBase=this.uiTheme;this.hudThemeValue={...this.uiTheme,...YY.VENUE_UI?.[this.venueId]};}
+      return this.hudThemeValue;
+    }
+    scoreboardLayout() {
+      const u=clamp(Math.round(this.H*.043*this.hudK),15,28),h=u*2.65+10,y=Math.max(8,this.hudTop||0);
+      let left=Math.max(14,this.hudSafe||0),right=Math.min(this.W-left,this.hudRight||this.W-left);
+      for(const r of typeof this.hudAvoid==='function'?this.hudAvoid():[]){
+        if(r.y+r.h<=y||r.y>=y+45||r.h>70)continue;
+        if(r.x+r.w<this.W*.3)left=Math.max(left,r.x+r.w+9);
+        else if(r.x>this.W*.7)right=Math.min(right,r.x-9);
+      }
+      const w=Math.max(280,Math.min(right-left,this.W*.84,880)),x=(left+right-w)/2;
+      return {x,y,w,h,u,cx:x+w/2,center:Math.min(120,w*.21)};
+    }
     drawScoreboard(ctx, m) {
-      const W = this.W;
-      const order = this.mirror ? [1, 0] : [0, 1];
-      const u = clamp(Math.round(this.H * 0.043 * this.hudK), 15, 30);
-      const bw = Math.min(W * 0.64, 660), bh = u * 2.15;
-      const bx = W / 2 - bw / 2, by = 8;
-      if (!this.scoreSeen) this.scoreSeen = m.score.slice();
-      for (let i = 0; i < 2; i++) if (m.score[i] !== this.scoreSeen[i]) { this.scoreSeen[i] = m.score[i]; this.scorePop[i] = this.time; }
-      ctx.save();
-      ctx.fillStyle = 'rgba(0,0,0,0.3)'; rr(ctx, bx + 2, by + 5, bw - 4, bh, bh * 0.28); ctx.fill(); // 廉价投影（不用 shadowBlur）
-      const bg = ctx.createLinearGradient(0, by, 0, by + bh);
-      bg.addColorStop(0, 'rgba(24,28,62,0.94)'); bg.addColorStop(1, 'rgba(8,10,28,0.94)');
-      ctx.fillStyle = bg; rr(ctx, bx, by, bw, bh, bh * 0.28); ctx.fill();
+      const skin=this.hudTheme(), radius=skin?4:13;
+      const b=this.scoreboardLayout(),{x:bx,y:by,w:bw,h:bh,u,cx,center}=b,order=this.mirror?[1,0]:[0,1];
+      const side=(bw-center)/2,fit=(text,x,y,size,max,color,weight=700,align='left')=>{
+        ctx.font=`${weight} ${Math.round(size)}px ${FONT}`;ctx.textAlign=align;ctx.textBaseline='middle';ctx.fillStyle=color;
+        let value=String(text);if(ctx.measureText(value).width>max){while(value.length>1&&ctx.measureText(value+'…').width>max)value=value.slice(0,-1);value+='…';}
+        ctx.fillText(value,x,y);
+      };
+      if(!this.scoreSeen)this.scoreSeen=m.score.slice();
+      for(let i=0;i<2;i++)if(m.score[i]!==this.scoreSeen[i]){this.scoreSeen[i]=m.score[i];this.scorePop[i]=this.time;}
+      ctx.save();ctx.fillStyle=(skin?.bg||'#061425ed');rr(ctx,bx,by,bw,bh,radius);ctx.fill();ctx.strokeStyle=(skin?.line||'#8ecbe133');ctx.lineWidth=1;ctx.stroke();
+      ctx.save();rr(ctx,bx,by,bw,bh,radius);ctx.clip();
+      for(let j=0;j<2;j++){
+        const i=order[j],left=j===0,look=this.lookOf(m,i),sx=left?bx:cx+center/2;
+        const g=ctx.createLinearGradient(sx,by,sx+side,by);g.addColorStop(0,skin?.panelTop||YY.shade(look.shirt,left?.37:.12));g.addColorStop(1,skin?.panelBot||YY.shade(look.shirt,left?.12:.37));ctx.fillStyle=g;ctx.fillRect(sx,by,side,bh);if(skin){ctx.fillStyle=look.shirt;ctx.fillRect(sx+10,by,28,2);}
+      }
       ctx.restore();
-      const cw = bh * 2.2;
-      ctx.save();
-      rr(ctx, bx, by, bw, bh, bh * 0.28); ctx.clip();
-      for (let j = 0; j < 2; j++) {
-        const i = order[j], look = this.lookOf(m, i), left = j === 0;
-        const x0 = left ? bx : W / 2 + cw / 2 - bh * 0.3, x1 = left ? W / 2 - cw / 2 + bh * 0.3 : bx + bw;
-        const g = ctx.createLinearGradient(left ? x0 : x1, 0, left ? x1 : x0, 0);
-        g.addColorStop(0, YY.shade(look.shirt, 0.85)); g.addColorStop(0.7, YY.shade(look.shirt2, 0.6)); g.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        if (left) { ctx.moveTo(x0, by); ctx.lineTo(x1, by); ctx.lineTo(x1 - bh * 0.4, by + bh); ctx.lineTo(x0, by + bh); }
-        else { ctx.moveTo(x0 + bh * 0.4, by); ctx.lineTo(x1, by); ctx.lineTo(x1, by + bh); ctx.lineTo(x0, by + bh); }
-        ctx.closePath(); ctx.fill();
+      if(skin){ctx.strokeStyle=skin.hair;rr(ctx,bx+3,by+3,bw-6,bh-6,2);ctx.stroke();}
+      for(let j=0;j<2;j++){
+        const i=order[j],left=j===0,p=m.players[i],look=this.lookOf(m,i),identity=m.identities?.[i],ar=Math.min(u*.87,side*.15),edge=left?bx+12:bx+bw-12;
+        const ax=edge+(left?ar:-ar),ay=by+bh*.35,align=left?'left':'right',nx=ax+(left?ar+12:-ar-12),tw=side-ar*2-35;
+        ctx.save();ctx.beginPath();ctx.arc(ax,ay,ar,0,Math.PI*2);ctx.clip();ctx.drawImage(this.portraitOf(look),ax-ar,ay-ar,ar*2,ar*2);ctx.restore();
+        ctx.lineWidth=1.5;ctx.strokeStyle=look.shirt;ctx.beginPath();ctx.arc(ax,ay,ar,0,Math.PI*2);ctx.stroke();
+        if(m.skillsOn&&p.skill)this.drawEnergy(ctx,p,ax,ay,ar);
+        fit(identity?.nickname||m.names[i],nx,by+bh*.2,u*.58,tw,(skin?.text||'#f4faff'),800,align);
+        fit(look.name+' · 体力 '+Math.round(p.stamina??100),nx,by+bh*.43,u*.44,tw,(skin?.sub||'#b9d4e1'),600,align);
+        // 只在有真实玩家身份时显示第三行，避免本机/AI 对局把昵称重复两遍。
+        if(identity?.id)fit('ID '+identity.id,edge,by+bh*.73,Math.max(9,u*.42),side-24,(skin?.dim||'#83b5c8'),500,align);
+        const sw=side-25,sh=3.5,sy=by+bh-9,sx=left?bx+12:bx+bw-12-sw,r=clamp((p.stamina??100)/C.STAM_MAX,0,1),state=YY.staminaState(p);
+        ctx.fillStyle=(skin?.bg||'#06111f');rr(ctx,sx,sy,sw,sh,2);ctx.fill();
+        const history=this.staminaDisplay||(this.staminaDisplay=[]),last=history[i]||{value:r,t:this.time},ghost=Math.max(r,last.value-Math.max(0,this.time-last.t)*.36);history[i]={value:ghost,t:this.time};
+        ctx.fillStyle='#ffe8c16b';ctx.fillRect(left?sx:sx+sw-sw*ghost,sy,sw*ghost,sh);ctx.fillStyle=state.color;ctx.fillRect(left?sx:sx+sw-sw*r,sy,sw*r,sh);
+        ctx.fillStyle='#ecfff8aa';ctx.fillRect(left?sx+sw*C.STAM_FRESH/C.STAM_MAX:sx+sw-sw*C.STAM_FRESH/C.STAM_MAX,sy-1,1,sh+2);
+        const px=cx+(left?-1:1)*center*.265,age=this.time-this.scorePop[i],pop=age<.5?1+Math.sin(age/.5*Math.PI)*.18:1;
+        ctx.save();ctx.translate(px,by+bh*.46);ctx.scale(pop,pop);ctx.font=`900 ${Math.round(u*1.25)}px ${NUMF}`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=(skin?.text||'#fff');ctx.fillText(String(m.score[i]),0,0);ctx.restore();
+        if(m.server===i&&['serve','rally'].includes(m.phase))this.shuttleIcon(ctx,px,by+bh*.83,u*.22);
       }
-      ctx.fillStyle = 'rgba(255,255,255,0.16)'; ctx.fillRect(bx, by, bw, 1.5);
+      fit(':',cx,by+bh*.43,u*.85,18,(skin?.gold||'#7e9fb0'),800,'center');
+      let chip=m.opt.target+' 分制',chipCol=(skin?.sub||'#b3cbd8'),chipBg=(skin?.panelBot||'#09182be6');
+      const point=i=>m.score[i]+1>=m.opt.cap||(m.score[i]+1>=m.opt.target&&m.score[i]+1-m.score[1-i]>=2);
+      if(m.phase!=='over'&&!(m.winner>=0)&&(point(0)||point(1))){chip=m.score.every(s=>s===m.opt.cap-1)?'决胜分':'赛点';chipCol='#ffdc79';chipBg='#382b16ee';}
+      const fs=Math.max(10,Math.round(u*.42));ctx.font=`700 ${fs}px ${FONT}`;const cw=ctx.measureText(chip).width+20,cy=by+bh+7;
+      ctx.fillStyle=chipBg;rr(ctx,cx-cw/2,cy,cw,19,skin?3:8);ctx.fill();fit(chip,cx,cy+9.5,fs,cw-12,chipCol,700,'center');
+      this.drawMatchTitles(ctx,m,bx,by,bw,bh,cw+16,u);
+      if(m.rally>=3&&m.phase==='rally')fit('回合 '+m.rally,cx,cy+33,fs+1,160,'#ffd986',800,'center');
       ctx.restore();
-      ctx.strokeStyle = 'rgba(255,255,255,0.16)'; ctx.lineWidth = 1;
-      rr(ctx, bx, by, bw, bh, bh * 0.28); ctx.stroke();
-
-      for (let j = 0; j < 2; j++) {
-        const i = order[j], left = j === 0, p = m.players[i];
-        const ar = bh * 0.38;
-        const ax = left ? bx + bh * 0.55 : bx + bw - bh * 0.55, ay = by + bh / 2;
-        ctx.save();
-        ctx.beginPath(); ctx.arc(ax, ay, ar, 0, Math.PI * 2); ctx.clip();
-        ctx.drawImage(this.portraitOf(this.lookOf(m, i)), ax - ar, ay - ar, ar * 2, ar * 2);
-        ctx.restore();
-        ctx.strokeStyle = YY.AIChallenge?.title(m.titles?.[i])?.color||'#fff'; ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.arc(ax, ay, ar, 0, Math.PI * 2); ctx.stroke();
-        if (m.skillsOn && p.skill) this.drawEnergy(ctx, p, ax, ay, ar);
-        const nx = left ? ax + ar + 10 : ax - ar - 10;
-        ctx.textAlign = left ? 'left' : 'right'; ctx.textBaseline = 'middle';
-        ctx.font = `900 ${Math.round(u * 0.6)}px ${FONT}`;
-        ctx.fillStyle = '#fff';
-        ctx.fillText(m.names[i], nx, by + bh * 0.35);
-        const sw = Math.max(46, Math.min(bw * 0.19, W / 2 - cw / 2 - (left ? nx - bx : bx + bw - nx) - 24 + bx)), sh = Math.max(5, u * 0.24);
-        const sx0 = left ? nx : nx - sw, sy0 = by + bh * 0.62;
-        ctx.fillStyle = 'rgba(0,0,0,0.45)'; rr(ctx, sx0, sy0, sw, sh, sh / 2); ctx.fill();
-        const r = clamp(p.stamina / C.STAM_MAX, 0, 1), state=YY.staminaState(p);
-        const history=this.staminaDisplay||(this.staminaDisplay=[]),last=history[i]||{value:r,t:this.time};
-        const ghost=Math.max(r,last.value-Math.max(0,this.time-last.t)*.36);history[i]={value:ghost,t:this.time};
-        ctx.fillStyle='#ffe8c188';const gw=sw*ghost;if(gw>.2)ctx.fillRect(left?sx0:sx0+sw-gw,sy0,gw,sh);
-
-        // 绿：状态充沛（无惩罚）；黄：开始疲劳（移动、挥拍、发力逐渐下降）；红：体力透支
-        const col = p.stamina >= C.STAM_FRESH ? ['#5cffa8', '#1fc77a'] : p.stamina >= C.STAM_FRESH * 0.45 ? ['#ffd96b', '#ffa53d'] : ['#ff7a7a', '#e2384a'];
-        if (p.stamina < C.STAM_FRESH * 0.45 && (m.phase === 'rally' || m.phase === 'serve')) {
-          ctx.save(); ctx.globalAlpha = 0.35 + 0.35 * Math.sin(this.time * 9);
-          ctx.fillStyle = '#ff4a5a'; rr(ctx, sx0 - 2, sy0 - 2, sw + 4, sh + 4, sh / 2 + 2); ctx.fill(); ctx.restore();
-          ctx.fillStyle = 'rgba(0,0,0,0.45)'; rr(ctx, sx0, sy0, sw, sh, sh / 2); ctx.fill();
-        }
-        const sg = ctx.createLinearGradient(0, sy0, 0, sy0 + sh);
-        sg.addColorStop(0, col[0]); sg.addColorStop(1, col[1]);
-        ctx.fillStyle = sg;
-        const fw = Math.max(0, sw * r);
-        if(fw>.2){rr(ctx, left ? sx0 : sx0 + sw - fw, sy0, fw, sh, Math.min(sh/2,fw/2)); ctx.fill();}
-        const need = C.STAM_FRESH / C.STAM_MAX; // 刻度：低于此处开始疲劳
-        ctx.fillStyle = 'rgba(255,255,255,0.85)';
-        ctx.fillRect(left ? sx0 + sw * need : sx0 + sw - sw * need, sy0 - 2, 1.5, sh + 4);
-        ctx.font=`600 ${Math.max(9,u*.35)}px ${FONT}`;ctx.fillStyle=state.color;
-        ctx.fillText(Math.round(state.value)+' · '+state.label,left?sx0:sx0+sw,sy0+sh+Math.max(7,u*.28));
-        const sx = W / 2 + (left ? -1 : 1) * cw * 0.27;
-        const age = this.time - this.scorePop[i];
-        const pop = age < 0.5 ? 1 + Math.sin((age / 0.5) * Math.PI) * 0.4 : 1;
-        ctx.fillStyle = 'rgba(0,0,0,0.38)';
-        rr(ctx, sx - bh * 0.42, by + bh * 0.14, bh * 0.84, bh * 0.72, bh * 0.16); ctx.fill();
-        if (age < 0.8) {
-          ctx.globalCompositeOperation = 'lighter';
-          const gl = ctx.createRadialGradient(sx, by + bh / 2, 0, sx, by + bh / 2, bh);
-          gl.addColorStop(0, `rgba(255,220,120,${0.6 * (1 - age / 0.8)})`); gl.addColorStop(1, 'rgba(255,220,120,0)');
-          ctx.fillStyle = gl; ctx.fillRect(sx - bh, by - bh * 0.5, bh * 2, bh * 2);
-          ctx.globalCompositeOperation = 'source-over';
-        }
-        ctx.save();
-        ctx.translate(sx, by + bh / 2 + 1);
-        ctx.scale(pop, pop);
-        ctx.font = `900 ${Math.round(bh * 0.6)}px ${NUMF}`;
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#fff';
-        ctx.fillText(String(m.score[i]), 0, 0);
-        ctx.restore();
-        if (m.server === i && (m.phase === 'serve' || m.phase === 'rally')) this.shuttleIcon(ctx, sx + (left ? -1 : 1) * bh * 0.62, by + bh * 0.3, u * 0.36);
-      }
-      ctx.fillStyle = 'rgba(255,255,255,0.55)';
-      ctx.beginPath(); ctx.arc(W / 2, by + bh * 0.4, 2.5, 0, Math.PI * 2); ctx.arc(W / 2, by + bh * 0.6, 2.5, 0, Math.PI * 2); ctx.fill();
-
-      let chip = `${m.opt.target} 分制 · 领先 2 分 · ${m.opt.cap} 分封顶`, chipCol = 'rgba(255,255,255,0.7)', chipBg = 'rgba(8,10,28,0.72)';
-      const gp = (i) => { const me = m.score[i] + 1, ot = m.score[1 - i]; return me >= m.opt.cap || (me >= m.opt.target && me - ot >= 2); };
-      if (m.phase !== 'over' && !(m.winner >= 0) && (gp(0) || gp(1))) {
-        chip = m.score[0] === m.opt.cap - 1 && m.score[1] === m.opt.cap - 1 ? '决胜分' : '赛点';
-        chipCol = '#1a1000'; chipBg = `rgba(255,${(200 + Math.sin(this.time * 6) * 30) | 0},60,0.95)`;
-      }
-      const fs = Math.max(Math.round(10 * this.hudK), Math.round(u * 0.42));
-      ctx.font = `900 ${fs}px ${FONT}`;
-      const tw = ctx.measureText(chip).width;
-      const cy = by + bh + 6;
-      ctx.fillStyle = chipBg; rr(ctx, W / 2 - tw / 2 - 12, cy, tw + 24, fs + 10, (fs + 10) / 2); ctx.fill();
-      ctx.fillStyle = chipCol; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(chip, W / 2, cy + (fs + 10) / 2);
-      this.drawMatchTitles(ctx,m,bx,by,bw,bh,tw+24,u);
-      if (m.rally >= 3 && m.phase === 'rally') {
-        const txt = `回合 ${m.rally}`;
-        const w2 = ctx.measureText(txt).width;
-        const y2 = cy + fs + 16;
-        const rg = ctx.createLinearGradient(W / 2 - w2, 0, W / 2 + w2, 0);
-        rg.addColorStop(0, '#ff5a3c'); rg.addColorStop(1, '#ffae3c');
-        ctx.fillStyle = rg; rr(ctx, W / 2 - w2 / 2 - 12, y2, w2 + 24, fs + 10, (fs + 10) / 2); ctx.fill();
-        ctx.fillStyle = '#fff'; ctx.fillText(txt, W / 2, y2 + (fs + 10) / 2);
-      }
     }
     /** 头像外圈的技能能量环；充满后彩色流转 */
     drawEnergy(ctx, p, ax, ay, ar) {
@@ -1755,7 +1699,7 @@
       ctx.strokeStyle = 'rgba(0,0,0,0.55)';
       ctx.beginPath(); ctx.arc(ax, ay, R, 0, Math.PI * 2); ctx.stroke();
       if (e > 0.01) {
-        ctx.strokeStyle = full ? `hsl(${(this.time * 260) % 360},100%,66%)` : sk.color;
+        ctx.strokeStyle = full ? (this.hudTheme()?.gold || `hsl(${(this.time * 260) % 360},100%,66%)`) : sk.color;
         ctx.beginPath(); ctx.arc(ax, ay, R, -Math.PI / 2, -Math.PI / 2 + e * Math.PI * 2); ctx.stroke();
       }
       const active = Object.keys(p.buff || {}).some((k) => p.buff[k] > 0);
@@ -1771,7 +1715,7 @@
     }
     /** 技能播报：贴在施放者一侧、记分牌下方的小卡片，不横穿球场；球或选手经过时自动变淡 */
     cutInBounds(c) {
-      const k = this.hudK, u = clamp(Math.round(this.H * 0.043 * k), 15, 30), bar = { x: (this.W - Math.min(this.W * 0.64, 660)) / 2, y: 8, w: Math.min(this.W * 0.64, 660), h: u * 2.15 };
+      const k=this.hudK,bar=this.scoreboardLayout(),u=bar.u;
       const h = clamp(Math.round(this.H * 0.07 * k), 30, 50), fs = Math.round(h * 0.42);
       const g = this.ctx; g.save();
       g.font = `italic 900 ${fs}px ${FONT}`; let tw = g.measureText(c.name).width;
@@ -1932,27 +1876,27 @@
     }
 
     drawPracticeHUD(ctx, pr) {
-      const W = this.W;
+      const W = this.W,skin=this.hudTheme(),radius=skin?4:14;
       const u = clamp(Math.round(this.H * 0.04 * this.hudK), 14, 26);
       const bw = Math.min(W * 0.68, 620), bh = u * 2.7;
       const bx = W / 2 - bw / 2, by = 8;
       ctx.save();
-      ctx.fillStyle = 'rgba(0,0,0,0.3)'; rr(ctx, bx + 2, by + 5, bw - 4, bh, 14); ctx.fill();
+      ctx.fillStyle = 'rgba(0,0,0,0.3)'; rr(ctx, bx + 2, by + 5, bw - 4, bh, radius); ctx.fill();
       const bg = ctx.createLinearGradient(0, by, 0, by + bh);
-      bg.addColorStop(0, 'rgba(24,28,62,0.94)'); bg.addColorStop(1, 'rgba(8,10,28,0.94)');
-      ctx.fillStyle = bg; rr(ctx, bx, by, bw, bh, 14); ctx.fill();
+      bg.addColorStop(0, (skin?.panelTop||'rgba(24,28,62,0.94)')); bg.addColorStop(1, (skin?.panelBot||'rgba(8,10,28,0.94)'));
+      ctx.fillStyle = bg; rr(ctx, bx, by, bw, bh, radius); ctx.fill();
       ctx.restore();
-      ctx.strokeStyle = 'rgba(255,255,255,0.16)'; ctx.lineWidth = 1; rr(ctx, bx, by, bw, bh, 14); ctx.stroke();
-      ctx.fillStyle = '#ffd23f'; rr(ctx, bx, by + bh * 0.18, 5, bh * 0.3, 2.5); ctx.fill();
+      ctx.strokeStyle = (skin?.line||'rgba(255,255,255,0.16)'); ctx.lineWidth = 1; rr(ctx, bx, by, bw, bh, radius); ctx.stroke();
+      ctx.fillStyle = (skin?.gold||'#ffd23f'); rr(ctx, bx, by + bh * 0.18, 5, bh * 0.3, 2.5); ctx.fill();
       ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
       ctx.font = `900 ${Math.round(u * 0.78)}px ${FONT}`;
-      ctx.fillStyle = '#ffd23f';
+      ctx.fillStyle = (skin?.gold||'#ffd23f');
       ctx.fillText(pr.def.name, bx + 16, by + bh * 0.33);
       ctx.textAlign = 'right';
       const g = pr.goal;
       const score = pr.tutorial ? `${pr.completed} / 3` : g ? `${pr.ok} / ${g.need}` : `${pr.ok} / ${pr.att}`;
       ctx.font = `900 ${Math.round(u * 0.85)}px ${NUMF}`;
-      ctx.fillStyle = g && pr.ok >= g.need ? '#7dffb0' : '#fff';
+      ctx.fillStyle = g && pr.ok >= g.need ? '#7dffb0' : (skin?.text||'#fff');
       ctx.fillText(score, bx + bw - 16, by + bh * 0.33);
       const tw = ctx.measureText(score).width;
       ctx.font = `bold ${Math.round(u * 0.48)}px ${FONT}`;
@@ -1970,6 +1914,17 @@
       if (!b) return;
       b.t += dt;
       if (b.t >= b.life) { this.banner = null; return; }
+      if(this.uiTheme){
+        const skin=this.hudTheme(),fs=clamp(Math.round(this.H*.07),25,48),w=Math.min(this.W*.76,680),h=fs*(b.sub?2.3:1.8),x=(this.W-w)/2,y=this.H*.34-h/2;
+        const fade=Math.min(1,b.t/.2,Math.max(0,(b.life-b.t)/.25));
+        ctx.save();ctx.globalAlpha=fade;ctx.translate(0,(1-fade)*8);
+        ctx.fillStyle=skin.panelBot;rr(ctx,x,y,w,h,4);ctx.fill();ctx.strokeStyle=skin.gold;ctx.lineWidth=1.2;ctx.stroke();
+        ctx.strokeStyle=skin.hair;rr(ctx,x+5,y+5,w-10,h-10,2);ctx.stroke();
+        ctx.font=`800 ${fs}px ${FONT}`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=skin.text;
+        ctx.fillText(b.text,this.W/2,y+h*(b.sub?.4:.5),w-48);
+        if(b.sub){ctx.font=`600 ${Math.round(fs*.38)}px ${FONT}`;ctx.fillStyle=skin.gold;ctx.fillText(b.sub,this.W/2,y+h*.74,w-36);}
+        ctx.restore();return;
+      }
       const u = b.t / b.life;
       const inK = Math.min(1, b.t / 0.22), outK = u > 0.82 ? (u - 0.82) / 0.18 : 0;
       const e = 1 - (1 - inK) ** 3;
@@ -2032,7 +1987,9 @@
     draw(m, o, dt) {
       o = o || {};
       m = this.interpolate(m, o.alpha);
-      this.clubVision=YY.clubVisibility?.(m,o.labels?.[0]&&o.labels?.[1]?null:this.mirror?1:0)||{};
+      this.teacherViewer=o.labels?.[0]&&o.labels?.[1]?null:this.mirror?1:0;
+      this.clubVision=YY.clubVisibility?.(m,this.teacherViewer)||{};
+      this.texts=this.texts.filter(t=>t.owner==null||YY.teacherAlpha?.(m,m.players[t.owner],this.teacherViewer)!==0);
       this.poseCache = new Map();
       this.time += dt;
       // 自动画质：只统计正常帧（后台节流 / 卡顿帧不算），持续偏慢才降级，恢复流畅后再升回
@@ -2075,7 +2032,9 @@
       if (o.landHint && m.ents) for (const e of m.ents) if (e.k === 'dirty' && e.lx != null) for (const i of o.landHint) if (e.o !== i && m.players[i] && Math.sign(e.lx) === m.players[i].side) this.drawHint(ctx, m, i, { landX: e.lx }, false);
 
       const humans = m.players.filter((p) => !(m.practice && !m.tutorial && p.idx === 1));
+      const solidHumans=humans.filter(p=>!YY.teacherConcealed?.(m,p));
       for (const p of humans) {
+        if(YY.teacherConcealed?.(m,p)){this.ghosts[p.idx]=[];continue;}
         this.updateSpring(p, dt);
         const fast = (p.swing && (p.swing.style === 'smash' || (!p.swing.style && p.swing.dur > 0.4)) && p.swing.t < 0.3) || (!p.onGround && Math.abs(p.vy) > 1.5);
         this.ghostT[p.idx] -= dt;
@@ -2092,7 +2051,7 @@
         ctx.beginPath(); ctx.rect(-50, this.gy, this.W + 100, this.H); ctx.clip();
         ctx.translate(0, 2 * this.gy); ctx.scale(1, -1);
         ctx.globalAlpha = v.glossy;
-        for (const p of humans) { const lk = this.lookOf(m, p.idx); if (!(YY.SkillFX && YY.SkillFX.pose(this, ctx, p, lk, m))) this.drawCharAt(ctx, p, lk, this.charOpts(p, m)); }
+        for (const p of solidHumans) { const lk = this.lookOf(m, p.idx); if (!(YY.SkillFX && YY.SkillFX.pose(this, ctx, p, lk, m))) this.drawCharAt(ctx, p, lk, this.charOpts(p, m)); }
         ctx.globalAlpha = 1;
         ctx.restore();
       }
@@ -2100,8 +2059,8 @@
       if (YY.SkillFX && m.ents) YY.SkillFX.ground(this, ctx, m, o, dt);
       this.marketFx(m,dt);
       if(!this.clubVision.hidden)this.marketBall(m,dt);
-      for(const p of humans)this.drawMarketAura(ctx,p);
-      for (const p of humans) this.drawShadow(ctx, p);
+      for(const p of solidHumans)this.drawMarketAura(ctx,p);
+      for (const p of solidHumans) this.drawShadow(ctx, p);
       this.gearSteps(m, dt);
       this.drawColumns(ctx, dt);
       YY.SkillFX?.clubCourt?.(ctx,m,(x,y)=>({x:this.sx(x),y:this.sy(y),k:this.sc}),false);
@@ -2120,6 +2079,9 @@
 
       for (const p of m.players) {
         if (m.practice && !m.tutorial && p.idx === 1) { if (!m.hideOpp) this.drawMachine(ctx, p); continue; }
+        const bodyAlpha=YY.teacherAlpha?.(m,p,this.teacherViewer)??1;
+        if(!bodyAlpha){this.ghosts[p.idx]=[];continue;}
+        ctx.save();ctx.globalAlpha=bodyAlpha;
         const look = this.lookOf(m, p.idx);
         const gs = this.ghosts[p.idx];
         const bk = p.buff ? Object.keys(p.buff).find((k) => p.buff[k] > 0 && YY.SKILLS && YY.SKILLS[k]) : null;
@@ -2128,10 +2090,10 @@
           const gh = gs[i];
           gh.t += dt;
           if (gh.t > 0.2) { gs.splice(i, 1); continue; }
-          ctx.globalAlpha = 0.28 * (1 - gh.t / 0.2) * ((i + 1) / gs.length);
+          ctx.globalAlpha = bodyAlpha * 0.28 * (1 - gh.t / 0.2) * ((i + 1) / gs.length);
           this.drawCharAt(ctx, gh.p, look, this.charOpts(gh.p, m, { flat: gh.tint || look.shirt }));
         }
-        ctx.globalAlpha = 1;
+        ctx.globalAlpha = bodyAlpha;
         if (!(YY.SkillFX && YY.SkillFX.pose(this, ctx, p, look, m))) this.drawCharAt(ctx, p, look, this.charOpts(p, m));
         this.drawGearGlow(ctx, p);
         this.drawSwoosh(ctx, p, look);
@@ -2145,6 +2107,7 @@
           ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
           ctx.fillText(o.labels[p.idx], X, Y - fs / 2 - 3);
         }
+        ctx.restore();
       }
       this.trailFire = false;
       this.trailKind = s.live ? s.shot : null;

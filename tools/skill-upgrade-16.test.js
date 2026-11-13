@@ -10,7 +10,7 @@ test('gravity accepts its displayed cost, automatically settles and cannot immed
  const m=game('xingxing',['zhongli','yueliang']),p=m.players[0];ball(m);p.energy=10;
  assert.ok(cast(m,'zhongli'));assert.equal(p.energy,0);m.skPlayer(p,C.DT);assert.equal(p.buff.gravOn,0);
  p.energy=100;assert.equal(cast(m,'zhongli'),false);p.buff.gravRest=0;assert.ok(cast(m,'zhongli'));
- m.time+=1.51;m.skPlayer(p,C.DT);assert.equal(p.buff.gravOn,0);assert.ok(p.buff.gravRest>0);
+ m.shuttle.live=false;for(let i=0;i<182;i++)m.step(C.DT);assert.equal(p.buff.gravOn,0);assert.ok(p.buff.gravRest>0);
 });
 test('spin can sweep, recall without spare energy and refund only once',()=>{
  const m=game('dingding',['xuanpai','youyou']),p=m.players[0];ball(m);assert.ok(cast(m,'xuanpai'));
@@ -53,19 +53,18 @@ test('wind changes one nearby trajectory and remains available for movement',()=
  ball(m);Object.assign(m.shuttle,{x:e.x+.1,y:e.y,vx:8,vy:0});m.skShuttle({x:e.x-.1,y:e.y,vx:8,vy:0});assert.equal(e.used,1);const vx=m.shuttle.vx;
  m.skShuttle({x:e.x-.1,y:e.y,vx});assert.equal(m.shuttle.vx,vx);p.x=e.x;m.skPlayer(p,C.DT);assert.ok(m.mods(p).move>1);
 });
-test('teacher rewards successful skill defense once; first two rhythm shots preserve choice',()=>{
- const m=game('zhu',['jiezou','tingyixia']),p=m.players[0];ball(m);m.shuttle.skillTag='tafeng';m.afterHit(p,{type:'clear'},.8,{});
- assert.ok(p.buff.teacherCalm);assert.equal(m.skHitQ(p,.5,{}),.85);assert.equal(p.buff.teacherCalm,0);
- cast(m,'jiezou');for(let i=0;i<2;i++){const shot={type:'clear',vx:6,vy:8};m.skShot(p,shot,{});assert.deepEqual(shot,{type:'clear',vx:6,vy:8});}
- const shot={type:'clear',vx:6,vy:8};m.skShot(p,shot,{});assert.notEqual(shot.vx,6);assert.equal(p.cnt.combo,0);
+test('teacher control preparation rewards manual variety and the echo preserves chosen manual shot families',()=>{
+ const m=game('zhu',['jiezou','tingyixia']),p=m.players[0];
+ for(const type of ['clear','drop','clear']){ball(m);m.afterHit(p,{type},.8,{});m.shuttle.crossedNet=true;m.teacherCommit();}
+ assert.equal(p.cnt.teacher.layers,2);ball(m);p.swing={btn:'drop'};const ctx={};assert.equal(m.skHitQ(p,.5,ctx),.94);
+ const shot={type:'drop',vx:6,vy:8};m.skShot(p,shot,ctx);assert.equal(p.cnt.teacher.layers,0);assert.equal(shot.vx,6);
+ p.swing=null;cast(m,'jiezou');assert.ok(m.entOf('teacherEcho',0));assert.equal(p.buff.teacherHide,6);assert.equal(p.cnt.combo,undefined);
 });
-test('freeze telegraphs placement and early thaw; replacement leaves committed swings alone',()=>{
- const m=game('laochen',['shuangji','yati']),p=m.players[0];ball(m);cast(m,'shuangji');const e=m.entOf('pane',0);
- Object.assign(m.shuttle,{x:e.x,y:e.y});m.skShuttle({x:e.x-.1,y:e.y});assert.equal(m.shuttle.ctl,null);
- e.age=.3;m.skShuttle({x:e.x-.1,y:e.y});assert.equal(m.shuttle.ctl.k,'freeze');cast(m,'shuangji');assert.ok(m.shuttle.ctl.thaw);assert.ok(m.shuttle.ctl.t<=.16);
- for(let i=0;i<21;i++)if(m.shuttle.ctl)m.skControl(C.DT);assert.equal(m.shuttle.ctl,null);
- cast(m,'yati');const rep=m.entOf('replace',0),o=m.players[1];rep.age=.4;o.swing={t:.5};const shot={type:'smash',vx:-15,vy:-3};m.skShot(o,shot,{});assert.equal(shot.type,'smash');
- o.swing=null;m.skShot(o,shot,{});assert.equal(shot.type,'lift');
+test('ice telegraphs its floor activation, and rewrites require confirmed opposing manual contact',()=>{
+ const m=game('laochen',['shuangji','yati']),p=m.players[0],o=m.players[1];ball(m);cast(m,'shuangji');const e=m.entOf('pane',0);o.x=e.x;
+ assert.equal(m.iceAt(o),null);e.age=.36;assert.equal(m.iceAt(o),e);assert.equal(m.shuttle.ctl,null);cast(m,'yati');const rep=m.entOf('replace',0);
+ Object.assign(m.shuttle,{x:o.x+o.dir*.5,y:2.3,lastHitter:0,crossedNet:true,selfToss:-1});const shot={type:'smash',vx:-15,vy:-3};assert.equal(m.replaceShot(o,shot,{}),false,'mark has an activation delay');
+ rep.age=.2;assert.equal(m.replaceShot(o,shot,{device:true}),false);assert.equal(rep.n,2);assert.ok(m.replaceShot(o,shot,{}));assert.equal(shot.type,'lift');assert.equal(rep.n,1);
 });
 test('bun cannot accelerate an enemy shot; legal release stays in court without a hidden time boost',()=>{
  const m=game('ruibao',['baozi','huiguo']),p=m.players[0];ball(m);m.shuttle.bun={o:0,st:20,t:5};assert.equal(m.bunRelease(p),false);

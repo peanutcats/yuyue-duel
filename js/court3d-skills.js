@@ -4,11 +4,11 @@
   Y.SKILL3D_NOTES={
     lingfeng:'鱼跃与踏风可横向扑救；风口只作用于覆盖的球道。',canglan:'潮水覆盖己方半场；回潮完整倒放三维球迹。',
     xiaohong:'反射板独立布置球道，出口落点固定；辅助线校准两个方向。',ranran:'穿花双轴抢位，蝶结换折返或弹弓；牵丝可选四向出球。',
-    ruibao:'地板与临时墙在所在球道反弹；肉包要实际碰到羽毛球。',xingxing:'月亮与星门可以横向布置；重力作用于完整三维飞行。',
+    ruibao:'反弹后再按出锅；前推压短、后推打长、横推选球道。肉包真实横向投掷，回锅保留蓄力。',xingxing:'月亮与星门可以横向布置；重力作用于完整三维飞行。',
     dingding:'飞轮有限球道锁球，金窗再按弹射，或带回拍前亲手打。',houzi:'筋斗云追向来球，藤蔓支持横向荡动，小猴巡逻协防。',
-    lu:'分身留在真实三维位置；接力连到本体或分身；假球分散落区。',laochen:'预约守住所选球道，冰窗可绕开；冻结保留原始三维速度。',
+    lu:'分身留在真实三维位置；接力连到本体或分身；假球分散落区。',laochen:'两拍批量替换保持所选球道；对方冰区影响双轴抓地，可绕行或跳过。',
     guoge:'红包具有地面范围，可侧移绕开；装备强化同步作用于双轴移动。',tianchu:'镜像分散到左中右三条球路；水中月可横向变线。',
-    zhu:'三拍节奏保留摇杆方向；标志桶可侧移绕过；停球跟随四向走位。',bobo:'高台提供持续高点，猎航四向移动、自动调高；骨翼俯冲保留触球时的摇杆方向。',
+    zhu:'幻象独立沿双轴追球但不跳不杀；本体隐身跑位。请君入瓮过网时选择长短与侧向空当。',bobo:'高台提供持续高点，猎航四向移动、自动调高；骨翼俯冲保留触球时的摇杆方向。',
     miaomiao:'滑步与转体支持四向衔接；燕尾过网后纵向弯落、侧向弯线，两拍可切换。',mage:'接球当拍借力；纸镖穿场、过网展翼滑翔，摇杆保留前后与左右落区。',
     zhuzhu:'回眸滑步留香影，真短假长；藏羽隐去球与落点，险线可选择边线。',sun:'三威胁集不同花式强化下一招；热手有三段步、双次篮板、末 1.3 秒压哨。',dong:'过载影响后两拍，雾线之上隐藏球路；反压支持侧向接球并吸收过载。',
     nan:'慢镜看清三维来球；复映近剪或深剪，保留左右球道；快进沿原轨迹提速。'
@@ -27,11 +27,11 @@
     if(s.path?.length){const q=s.path[s.path.length-1];if(q.length===4)q.push(s.z,s.vz);}
     for(const e of this.ents){
       const old=oldFake.get(e.id);
-      if(old&&e.n===old.n&&e.hitBy===old.hitBy&&e.y>0.15){
+      if(old&&(this.phase==='rally'||!Y.skillPersistent(e))&&e.n===old.n&&e.hitBy===old.hitBy&&e.y>0.15){
         const ball={...old,z:old.z||0,vz:old.vz||0,space3D:true,netHit:true};Y.stepShuttle(ball,dt,this.env);
         Object.assign(e,{x:ball.x,y:ball.y,z:ball.z,vx:ball.vx,vy:ball.vy,vz:ball.vz});
       }
-      if(e.k==='mini')e.z=clamp((e.homeZ??(e.homeZ=e.z||0))+Math.sin(e.ph||0)*.65,-2.35,2.35);
+      if(e.k==='mini'&&this.phase==='rally')e.z=clamp((e.homeZ??(e.homeZ=e.z||0))+Math.sin(e.ph||0)*.65,-2.35,2.35);
     }
   };
   const update=P.updatePlayer;
@@ -99,11 +99,6 @@
     B.skShot.call(this,p,shot,ctx);
     if(!ctx.boboDive&&!ctx.newcomerSolved&&Math.abs(vx)>.01)shot.vz=vz*(shot.vx/vx);
 
-  };
-  P.comboShot=function(p,shot,n){
-    // Rhythm supports the player's chosen lane instead of replacing it.
-    if(n===1){const target=this.shotTarget(p,shot.type);Object.assign(shot,Y.solveShot3D(this.shuttle,{x:p.dir*target.x,z:target.z},shot.type,1.08,this.physEnv()));this.gainEnergy(p,3);}
-    this.proc(p,'jiezou',n===1?'第三拍 · 节奏加力':n===3?'一 · 稳住':'二 · 跟上');
   };
   P.poleHead=function(p,e){
     if(!e.dir3D)return B.poleHead.call(this,p,e);

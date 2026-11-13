@@ -183,6 +183,12 @@
       hipY+=.025*tuck;
     }
     F1=mixPoint(F1,[.48*slideDir,.02],slide*.65);F2=mixPoint(F2,[-.4*slideDir,.04],slide*.65);
+    // Skill movement must change the limbs, not only translate a running sprite.
+    if(action?.id==='tafeng'&&air){F1=mixPoint(F1,[.12,-.05],action.e);F2=mixPoint(F2,[-.24,.38],action.e);}
+    if(p.cnt?.club?.dash?.id==='ouzhou'){
+      const cross=slide*(p.cnt.club.ready?.ouzhou?.second?1:-1);
+      F1[0]+=.22*cross;F2[0]-=.22*cross;F2[1]+=.13*slide;
+    }
     const H=[(shot?shot.hipX:0)+lunge*.09+brake*.025,hipY];
     const hipYaw=(shot?shot.hipYaw:-run*fwd*.15)+turn*.45;
     const chestYaw=(shot?shot.chestYaw:-run*fwd*.28)+turn*.8+(action?.yaw||0)+(mechanical?.punch||0)*.32;
@@ -199,7 +205,7 @@
     const S=[H[0]+ux*.5+shoulderTurn*uy,H[1]+uy*.5-shoulderTurn*ux];
     const S2=[H[0]+ux*.5-shoulderTurn*uy-.025,H[1]+uy*.5+shoulderTurn*ux-.025];
     const tilt=action?.id==='liubai'?-.3*action.e:MOOD_HEAD[mood]!=null?MOOD_HEAD[mood]+Math.sin(t*2.1+p.idx)*.03:-clamp((o.gazeY||0)*.12,-.2,.35);
-    const hd=[N[0]+Math.sin(lean+tilt*.5)*.16,N[1]+Math.cos(lean+tilt*.5)*.16];
+    const hd=[N[0]+Math.sin(lean+tilt*.5)*.16-(action?.id==='liubai'?.1*action.e:0),N[1]+Math.cos(lean+tilt*.5)*.16];
 
     let A=45, bend=1.05, O=22, ob=.6;
     // 自抛后的蓄势：拍举过肩、负手指球，挑球随挥直接接进扣杀引拍。
@@ -277,7 +283,18 @@
       const hold=smooth(0,.035,sw.t)*(1-smooth(.1,.19,sw.t));
       W2=mixPoint(W2,[.38,.95-p.y],hold); E2=ik(...S2,...W2,.27,.25,1);
     }
-    return {H,H1,H2,K1,K2,F1,F2,N,S,S2,E,W,E2,W2,hd,lean,Rk,rs,A:Rk,ux,uy,air,run,
+    // Turn around the athlete's vertical axis, rather than just leaning the torso.
+    // All joints share this projection; racket contact stays pinned during a real hit.
+    const turnAngle=p.cnt?.nv?.turnAngle;
+    if(air&&Number.isFinite(turnAngle)){
+      const c=Math.cos(turnAngle),sn=Math.sin(turnAngle),pivot=H[0];
+      const front=new Set([S,E,W,H1,K1,F1]),back=new Set([S2,E2,W2,H2,K2,F2]);
+      for(const point of new Set([H,H1,H2,K1,K2,F1,F2,N,S,S2,E,W,E2,W2,hd])){
+        if(sw?.contact&&(point===W||point===E))continue;
+        point[0]=pivot+(point[0]-pivot)*c+(front.has(point)?.12:back.has(point)?-.12:0)*sn;
+      }
+    }
+    return {H,H1,H2,K1,K2,F1,F2,N,S,S2,E,W,E2,W2,hd,lean,Rk,rs,A:Rk,ux,uy,air,run,spinAngle:air?turnAngle:undefined,
       smash:!!(shot && shot.smash),mood,ph,style:shot?.style,hipYaw,chestYaw,face:shot?.face||1,motion:shot};
   }
   YY.charPose=pose;
@@ -324,6 +341,14 @@
     const value=`rgb(${r | 0},${g | 0},${b | 0})`;if(shadeCache.size>768)shadeCache.clear();shadeCache.set(key,value);return value;
   }
   YY.shade = shade;
+  // 给任意 #hex / rgb() 颜色加透明度；画背景叠色时统一走这里。
+  function tint(color, a) {
+    const m = String(color).match(/^rgb\(([\d.]+),\s*([\d.]+),\s*([\d.]+)\)$/);
+    if (m) return `rgba(${m[1] | 0},${m[2] | 0},${m[3] | 0},${a})`;
+    const n = parseInt(String(color).slice(1), 16);
+    return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+  }
+  YY.tint = tint;
 
   function shoe(ctx, F, K, look, lw, flat, pulse = 0, time = 0, air = false) {
     const a = look.shoeArt;
@@ -474,15 +499,25 @@
     ctx.strokeStyle=look.skin2;ctx.lineWidth=.008;ctx.beginPath();ctx.moveTo(-.025,-.075);ctx.quadraticCurveTo(0,-.092,.03,-.07);ctx.stroke();ctx.restore();
   }
 
+  const smooth2 = (a, b, t) => { const u = clamp((t - a) / (b - a || 1e-6), 0, 1); return u * u * (3 - 2 * u); };
   function torso(ctx, P, look, lw, flat, f) {
     if (look.marketTier >= 3 && !flat && YY.MarketArt) { YY.MarketArt.torso(ctx,P,look);return; }
     const { H, ux, uy } = P;
     const rx = uy, ry = -ux; // 指向前方的法向量
     const silhouette=YY.CharacterArt?.profile(look),tw=silhouette?.waist||(look.slim?.78:look.buff?1.2:1);
+    // 躯干宽度曲线：腰收、胸阔、肩斜。单纯从腰到肩线性放大会变成一块梯形木板。
+    const shoulderW=silhouette?.shoulder||tw, bellyK=look.belly?1+.1*Math.sin(Math.PI*clamp(.3,0,1)):1;
+    const widthAt=u=>{
+      // u: 0 髋 → .5 胸 → .58 肩
+      const waist=tw*(1-.13*smooth2(.0,.3,u));            // 髋上方先略收
+      const chest=lerp(waist,shoulderW,clamp((u-.18)/.32,0,1))*(1+.05*smooth2(.25,.45,u));
+      const taper=u>.5?1-.16*clamp((u-.5)/.1,0,1):1;      // 肩头向内收一点，避免方肩
+      return chest*taper*bellyK;
+    };
     const pt = (u, r) => {
       const yaw = lerp(P.hipYaw || 0, P.chestYaw || 0, clamp(u / .5, 0, 1));
-      const width=(1-.24*Math.abs(Math.sin(yaw)))*lerp(tw,silhouette?.shoulder||tw,clamp((u-.12)/.4,0,1))*(look.belly?1+.12*Math.sin(Math.PI*clamp(u/.56,0,1)):1);
-      const turn = Math.sin(yaw) * .035 * clamp(u / .5, 0, 1);
+      const width=(1-.24*Math.abs(Math.sin(yaw)))*widthAt(u);
+      const turn = Math.sin(yaw) * .04 * clamp(u / .5, 0, 1);
       return [H[0] + ux * u + rx * (r * width + turn), H[1] + uy * u + ry * (r * width + turn)];
     };
     if(look.dress){
@@ -537,14 +572,21 @@
       for(const sign of [-1,1]){ctx.beginPath();ctx.moveTo(...pt(.57,sign*.1));ctx.lineTo(...pt(.38,sign*.11));ctx.stroke();}
       return;
     }
-    // 侧面拼色
+    // 侧面拼色：只是靠后侧的一条窄边，不吞掉半件衣服。
     ctx.save();
     ctx.clip();
     ctx.fillStyle = look.panel;
     ctx.beginPath();
-    const a = pt(-0.05, -0.2), b = pt(0.55, -0.2), c2 = pt(0.48, -0.08), d = pt(-0.05, -0.1);
+    const a = pt(-0.04, -0.2), b = pt(0.5, -0.2), c2 = pt(0.47, -0.135), d = pt(-0.04, -0.145);
     ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(c2[0], c2[1]); ctx.lineTo(d[0], d[1]); ctx.closePath();
     ctx.fill();
+    // 靠前侧肩部的受光：从锁骨到腋下的一条亮带，制造圆润的胸腔。
+    const lit = pt(0.5, 0.16), lit2 = pt(0.2, 0.19), lit3 = pt(0.06, 0.16);
+    const lightGrad = ctx.createLinearGradient(lit[0], lit[1], lit3[0], lit3[1]);
+    lightGrad.addColorStop(0, YY.tint(shade(look.shirt, 1.24), .8)); lightGrad.addColorStop(1, YY.tint(shade(look.shirt, 1.02), 0));
+    ctx.fillStyle = lightGrad; ctx.beginPath();
+    ctx.moveTo(...pt(0.52, 0.06)); ctx.lineTo(lit[0], lit[1]); ctx.quadraticCurveTo(lit2[0], lit2[1], lit3[0], lit3[1]);
+    ctx.lineTo(...pt(0.06, 0.05)); ctx.closePath(); ctx.fill();
     if (look.plaid) {
       // 格子衫
       const ga = ctx.globalAlpha;
@@ -618,8 +660,8 @@
     const art=YY.CharacterArt?.profile(look);
     o={...o,art:o.art||art,identity:o.identity||YY.CharacterArt?.motionFor(p,look)};
     const base = o.pose || pose(p, o.time || 0, o);
-    const P = o.showcase && YY.CharacterArt ? YY.CharacterArt.displayPose(p,o.time||0,look,base) : base;
-    const lw = 0.009;
+    const P = o.pose || (o.showcase && YY.CharacterArt ? YY.CharacterArt.displayPose(p,o.time||0,look,base) : base);
+    const lw = 0.0115;
     const flat = o.flat || null;
     const bw = art?.limb || (look.slim ? 0.72 : look.buff ? 1.22 : 1), hs = (look.headScale || 1)*(art?.head||1);
     const dark = (c) => (flat ? flat : shade(c, 0.78));
@@ -628,18 +670,21 @@
 
     // 后腿
     if (!flat && look.marketTier >= 3) YY.MarketArt?.back(ctx,P,look,p,o);
-    (YY.CharacterArt?.limb||jointFallback)(ctx,P.H2,P.K2,P.F2,[.073,.082,.047,.061,.035].map(v=>v*bw),dark(look.stockings||look.skin),flat?null:look.outline,lw);
+    (YY.CharacterArt?.limb||jointFallback)(ctx,P.H2,P.K2,P.F2,[.086,.096,.054,.072,.042].map(v=>v*bw),dark(look.stockings||look.skin),flat?null:look.outline,lw);
     if (!flat) limb(ctx, [lerp(P.K2[0], P.F2[0], 0.72), lerp(P.K2[1], P.F2[1], 0.72)], P.F2, 0.05, 0.047, shade(look.sock, 0.85), null, lw, look.outline);
     if(!flat && look.marketTier>=3) YY.MarketArt?.limb(ctx,P.K2,P.F2,look,'shin');
     shoe(ctx, P.F2, P.K2, look, lw, flat ? flat : null, o.shoePulse || 0, o.time, !p.onGround);
-    // 后手（在身体后）
-    (YY.CharacterArt?.limb||jointFallback)(ctx,P.S2,P.E2,P.W2,[.048,.055,.033,.043,.028].map(v=>v*bw),dark(look.skin),flat?null:look.outline,lw);
+    // Resting hands can come in front of the shirt to actually hold a prop.
+    const freeArm=()=>{
+    (YY.CharacterArt?.limb||jointFallback)(ctx,P.S2,P.E2,P.W2,[.058,.068,.040,.052,.034].map(v=>v*bw),dark(look.skin),flat?null:look.outline,lw);
     if (!flat) {
       if (!look.tank) limb(ctx, P.S2, [lerp(P.S2[0], P.E2[0], 0.38), lerp(P.S2[1], P.E2[1], 0.38)], 0.066 * bw, 0.056 * bw, look.shirt2, null, lw, look.outline);
       if(look.marketTier>=3){YY.MarketArt?.limb(ctx,P.S2,P.E2,look,'shoulder');YY.MarketArt?.limb(ctx,P.E2,P.W2,look,'arm');}
       ctx.fillStyle = dark(look.skin);
-      if(YY.CharacterArt?.hand)YY.CharacterArt.hand(ctx,P.E2,P.W2,look,false);else{ctx.beginPath();ctx.arc(P.W2[0],P.W2[1],.04,0,Math.PI*2);ctx.fill();}
+      if(!P.freeFront){if(YY.CharacterArt?.hand)YY.CharacterArt.hand(ctx,P.E2,P.W2,look,P.freeGesture||false);else{ctx.beginPath();ctx.arc(P.W2[0],P.W2[1],.04,0,Math.PI*2);ctx.fill();}}
     }
+    };
+    if(!P.freeFront)freeArm();
     // 发尾（在头后）
     const scaleHead = (fn) => { if (hs === 1) return fn(); ctx.save(); ctx.translate(P.hd[0], P.hd[1] - 0.06); ctx.scale(hs, hs); ctx.translate(-P.hd[0], -(P.hd[1] - 0.06)); fn(); ctx.restore(); };
     // 短裤
@@ -648,7 +693,7 @@
     // 躯干
     torso(ctx, P, look, lw, flat, o.f);
     // 前腿
-    (YY.CharacterArt?.limb||jointFallback)(ctx,P.H1,P.K1,P.F1,[.077,.087,.049,.066,.036].map(v=>v*bw),flat||look.stockings||look.skin,flat?null:look.outline,lw);
+    (YY.CharacterArt?.limb||jointFallback)(ctx,P.H1,P.K1,P.F1,[.090,.101,.056,.077,.044].map(v=>v*bw),flat||look.stockings||look.skin,flat?null:look.outline,lw);
     if (!flat) limb(ctx, [lerp(P.K1[0], P.F1[0], 0.72), lerp(P.K1[1], P.F1[1], 0.72)], P.F1, 0.051, 0.048, look.sock, null, lw, look.outline);
     if(!flat && look.marketTier>=3) YY.MarketArt?.limb(ctx,P.K1,P.F1,look,'shin');
     shoe(ctx, P.F1, P.K1, look, lw, flat ? flat : null, o.shoePulse || 0, o.time, !p.onGround);
@@ -662,7 +707,7 @@
     }
     if(look.dress||['bow','star'].includes(art?.detail)){
       const x=P.H[0],y=P.H[1],sway=clamp(p.vx||0,-5,5)*.006;
-      ctx.beginPath();ctx.moveTo(x-.14,y+.025);ctx.lineTo(x+.15,y+.025);ctx.quadraticCurveTo(x+.22+sway,y-.12,x+.26+sway,y-.30);ctx.quadraticCurveTo(x,y-.35,x-.24+sway,y-.30);ctx.closePath();ctx.fillStyle=flat||(look.dress?look.shirt:look.shorts);ctx.fill();
+      ctx.beginPath();ctx.moveTo(x-.14,y+.025);ctx.lineTo(x+.15,y+.025);ctx.quadraticCurveTo(x+.22+sway,y-.12,x+.26+sway,y-.30);ctx.quadraticCurveTo(x,y-.35,x-.24+sway,y-.30);ctx.closePath();const skirtColor=look.dress?look.shirt:look.shorts,skirt=ctx.createLinearGradient(x-.22,y,x+.25,y-.3);skirt.addColorStop(0,shade(skirtColor,.87));skirt.addColorStop(.38,shade(skirtColor,1.10));skirt.addColorStop(1,skirtColor);ctx.fillStyle=flat||skirt;ctx.fill();
       if(!flat){ctx.strokeStyle=look.outline;ctx.lineWidth=lw;ctx.stroke();ctx.strokeStyle=look.trim;ctx.lineWidth=.008;ctx.beginPath();ctx.moveTo(x-.22+sway,y-.29);ctx.quadraticCurveTo(x,y-.33,x+.24+sway,y-.29);ctx.stroke();}
     }
     // 头
@@ -672,7 +717,7 @@
     } else {limb(ctx,P.N,[P.hd[0],P.hd[1]-.07],.046,.043,look.skin2,null,lw,look.outline);scaleHead(() => YY.CharacterArt?.head2D?YY.CharacterArt.head2D(ctx,P,look,o):head(ctx,P,look,o,lw));}
     if(!flat && look.marketTier>=3)scaleHead(()=>YY.MarketArt?.visor(ctx,P,look));
     // 持拍手（最前）
-    (YY.CharacterArt?.limb||jointFallback)(ctx,P.S,P.E,P.W,[.053,.061,.035,.046,.03].map(v=>v*bw),flat||look.skin,flat?null:look.outline,lw);
+    (YY.CharacterArt?.limb||jointFallback)(ctx,P.S,P.E,P.W,[.064,.074,.043,.056,.036].map(v=>v*bw),flat||look.skin,flat?null:look.outline,lw);
     if (!flat) {
       // 护腕
       const wb = [lerp(P.E[0], P.W[0], 0.78), lerp(P.E[1], P.W[1], 0.78)];
@@ -681,7 +726,8 @@
       if (!look.tank) limb(ctx, P.S, [lerp(P.S[0], P.E[0], 0.35), lerp(P.S[1], P.E[1], 0.35)], 0.07 * bw, 0.06 * bw, look.shirt, null, lw, look.outline);
       if(look.marketTier>=3){YY.MarketArt?.limb(ctx,P.S,P.E,look,'shoulder');YY.MarketArt?.limb(ctx,P.E,P.W,look,'arm');}
     }
-    if (!o.hideRacket) {
+    if(P.freeFront)freeArm();
+    if (!o.hideRacket && P.showRacket!==false) {
       if(!flat && look.marketTier>=3 && YY.MarketArt) YY.MarketArt.racket(ctx,P,look,o);
       else if(!o.mechanical)racket(ctx, P, look, lw, flat, o.glow || 0, o.racketPulse || 0);
       if(!flat&&o.inkReady&&!o.mechanical){const h=YY.racketHead(P);ctx.save();ctx.translate(h[0],h[1]);ctx.scale(1,-1);YY.SkillFX?.inkRacket?.(ctx,0,0,1/42,o.time||0,-P.Rk);ctx.restore();}
@@ -692,9 +738,12 @@
       ctx.save();ctx.translate(P.K1[0]+.02,P.K1[1]-.01);ctx.rotate(-.3);ctx.fillStyle='#ead5b6';YY.rr(ctx,-.045,-.025,.09,.05,.01);ctx.fill();ctx.strokeStyle='#c29d78';ctx.lineWidth=.005;ctx.stroke();ctx.restore();
     }
     if(!flat&&art?.detail==='tape')limb(ctx,mixPoint(P.S,P.E,.6),mixPoint(P.S,P.E,.76),.047,.044,'#d9e8d9',null,lw*.4,look.shirt2);
+    // Props sit in the palms; the fingers overlap their lower edge.
+    if(o.showcase&&!flat)YY.CharacterArt?.showcaseAccessory(ctx,P,look,o.time||0);
+    if(P.freeFront&&!flat)YY.CharacterArt?.hand(ctx,P.E2,P.W2,look,P.freeGesture||false);
     // 手
     ctx.fillStyle = flat || look.skin;
-    if(!flat&&YY.CharacterArt?.hand)YY.CharacterArt.hand(ctx,P.E,P.W,look,true);else{ctx.beginPath();ctx.arc(P.W[0],P.W[1],.04,0,Math.PI*2);ctx.fill();}
+    if(!flat&&YY.CharacterArt?.hand)YY.CharacterArt.hand(ctx,P.E,P.W,look,P.handGesture||true);else{ctx.beginPath();ctx.arc(P.W[0],P.W[1],.04,0,Math.PI*2);ctx.fill();}
     if (!flat && look.prison) YY.MarketArt?.prisonCuffs(ctx, P, look, o.time || 0);
     return P;
   };
@@ -703,26 +752,93 @@
   YY.racketHead = (P) => [P.W[0] + Math.cos(P.Rk) * RK_OFF * (P.rs || 1), P.W[1] + Math.sin(P.Rk) * RK_OFF * (P.rs || 1)];
 
   /** Full-body key art shares the playable model and authored personal gesture. */
+  // 立绘背景：深色底 → 角色色光晕 → 运动斜线 → 身份徽记水印 → 地平线与投影。
+  // 全部由角色配色推导，20 人同一套版式、不同气质；文字与人物都压在暗背景上，
+  // 不再出现整张粉色/浅蓝的平涂。
+  YY.illustrationBackdrop=function(g,look,width,height){
+    const W=width,H=height,tone=look.shirt,tone2=look.shirt2||shade(tone,.7),trim=look.trim||'#f3d9a4';
+    const base=g.createLinearGradient(0,0,W*.35,H);
+    base.addColorStop(0,shade(tone2,.42));base.addColorStop(.5,shade(tone2,.30));base.addColorStop(1,shade(tone2,.20));
+    g.fillStyle=base;g.fillRect(0,0,W,H);
+    // 角色色光晕，压在头肩之后。
+    const glow=g.createRadialGradient(W*.52,H*.3,0,W*.52,H*.3,W*.62);
+    glow.addColorStop(0,YY.tint(shade(tone,1.06),.22));glow.addColorStop(.42,YY.tint(tone,.11));glow.addColorStop(1,'#00000000');
+    g.fillStyle=glow;g.fillRect(0,0,W,H);
+    // 斜向运动带：三条宽窄不同的斜切色块，形成层次。
+    g.save();
+    for(const [u,w,a]of[[.18,.30,.05],[.58,.17,.07],[.82,.10,.05]]){
+      g.fillStyle=tone;g.globalAlpha=a;g.beginPath();
+      g.moveTo(W*u,H);g.lineTo(W*(u+w),H);g.lineTo(W*(u+w)+W*.42,0);g.lineTo(W*u+W*.42,0);g.closePath();g.fill();
+    }
+    g.restore();
+    // 球路弧线：两道细弧从右下扫向中心，暗示挥拍轨迹。
+    g.save();g.strokeStyle=trim;g.lineWidth=Math.max(1,W*.004);
+    for(const [r,o]of[[W*.9,.10],[W*1.12,.06]]){g.globalAlpha=o;g.beginPath();g.ellipse(W*.98,H*.98,r,r*.78,0,Math.PI*1.08,Math.PI*1.52);g.stroke();}
+    g.restore();
+    // 身份徽记水印。
+    const motif=YY.CharacterArt?.profile(look)?.motif||'wing';
+    g.save();g.globalAlpha=.075;g.strokeStyle=trim;g.fillStyle=trim;
+    g.translate(W*.7,H*.24);YY.CharacterArt?.emblem(g,motif,0,0,W*.3,trim);g.restore();
+    // 地面：一条暗带 + 透视线，给站姿一个落脚面。
+    const floor=g.createLinearGradient(0,H*.72,0,H);floor.addColorStop(0,'#00000000');floor.addColorStop(1,'#00000055');
+    g.fillStyle=floor;g.fillRect(0,H*.72,W,H*.28);
+    g.save();g.strokeStyle='#ffffff';g.globalAlpha=.07;g.lineWidth=1;
+    for(let i=-3;i<=3;i++){g.beginPath();g.moveTo(W*.5+i*W*.1,H*.74);g.lineTo(W*.5+i*W*.34,H);g.stroke();}
+    g.restore();
+    // 浮尘：确定性分布的亮点，不随时间闪烁。
+    g.save();
+    for(let i=0;i<18;i++){const x=((i*97)%100)/100*W,y=((i*61+17)%100)/100*H*.92,r=i%5===0?W*.006:W*.0028;g.fillStyle=i%3?trim:'#ffffff';g.globalAlpha=.06+(i%4)*.05;g.beginPath();g.arc(x,y,r,0,Math.PI*2);g.fill();}
+    g.restore();
+    // 压角：左上标题区与底部名牌区更暗，保证文字可读。
+    const top=g.createLinearGradient(0,0,0,H*.24);top.addColorStop(0,'#00000066');top.addColorStop(1,'#00000000');g.fillStyle=top;g.fillRect(0,0,W,H*.24);
+  };
   YY.characterIllustration=function(look,width=360,height=460){
     const c=YY.platform.createCanvas();c.width=width;c.height=height;const g=c.getContext('2d');
-    const bg=g.createLinearGradient(0,0,width,height);bg.addColorStop(0,shade(look.shirt,1.87));bg.addColorStop(1,shade(look.shirt,1.45));g.fillStyle=bg;g.fillRect(0,0,width,height);
-    g.save();g.globalAlpha=.18;g.strokeStyle=look.shirt2;g.lineWidth=1;for(let i=0;i<7;i++){g.beginPath();g.moveTo(i*width/5,0);g.lineTo(i*width/5-width*.4,height);g.stroke();}g.restore();
+    YY.illustrationBackdrop(g,look,width,height);
     const player={idx:0,dir:1,vx:0,vy:0,onGround:true,swing:null,runPhase:0,land:0,x:0,y:0,buff:{}},opts={time:.4,showcase:true,gazeX:.4,quality:1};
-    const P=YY.CharacterArt.displayPose(player,.4,look,pose(player,.4)),rh=YY.racketHead(P),points=[P.F1,P.F2,P.E,P.E2,P.W,P.W2,[P.hd[0]-.25,P.hd[1]+.27],[P.hd[0]+.25,P.hd[1]-.17],[rh[0]-.21,rh[1]+.22],[rh[0]+.21,rh[1]-.22]];
-    const minX=Math.min(...points.map(p=>p[0]))-.12,maxX=Math.max(...points.map(p=>p[0]))+.12,maxY=Math.max(...points.map(p=>p[1]));
-    const k=Math.min(height*.76/maxY,width*.84/(maxX-minX)),cx=width*.5-(minX+maxX)*.5*k;
-    g.save();g.translate(cx,height*.91);g.fillStyle=look.shirt2+'24';g.beginPath();g.ellipse(0,0,k*.48,height*.023,0,0,Math.PI*2);g.fill();g.scale(k,-k);YY.drawCharacter(g,player,look,opts);g.restore();
-    g.save();g.globalAlpha=.6;g.fillStyle=look.shirt2;g.font='600 '+Math.round(width*.027)+'px '+YY.FONT;g.fillText('Y U Y U E   /   C L U B',width*.08,height*.08);g.restore();return c;
+    const P=YY.CharacterArt.displayPose(player,.4,look,pose(player,.4)),bounds=YY.CharacterArt.displayBounds(P);
+    const minX=bounds.minX-.05,maxX=bounds.maxX+.05,maxY=bounds.maxY;
+    const footY=height*.905,k=Math.min(footY*.9/maxY,width*.82/(maxX-minX)),cx=width*.5-(minX+maxX)*.5*k;
+    // 站立高光柱：人物身后的柔光，避免与暗背景糊在一起。
+    const halo=g.createRadialGradient(cx,height*.42,0,cx,height*.42,k*.95);
+    halo.addColorStop(0,YY.tint(shade(look.shirt,1.5),.19));halo.addColorStop(1,'#00000000');
+    g.fillStyle=halo;g.fillRect(0,0,width,height);
+    g.save();g.translate(cx,footY);g.scale(1,.19);
+    const shadow=g.createRadialGradient(0,0,0,0,0,k*.62);shadow.addColorStop(0,'#000000b0');shadow.addColorStop(.7,'#00000040');shadow.addColorStop(1,'#00000000');g.fillStyle=shadow;g.beginPath();g.arc(0,0,k*.62,0,Math.PI*2);g.fill();g.restore();
+    g.save();g.translate(cx,footY);g.scale(k,-k);YY.drawCharacter(g,player,look,opts);g.restore();
+    // 名牌：色条 + 姓名，左下角。
+    const pad=width*.075,plateH=Math.max(16,height*.058),py=height-plateH-pad*.9;
+    g.save();
+    g.fillStyle=YY.tint(shade(look.shirt2||"#12222e",.42),.75);YY.rr(g,pad*.7,py,width-pad*1.4,plateH,plateH*.28);g.fill();
+    g.fillStyle=look.trim||'#f3d9a4';g.fillRect(pad*.7,py+plateH*.28,Math.max(2,width*.006),plateH*.44);
+    g.fillStyle='#fff8e9';g.textBaseline='middle';g.font='700 '+Math.round(plateH*.52)+'px '+YY.FONT;
+    g.fillText(look.name,pad*.7+plateH*.34,py+plateH*.52);
+    g.restore();
+    g.save();g.globalAlpha=.5;g.fillStyle='#ffffff';g.font='600 '+Math.round(width*.024)+'px '+YY.FONT;g.fillText('Y U Y U E   /   C L U B',pad*.7,height*.075);g.restore();
+    return c;
   };
 
-  /** 头像（用于记分牌与界面） */
+  /** 头像：与立绘同一套头与配色，深色底 + 角色色光 + 肩线，小尺寸也能看清表情。 */
   YY.portrait = function (look, size) {
     const c=YY.platform.createCanvas();c.width=c.height=size;const g=c.getContext('2d'),a=YY.CharacterArt?.acting(look)||{tilt:0,hip:0,expression:'confident'};
-    const bg=g.createLinearGradient(0,0,size,size);bg.addColorStop(0,shade(look.shirt,1.4));bg.addColorStop(1,look.shirt2);g.fillStyle=bg;g.fillRect(0,0,size,size);
-    g.save();g.globalAlpha=.12;g.strokeStyle='#fff';g.lineWidth=size*.018;g.beginPath();g.arc(size*.5,size*.51,size*.39,.4,5.9);g.stroke();g.restore();
-    g.save();g.translate(size*.5,size*1.02);g.rotate(a.tilt*.3);g.scale(size*.55,size*.55);
-    g.fillStyle=look.shirt;g.beginPath();g.moveTo(-.9,.1);g.quadraticCurveTo(-.95,-.65,-.34,-.75);g.lineTo(.34,-.75);g.quadraticCurveTo(.9,-.62,1,.1);g.closePath();g.fill();
-    g.strokeStyle=look.trim;g.lineWidth=.055;g.beginPath();g.moveTo(-.34,-.71);g.quadraticCurveTo(0,-.28,.34,-.71);g.stroke();YY.CharacterArt?.emblem(g,YY.CharacterArt.profile(look).motif,.45,-.37,.13,look.trim);g.restore();
-    g.save();g.translate(size*.5,size*.43);g.rotate(a.tilt);g.scale(size*.265,size*.265);if(YY.CharacterArt)YY.CharacterArt.head(g,look,{expression:a.expression,turn:a.hip,time:.4,gaze:a.tilt*2});else{g.scale(1/.147,-1/.147);head(g,{hd:[0,0],N:[0,-.15]},look,{time:.4,mood:'focus'},.009);}g.restore();return c;
+    const tone=look.shirt,tone2=look.shirt2||shade(tone,.7),trim=look.trim||'#f3d9a4';
+    const bg=g.createLinearGradient(0,0,size,size);bg.addColorStop(0,shade(tone2,.46));bg.addColorStop(1,shade(tone2,.26));g.fillStyle=bg;g.fillRect(0,0,size,size);
+    const glow=g.createRadialGradient(size*.5,size*.42,0,size*.5,size*.42,size*.62);
+    glow.addColorStop(0,YY.tint(shade(tone,1.05),.27));glow.addColorStop(.6,YY.tint(tone,.09));glow.addColorStop(1,'#00000000');g.fillStyle=glow;g.fillRect(0,0,size,size);
+    g.save();g.globalAlpha=.1;g.strokeStyle=trim;g.lineWidth=size*.012;
+    for(let i=0;i<3;i++){g.beginPath();g.moveTo(size*(.1+i*.28),size);g.lineTo(size*(.34+i*.28),0);g.stroke();}g.restore();
+    // 肩与领口：和立绘同一躯干色，给头像一个“半身像”的底。
+    g.save();g.translate(size*.5,size*1.06);g.rotate(a.tilt*.22);g.scale(size*.58,size*.58);
+    const torso=g.createLinearGradient(-.5,0,.5,0);torso.addColorStop(0,shade(tone,.72));torso.addColorStop(.45,tone);torso.addColorStop(1,shade(tone,1.12));
+    g.fillStyle=torso;g.beginPath();g.moveTo(-1.0,.26);g.quadraticCurveTo(-1.02,-.62,-.4,-.78);g.quadraticCurveTo(0,-.55,.4,-.78);g.quadraticCurveTo(1.02,-.62,1.0,.26);g.closePath();g.fill();
+    g.strokeStyle=shade(tone2,.7);g.lineWidth=.05;g.stroke();
+    g.strokeStyle=trim;g.lineWidth=.075;g.beginPath();g.moveTo(-.42,-.74);g.quadraticCurveTo(0,-.34,.42,-.74);g.stroke();
+    g.globalAlpha=.9;YY.CharacterArt?.emblem(g,YY.CharacterArt.profile(look).motif,-.62,-.34,.11,trim);g.globalAlpha=1;g.restore();
+    g.save();g.translate(size*.5,size*.47);g.rotate(a.tilt*.7);g.scale(size*.285,size*.285);
+    if(YY.CharacterArt)YY.CharacterArt.head(g,look,{expression:a.expression,turn:a.hip,time:.4,gaze:a.tilt*2});else{g.scale(1/.147,-1/.147);head(g,{hd:[0,0],N:[0,-.15]},look,{time:.4,mood:'focus'},.009);}
+    g.restore();
+    const vign=g.createRadialGradient(size*.5,size*.5,size*.34,size*.5,size*.5,size*.72);
+    vign.addColorStop(0,'#00000000');vign.addColorStop(1,'#00000055');g.fillStyle=vign;g.fillRect(0,0,size,size);
+    return c;
   };
 })(typeof GameGlobal !== 'undefined' ? GameGlobal : typeof window !== 'undefined' ? window : globalThis);

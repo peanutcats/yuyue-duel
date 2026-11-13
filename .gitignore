@@ -7,3 +7,9 @@ node_modules/
 output/
 project.private.config.json
 .env
+
+# Persistent account stores contain private user data.
+data/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm

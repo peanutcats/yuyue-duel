@@ -32,7 +32,7 @@ test('field devices survive the end of a point with their countdown paused', () 
   n.addEnt('bow',0,0,C.NET_H,99);cast(n, 0, 'jiewang'); cast(n, 1, 'fuzhi'); const clone = n.entOf('clone', 1), left = [n.players[0].buff.silkReady, clone.t];
   endPoint(n); for (let i = 0; i < 120; i++) n.step(C.DT);
   assert.ok(n.entOf('clone', 1) === clone, 'the clone stays for the next rally');
-  assert.ok(Math.abs(clone.t-left[1])<.05);assert.ok(!(n.players[0].buff.silkReady>0),'ribbon charge ends with the rally');
+  assert.ok(Math.abs(clone.t-left[1])<.05);assert.equal(n.players[0].buff.silkReady,left[0],'unused ribbon charge pauses with the rally');
   // 一次性的动作（潮水、长拍）照常在回合结束时收掉
   const w = M('canglan', 'lingfeng'); serve(w, 0, 'clear'); cast(w, 0, 'chaolai'); endPoint(w);
   assert.ok(!w.entOf('wave', 0));
@@ -180,23 +180,12 @@ test('xingxing: the gate exit holds the ball for 0.35 s; gravity is a draining t
   q.energy = 0.01; q.skillCd = 0; q.buff.gravOn = 99; g.phase = 'rally'; g.skPlayer(q, 0.1); assert.equal(q.buff.gravOn, 0, 'switches off with no energy');
 });
 
-test('laochen: Ctrl+H swaps the next attack for a soft ball; the freeze pane stops the real shuttle', () => {
-  for (const [aim, type] of [[null, 'lift'], [1, 'net']]) {
-    const m = M('laochen', 'canglan', ['yati', 'shuangji']); m.phase = 'rally'; const p = m.players[0], o = m.players[1]; p.x = -3; o.x = 3;
-    assert.ok(cast(m, 0, 'yati', aim)); assert.ok(m.entOf('replace', 0)); m.entOf('replace',0).age=.31; const e0 = p.energy;
-    Object.assign(m.shuttle, { x: o.x - 0.5, y: 2.6, live: true, held: false, ctl: null });
-    const drop = { type: 'drop', vx: -6, vy: 1 }; m.skShot(o, drop, {}); assert.equal(drop.type, 'drop', 'soft balls are not replaced');
-    const shot = { type: 'smash', vx: -20, vy: -6 }, ctx = {}; m.skShot(o, shot, ctx);
-    assert.equal(shot.type, type); assert.ok(shot.vy > 0 && ctx.replaced === 1); assert.equal(p.energy, e0 + 3); assert.ok(!m.entOf('replace', 0), 'replaced once');
-  }
-  const n = M('laochen', 'canglan', ['shuangji', 'yati']); n.phase = 'rally'; const q = n.players[0]; q.x = -3;
-  assert.ok(cast(n, 0, 'shuangji', { x: .6, y: .5 })); const pane = n.entOf('pane', 0); assert.ok(q.side * pane.x > 0); pane.age=.3;
-  incoming(n.shuttle, { x: pane.x + 1.6, y: pane.y + .1, vx: -9, vy: 0, crossedNet: true });
-  let frozen = null; run(n, 0.5, () => { const c = n.shuttle.ctl; if (!frozen && c && c.k === 'freeze') frozen = { x: n.shuttle.x, vx: c.vx }; });
-  assert.ok(frozen, 'the shuttle freezes in the pane'); run(n, 0.3); assert.equal(n.shuttle.x, frozen.x, 'and stays put');
-  assert.equal(YY.skPack(n).c.k, 'freeze', 'online peers see the freeze');
-  q.skillCd = 0; assert.ok(cast(n, 0, 'shuangji')); assert.ok(n.shuttle.ctl.thaw); for(let i=0;i<20&&n.shuttle.ctl;i++)n.skControl(C.DT); assert.equal(n.shuttle.ctl, null); assert.equal(n.shuttle.vx, frozen.vx, 'early thaw keeps its speed');
-  assert.deepEqual(n.score, [0, 0]);
+test('laochen: two manual rewrites and opposing ground ice preserve physical ball motion', () => {
+  const m=M('laochen','canglan',['yati','shuangji']);m.phase='rally';const p=m.players[0],o=m.players[1];
+  assert.ok(cast(m,0,'yati'));const rule=m.entOf('replace',0);rule.age=.2;
+  for(const type of ['drop','smash']){Object.assign(m.shuttle,{x:2.5,y:2.6,live:true,held:false,ctl:null,lastHitter:0,crossedNet:true,selfToss:-1});const shot={type,vx:-12,vy:-2},ctx={};assert.ok(m.replaceShot(o,shot,ctx));assert.equal(shot.type,'lift');assert.equal(ctx.replaced,1);}
+  assert.ok(!m.entOf('replace',0));p.skillCd=0;assert.ok(cast(m,0,'shuangji'));const ice=m.entOf('pane',0);assert.ok(ice.x*o.side>0);assert.equal(ice.ground,1);ice.age=.4;o.x=ice.x;o.vx=4;
+  assert.equal(m.iceAt(o),ice);m.inputs[1].move=0;const vx=o.vx;m.updatePlayer(o,C.DT);assert.ok(o.vx>vx-.1);assert.equal(m.shuttle.ctl,null);
 });
 
 test('ranran sling, ding devices and guoge leverage give heavy feedback events', () => {

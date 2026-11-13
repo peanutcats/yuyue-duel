@@ -19,14 +19,15 @@ function createPrediction(YY, N) {
       const own = sn.pp[this.index]?.cnt;
       if (own && (own.vine || own.fling != null)) { this.display = null; return; }
       const m = Object.create(YY.Match.prototype);
-      m.players = sn.pp.map(p => ({ ...p, st: { ...p.st }, buff: { ...p.buff }, cnt: { ...p.cnt }, hist: (p.hist || []).slice(), swing: p.swing ? { ...p.swing } : null }));
+      m.players = sn.pp.map(p => ({ ...p, st: { ...p.st }, buff: { ...p.buff }, cnt: { ...p.cnt, ...(p.cnt.teacher ? {teacher:{...p.cnt.teacher}} : {}) }, hist: (p.hist || []).slice(), swing: p.swing ? { ...p.swing } : null }));
       m.inputs = [{ move: 0, presses: [] }, { move: 0, presses: [] }];
       m.phase = sn.ph; m.server = sn.sv; m.serveT = sn.st; m.serving = sn.sg ? {} : null;
       m.shuttle = { x: sn.s[0], y: sn.s[1], vx: sn.s[2], vy: sn.s[3] };
       m.emit = () => {};
       // 技能效果由服务器结算；本地只保留跑动/跳跃所需的规则状态
       const k = sn.k || 0;
-      m.skillsOn = false; m.ents = k ? k.e.filter(e => e.k === 'cone') : []; // 标志桶会挡路，本地也要算
+      m.skillsOn = false; m.predictGround = true;
+      m.ents = k ? k.e.filter(e => e.k === 'cone' || e.k === 'pane' && e.ground).map(e=>({...e})) : [];
       m.events = []; m.time = sn.ht || 0; m.pred = null;
       m.sk = { half: k ? k.r[0].slice() : [YY.C.HALF, YY.C.HALF], netUp: 0, shift: 0, option: null, potato: null, beat: null, used: [{}, {}], seen: [{}, {}] };
       m.shuttle.ctl = k && k.c || null;
@@ -47,7 +48,10 @@ function createPrediction(YY, N) {
           inp.presses.push(...d.presses.map(a => ({ btn: a.btn })));
         }
         if (hitstop > 0) hitstop -= YY.C.DT;
-        else { m.time += YY.C.DT; m.updatePlayer(p, YY.C.DT); }
+        else {
+          m.time += YY.C.DT; m.updatePlayer(p, YY.C.DT);
+          if(m.phase==='rally')for(const e of m.ents)if(e.k==='pane'){e.age+=YY.C.DT;e.t-=YY.C.DT;}
+        }
         time += YY.C.DT;
       }
       if (this.display && this.display.phase === sn.ph) {

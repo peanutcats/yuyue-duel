@@ -48,18 +48,6 @@
     '孙大帅':['laugh',-.04,.06, .39,-.32, 105,1.55,28,.65, 1.15,1.13,.22],
     '董总':['stern',.03,.03, .25,-.22, 12,1.15,68,2.2, 1.05,1.03,-.02]
   };
-  const displayHands={
-    '凌风':[[.45,1.52],1.7,[-.4,1.62]],'沧澜':[[.48,1.15],.6,[-.28,.98]],
-    '小红':[[.45,1.38],1.0,[-.03,1.62]],'冉冉':[[.50,1.14],.75,[-.48,1.58]],
-    '王瑞':[[.42,1.30],1.2,[-.38,1.06]],'星星':[[.27,1.45],1.75,[-.35,1.65]],
-    '丁丁':[[.38,1.16],1.2,[-.18,1.60]],'猴子':[[.43,1.58],2.7,[-.4,1.02]],
-    '路先森':[[.43,.95],-.18,[-.24,1.56]],'老陈':[[.36,1.16],.65,[-.2,1.17]],
-    '果哥':[[.43,1.63],1.95,[-.45,1.66]],'田楚':[[.50,1.14],.62,[-.21,.96]],
-    '朱老师':[[.46,1.17],.9,[-.41,1.42]],'波波':[[.39,1.54],1.6,[-.35,1.05]],
-    '苗苗':[[.51,1.45],1.0,[-.4,1.54]],'马哥':[[.38,.98],-.4,[-.24,1.38]],
-    '老南':[[.41,1.13],.7,[-.23,1.31]],'朱朱':[[.43,1.31],1.12,[-.28,1.59]],
-    '孙大帅':[[.42,1.56],2.0,[-.42,1.10]],'董总':[[.42,1.22],1.1,[-.18,1.40]]
-  };
   const acting=look=>{const v=actingRows[look?.name]||actingRows['凌风'];return{expression:v[0],tilt:v[1],hip:v[2],front:v[3],back:v[4],arm:v.slice(5,9),faceW:v[9],jaw:v[10],smile:v[11]};};
   // A single soft silhouette across the joint: thigh/calf and biceps/forearm
   // have different volumes. No capsule end-caps or dark joint rings.
@@ -78,21 +66,119 @@
   }
   function hand(g,e,w,look,grip=true){
     g.save();g.translate(...w);g.rotate(Math.atan2(w[1]-e[1],w[0]-e[0]));g.fillStyle=look.skin;g.strokeStyle=look.skin2;g.lineWidth=.006;
+    if(typeof grip==='string'&&grip!=='grip'){
+      // A loose palm, a greeting and a pointing finger share the existing
+      // skin/outline treatment, without turning every empty hand into a fist.
+      const open=grip==='wave'||grip==='open',point=grip==='point',support=grip==='support';
+      g.beginPath();g.moveTo(-.026,-.025);g.quadraticCurveTo(.012,-.034,.042,-.022);
+      g.quadraticCurveTo(.065,-.006,.045,.024);g.quadraticCurveTo(.012,.038,-.024,.025);g.closePath();g.fill();g.stroke();
+      g.lineCap='round';
+      const fingers=open?4:point?1:support?3:3;
+      for(let i=0;i<fingers;i++){
+        const y=-.019+i*.014,tip=point?.102:open?.085-Math.abs(i-1.5)*.009:support?.069:.066-i*.006;
+        const spread=open?(i-1.5)*.015:.012;
+        g.beginPath();g.moveTo(.029,y);g.quadraticCurveTo(.051,y+spread*.5,tip,y+spread);
+        g.strokeStyle=look.skin2;g.lineWidth=.015;g.stroke();g.strokeStyle=look.skin;g.lineWidth=.010;g.stroke();
+      }
+      g.beginPath();g.moveTo(.003,.022);g.quadraticCurveTo(.018,.053,.041,.043);g.strokeStyle=look.skin2;g.lineWidth=.018;g.stroke();g.strokeStyle=look.skin;g.lineWidth=.012;g.stroke();
+      g.restore();return;
+    }
     g.beginPath();g.moveTo(-.025,-.027);g.quadraticCurveTo(.014,-.045,.046,-.022);g.quadraticCurveTo(.066,.01,.037,.036);g.lineTo(-.023,.028);g.closePath();g.fill();g.stroke();
     g.beginPath();g.moveTo(-.01,.018);g.quadraticCurveTo(.018,.057,.039,.028);g.stroke();
     if(grip){g.beginPath();g.moveTo(.023,-.025);g.lineTo(.025,.013);g.moveTo(.037,-.018);g.lineTo(.039,.009);g.stroke();}g.restore();
   }
+  // Display acting only: one planted leg, a relaxed knee, and hands with a
+  // purpose. Coordinates are local to the hip; rackets remain gameplay props.
+  const displayStances={
+    '凌风':{hip:.045,twist:-.10,lean:-.025,feet:[.12,-.25],knees:[.012,.075],hand:[.32,.91],racket:-1.12,free:[-.29,1.15],prop:'shuttle'},
+    '沧澜':{hip:-.055,twist:.10,lean:.025,feet:[.25,-.14],knees:[-.045,-.008],hand:[.33,.96],racket:-.90,free:[-.28,1.22],prop:'shuttle'},
+    '小红':{hip:-.025,twist:-.06,lean:.015,feet:[.21,-.13],knees:[.035,-.008],hand:[.08,1.20],racket:null,free:[-.14,1.05],prop:'plan',propOffset:[.065,.02],gesture:'point',freeFront:true},
+    '冉冉':{hip:.065,twist:.14,lean:-.035,feet:[.13,-.19],knees:[.008,.085],hand:[.39,1.48],racket:null,free:[-.19,.98],prop:'none',gesture:'wave',freeGesture:'rest',freeFront:true},
+    '王瑞':{hip:-.025,twist:-.06,lean:.025,feet:[.26,-.19],knees:[.035,-.005],hand:[.23,.98],racket:null,free:[-.35,1.20],prop:'bun',gesture:'rest',freeGesture:'support'},
+    '星星':{hip:.045,twist:.09,lean:-.025,feet:[.13,-.16],knees:[.008,.065],hand:[.03,1.19],racket:null,free:[-.17,1.24],prop:'starball',gesture:'support',freeFront:true},
+    '丁丁':{hip:-.035,twist:-.10,lean:.025,feet:[.23,-.15],knees:[.045,-.008],hand:[.18,1.58],racket:null,free:[-.27,1.05],prop:'tool',gesture:'point'},
+    '猴子':{hip:.045,twist:-.08,lean:-.025,feet:[.13,-.31],knees:[.01,.065],hand:[.37,1.28],racket:1.10,free:[-.33,1.15],prop:'thumb'},
+    '路先森':{hip:-.035,twist:.09,lean:.025,feet:[.24,-.14],knees:[.04,-.008],hand:[.07,1.21],racket:null,free:[-.14,1.06],prop:'tablet',propOffset:[.06,.025],gesture:'point',freeFront:true},
+    '老陈':{hip:.015,twist:.04,lean:-.015,feet:[.12,-.20],knees:[.008,.035],hand:[.06,1.16],racket:null,free:[-.16,1.03],prop:'clipboard',propOffset:[.07,.025],gesture:'point',freeFront:true},
+    '果哥':{hip:.015,twist:-.10,lean:-.01,feet:[.20,-.27],knees:[.012,.04],hand:[.23,1.00],racket:null,free:[-.37,1.24],prop:'thumb',gesture:'rest',freeFront:true},
+    '田楚':{hip:.06,twist:.14,lean:-.035,feet:[.13,-.20],knees:[.005,.06],hand:[.30,.88],racket:-1.25,free:[-.18,.94],prop:'none',freeGesture:'rest',freeFront:true},
+    '朱老师':{hip:-.025,twist:-.06,lean:.02,feet:[.23,-.15],knees:[.03,-.005],hand:[.39,1.22],racket:null,free:[-.27,1.28],prop:'whistle',gesture:'open'},
+    '波波':{hip:-.035,twist:-.10,lean:.03,feet:[.22,-.15],knees:[.05,-.008],hand:[.04,1.14],racket:null,free:[-.16,1.04],prop:'fossil',propOffset:[.07,.025],gesture:'support',freeFront:true},
+    '苗苗':{hip:.025,twist:-.10,lean:.035,crouch:.035,feet:[.22,-.29],knees:[.04,.045],hand:[.38,1.08],racket:.62,free:[-.29,1.12],prop:'shuttle'},
+    '马哥':{hip:-.045,twist:.05,lean:.035,feet:[.22,-.14],knees:[.05,-.008],hand:[.22,.87],racket:null,free:[-.25,1.10],prop:'coffee',gesture:'relaxed'},
+    '老南':{hip:.015,twist:.06,lean:-.015,feet:[.13,-.22],knees:[.008,.04],hand:[.14,1.22],racket:null,free:[-.12,1.16],prop:'camera',propOffset:[.11,.035],gesture:'grip',freeFront:true},
+    '朱朱':{hip:.065,twist:.14,lean:-.04,feet:[.12,-.15],knees:[.008,.07],hand:[.23,1.01],racket:null,free:[-.25,1.10],prop:'scroll',gesture:'rest',freeFront:true},
+    '孙大帅':{hip:.035,twist:-.08,lean:-.015,feet:[.19,-.29],knees:[.012,.05],hand:[.32,.90],racket:-1.03,free:[-.36,1.02],prop:'basket',freeGesture:'support'},
+    '董总':{hip:-.025,twist:.05,lean:.02,feet:[.22,-.15],knees:[.025,-.008],hand:[.06,1.19],racket:null,free:[-.15,1.06],prop:'tablet',propOffset:[.07,.025],gesture:'point',freeFront:true}
+  };
   function displayPose(p,time,look,base){
-    const a=acting(look),P={...base};for(const k of Object.keys(P))if(Array.isArray(P[k]))P[k]=P[k].slice();
-    const breathe=Math.sin(time*2.1)*.008;
-    P.H=[a.hip,.86+breathe];P.H1=[a.hip+.055,.86+breathe];P.H2=[a.hip-.055,.85+breathe];
-    P.F1=[a.front,.015];P.F2=[a.back,.045];P.K1=[lerp(P.H1[0],a.front,.55)+.08,.43];P.K2=[lerp(P.H2[0],a.back,.5)+.06,.45];
-    P.S=[a.hip+.15,1.37+breathe];P.S2=[a.hip-.14,1.36+breathe];P.N=[a.hip-.015,1.46+breathe];P.hd=[a.hip+a.tilt*.14,1.64+breathe];
-    const hands=displayHands[look.name]||displayHands['凌风'];
-    const elbow=(s,w,side)=>{const dx=w[0]-s[0],dy=w[1]-s[1],d=Math.max(.001,Math.hypot(dx,dy)),along=(d*d+.29**2-.27**2)/(2*d),bend=Math.sqrt(Math.max(0,.29**2-along*along));return[s[0]+dx/d*along-dy/d*bend*side,s[1]+dy/d*along+dx/d*bend*side];};
-    P.W=[hands[0][0]+a.hip,hands[0][1]+breathe];P.W2=[hands[2][0]+a.hip,hands[2][1]+breathe];P.E=elbow(P.S,P.W,-1);P.E2=elbow(P.S2,P.W2,1);P.Rk=hands[1];P.rs=1;P.ux=(P.N[0]-P.H[0])/.56;P.uy=(P.N[1]-P.H[1])/.56;P.lean=a.tilt*.2;P.chestYaw=a.tilt;return P;
+    const d=displayStances[look.name]||displayStances['凌风'],P={...base},t=time+rows.findIndex(r=>r[0]===look.name)*.37;
+    for(const k of Object.keys(P))if(Array.isArray(P[k]))P[k]=P[k].slice();
+    const breathe=Math.sin(t*1.9)*.005,sway=Math.sin(t*.9)*.004,hx=d.hip+sway,hy=.90+breathe-(d.crouch||0),dy=hy-.90;
+    const roll=d.hip*.20,lean=d.lean,tw=d.twist;
+    P.H=[hx,hy];P.H1=[hx+.063,hy+roll];P.H2=[hx-.063,hy-roll];
+    P.F1=[d.feet[0],.015];P.F2=[d.feet[1],.045];
+    // Knees follow the hip-to-ankle line. Only the unweighted leg softens;
+    // the old outward IK offset made every idle character look mid-squat.
+    const knee=(h,f,b)=>[lerp(h[0],f[0],.52)+b,lerp(h[1],f[1],.52)];
+    P.K1=knee(P.H1,P.F1,d.knees[0]);P.K2=knee(P.H2,P.F2,d.knees[1]);
+    const chest=hx+lean,shoulder=tw*.055;
+    P.S=[chest+.155,hy+.49+shoulder];P.S2=[chest-.155,hy+.49-shoulder];
+    P.N=[chest,hy+.585];P.hd=[chest-.012,hy+.785];
+    const arm=(S,target,side)=>{
+      let dx=target[0]-S[0],dy=target[1]-S[1],len=Math.hypot(dx,dy)||1,dst=clamp(len,.10,.535);dx/=len;dy/=len;
+      const W=[S[0]+dx*dst,S[1]+dy*dst];
+      // The resting forearm comes towards the viewer. Its projected length
+      // shortens so a hand held at the waist does not force a flared elbow.
+      const hanging=[S[0]+side*.07,S[1]-.27],lower=clamp(Math.hypot(W[0]-hanging[0],W[1]-hanging[1]),Math.max(.18,dst-.28+.005),.265);
+      const along=(dst*dst+.28*.28-lower*lower)/(2*dst),bend=Math.sqrt(Math.max(0,.28*.28-along*along));
+      const candidates=[-1,1].map(sign=>[S[0]+dx*along-dy*bend*sign,S[1]+dy*along+dx*bend*sign]);
+      // Prefer the hanging elbow over the alternative that folds through the
+      // chest; raised gestures still resolve through the full reachable arc.
+      const cost=E=>Math.hypot(E[0]-hanging[0],E[1]-hanging[1])+2*Math.max(0,(S[0]-E[0])*side-.035);
+      return {W,E:cost(candidates[0])<cost(candidates[1])?candidates[0]:candidates[1]};
+    };
+    const r=arm(P.S,[hx+d.hand[0],d.hand[1]+dy+Math.sin(t*1.2)*.004],1),l=arm(P.S2,[hx+d.free[0],d.free[1]+dy+Math.sin(t*.95)*.004],-1);
+    P.W=r.W;P.E=r.E;P.W2=l.W;P.E2=l.E;
+    P.showRacket=d.racket!==null;P.Rk=(d.racket??-.9)+Math.sin(t*1.2)*.012;P.rs=.92;
+    P.handGesture=d.gesture||(P.showRacket?'grip':'relaxed');P.freeGesture=d.freeGesture||(d.prop==='none'?'relaxed':'grip');P.freeFront=!!d.freeFront;
+    P.headTilt=-tw*.8;P.headTurn=tw*1.4;P.ux=(P.N[0]-P.H[0])/.56;P.uy=(P.N[1]-P.H[1])/.56;
+    P.lean=lean;P.hipYaw=-tw*.4;P.chestYaw=tw*1.4;P.prop=d.prop;
+    P.propAnchor=[P.W2[0]+(d.propOffset?.[0]||0),P.W2[1]+(d.propOffset?.[1]||0)];
+    return P;
   }
-  function head2D(g,P,look,o={}){const a=acting(look);g.save();g.translate(...P.hd);g.rotate((o.showcase?a.tilt:clamp(P.lean*.35,-.2,.2)));g.scale(.147,-.147);head(g,look,{turn:.22,time:o.time||0,focus:!!P.motion,gaze:clamp(o.gazeX||0,-1,1),expression:o.showcase?a.expression:undefined,mood:o.mood,quality:o.quality??1});g.restore();}
+  // The same visible silhouette drives exported art and the live collection.
+  // Hidden rackets must not leave empty space or shrink a non-racket gesture.
+  function displayBounds(P,headPad=.32){
+    const pts=[],box=(q,x,y)=>pts.push([q[0]-x,q[1]-y],[q[0]+x,q[1]+y]);
+    for(const key of ['H','K1','K2','S','S2','E','E2'])box(P[key],.11,.10);
+    for(const key of ['W','W2'])box(P[key],.13,.13);
+    for(const key of ['F1','F2'])box(P[key],.18,.10);
+    box(P.hd,headPad,headPad);
+    if(P.showRacket!==false)box(Y.racketHead(P),.23,.23);
+    if(P.prop&&P.prop!=='none')box(P.propAnchor||P.W2,.22,.28);
+    return {minX:Math.min(...pts.map(q=>q[0])),maxX:Math.max(...pts.map(q=>q[0])),minY:Math.min(...pts.map(q=>q[1])),maxY:Math.max(...pts.map(q=>q[1]))};
+  }
+  function showcaseAccessory(g,P,look,time){
+    const type=P.prop;if(!type||type==='none')return;
+    const [x,y]=P.propAnchor||P.W2;g.save();g.translate(x,y);g.scale(1,-1);g.lineWidth=.008;g.lineJoin='round';g.lineCap='round';
+    const box=(x,y,w,h,fill,stroke='#26384e')=>{Y.rr(g,x,y,w,h,.014);g.fillStyle=fill;g.fill();g.strokeStyle=stroke;g.stroke();};
+    if(['shuttle','starball'].includes(type)){
+      g.save();g.translate(-.01,-.045);g.rotate(-.18+Math.sin(time)*.04);g.fillStyle='#f7f2df';g.strokeStyle='#bdcbd5';g.beginPath();g.moveTo(-.034,0);g.lineTo(-.085,-.14);g.quadraticCurveTo(0,-.17,.085,-.14);g.lineTo(.034,0);g.closePath();g.fill();g.stroke();for(let i=-2;i<=2;i++){g.beginPath();g.moveTo(i*.014,-.01);g.lineTo(i*.036,-.14);g.stroke();}g.fillStyle='#ddb87b';g.beginPath();g.ellipse(0,.01,.036,.028,0,0,TAU);g.fill();g.restore();
+    }else if(type==='bun'){g.fillStyle='#f4dcb2';g.strokeStyle='#b68c61';g.beginPath();g.ellipse(0,-.055,.10,.065,0,0,TAU);g.fill();g.stroke();for(let i=-1;i<=1;i++){g.beginPath();g.moveTo(i*.05,-.04);g.quadraticCurveTo(i*.02,-.12,0,-.10);g.stroke();}}
+    else if(type==='basket'){g.fillStyle='#e49a50';g.strokeStyle='#664130';g.beginPath();g.arc(-.015,-.045,.145,0,TAU);g.fill();g.stroke();for(let i of[-1,1]){g.beginPath();g.moveTo(-.15,-.045);g.quadraticCurveTo(-.015,-.045+i*.16,.13,-.045);g.stroke();}g.beginPath();g.moveTo(-.015,-.19);g.lineTo(-.015,.10);g.stroke();}
+    else if(['plan','tablet','clipboard','fossil','scroll'].includes(type)){
+      const paper=type==='plan'||type==='clipboard'||type==='scroll',fill=paper?'#f3e5c5':type==='fossil'?'#b9a27d':'#24475b';
+      g.rotate(-.12);box(-.11,-.19,.20,.25,fill);if(type==='fossil'){emblem(g,'fossil',-.01,-.07,.075,'#6b5948');}else if(paper){g.strokeStyle='#b29a75';for(let i=0;i<4;i++){g.beginPath();g.moveTo(-.08,-.14+i*.044);g.lineTo(.055,-.14+i*.044);g.stroke();}if(type==='clipboard')box(-.04,-.21,.07,.035,'#566975');}else{box(-.087,-.167,.154,.19,'#a3c9d1');emblem(g,profile(look).motif,-.01,-.075,.053,'#437890');}}
+    else if(type==='coffee'){box(-.055,-.14,.11,.15,'#f4e8cd');box(-.066,-.16,.132,.025,'#654d46');box(-.055,-.10,.11,.052,'#9a7761');}
+    else if(type==='camera'){box(-.12,-.12,.24,.14,'#324351');box(-.08,-.155,.08,.04,'#465e6b');g.fillStyle='#a9c6cc';g.beginPath();g.arc(.015,-.05,.06,0,TAU);g.fill();g.fillStyle='#193348';g.beginPath();g.arc(.015,-.05,.044,0,TAU);g.fill();g.fillStyle='#d7f2ed';g.beginPath();g.arc(0,-.07,.014,0,TAU);g.fill();}
+    else if(type==='ribbon'){emblem(g,'bow',0,-.065,.083,look.band);}
+    else if(type==='tool'){g.strokeStyle='#c6d3dd';g.lineWidth=.025;g.beginPath();g.moveTo(0,.05);g.lineTo(.055,-.16);g.stroke();g.strokeStyle='#ecaf5b';g.lineWidth=.035;g.beginPath();g.moveTo(0,.05);g.lineTo(.021,-.03);g.stroke();}
+    else if(type==='whistle'){box(-.035,-.055,.09,.05,'#e7c96d');g.strokeStyle='#ded1ac';g.lineWidth=.005;g.beginPath();g.moveTo(.02,-.05);g.quadraticCurveTo(.12,-.18,.16,-.11);g.stroke();}
+    else if(type==='thumb'){g.strokeStyle=look.skin;g.lineWidth=.035;g.beginPath();g.moveTo(-.015,0);g.lineTo(-.025,-.09);g.stroke();}
+    g.restore();
+  }
+  function head2D(g,P,look,o={}){const a=acting(look),spinning=Number.isFinite(P.spinAngle);g.save();g.translate(...P.hd);g.rotate((o.showcase?a.tilt+(P.headTilt||0)*.45:clamp(P.lean*.35,-.2,.2)));g.scale(.147,-.147);head(g,look,{back:spinning&&Math.cos(P.spinAngle)<-.15,turn:spinning?Math.sin(P.spinAngle)*.85:.22+(P.headTurn||0)*.5,time:o.time||0,focus:!!P.motion,gaze:clamp(o.gazeX||0,-1,1),expression:o.showcase?a.expression:undefined,mood:o.mood,quality:o.quality??1});g.restore();}
   const basic=Object.freeze({name:'球友',motif:'wing',shoulder:1,waist:1,limb:1,head:1,lean:0,detail:'jersey'});
   const profile=look=>profiles[look?.name]||basic;
   const motionRows={
@@ -134,10 +220,10 @@
     shensuo:['reach',28,.8,80,.7],xuanpai:['sweep',-25,.5,150,.6],youyou:['reach',8,.55,65,1.2],
     jindou:['leap',138,.7,145,.5],dangteng:['leap',45,.8,165,.2],haomao:['summon',65,1.8,35,.45],
     fuzhi:['summon',45,.3,145,.3],jieli:['reach',30,.35,125,.45],zangshu:['place',-18,.7,28,.55],
-    yati:['focus',70,1.6,95,1.7],yueqiu:['place',-32,.45,35,1.1],shuangji:['place',88,.7,128,.7],
+    yati:['focus',70,1.6,95,1.7],yueqiu:['place',-32,.45,35,1.1],shuangji:['place',-64,.65,132,.65],
     ganggan:['focus',75,.55,40,1.5],jiepan:['place',45,.4,135,.45],qiquan:['focus',22,1.4,118,.8],
     jingxiang:['summon',110,.6,65,.6],meida:['focus',58,1.4,120,1.4],shuizhong:['leap',-12,.6,130,.5],
-    jiezou:['focus',68,.8,112,.85],biaozhi:['place',-55,.5,-18,.8],tingyixia:['focus',80,1.7,90,.2],
+    jiezou:['summon',102,.68,56,.42],biaozhi:['place',-55,.5,-18,.8],tingyixia:['focus',38,.55,126,.5],
     jibei:['place',-40,.6,35,1.2],yimo:['leap',35,.2,155,.2],weichui:['sweep',-28,.7,140,.5],
     dianbu:['leap',38,.9,115,.7],bianpai:['sweep',95,.6,150,.35],jieli_jump:['leap',128,.45,65,.3],
     tongqin:['focus',42,1.08,110,.62],gongwei:['place',82,.72,55,1.05],jiaban:['sweep',104,.64,118,.6],
@@ -154,6 +240,11 @@
     const base=office||{reach:[32,1.05,75,.75],sweep:[10,.5,115,.7],summon:[125,.55,135,.35],place:[-20,.8,-35,1.05],focus:[65,1.4,82,1.15],leap:[100,.6,-15,.6]}[k];
     const ease=v=>{v=clamp(v,0,1);return v*v*(3-2*v);},release=ease((age-.08)/.15),recover=ease((age-.3)/.32);
     const arm=(gestures[id]?.slice(1)||base).map((v,i)=>v+(i%2?variant*.06:variant*4));
+    if(office){
+      if(id==='tongqin'){arm[0]=lerp(115,-12,release)*(1-recover)+42*recover;arm[1]=lerp(1.7,.3,release);arm[2]=105;arm[3]=.7;}
+      if(id==='gongwei'){arm[0]=lerp(84,-8,release);arm[2]=lerp(96,142,release);arm[1]=.7;arm[3]=.65;}
+      if(id==='jiaban'){arm[0]=lerp(72,-28,release);arm[2]=lerp(100,166,release);arm[1]=.75;arm[3]=.55;}
+    }
     arm[0]+=lerp(-32,23,release)*(1-recover);arm[2]+=lerp(18,-24,release)*(1-recover);
     return {id,family:k,age,u,e,release,recover,variant,arm,
       lean:id==='liubai'?-.20:(k==='place'?.13:k==='reach'?.08:k==='summon'?-.07:variant*.04)*(release-.25),
@@ -191,64 +282,141 @@
   }
   // Head texture in screen coordinates; orientation changes front/back, so a
   // near player's hair and a far player's face retain the same identity.
+  // ---------- 头：动漫式分层画法 ----------
+  // 顶骨骼固定，五官整体随 turn 平移；先画后发与颈部阴影，再画脸、刘海、
+  // 眼（虹膜三层渐变 + 高光 + 睫毛线）、鼻唇与受光边。小尺寸下靠剪影与
+  // 眼线保持辨识度，大尺寸（立绘、头像）再叠加发丝与高光带。
+  const LONG_HAIR = new Set(['long','ponytail','twin','bangs','side','bun']);
+  const SHORT_HAIR = new Set(['buzz','crew','receding']);
   function head(g,look,{back=false,turn=0,time=0,focus=false,gaze=0,quality=1,expression,mood}={}){
-    const art=profile(look),act=acting(look),expr=expression||(['happy','cheer','smile'].includes(mood)?'laugh':focus?'focused':act.expression),R=1,hair=look.hair,outline=look.outline||'#17202e';
-    g.save();g.scale(act.faceW,1);if(look.identity==='basketball')g.scale(1.02,1);g.lineCap='round';g.lineJoin='round';g.lineWidth=.065;g.strokeStyle=outline;
-    const skin=g.createLinearGradient(-1,-1,1,1);skin.addColorStop(0,look.skin);skin.addColorStop(.55,look.skin);skin.addColorStop(1,look.skin2);
-    // Layered locks have deterministic spring lag, including ties and clips.
-    const sway=Math.sin(time*5.2)*.08+turn*.16;
-    if(['ponytail','twin','long','bangs','bun'].includes(hair)){
-      g.fillStyle=look.hairC;
-      const locks=hair==='twin'?[-1,1]:[back?-.45:-.9];
-      for(const s of locks){g.beginPath();g.moveTo(s*.78,-.65);g.bezierCurveTo(s*1.42,-.7,s*1.55+sway,.8,s*1.05+sway,1.5);g.bezierCurveTo(s*.92+sway,.7,s*.68,.35,s*.65,-.4);g.closePath();g.fill();g.stroke();g.strokeStyle=look.hairHi;g.lineWidth=.07;g.beginPath();g.moveTo(s*.91,-.3);g.quadraticCurveTo(s*1.2+sway,.6,s*1.08+sway,1.15);g.stroke();g.strokeStyle=outline;g.lineWidth=.065;}
-      if(hair==='bun'){g.beginPath();g.ellipse(-.6,-.95,.48,.42,.3,0,TAU);g.fill();g.stroke();}
+    const art=profile(look),act=acting(look),expr=expression||(['happy','cheer','smile'].includes(mood)?'laugh':focus?'focused':act.expression),hair=look.hair;
+    const outline=look.outline||'#17202e',hairC=look.hairC,hairHi=look.hairHi||Y.shade(hairC,1.5),hairSh=Y.shade(hairC,.74);
+    const sway=Math.sin(time*5.2)*.07+turn*.2,tx=turn*.15,blink=(time%4.7)>4.58;
+    const smiling=['playful','laugh','grin','kind','eager'].includes(expr),narrow=['serene','precise','calm','mysterious','focused','knowing','smirk','stern','tired'].includes(expr);
+    g.save();g.scale(act.faceW,1);if(look.identity==='basketball')g.scale(1.02,1);
+    g.lineCap='round';g.lineJoin='round';g.lineWidth=.045;g.strokeStyle=outline;
+    const skin=g.createLinearGradient(-1.1,-.9,.9,.9);
+    skin.addColorStop(0,Y.shade(look.skin,1.06));skin.addColorStop(.45,look.skin);skin.addColorStop(1,look.skin2);
+    // —— 后发：先铺体量，再压暗与受光 ——
+    if(!SHORT_HAIR.has(hair)||hair==='receding'){
+      g.fillStyle=hairC;
+      if(hair==='twin'){for(const s of[-1,1]){g.beginPath();g.moveTo(s*.72,-.62);g.bezierCurveTo(s*1.34,-.72,s*1.5+sway,1.0,s*1.02+sway,1.6);g.bezierCurveTo(s*.9+sway,.72,s*.62,.36,s*.6,-.42);g.closePath();g.fill();g.stroke();}}
+      else if(hair==='ponytail'){const s=back?-.5:-1;g.beginPath();g.moveTo(s*.7,-.62);g.bezierCurveTo(s*1.38,-.8,s*1.5+sway,1.0,s*1.0+sway,1.62);g.bezierCurveTo(s*.86+sway,.74,s*.62,.34,s*.58,-.4);g.closePath();g.fill();g.stroke();}
+      else if(hair==='long'||hair==='bangs'||hair==='side'){for(const s of[-1,1]){g.beginPath();g.moveTo(s*.6,-.7);g.bezierCurveTo(s*1.28,-.72,s*1.3+sway,1.05,s*.86+sway,1.66);g.bezierCurveTo(s*.5+sway,.9,s*.5,.3,s*.46,-.5);g.closePath();g.fill();g.stroke();}}
+      else {g.beginPath();g.moveTo(-1.02,-.1);g.bezierCurveTo(-1.14,-1.12,-.58,-1.36,0,-1.36);g.bezierCurveTo(.6,-1.36,1.14,-1.1,1.02,-.08);g.bezierCurveTo(.98,.42,.62,.66,0,.7);g.bezierCurveTo(-.62,.66,-.98,.42,-1.02,-.1);g.closePath();g.fill();g.stroke();}
+      // 发尾受光/背光，避免整块死黑。
+      g.fillStyle=Y.shade(hairC,1.22);
+      if(['twin','ponytail','long','bangs','side'].includes(hair))for(const s of(hair==='twin'?[-1,1]:[-1])){g.save();g.globalAlpha*=.5;g.beginPath();g.moveTo(s*.66,-.4);g.bezierCurveTo(s*1.1+sway,.5,s*1.06+sway,1.1,s*.92+sway,1.5);g.bezierCurveTo(s*.8+sway,.8,s*.66,.2,s*.66,-.4);g.closePath();g.fill();g.restore();}
     }
-    for(const s of[-1,1]){g.fillStyle=look.skin2;g.beginPath();g.ellipse(s*.92,.02,look.bigEars?.26:.18,.29,s*.15,0,TAU);g.fill();g.stroke();}
-    g.fillStyle=skin;g.beginPath();g.moveTo(-.97,-.23);g.bezierCurveTo(-1.06,-1.23,1.03,-1.28,1,-.18);g.bezierCurveTo(.98,.6,.55*act.jaw,.97,.04,1.02);g.bezierCurveTo(-.6*act.jaw,1,-.94,.62,-.97,-.23);g.closePath();g.fill();g.stroke();
-    if(hair==='receding'){
-      // Exposed crown, short silver temples and only three fine strands on top.
-      for(const side of[-1,1]){g.fillStyle=look.hairC;g.beginPath();g.moveTo(side*.96,.32);g.bezierCurveTo(side*1.04,-.05,side*1.05,-.61,side*.83,-.78);g.lineTo(side*.77,-.24);g.lineTo(side*.84,.4);g.closePath();g.fill();g.strokeStyle=look.hairHi;g.lineWidth=.045;for(let i=0;i<4;i++){g.beginPath();g.moveTo(side*(.86+i*.025),-.3);g.lineTo(side*(.88+i*.02),.17);g.stroke();}}
-      if(back){g.strokeStyle=look.hairC;g.lineWidth=.17;g.beginPath();g.moveTo(-.85,.37);g.quadraticCurveTo(0,.98,.85,.37);g.stroke();}
-      g.strokeStyle=look.hairHi;g.lineWidth=.025;for(let i=0;i<3;i++){g.beginPath();g.moveTo(-.36+i*.15,-.86);g.quadraticCurveTo(-.18+i*.15,-1.13,.13+i*.12,-.88);g.stroke();}
-    }else{
-    g.fillStyle=look.hairC;g.beginPath();
-    const messy=['spiky','mess','quiff'].includes(hair),part=['side','part','gray'].includes(hair);
-    g.moveTo(-1,.2);g.bezierCurveTo(-1.18,-1.1,-.55,-1.25,.04,-1.23);
-    if(messy){for(let i=0;i<5;i++){g.lineTo(-.7+i*.34,-1.2-(i%2?.12:.3));g.lineTo(-.51+i*.34,-1.13);}g.bezierCurveTo(1.22,-.83,1.07,-.1,1,.23);}
-    else g.bezierCurveTo(.8,-1.34,1.13,-.86,1,.19);
-    if(back){g.bezierCurveTo(.92,.83,.42,.63,.12,.75);g.lineTo(-.12,.65);g.bezierCurveTo(-.55,.8,-1,.6,-1,.2);}
-    else if(hair==='bowl'){g.lineTo(.86,-.15);for(let i=0;i<6;i++)g.lineTo(.8-i*.32,-.3+(i%2)*.08);g.lineTo(-.87,.2);}
-    else if(part||hair==='bangs'){g.bezierCurveTo(.67,-.7,.1,-.4,-.25,-.3);g.bezierCurveTo(-.52,-.1,-.72,.28,-.87,.37);}
-    else if(hair==='crew'||hair==='buzz'){g.lineTo(.88,-.5);g.quadraticCurveTo(.03,-.75,-.86,-.43);}
-    else{g.lineTo(.87,-.23);g.lineTo(.45,-.65);g.lineTo(.12,-.3);g.lineTo(-.35,-.64);g.lineTo(-.83,.18);}
-    g.closePath();g.fill();g.stroke();
-    g.strokeStyle=look.hairHi;g.lineWidth=.095;g.beginPath();g.moveTo(-.75,-.68);g.bezierCurveTo(-.38,-1.11,.3,-1.1,.64,-.88);g.stroke();
-    if(quality)for(let i=0;i<3;i++){g.lineWidth=.035;g.beginPath();g.moveTo(-.6+i*.35,-.9);g.quadraticCurveTo(-.7+i*.36,-.55,-.66+i*.4,-.35);g.stroke();}
-    }
-    if(hair==='spiky'||look.headband){g.strokeStyle=look.band;g.lineWidth=.2;g.beginPath();g.moveTo(-1,-.42);g.quadraticCurveTo(0,-.57,1,-.42);g.stroke();}
+    // —— 耳 ——
+    for(const s of[-1,1]){g.fillStyle=Y.shade(look.skin,.97);g.beginPath();g.ellipse(s*.94,.06,look.bigEars?.26:.17,.28,s*.15,0,TAU);g.fill();g.stroke();g.fillStyle=Y.shade(look.skin2,.94);g.beginPath();g.ellipse(s*.96,.08,.06,.14,s*.15,0,TAU);g.fill();}
+    // —— 脸 ——
+    g.fillStyle=skin;g.beginPath();g.moveTo(-.98,-.26);
+    g.bezierCurveTo(-1.05,-1.12,-.6,-1.26,.02,-1.26);g.bezierCurveTo(.66,-1.26,1.05,-1.1,.98,-.2);
+    g.bezierCurveTo(.96,.2,.9,.44,.74,.66);
+    g.bezierCurveTo(.58*act.jaw,.94,.28*act.jaw,1.07,.02,1.07);
+    g.bezierCurveTo(-.3*act.jaw,1.06,-.6*act.jaw,.92,-.76,.64);
+    g.bezierCurveTo(-.9,.42,-.97,.14,-.98,-.26);g.closePath();g.fill();g.stroke();
     if(!back){
-      const blink=(time%4.7)>4.58,ey=.11,dx=clamp(gaze,-1,1)*.075;
-      const smiling=['playful','laugh','grin','kind','eager'].includes(expr),narrow=['serene','precise','calm','mysterious','focused','knowing','smirk','stern','tired'].includes(expr);
-      for(const sign of[-1,1]){const ex=sign*.40+turn*.12,wink=expr==='playful'&&sign<0,eh=blink||wink?.02:narrow?.13:expr==='wonder'?.235:.19;
-        g.fillStyle='#fffaf1';g.beginPath();g.ellipse(ex,ey,.19,eh,-sign*.09,0,TAU);g.fill();g.fillStyle=look.eye;g.beginPath();g.ellipse(ex+dx,ey,.09,eh*.85,0,0,TAU);g.fill();
-        g.strokeStyle=look.hairC;g.lineWidth=.045;g.beginPath();g.moveTo(ex-.18,ey-.04);g.quadraticCurveTo(ex,ey-eh*1.35,ex+.18,ey-.035);g.stroke();
-        if(!blink&&!wink){g.fillStyle='#fff';g.beginPath();g.arc(ex+dx-.025,ey-eh*.38,.032,0,TAU);g.fill();}
-        const slant=['stern','focused','bold','confident'].includes(expr)?sign*.07:expr==='curious'&&sign>0?-.1:0;
-        g.strokeStyle=look.hairC;g.lineWidth=look.brow?.13:.065;g.beginPath();g.moveTo(ex-.17,-.18-slant);g.quadraticCurveTo(ex,-.26,ex+.17,-.18+slant);g.stroke();
+      // 侧脸阴影：太阳穴到下颌的一条软阴影，给平涂皮肤体积。
+      g.save();g.beginPath();g.moveTo(-.98,-.26);g.bezierCurveTo(-1.05,-1.12,-.6,-1.26,.02,-1.26);g.lineTo(.02,1.07);g.bezierCurveTo(-.3*act.jaw,1.06,-.6*act.jaw,.92,-.76,.64);g.bezierCurveTo(-.9,.42,-.97,.14,-.98,-.26);g.closePath();g.clip();
+      g.fillStyle=Y.shade(look.skin2,.9);g.globalAlpha*=.42;g.beginPath();g.moveTo(-1.06,-.4);g.bezierCurveTo(-.8,-.1,-.72,.4,-.86,1.1);g.lineTo(-.34,1.2);g.bezierCurveTo(-.5,.5,-.5,.05,-.66,-.5);g.closePath();g.fill();g.restore();
+    }
+    if(hair==='receding'){
+      for(const side of[-1,1]){g.fillStyle=hairC;g.beginPath();g.moveTo(side*.97,.34);g.bezierCurveTo(side*1.05,-.06,side*1.06,-.62,side*.84,-.8);g.lineTo(side*.77,-.24);g.lineTo(side*.85,.42);g.closePath();g.fill();g.strokeStyle=hairHi;g.lineWidth=.04;for(let i=0;i<4;i++){g.beginPath();g.moveTo(side*(.86+i*.026),-.32);g.lineTo(side*(.89+i*.02),.19);g.stroke();}}
+      if(!back){g.strokeStyle=hairHi;g.lineWidth=.022;for(let i=0;i<3;i++){g.beginPath();g.moveTo(-.36+i*.15,-.88);g.quadraticCurveTo(-.18+i*.15,-1.15,.13+i*.12,-.9);g.stroke();}}
+    }else if(back){
+      g.fillStyle=hairC;g.beginPath();g.moveTo(-1.02,.1);g.bezierCurveTo(-1.1,-1.1,-.58,-1.34,0,-1.34);g.bezierCurveTo(.6,-1.34,1.12,-1.06,1.02,.12);g.bezierCurveTo(.98,.66,.55,.86,0,.9);g.bezierCurveTo(-.56,.86,-.98,.64,-1.02,.1);g.closePath();g.fill();g.stroke();
+      g.strokeStyle=hairHi;g.lineWidth=.05;if(quality)for(const s of[-1,1])for(let i=0;i<3;i++){g.beginPath();g.moveTo(s*(.2+i*.22),-.9);g.quadraticCurveTo(s*(.28+i*.22)+sway*.3,.1,s*(.24+i*.22)+sway,.6);g.stroke();}
+      g.strokeStyle=hairSh;g.lineWidth=.03;g.beginPath();g.moveTo(-.5,1.02);g.quadraticCurveTo(0,.72,.5,1.02);g.stroke();
+    }else{
+      // —— 刘海：从额顶铺到眉上，按发型分缕 ——
+      const tips={
+        spiky:[[-.95,.16],[-.78,-.34],[-.6,-.06],[-.34,-.46],[-.08,-.12],[.2,-.5],[.44,-.12],[.7,-.42],[.95,.14]],
+        mess:[[-1,.18],[-.76,-.3],[-.5,-.02],[-.2,-.44],[.06,-.16],[.34,-.46],[.6,-.1],[.86,-.3],[1,.16]],
+        quiff:[[-1.02,.2],[-.92,-.5],[-.62,-.78],[-.2,-.94],[.24,-.86],[.62,-.6],[.8,-.14],[.98,.18]],
+        bowl:[[-1,.2],[-.86,-.16],[-.52,-.22],[-.16,-.28],[.2,-.28],[.54,-.22],[.86,-.16],[1,.2]],
+        bangs:[[-1,.18],[-.82,-.2],[-.44,-.34],[-.06,-.36],[.3,-.32],[.68,-.26],[1,.16]],
+        part:[[-1.02,.22],[-.86,-.22],[-.56,-.5],[-.2,-.6],[.1,-.5],[.42,-.62],[.72,-.36],[.98,.14]],
+        side:[[-1.02,.2],[-.94,-.34],[-.66,-.64],[-.3,-.72],[.04,-.56],[.34,-.7],[.7,-.44],[1,.16]],
+        long:[[-1.02,.18],[-.88,-.3],[-.6,-.66],[-.24,-.78],[.1,-.6],[.44,-.74],[.76,-.46],[1,.14]],
+        ponytail:[[-1.02,.18],[-.88,-.32],[-.58,-.6],[-.22,-.66],[.12,-.5],[.46,-.66],[.78,-.4],[1,.16]],
+        twin:[[-1.02,.18],[-.86,-.3],[-.56,-.62],[-.18,-.7],[.16,-.52],[.5,-.68],[.8,-.42],[1,.16]],
+        gray:[[-1.02,.22],[-.86,-.24],[-.54,-.54],[-.16,-.62],[.16,-.5],[.5,-.64],[.78,-.34],[.99,.16]],
+        crew:[[-1,.2],[-.9,-.24],[-.62,-.5],[-.28,-.6],[.08,-.56],[.44,-.56],[.78,-.36],[1,.16]],
+        buzz:[[-1,.2],[-.92,-.18],[-.68,-.42],[-.36,-.5],[0,-.52],[.36,-.5],[.7,-.4],[1,.14]],
+        receding:[[-1,.2],[-1,-.2],[-.86,-.5],[-.6,-.66],[-.34,-.6],[0,-.5],[.34,-.6],[.6,-.7],[.86,-.52],[1,-.16],[1,.18]],
+      }[hair]||[[-1,.18],[-.8,-.26],[-.44,-.4],[-.06,-.42],[.32,-.36],[.68,-.28],[1,.16]];
+      g.fillStyle=hairC;g.beginPath();
+      g.moveTo(-1.03,.2);
+      g.bezierCurveTo(-1.14,-1.08,-.6,-1.34,.02,-1.34);
+      g.bezierCurveTo(.64,-1.34,1.14,-1.06,1.03,.2);
+      for(let i=tips.length-1;i>=0;i--)g.lineTo(tips[i][0],tips[i][1]);
+      g.closePath();g.fill();g.stroke();
+      // 顶高光带：断成几段，像原画里的发丝反光。
+      if(quality){g.save();g.strokeStyle=hairHi;g.lineWidth=.075;g.globalAlpha*=.85;g.beginPath();g.moveTo(-.72,-.74);g.bezierCurveTo(-.36,-1.02,.16,-1.06,.6,-.84);g.stroke();g.lineWidth=.04;for(const [x,y]of[[-.5,-.86],[-.12,-.95],[.28,-.92]]){g.beginPath();g.moveTo(x,y);g.quadraticCurveTo(x+.06,y+.22,x+.02,y+.32);g.stroke();}g.restore();}
+      // 侧鬓：压住脸缘，避免脸像贴上去的平面。
+      g.fillStyle=hairC;for(const s of[-1,1]){g.beginPath();g.moveTo(s*1.0,-.34);g.quadraticCurveTo(s*.94,.3,s*.86,.5);g.quadraticCurveTo(s*.8,.2,s*.86,-.4);g.closePath();g.fill();}
+    }
+    if(hair==='spiky'||look.headband){g.strokeStyle=look.band;g.lineWidth=.19;g.beginPath();g.moveTo(-1.0,-.36);g.quadraticCurveTo(0,-.54,1.0,-.36);g.stroke();g.strokeStyle='#ffffff44';g.lineWidth=.03;g.beginPath();g.moveTo(-.9,-.42);g.quadraticCurveTo(0,-.58,.9,-.42);g.stroke();}
+    if(!back){
+      const ey=.1,dx=clamp(gaze+Math.sin(time*.65)*.18,-1,1)*.07;
+      const starlight=look.identity==='basketball'||art.detail==='star';
+      for(const sign of[-1,1]){
+        const ex=sign*.42+tx,wink=expr==='playful'&&sign<0&&(time%6.5)>5.7,closed=blink||wink;
+        const eh=narrow?.125:expr==='wonder'?.235:.185,ew=expr==='wonder'?.205:.19,ty=ey+act.hip*.02;
+        // 眼白
+        g.fillStyle='#fffdf6';g.beginPath();
+        g.moveTo(ex-ew,ty+.02);g.quadraticCurveTo(ex-ew*.5,ty-eh*1.12,ex+ew*.42,ty-eh*.9);
+        g.quadraticCurveTo(ex+ew*1.02,ty-eh*.5,ex+ew,ty+.02);
+        if(closed){g.quadraticCurveTo(ex,ty+eh*.55,ex-ew,ty+.02);}else{g.quadraticCurveTo(ex+ew*.42,ty+eh*.92,ex-ew*.34,ty+eh*.8);g.quadraticCurveTo(ex-ew*.86,ty+eh*.46,ex-ew,ty+.02);}
+        g.closePath();g.fill();
+        if(!closed){
+          // 虹膜：上深下浅 + 底部反光，缩小瞳孔后才像日系原画。
+          const iris=g.createLinearGradient(0,ty-eh*.9,0,ty+eh*.85);
+          iris.addColorStop(0,Y.shade(look.eye,.55));iris.addColorStop(.55,look.eye);iris.addColorStop(1,Y.shade(look.eye,1.75));
+          g.save();g.clip();
+          g.fillStyle=iris;g.beginPath();g.ellipse(ex+dx,ty+.01,ew*.52,eh*.92,0,0,TAU);g.fill();
+          g.fillStyle='#101a26';g.beginPath();g.ellipse(ex+dx,ty-.01,ew*.21,eh*.5,0,0,TAU);g.fill();
+          g.fillStyle=starlight?'#ffe9a8':'#dff6ff';g.globalAlpha*=.85;g.beginPath();g.ellipse(ex+dx,ty+eh*.55,ew*.4,eh*.26,0,0,TAU);g.fill();g.restore();
+          // 两点高光：左上主光 + 右下小反射。
+          g.fillStyle='#ffffff';g.beginPath();g.ellipse(ex+dx-ew*.16,ty-eh*.34,ew*.17,eh*.24,0,0,TAU);g.fill();
+          g.globalAlpha*=.7;g.beginPath();g.arc(ex+dx+ew*.2,ty+eh*.3,ew*.07,0,TAU);g.fill();g.globalAlpha/=.7;
+        }
+        // 上睫毛：粗、外眼角上挑；闭眼时改成一条弧线。
+        g.strokeStyle=outline;g.lineWidth=.055;g.beginPath();
+        if(closed){g.moveTo(ex-ew*.95,ty+.04);g.quadraticCurveTo(ex,ty+eh*.5,ex+ew*.95,ty+.0);}
+        else{g.moveTo(ex-ew*.98,ty+.03);g.quadraticCurveTo(ex-ew*.5,ty-eh*1.18,ex+ew*.44,ty-eh*.95);g.quadraticCurveTo(ex+ew*1.06,ty-eh*.62,ex+ew*1.02,ty-.02);}
+        g.stroke();
+        if(!closed){g.lineWidth=.03;g.strokeStyle=Y.shade(look.skin2,.86);g.beginPath();g.moveTo(ex-ew*.8,ty+eh*.78);g.quadraticCurveTo(ex+ew*.1,ty+eh*1.02,ex+ew*.86,ty+eh*.3);g.stroke();}
+        // 眉：角度与粗细跟表情走。
+        const slant=['stern','bold','confident','focused'].includes(expr)?sign*.09:expr==='curious'&&sign>0?-.12:expr==='wonder'?-.05:0;
+        g.strokeStyle=look.brow?.16:.07;g.lineWidth=look.brow?.11:.06;
+        g.beginPath();g.moveTo(ex-ew*.92,-.3-slant);g.quadraticCurveTo(ex,-.4-slant*.4,ex+ew*.92,-.28+slant);g.stroke();
       }
-      g.strokeStyle=look.skin2;g.lineWidth=.04;g.beginPath();g.moveTo(.03,.09);g.quadraticCurveTo(.04,.27,.12,.32);g.lineTo(-.015,.34);g.stroke();
-      const smile=focus?.025:act.smile;
-      g.strokeStyle=outline;g.lineWidth=.04;g.beginPath();g.moveTo(-.21,.60);g.quadraticCurveTo(.01,.60+smile,.23,expr==='smirk'||expr==='wry'?.55:.60);
-      if(expr==='laugh'||expr==='grin'){g.quadraticCurveTo(.03,.98,-.21,.60);g.fillStyle='#7b3841';g.fill();g.fillStyle='#fff8ed';g.fillRect(-.13,.615,.27,.07);}g.stroke();
-      if(smiling){g.fillStyle='#eb948546';for(const sign of[-1,1]){g.beginPath();g.ellipse(sign*.63,.4,.18,.09,sign*.15,0,TAU);g.fill();}}
-      if(look.lip){g.strokeStyle=look.lip;g.lineWidth=.08;g.beginPath();g.moveTo(-.16,.62);g.quadraticCurveTo(.02,.7,.2,.61);g.stroke();}
-      if(look.age){g.strokeStyle=look.skin2;g.beginPath();g.moveTo(-.74,.14);g.lineTo(-.87,.19);g.moveTo(.7,.14);g.lineTo(.83,.19);g.moveTo(-.26,.43);g.lineTo(-.31,.6);g.stroke();}
-      if(look.blush){g.fillStyle='#ed9c9670';for(const s of[-1,1]){g.beginPath();g.ellipse(s*.62,.42,.19,.085,0,0,TAU);g.fill();}}
-      if(look.glasses){g.strokeStyle=look.age?'#6e6153':'#1e2d38';g.lineWidth=.08;for(const s of[-1,1]){g.beginPath();if(look.glasses==='rect')Y.rr(g,s*.42-.29,ey-.24,.58,.47,.1);else g.ellipse(s*.42,ey,.29,.27,0,0,TAU);g.stroke();g.fillStyle='#d5f6ff22';g.fill();}g.beginPath();g.moveTo(-.12,ey-.03);g.quadraticCurveTo(0,ey-.14,.12,ey-.03);g.stroke();g.strokeStyle='#ffffffaa';g.lineWidth=.035;g.beginPath();g.moveTo(-.58,ey-.13);g.lineTo(-.4,ey-.21);g.moveTo(.26,ey-.13);g.lineTo(.44,ey-.21);g.stroke();}
-    }else if(look.glasses){g.strokeStyle='#7c8d9c';g.lineWidth=.065;g.beginPath();g.moveTo(-.94,.08);g.lineTo(-.74,-.13);g.moveTo(.94,.08);g.lineTo(.74,-.13);g.stroke();}
-    if(art.detail==='bow'){g.strokeStyle=look.band;g.lineWidth=.10;g.beginPath();g.moveTo(-.8,-.9);g.bezierCurveTo(-1.6,-.2,-1.2+sway,.8,-1.55+sway,1.4);g.stroke();g.fillStyle=look.band;g.beginPath();g.moveTo(-.8,-.9);g.lineTo(-1.25,-1.3);g.lineTo(-1.3,-.68);g.closePath();g.fill();g.beginPath();g.moveTo(-.8,-.9);g.lineTo(-.42,-1.3);g.lineTo(-.35,-.68);g.closePath();g.fill();}
-    if(look.hairpin){g.strokeStyle=look.trim;g.lineWidth=.085;g.beginPath();g.moveTo(-.92,-.7);g.lineTo(-.5,-1.18);g.stroke();g.fillStyle=look.trim;g.beginPath();g.arc(-.92,-.7,.1,0,TAU);g.fill();}
-    if(art.detail==='star'){g.fillStyle='#ffe69c';g.beginPath();g.arc(.86,-.39,.13,0,TAU);g.fill();}
+      // 鼻：一小块阴影 + 尖，不用写实鼻孔。
+      g.strokeStyle=Y.shade(look.skin2,.92);g.lineWidth=.038;g.beginPath();g.moveTo(.04+tx*.3,.12);g.quadraticCurveTo(.075+tx*.3,.3,.13+tx*.3,.34);g.lineTo(-.012+tx*.3,.35);g.stroke();
+      // 嘴：按表情换弧线与开合。
+      const smile=focus?.02:act.smile+Math.sin(time*.8)*.012,my=.58,open=expr==='laugh'||expr==='grin';
+      g.strokeStyle=outline;g.lineWidth=.038;g.beginPath();g.moveTo(-.2+tx*.4,my);
+      if(open){g.quadraticCurveTo(.02+tx*.4,my+smile*.6,.23+tx*.4,my-((expr==='smirk'||expr==='wry')?.05:0));g.quadraticCurveTo(.03+tx*.4,my+.34,-.2+tx*.4,my);g.fillStyle='#7a3742';g.fill();g.fillStyle='#fff8ed';g.beginPath();g.moveTo(-.15+tx*.4,my+.015);g.lineTo(.17+tx*.4,my+.015);g.lineTo(.17+tx*.4,my+.06);g.lineTo(-.15+tx*.4,my+.06);g.fill();}
+      else{g.quadraticCurveTo(.02+tx*.4,my+smile,.23+tx*.4,my-((expr==='smirk'||expr==='wry')?.05:0));}g.stroke();
+      if(smiling||look.blush){g.fillStyle='#ef8d8a';g.globalAlpha*=.34+(look.blush||0)*.4;for(const sign of[-1,1]){g.beginPath();g.ellipse(sign*.62+tx*.2,.36,.17,.075,sign*.14,0,TAU);g.fill();}g.globalAlpha/=.34+(look.blush||0)*.4;}
+      if(look.lip){g.strokeStyle=look.lip;g.lineWidth=.07;g.beginPath();g.moveTo(-.14+tx*.4,.6);g.quadraticCurveTo(.03+tx*.4,.66,.19+tx*.4,.59);g.stroke();}
+      if(look.age){g.strokeStyle=Y.shade(look.skin2,.9);g.lineWidth=.028;g.beginPath();g.moveTo(-.74,.16);g.lineTo(-.86,.21);g.moveTo(.7,.16);g.lineTo(.82,.21);g.moveTo(-.24,.44);g.lineTo(-.3,.58);g.moveTo(.24,.44);g.lineTo(.3,.58);g.stroke();}
+      if(look.glasses){
+        g.strokeStyle=look.age?'#6e6153':'#1e2d38';g.lineWidth=.075;
+        for(const s of[-1,1]){g.beginPath();if(look.glasses==='rect')Y.rr(g,s*.42+tx-.29,ey-.25,.58,.48,.09);else g.ellipse(s*.42+tx,ey,.29,.28,0,0,TAU);g.stroke();
+          g.fillStyle='#bfe9ff';g.globalAlpha*=.16;g.fill();g.globalAlpha/=.16;}
+        g.beginPath();g.moveTo(-.13+tx,ey-.03);g.quadraticCurveTo(0+tx,ey-.15,.13+tx,ey-.03);g.stroke();
+        g.strokeStyle='#ffffffcc';g.lineWidth=.032;g.beginPath();g.moveTo(-.58+tx,ey-.13);g.lineTo(-.4+tx,ey-.22);g.moveTo(.26+tx,ey-.13);g.lineTo(.44+tx,ey-.22);g.stroke();
+      }
+    }else if(look.glasses){g.strokeStyle='#7c8d9c';g.lineWidth=.06;g.beginPath();g.moveTo(-.95,.1);g.lineTo(-.76,-.12);g.moveTo(.95,.1);g.lineTo(.76,-.12);g.stroke();}
+    if(art.detail==='bow'){g.strokeStyle=look.band;g.lineWidth=.1;g.beginPath();g.moveTo(-.8,-.9);g.bezierCurveTo(-1.6,-.2,-1.2+sway,.8,-1.55+sway,1.4);g.stroke();g.fillStyle=look.band;g.strokeStyle=outline;g.lineWidth=.03;g.beginPath();g.moveTo(-.8,-.9);g.lineTo(-1.25,-1.3);g.lineTo(-1.3,-.68);g.closePath();g.fill();g.stroke();g.beginPath();g.moveTo(-.8,-.9);g.lineTo(-.42,-1.3);g.lineTo(-.35,-.68);g.closePath();g.fill();g.stroke();g.fillStyle='#ffffff55';g.beginPath();g.ellipse(-.8,-.88,.1,.1,0,0,TAU);g.fill();}
+    if(look.hairpin){g.strokeStyle=look.trim;g.lineWidth=.08;g.beginPath();g.moveTo(-.92,-.66);g.lineTo(-.5,-1.16);g.stroke();g.fillStyle=look.trim;g.beginPath();g.arc(-.92,-.66,.1,0,TAU);g.fill();g.strokeStyle=outline;g.lineWidth=.02;g.stroke();}
+    if(art.detail==='star'){g.fillStyle='#ffe69c';g.beginPath();for(let i=0;i<10;i++){const a=i*Math.PI/5-Math.PI/2,r=i%2?.06:.14;g.lineTo(.86+Math.cos(a)*r,-.38+Math.sin(a)*r);}g.closePath();g.fill();}
+    // 受光边：右上方一条细亮线，头部从背景里脱出来。
+    if(!back&&quality){g.strokeStyle=Y.shade(hairHi,1.15);g.globalAlpha*=.5;g.lineWidth=.045;g.beginPath();g.moveTo(.34,-1.3);g.bezierCurveTo(.86,-1.16,1.02,-.7,.99,-.2);g.stroke();g.globalAlpha/=.5;}
     g.restore();
   }
   function uniform2D(g,pt,look){
@@ -310,5 +478,5 @@
       if(mechanical){g.save();g.translate(xx,yy);g.rotate(a+u*3);g.fillStyle=i%2?'#91f3cc':'#ffe2a0';g.fillRect(-r*.025,-r*.07,r*.05,r*.14);g.restore();}else butterfly(g,xx,yy,r*.075*(1-u*.5),age+i,'#ee80aa');
     }g.restore();
   }
-  Y.CharacterArt={profiles,profile,emblem,head,head2D,ribbon,butterfly,flywheel,burst,limb,hand,acting,displayPose,action,family,uniform2D,motionFor,mechanical,gestures};
+  Y.CharacterArt={profiles,profile,emblem,head,head2D,ribbon,butterfly,flywheel,burst,limb,hand,acting,displayPose,action,family,uniform2D,motionFor,mechanical,gestures,displayStances,displayBounds,showcaseAccessory};
 })(typeof GameGlobal!=='undefined'?GameGlobal:typeof window!=='undefined'?window:globalThis);

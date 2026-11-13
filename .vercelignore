@@ -1,4 +1,10 @@
-# 部署到 Vercel 时不需要上传的开发文件
+# Development and local artifacts are not needed by the static website.
 tools/
+output/
+.playwright-cli/
 .claude/
-GAME_DEVELOPMENT_PROMPT.md
+.workbuddy/
+node_modules/
+.env
+.env.*
+*.md

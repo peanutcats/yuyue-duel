@@ -10,7 +10,13 @@ class Network {
   }
   connect(request) {
     this.close(); this.request = request; this.manual = false; this.active = true;
-    return new Promise((resolve, reject) => { this.resolve = resolve; this.reject = reject; this.open(); });
+    return new Promise((resolve, reject) => {
+      this.resolve = resolve; this.reject = reject;
+      const generation = this.generation;
+      if (!this.getSession) return this.open();
+      this.status = 'connecting'; this.openedAt = this.P.now();
+      Promise.resolve().then(() => this.getSession()).then(token => { if (generation !== this.generation || this.manual) return; this.session = token; this.open(); }).catch(e => { if (generation === this.generation && !this.manual) this.fail(e.message || '微信登录失败'); });
+    });
   }
   configured() {
     if (this.config.networkTransport === 'off') return false;
@@ -59,7 +65,7 @@ class Network {
       if (!current()) return;
       this.status = 'connected'; this.lastReceived = this.P.now();
       const request = this.token ? { t: 'resume', room: this.code, token: this.token } : this.queueToken ? { t: 'queue_resume', ticket: this.queueToken } : this.request;
-      this.send({ ...request, ...(['queue_join', 'queue_resume'].includes(request.t) ? { active: this.active && !this.P.hidden() } : {}), roomProtocol: 2 });
+      this.send({ ...request, ...(this.session ? { session: this.session } : {}), ...(['queue_join', 'queue_resume'].includes(request.t) ? { active: this.active && !this.P.hidden() } : {}), roomProtocol: 2 });
       this.ping();
     });
     socket.onMessage(event => {

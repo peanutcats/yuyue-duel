@@ -4,7 +4,7 @@
 (function (G) {
   'use strict';
   const YY = (G.YY = G.YY || {});
-  YY.PHYSICS_VERSION = 24;
+  YY.PHYSICS_VERSION = 28;
   // Free matches use these presets; story and training retain their own goals.
   YY.SCORE_RULES = Object.freeze({7: 11, 15: 21, 21: 30});
   YY.matchFormat = value => {
@@ -148,8 +148,8 @@
     const open=paper.glide?smooth(.08,.62,d):0;
     const fold=paper.glide?smooth(paper.foldAt,paper.foldAt+.64,d):0;
     const wing=open*(1-fold);
-    return {drag:(paper.dart?.46:1)*(1-.3*wing)+fold*1.65,
-      gravity:1-.78*wing+.68*fold,wing,fold};
+    return {drag:(paper.dart?.37:1)*(1-.3*wing)+fold*1.65,
+      gravity:1-.86*wing+.88*fold,wing,fold};
   };
   YY.stepShuttle = function (s, dt, env) {
     s.stepTime = 0;

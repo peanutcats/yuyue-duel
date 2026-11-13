@@ -11,7 +11,8 @@
         if(!YY.Soundtrack)return;
         A.venue=this.R?.venueId;
         A.musicEnabled=this.settings.music!==false;
-        A.musicScene?.(YY.Soundtrack.scene(this));
+        this.musicDirector=this.musicDirector||YY.Soundtrack.createDirector();
+        A.musicScene?.(this.musicDirector.update(this,dt));
         A.updateMusic?.(dt);
       },
       /** 我方出战配置：故事模式只能用已解锁的器械；其他模式器械自由搭配 */
@@ -53,6 +54,7 @@
         ...YY.matchFormat(this.settings.target), courtMode: this.settings.courtMode, names: ['你', opp.look.name + ' · ' + lv.name], firstServer: 0,titles:[YY.AIChallenge?.equipped()?.id,null],
         looks: [mine.look, opp.look], stats: [mine.stats, opp.stats], gear: [mine.gear, opp.gear], skills: skills ? [mine.skill, opp.skill] : null,
       });
+      this.match.battleMeta={level:this.level,chars:[mine.id,opp.id]};
       this.ais = [(YY.createAI || ((m,...args) => new YY.AI(m,...args)))(this.match, 1, this.level, opp.id)];
       YY.AIChallenge?.begin(this.match, opp.id, this.level);
       this.ctrlFor[0] = this.soloCtrl(true, skills ? mine.skill.act : null);
@@ -82,13 +84,13 @@
       return { id, owned, gear, stats: YY.buildStats(Object.assign({ char: id }, gear)), skill: YY.skillSet(id, YY.Profile.kit(id)), look: YY.lookOf(id) };
     },
       /** 训练场：自选角色与技能，可调发球机；cfg 见 YY.TRAIN_DEFAULT */
-      startTraining(cfg) {
+      startTraining(cfg, preview) {
       cfg = this.trainCfg = YY.cleanTrain(cfg || this.trainCfg);
       this.reset();
       this.mode = 'practice';
       this.drill = 'train';
-      const me = this.trainLoadout(cfg.char), kit = cfg.skills ? me.skill : null;
-      this.match = new YY.Match({ names: ['你', '发球机'], practice: true, looks: [me.look, null], stats: [me.stats, null], gear: [me.gear, null], skills: kit ? [kit, null] : null });
+      const me = this.trainLoadout(cfg.char), kit = cfg.skills ? preview?.kit ? YY.skillSet(cfg.char,preview.kit) : me.skill : null;
+      this.match = (YY.createMatch || (o=>new YY.Match(o)))({ courtMode:preview?.courtMode||'2d', names: ['你', '发球机'], practice: true, looks: [me.look, null], stats: [me.stats, null], gear: [me.gear, null], skills: kit ? [kit, null] : null });
       this.practice = new YY.Training(this.match, cfg);
       this.ctrlFor[0] = this.soloCtrl(true, kit ? kit.act : null);
       this.enterGame();

@@ -27,7 +27,7 @@ test('路先森 now carries 复制体 / 接力协议 / 脏数据 with descriptio
   assert.deepEqual([...lu.acts], ['fuzhi', 'jieli', 'zangshu']);
   for (const id of lu.acts) {
     const sk = YY.SKILLS[id];
-    assert.ok(sk.desc.length > 20 && sk.detail.length > 60 && sk.tip.length > 6, id);
+    assert.ok(sk.desc.length > 20 && !sk.detail && sk.tip.length > 6, id);
   }
   assert.equal(YY.SKILLS.jieli.aim, 'vector', 'the relay is dragged: up = high pass, flat = quick pass');
   assert.ok(YY.SKILLS.zangshu.stealth, 'the opponent gets no cut-in for dirty data');

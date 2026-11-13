@@ -520,137 +520,23 @@
     }
     g.fillStyle = '#ffffff'; g.fillText(text, x, y);
   }
-  const neon = {
-    id: 'neon', name: '霓虹电竞场', desc: '霓虹激光 · 发光球场线', glossy: 0.3,
-    shadow: { skew: 0, len: 1, alpha: 0.5 },
-    paintFar(g, V) {
-      const { W, H, sc } = V;
-      const bg = g.createLinearGradient(0, 0, 0, V.adTop);
-      bg.addColorStop(0, '#030010'); bg.addColorStop(0.6, '#0b0425'); bg.addColorStop(1, '#170735');
-      g.fillStyle = bg; g.fillRect(0, 0, W, H);
-      // 背墙几何面板
-      const r = rng(5);
-      g.lineWidth = 1;
-      for (let i = 0; i < 26; i++) {
-        const x = r() * W, y = r() * V.standTop, s = sc * (0.6 + r() * 1.6);
-        g.strokeStyle = r() < 0.5 ? 'rgba(0,240,255,0.14)' : 'rgba(255,0,170,0.14)';
-        g.beginPath();
-        for (let k = 0; k < 6; k++) { const a = (k / 6) * Math.PI * 2; const px = x + Math.cos(a) * s, py = y + Math.sin(a) * s; k ? g.lineTo(px, py) : g.moveTo(px, py); }
-        g.closePath(); g.stroke();
-      }
-      // 看台
-      const st = V.standTop, sb = V.adTop + V.adH * 0.5;
-      for (let i = 0; i < 6; i++) {
-        const y0 = st + (i / 6) * (sb - st), y1 = st + ((i + 1) / 6) * (sb - st);
-        g.fillStyle = i % 2 ? '#0d0826' : '#110a2f'; g.fillRect(0, y0, W, y1 - y0);
-        g.fillStyle = i % 2 ? 'rgba(0,240,255,0.35)' : 'rgba(255,0,170,0.35)'; g.fillRect(0, y1 - 1.5, W, 1.5);
-      }
-    },
-    nearTop(V) { return V.adTop - 4; },
-    paintNear(g, V) {
-      const { W, H, sc } = V;
-      g.fillStyle = '#05020f'; g.fillRect(0, V.adTop - 3, W, V.adH + 6);
-      const edge = g.createLinearGradient(0, 0, W, 0);
-      edge.addColorStop(0, '#ff00aa'); edge.addColorStop(0.5, '#00f0ff'); edge.addColorStop(1, '#ff00aa');
-      g.fillStyle = edge; g.fillRect(0, V.adTop - 3, W, 2); g.fillRect(0, V.adTop + V.adH + 1, W, 2);
-      // 地面
-      const ft = V.floorTop;
-      const fl = g.createLinearGradient(0, ft, 0, H);
-      fl.addColorStop(0, '#05030f'); fl.addColorStop(1, '#0d0a26');
-      g.fillStyle = fl; g.fillRect(0, ft, W, H - ft);
-      g.lineWidth = 1;
-      for (let z = -9; z <= 8; z += 1) { g.strokeStyle = `rgba(0,240,255,${0.05 + (z + 9) * 0.008})`; g.beginPath(); seg(g, V, -12, z, 12, z); g.stroke(); }
-      g.strokeStyle = 'rgba(0,240,255,0.1)';
-      g.beginPath(); for (let x = -12; x <= 12; x += 1) seg(g, V, x, -9, x, 8); g.stroke();
-      court(g, V, '#0a0d2a', '#0d1a46', null, false);
-      courtLines(g, V, 'rgba(0,240,255,0.18)', Math.max(5, sc * 0.2));
-      courtLines(g, V, 'rgba(0,240,255,0.45)', Math.max(2.5, sc * 0.08));
-      courtLines(g, V, 'rgba(220,255,255,0.95)', Math.max(1, sc * 0.03));
-      // 场边灯带
-      g.strokeStyle = 'rgba(255,0,170,0.5)'; g.lineWidth = Math.max(2, sc * 0.05);
-      g.beginPath(); seg(g, V, -C.HALF - 0.9, -HW - 0.9, C.HALF + 0.9, -HW - 0.9); seg(g, V, -C.HALF - 0.9, HW + 0.9, C.HALF + 0.9, HW + 0.9); g.stroke();
-    },
-    init(V) {
-      const st = { pulse: 0, cheer: 0, parts: [], sticks: [] };
-      // 霓虹招牌单独缓存，便于做闪烁
-      const sc = V.sc, w = Math.round(sc * 9), h = Math.round(sc * 2.2);
-      const dpr = V.dpr || 1;
-      const c = YY.platform.createCanvas();
-      c.width = Math.max(1, w * dpr); c.height = Math.max(1, h * dpr);
-      const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
-      neonText(g, '羽跃', w * 0.3, h * 0.5, sc * 1.05, 'rgba(255,0,170,A)');
-      neonText(g, '对决', w * 0.72, h * 0.52, sc * 0.95, 'rgba(0,240,255,A)');
-      st.sign = { c, w, h };
-      const r = rng(9);
-      const top = V.standTop + sc * 0.4, bot = V.adTop;
-      for (let i = 0; i < 70; i++) st.sticks.push({ x: r() * V.W, y: top + r() * (bot - top), ph: r() * 6, col: r() < 0.5 ? '0,240,255' : r() < 0.5 ? '255,0,170' : '255,230,90' });
-      st.strips = crowdStrips(V, 31, { shirts: ['#1a1238', '#22184a', '#140e30'], skins: ['#2c2050', '#33255a'], hairs: ['#0d0820'], alpha: 1, flags: 0 });
-      for (let i = 0; i < 40; i++) st.parts.push({ x: Math.random() * 18 - 9, y: Math.random() * 7, s: Math.random() });
-      return st;
-    },
-    event(st, type) {
-      if (type === 'hit') st.pulse = Math.max(st.pulse, 0.5);
-      if (type === 'smash') st.pulse = 1.3;
-      if (type === 'point' || type === 'over') { st.pulse = 1.5; st.cheer = 1; }
-    },
-    drawFar(ctx, R, t, st, dt) {
-      const V = R.V;
-      st.cheer = Math.max(0, st.cheer - dt * 0.5);
-      if (st.liveCrowd) {
-        for (const s of st.strips) {
-          const bounce = Math.abs(Math.sin(t * 11 + s.row)) * st.cheer * s.h * 0.15;
-          ctx.drawImage(s.c, 0, s.y - bounce, R.W, s.h);
-        }
-      }
-      // 招牌
-      const sg = st.sign;
-      const flick = Math.random() < 0.015 ? 0.35 : 0.92 + Math.sin(t * 30) * 0.04;
-      ctx.globalAlpha = flick;
-      ctx.drawImage(sg.c, R.cx - sg.w / 2, Math.max(4, V.standTop - sg.h - R.sc * 0.2), sg.w, sg.h);
-      ctx.globalAlpha = 1;
-      ctx.globalCompositeOperation = 'lighter';
-      // 荧光棒
-      for (const s of st.sticks) {
-        const a = Math.sin(t * (2 + st.cheer * 6) + s.ph) * 0.6;
-        const L = R.sc * 0.28;
-        ctx.strokeStyle = `rgba(${s.col},${0.55 + st.cheer * 0.4})`; ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(s.x + Math.sin(a) * L, s.y - Math.cos(a) * L); ctx.stroke();
-      }
-      // 激光
-      for (let i = 0; i < 4; i++) {
-        const left = i % 2 === 0;
-        const ox = left ? 0 : R.W, oy = 0;
-        const ang = Math.sin(t * (0.5 + i * 0.13) + i * 2) * 0.5 + (left ? 0.9 : Math.PI - 0.9);
-        const L = R.W * 1.2;
-        const ex = ox + Math.cos(ang) * L, ey = oy + Math.sin(ang) * L;
-        const col = i < 2 ? '0,240,255' : '255,0,170';
-        const gr = ctx.createLinearGradient(ox, oy, ex, ey);
-        gr.addColorStop(0, `rgba(${col},0.55)`); gr.addColorStop(1, `rgba(${col},0)`);
-        ctx.strokeStyle = gr; ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ex, ey); ctx.stroke();
-        ctx.lineWidth = 8; ctx.globalAlpha = 0.15; ctx.stroke(); ctx.globalAlpha = 1;
-      }
-      ctx.globalCompositeOperation = 'source-over';
-    },
-    drawNear(ctx, R, t, st, dt) {
-      const V = R.V;
-      st.pulse = Math.max(0, st.pulse - dt * 1.6);
-      ctx.globalCompositeOperation = 'lighter';
-      // 球场线脉冲
-      if (st.pulse > 0.02) courtLines(ctx, V, `rgba(0,240,255,${0.35 * st.pulse})`, Math.max(6, R.sc * 0.26));
-      // 扫描线
-      const sx = ((t * 0.18) % 1.4 - 0.2) * 26 - 13;
-      ctx.strokeStyle = 'rgba(255,0,170,0.35)'; ctx.lineWidth = 3;
-      ctx.beginPath(); seg(ctx, V, sx, -9, sx, 8); ctx.stroke();
-      // 浮动粒子
-      for (const p of st.parts) {
-        p.y += dt * (0.2 + p.s * 0.3); if (p.y > 7.5) { p.y = 0; p.x = Math.random() * 18 - 9; }
-        const q = V.P(p.x, p.y, -2);
-        ctx.fillStyle = p.s < 0.5 ? 'rgba(0,240,255,0.5)' : 'rgba(255,0,170,0.5)';
-        ctx.fillRect(q[0], q[1], 2, 2);
-      }
-      ctx.globalCompositeOperation = 'source-over';
-    },
+  // The old neon ID stays stable for saved rooms and venue preferences.
+  YY.paintSummerCourt=function(g,W,H){
+    const sky=g.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#233f64');sky.addColorStop(.6,'#7789a5');sky.addColorStop(1,'#dfb0a1');g.fillStyle=sky;g.fillRect(0,0,W,H);
+    g.fillStyle='#f9e5b6';g.beginPath();g.arc(W*.76,H*.25,H*.085,0,Math.PI*2);g.fill();
+    for(let layer=0;layer<2;layer++){g.fillStyle=layer?'#3c586f':'#60758d';for(let i=0;i<18;i++){const x=i*W/17,hh=H*(.12+(i*17%11)/70);g.fillRect(x,H*(.75+layer*.1)-hh,W*.065,hh+H*.3);if(layer)for(let k=0;k<3;k++){g.fillStyle='#f4d19b66';g.fillRect(x+W*.012,H*.85-hh+12+k*12,W*.009,4);g.fillStyle='#3c586f';}}}
+    g.strokeStyle='#30485b';g.lineWidth=2;
+    for(const base of[.09,.27]){g.beginPath();g.moveTo(0,H*base);g.quadraticCurveTo(W*.5,H*(base+.28),W,H*base);g.stroke();for(let i=0;i<16;i++){const u=(i+.5)/16,x=W*u,y=H*(base+.56*u*(1-u));g.fillStyle=i%3?'#ffe5b1':'#edb5a5';g.beginPath();g.arc(x,y,Math.max(2,H*.012),0,Math.PI*2);g.fill();}}
+    g.fillStyle='#344d5e';g.fillRect(0,H*.89,W,H*.11);g.strokeStyle='#b8c6c1';g.lineWidth=2;g.beginPath();g.moveTo(0,H*.90);g.lineTo(W,H*.90);g.stroke();
+    for(let i=0;i<12;i++){g.beginPath();g.moveTo(W*i/11,H*.9);g.lineTo(W*i/11,H);g.stroke();}
+  };
+  const neon={
+    id:'neon',name:'夏夜羽球场',desc:'灯串与晚风',glossy:.06,shadow:{skew:.24,len:1.1,alpha:.3},
+    paintFar(g,V){YY.paintSummerCourt(g,V.W,V.adTop+V.adH);},
+    nearTop(V){return V.adTop-4;},
+    paintNear(g,V){const {W,H}=V;g.fillStyle='#3c5361';g.fillRect(0,V.adTop-3,W,H-V.adTop+3);const floor=g.createLinearGradient(0,V.floorTop,0,H);floor.addColorStop(0,'#526d77');floor.addColorStop(1,'#314d5f');g.fillStyle=floor;g.fillRect(0,V.floorTop,W,H-V.floorTop);court(g,V,'#314d5f','#4a949e','#f8eccc',true);},
+    init(){return {cheer:0};},event(st,type){if(type==='point')st.cheer=1;},
+    drawFar(){},drawNear(){}
   };
 
   const outdoors = {
@@ -718,6 +604,14 @@
     }
   };}
   YY.VENUES = { arena, sunset, neon, ...Object.fromEntries(Object.entries(outdoors).map(([id,c])=>[id,outdoor(c)])) };
+  YY.VENUE_UI={
+    arena:{panelTop:'#294c65',panelBot:'#19384d',bg:'#142c40',gold:'#ffe0a0',line:'#83cbd04d'},
+    sunset:{panelTop:'#62465b',panelBot:'#3a344d',bg:'#28263d',gold:'#ffdaab',line:'#e8b39b55'},
+    neon:{panelTop:'#49617b',panelBot:'#2a435c',bg:'#20374f',gold:'#ffe1b4',line:'#f0c9a455'},
+    bamboo:{panelTop:'#365c55',panelBot:'#213e39',bg:'#182f2d',gold:'#e0eebc',line:'#add8bd55'},
+    harbor:{panelTop:'#2c6175',panelBot:'#1c4056',bg:'#17364a',gold:'#ffe0a1',line:'#9dd4df55'},
+    aurora:{panelTop:'#3a5e79',panelBot:'#263f5b',bg:'#1e334d',gold:'#c8f8e9',line:'#b6d9ed55'}
+  };
   YY.VENUE_IDS = YY.MATCH_VENUES.slice();
 
 

@@ -358,6 +358,10 @@
       s.speed = Math.hypot(f.vx, f.vy);
       m.phase = 'rally'; m.hitCount++;
       m.pred = YY.simulate(s.x, s.y, s.vx, s.vy, 6, true, false, m.physEnv ? m.physEnv() : null); m.pred.t0 = m.time;
+      if(m.courtMode==='3d'){
+        // 技能试招沿玩家当前球道喂球，纵深速度与预测都使用 3D 比赛数据。
+        s.space3D=true;s.z=m.players[0].z||0;s.vz=0;m.players[1].z=s.z;m.players[1].vz=0;m.rePred();
+      }
       m.players[1].flash = 0.2;
       m.emit({ type: 'hit', p: 1, shot: 'feed', name: '发球机', q: 1, label: '', speed: s.speed, x: s.x, y: s.y, feed: true });
       this.lastKind = type; this.playerHit = null; this.fed = true; this.hint = null; this.hintLock = false; this.idleReady = false;

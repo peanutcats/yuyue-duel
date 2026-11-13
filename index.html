@@ -9,10 +9,11 @@
   <meta name="description" content="羽跃对决：打开网页即可游玩的侧视羽毛球对战游戏，支持 AI 对战、好友对战与自由练习。">
   <title>羽跃对决 · 网页羽毛球对战</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23ff4b55'/%3E%3Cpath d='M22 40 L46 14 L52 20 L28 46Z' fill='%23fff'/%3E%3Ccircle cx='22' cy='44' r='8' fill='%23ffd23f'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="css/style.css?v=ink-124">
-  <link rel="stylesheet" href="css/court3d.css?v=ink-124">
-  <link rel="stylesheet" href="css/story-sixteen.css?v=arena-3">
-  <link rel="stylesheet" href="css/matchmaking.css?v=matchmaking-1">
+  <link rel="stylesheet" href="css/style.css?v=web-131-20261113">
+  <link rel="stylesheet" href="css/court3d.css?v=web-131-20261113">
+  <link rel="stylesheet" href="css/story-sixteen.css?v=web-131-20261113">
+  <link rel="stylesheet" href="css/matchmaking.css?v=web-131-20261113">
+  <link rel="stylesheet" href="css/account.css?v=web-131-20261113">
 </head>
 <body>
   <!-- 图标 -->
@@ -181,12 +182,12 @@
       <div class="panel wide match-panel">
         <header class="ph"><button class="icon-btn" data-go="friend" aria-label="返回联机对决"><svg><use href="#i-back"/></svg></button><div><h2>在线匹配</h2><small>下一位对手，正在来球场的路上</small></div><span class="match-live">真人 1v1</span></header>
         <div class="match-setup">
-          <div class="match-loadout"><span class="match-eyebrow">你的出场阵容</span><img id="matchPortrait" alt="所选角色"><h3 id="matchCharacter"></h3><p id="matchKit"></p><small id="matchGear"></small><button class="btn" id="btnMatchLoadout">调整角色 / 技能 / 器械</button></div>
+          <div class="match-route"><span class="match-eyebrow">MEET · PREPARE · PLAY</span><div class="match-route-court" aria-hidden="true"><i></i><i></i><b>1 : 1</b></div><h3>每次相遇，重新出招</h3><p>找到对手后，有 60 秒选择角色、技能和器械。保存过的搭配会自动带入准备页。</p><small>双方准备好，即可开赛</small></div>
           <div class="match-preferences"><span class="match-eyebrow">比赛规则</span>
             <div class="match-courts" role="group" aria-label="匹配场地模式"><button data-match-court="2d" aria-pressed="true"><b>2D 横版</b><small>经典节奏 · 侧视对决</small></button><button data-match-court="3d" aria-pressed="false"><b>3D 纵深</b><small>四向走位 · 触球定向</small></button></div>
             <label class="match-option" for="matchTarget">比赛分制<select id="matchTarget"><option value="7">7 分 · 11 分封顶</option><option value="15">15 分 · 21 分封顶</option><option value="21">21 分 · 30 分封顶</option></select></label>
             <label class="match-option" for="matchSkills">角色技能<input id="matchSkills" type="checkbox" checked></label>
-            <ol class="match-steps"><li>按相同规则寻找在线玩家</li><li>15 秒内确认，双方准备后开赛</li><li>赛后可继续寻找下一位对手</li></ol>
+            <ol class="match-steps"><li>按相同规则寻找在线玩家</li><li>找到对手后，60 秒内调整阵容并准备</li><li>赛后可继续寻找下一位对手</li></ol>
           </div>
         </div>
         <footer class="match-footer"><p id="matchSetupNote">真人 1v1 · 同规则配对 · 场馆随机</p><button class="btn primary big" id="btnMatchStart">开始匹配</button></footer>
@@ -196,11 +197,17 @@
       <div class="panel wide match-panel match-progress">
         <header class="ph center"><div><span class="match-eyebrow">ONLINE MATCH</span><h2 id="matchStatusTitle">正在寻找球友</h2><small id="matchStatusRules">正在连接比赛服务…</small></div></header>
         <div id="matchSearch"><div class="match-radar" aria-hidden="true"><i></i><i></i><i></i><svg><use href="#i-shuttle"/></svg></div><div id="matchElapsed" class="match-elapsed">0:00</div><p id="matchWaiting">正在连接…</p></div>
-        <div id="matchPair" class="match-pair" hidden><div><img id="matchSelfPortrait" alt="你的角色"><b id="matchSelfName"></b><span id="matchSelfReady"></span></div><strong id="matchVersus">VS</strong><div><img id="matchOpponentPortrait" alt="对手角色"><b id="matchOpponentName"></b><span id="matchOpponentReady"></span></div></div>
-        <p id="matchStatusNote" role="status" aria-live="polite">等待真实玩家加入，匹配成功后将请你确认</p>
-        <div class="row"><button id="btnMatchCancel" class="btn">取消匹配</button><button id="btnMatchAccept" class="btn primary" hidden>确认比赛</button></div>
+        <div id="matchPair" class="match-pair" hidden>
+          <article class="match-player self"><div class="match-player-id"><b id="matchSelfName"></b><small id="matchSelfId"></small></div><img id="matchSelfPortrait" alt="你的出战角色"><strong id="matchSelfCharacter"></strong><p id="matchSelfKit"></p><small id="matchSelfGear"></small><span id="matchSelfReady"></span><button class="btn" id="btnMatchLoadout">更换角色 / 技能 / 器械</button></article>
+          <strong id="matchVersus">VS</strong>
+          <article class="match-player"><div class="match-player-id"><b id="matchOpponentName"></b><small id="matchOpponentId"></small></div><img id="matchOpponentPortrait" alt="对手出战角色"><strong id="matchOpponentCharacter"></strong><p id="matchOpponentKit"></p><small id="matchOpponentGear"></small><span id="matchOpponentReady"></span></article>
+        </div>
+        <p id="matchStatusNote" role="status" aria-live="polite">等待真实玩家加入，找到对手后，有 60 秒调整阵容</p>
+        <div class="row"><button id="btnMatchCancel" class="btn">取消匹配</button><button id="btnMatchAccept" class="btn primary" hidden>准备就绪</button></div>
       </div>
     </section>
+
+    <div id="matchPrepTimer" class="match-prep-timer hidden" role="status"></div>
 
     <!-- 在线大厅 -->
     <section id="scr-lobby" class="screen panel-screen hidden">
@@ -446,50 +453,55 @@
     <button class="btn ghost" id="btnRotateOk">继续竖屏</button>
   </div>
 
-  <script src="js/core.js?v=ink-124"></script>
-  <script src="js/achievements.js?v=ink-124"></script>
-  <script src="js/roster.js?v=ink-124"></script>
-  <script src="js/gear-looks.js?v=ink-124"></script>
-  <script src="js/market-art.js?v=ink-124"></script>
-  <script src="js/skill-icons.js?v=ink-124"></script>
-  <script src="js/match.js?v=ink-124"></script>
-  <script src="js/court3d.js?v=ink-124"></script>
-  <script src="js/court3d-skills.js?v=ink-124"></script>
-  <script src="js/court3d-skill-info.js?v=ink-124"></script>
-  <script src="js/ai.js?v=ink-124"></script>
-  <script src="js/court3d-ai.js?v=ink-124"></script>
-  <script src="js/practice.js?v=ink-124"></script>
-  <script src="js/character-art.js?v=ink-124"></script>
-  <script src="js/char.js?v=ink-124"></script>
-  <script src="js/venues.js?v=ink-124"></script>
-  <script src="js/render.js?v=ink-124"></script>
-  <script src="js/court3d-motion.js?v=ink-124"></script>
-  <script src="js/court3d-render.js?v=ink-124"></script>
-  <script src="js/character-model3d.js?v=ink-124"></script>
-  <script src="js/emote.js?v=ink-124"></script>
-  <script src="js/skillfx.js?v=ink-124"></script>
-  <script src="js/scenes.js?v=ink-124"></script>
-  <script src="js/foley.js?v=ink-124"></script>
-  <script src="js/soundtrack.js?v=ink-124"></script>
-  <script src="js/audio.js?v=ink-124"></script>
-  <script src="js/input.js?v=ink-124"></script>
-  <script src="js/court3d-input.js?v=ink-124"></script>
-  <script src="js/net.js?v=ink-124"></script>
-  <script src="js/campaign.js?v=ink-124"></script>
-  <script src="js/knowledge.js?v=ink-124"></script>
-  <script src="js/story.js?v=ink-124"></script>
-  <script src="js/story-play.js?v=ink-124"></script>
-  <script src="js/story-games.js?v=ink-124"></script>
-  <script src="js/story-art.js?v=ink-124"></script>
-  <script src="js/story-rules.js?v=ink-124"></script>
-  <script src="js/gameplay.js?v=ink-124"></script>
-  <script src="js/main.js?v=ink-124"></script>
-  <script src="js/court3d-web.js?v=matchmaking-1"></script>
-  <script src="js/achievements-web.js?v=ink-124"></script>
-  <script src="js/story-web.js?v=ink-124"></script>
-  <script src="js/online-config.js?v=matchmaking-1"></script>
-  <script src="js/socket-network.js?v=ink-124"></script>
-  <script src="js/player-prediction.js?v=ink-124"></script>
-  <script src="js/matchmaking-web.js?v=matchmaking-1"></script>
+  <script src="js/core.js?v=web-131-20261113"></script>
+  <script src="js/achievements.js?v=web-131-20261113"></script>
+  <script src="js/roster.js?v=web-131-20261113"></script>
+  <script src="js/gear-looks.js?v=web-131-20261113"></script>
+  <script src="js/market-art.js?v=web-131-20261113"></script>
+  <script src="js/skill-icons.js?v=web-131-20261113"></script>
+  <script src="js/cloud-save.js?v=web-131-20261113"></script>
+  <script src="js/player-identity.js?v=web-131-20261113"></script>
+  <script src="js/match.js?v=web-131-20261113"></script>
+  <script src="js/court3d.js?v=web-131-20261113"></script>
+  <script src="js/court3d-skills.js?v=web-131-20261113"></script>
+  <script src="js/court3d-skill-info.js?v=web-131-20261113"></script>
+  <script src="js/skill-guide.js?v=web-131-20261113"></script>
+  <script src="js/ai.js?v=web-131-20261113"></script>
+  <script src="js/court3d-ai.js?v=web-131-20261113"></script>
+  <script src="js/practice.js?v=web-131-20261113"></script>
+  <script src="js/character-art.js?v=web-131-20261113"></script>
+  <script src="js/char.js?v=web-131-20261113"></script>
+  <script src="js/venues.js?v=web-131-20261113"></script>
+  <script src="js/render.js?v=web-131-20261113"></script>
+  <script src="js/court3d-motion.js?v=web-131-20261113"></script>
+  <script src="js/court3d-render.js?v=web-131-20261113"></script>
+  <script src="js/character-model3d.js?v=web-131-20261113"></script>
+  <script src="js/emote.js?v=web-131-20261113"></script>
+  <script src="js/skillfx.js?v=web-131-20261113"></script>
+  <script src="js/scenes.js?v=web-131-20261113"></script>
+  <script src="js/foley.js?v=web-131-20261113"></script>
+  <script src="js/soundtrack.js?v=web-131-20261113"></script>
+  <script src="js/audio.js?v=web-131-20261113"></script>
+  <script src="js/input.js?v=web-131-20261113"></script>
+  <script src="js/court3d-input.js?v=web-131-20261113"></script>
+  <script src="js/net.js?v=web-131-20261113"></script>
+  <script src="js/campaign.js?v=web-131-20261113"></script>
+  <script src="js/knowledge.js?v=web-131-20261113"></script>
+  <script src="js/story.js?v=web-131-20261113"></script>
+  <script src="js/story-play.js?v=web-131-20261113"></script>
+  <script src="js/story-games.js?v=web-131-20261113"></script>
+  <script src="js/story-art.js?v=web-131-20261113"></script>
+  <script src="js/story-rules.js?v=web-131-20261113"></script>
+  <script src="js/gameplay.js?v=web-131-20261113"></script>
+  <script src="js/main.js?v=web-131-20261113"></script>
+  <script src="js/court3d-web.js?v=web-131-20261113"></script>
+  <script src="js/achievements-web.js?v=web-131-20261113"></script>
+  <script src="js/story-web.js?v=web-131-20261113"></script>
+  <script src="js/online-config.js?v=web-131-20261113"></script>
+  <script src="js/socket-network.js?v=web-131-20261113"></script>
+  <script src="js/player-prediction.js?v=web-131-20261113"></script>
+  <script src="js/matchmaking-web.js?v=web-131-20261113"></script>
+  <script src="js/account-client.js?v=web-131-20261113"></script>
+  <script src="js/account-web.js?v=web-131-20261113"></script>
 </body>
 </html>

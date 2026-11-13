@@ -12,7 +12,7 @@
 
   const store = {
     get(k, d) { try { const v = localStorage.getItem('yuyue.' + k); return v === null ? d : JSON.parse(v); } catch (_) { return d; } },
-    set(k, v) { try { localStorage.setItem('yuyue.' + k, JSON.stringify(v)); } catch (_) {} },
+    set(k, v) { try { YY.platform.setStorage('yuyue.' + k, JSON.stringify(v)); } catch (_) {} },
   };
 
   const App = {
@@ -262,7 +262,7 @@
       if (this.R.touch !== YY.isTouch()) { this.R.touch = YY.isTouch(); this.R.resize(); }
       if (this.mode !== 'guest') this.R.setVenue(venue || this.pickVenue());
       this._skE = -1;
-      this.started = performance.now();
+      this.started = performance.now(); this.startedAt=Date.now();
     },
     startAttract(venue) {
       this.reset();
@@ -631,6 +631,12 @@
       $('resStats').innerHTML = html;
       requestAnimationFrame(() => requestAnimationFrame(() => document.querySelectorAll('#resStats i').forEach((el) => { el.style.width = el.dataset.w + '%'; })));
       const secs = Math.round((performance.now() - this.started) / 1000);
+      if(['ai','online','host','guest','local'].includes(this.mode)&&!m.battleRecorded&&(this.mode!=='online'||this.battleRecordedId!==this.matchId)){
+        YY.Profile.recordBattle(YY.battleRecord(m,{me,mode:this.isOnline()?'online':this.mode,
+        chars:this.mode==='online'?this.onlineChars:null,identities:this.mode==='online'?this.onlineIdentities:null,info:this.mode==='online'?this.matchInfo:null,
+        startedAt:this.startedAt,seconds:secs,venue:this.R.venueId,level:this.level,opponent:this.playerName(1-me,m),endReason:this.matchEndReason}));
+        m.battleRecorded=true;if(this.mode==='online')this.battleRecordedId=this.matchId;
+      }
       $('resTip').textContent = `比赛用时 ${Math.floor(secs / 60)} 分 ${secs % 60} 秒 · 最长回合 ${m.longest || 0} 拍\n` + this.tip(st[me], st[1 - me]);
       $('btnAgain').textContent = this.mode === 'guest' ? '请求再来一局' : '再来一局';
       const challenge = this.recordAIResult(m);
