@@ -239,6 +239,7 @@
       return super.checkContact(p, dt, previous, flightTime);
     }
     ringError(p, s) {
+      if(p.cnt?.school?.visit?.phase==='visit')return Math.abs(Math.hypot(s.x-p.x,s.y-p.y-C.SHOULDER,finite(s.z)-finite(p.z))-C.ARM);
       const dx = (s.x-p.x)*p.dir, dy = s.y-p.y-C.SHOULDER, dz = finite(s.z)-finite(p.z);
       return Math.abs(Math.hypot(dx,dy,dz)-C.ARM) + Math.max(0, -dx-.5)*.7;
     }
@@ -249,8 +250,8 @@
       if (hi >= lo) for (let j=0;j<=8;j++) {
         const u=lerp(lo,hi,j/8), f=clamp(u*dt/Math.max(1e-9,flightTime),0,1);
         const ball={x:lerp(prev.x,s.x,f),y:lerp(prev.y,s.y,f),z:lerp(prev.z,s.z,f)};
-        if (ball.x*p.side <= C.SHUTTLE_R || ball.y <= C.SHUTTLE_R) continue;
-        const pose={x:lerp(old.x,p.x,u),y:lerp(old.y,p.y,u),z:lerp(old.z,p.z,u),dir:p.dir};
+        if (!this.contactAllowed(p,ball) || ball.y <= C.SHUTTLE_R) continue;
+        const pose={x:lerp(old.x,p.x,u),y:lerp(old.y,p.y,u),z:lerp(old.z,p.z,u),dir:p.dir,cnt:p.cnt};
         const e=this.ringError(pose,ball);
         if (!best || e<best.e) best={u,e,ball,pose};
       }
@@ -304,6 +305,7 @@
     }
     rePred(hidden) {
       const s=this.shuttle, ctl=s.ctl;
+      if(ctl?.k==='schoolRoll')return this.schoolPrediction();
       if(s.slam&&!s.crossedNet&&!s.netHit&&!ctl){
         const c=s.slam,p=this.players[c.o],path=Y.slamPath(s.x,s.y,s.vx,s.vy,{side:p.side,walls:this.wallsOf(c.o),boost:c.steam?1.25:1.18,floor:c.floor,env:this.physEnv()});
         this.pred={...path,landZ:s.z,pts:path.pts.map(q=>({...q,z:s.z,vz:0})),t0:this.time,hidden:hidden??false};return;
@@ -326,15 +328,15 @@
       const id=p.kit?.act[slot], before=p.energy, x=p.x, z=p.z, old=this.eid;
       const d=Y.courtDirection(this.inputs[p.idx]);
       const manual=Math.hypot(d.move,d.strafe)>.12;
-      const replayAim=id==='yipai'&&typeof pr?.aim==='object'?Y.cleanSkillAim(pr.aim):null;
-      const raw={x:d.strafe,y:replayAim?.y??d.move};
+      const replayAim=['yipai','bianpai'].includes(id)&&typeof pr?.aim==='object'?Y.cleanSkillAim(pr.aim):null;const replayDepth=replayAim?(Math.abs(replayAim.x)>.27?replayAim.x:replayAim.y):null;
+      const raw={x:d.strafe,y:replayDepth??d.move};
       this._skillZ3D=manual?clamp(p.z+raw.x*2.6,-WIDTH,WIDTH):null;
-      this._skillAim3D=manual||replayAim?.y?raw:null;
+      this._skillAim3D=manual||replayDepth?raw:null;
       const baseAim=manual?{x:raw.y,y:['weichui','bianpai','yipai'].includes(id)?raw.y*.55:.3}:0;
       const length=typeof baseAim==='object'?Math.max(1,Math.hypot(baseAim.x,baseAim.y)):1;
-      const result=super.useSkill(p,slot,{aim:typeof baseAim==='object'?{x:baseAim.x/length,y:baseAim.y/length}:0,...(pr?.cookTarget?{cookTarget:pr.cookTarget}:{})});
+      const result=super.useSkill(p,slot,{aim:typeof baseAim==='object'?{x:baseAim.x/length,y:baseAim.y/length}:0,...(pr?.mirageAim?{mirageAim:pr.mirageAim}:{}),...(pr?.cookTarget?{cookTarget:pr.cookTarget}:{})});
       if(result || before!==p.energy || this.eid!==old) {
-        const mobility=['yuyue','tafeng','jindou','shihua','shuizhong'];
+        const mobility=['yuyue','tafeng','jindou','shihua'];
         if(mobility.includes(id)) {
           const target=manual?this._skillZ3D:(this.shuttle.live?finite(this.pred?.landZ,this.shuttle.z):p.z);
           if(Math.abs(p.x-x)>1.2)p.z=clamp(target,-LIMIT,LIMIT);

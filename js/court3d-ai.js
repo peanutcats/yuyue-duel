@@ -6,6 +6,7 @@
     update(dt){
       const m=this.m,p=m.players[this.i],s=m.shuttle,inp=m.inputs[this.i],lv=this.level3D;
       inp.move=0;inp.strafe=0;
+      if(this.schoolAI(dt))return;
       if(m.phase==='point'||m.phase==='over')return;
       if(m.phase==='serve'){
         if(m.server===this.i&&!m.serving&&m.serveT>.8){
@@ -14,11 +15,12 @@
         }return;
       }
       if(this.clubBlind())return;
+      if(this.decoy3D){const fake=m.ents.find(e=>e.id===this.decoy3D.id);if(!fake||Y.mirageMotionReadable(fake)){this.decoy3D=null;this.plan=null;this.fired3D=false;this.stroke3D=null;this.think3D=0;}}
       const incoming=s.live&&(s.lastHitter!==this.i||s.selfToss===this.i);
       if(this.seen3D!==m.hitCount||p.replan){this.seen3D=m.hitCount;this.react3D=m.time+lv.react;this.plan=null;this.fired3D=false;this.stroke3D=null;p.replan=false;}
       if(incoming&&m.time>this.react3D&&m.time>=this.think3D){
         this.think3D=m.time+.11;
-        if(p.fooled&&!this.decoy3D){p.fooled=false;const f=m.ents.find(e=>['fake','dirty'].includes(e.k)&&e.o!==this.i);if(f&&Math.random()>lv.read)this.decoy3D={id:f.id,until:m.time+.7-lv.read*.4};}
+        if(p.fooled&&!this.decoy3D){p.fooled=false;const f=m.ents.find(e=>['fake','dirty'].includes(e.k)&&e.o!==this.i&&!Y.mirageMotionReadable(e));if(f&&Math.random()>lv.read)this.decoy3D={id:f.id,until:m.time+.7-lv.read*.4};}
         const fake=this.decoy3D&&this.decoy3D.until>m.time?m.ents.find(e=>e.id===this.decoy3D.id):null;if(!fake)this.decoy3D=null;
         const pred=fake?{...Y.simulate3D({...fake,space3D:true},m.physEnv()),t0:m.time}:m.pred?.pts?m.pred:Y.simulate3D(s,m.physEnv());
         const elapsed=m.time-(pred.t0??m.time), speed=m.maxSpeed(p), error=lv.err*.23;
@@ -45,12 +47,14 @@
           let btn=depth>3.7?'drop':'clear';
           if((!p.onGround||s.y>2.25)&&Math.random()<lv.smash)btn='smash';
           if(Math.random()>lv.tactical)btn=Y.pick({clear:5,drop:3,smash:2});
+          if(p.passive==='hudie'&&Math.abs(p.x)<2.8&&Math.random()<lv.tactical)btn=s.y>1.85&&Math.abs(s.x)<1.9?'smash':depth>2.7?'drop':'clear';
           this.stroke3D={move:btn==='smash'?(depth<3.3?.7:-.7):btn==='drop'?-.35:.3,strafe:clamp((cross-s.z)/4.1,-1,1),until:m.time+.44};
           inp.presses.push({btn});this.fired3D=true;
         }
         if(this.fired3D&&!p.swing&&!p.shotQueue3D&&s.live&&s.lastHitter!==this.i&&m.ringError(p,s)<m.reachFor(p)&&Math.random()<.35)inp.presses.push({btn:'clear'});
       }else if(!incoming&&m.time>(this.react3D||0)+lv.recDelay){
-        this.moveTo3D(p.side*3.35,clamp((s.z||0)*.22,-.65,.65),lv.recover);
+        const net=p.passive==='hudie',field=p.buff.silkReady>0?p.cnt.ribbon?.field:null;
+        this.moveTo3D(p.side*(net?2.25:3.35),field?.z??clamp((s.z||0)*.22,-.65,.65),lv.recover);
       }
       if(incoming&&this.stroke3D?.until>m.time&&m.ringError(p,s)<m.reachFor(p)+.35){inp.move=this.stroke3D.move;inp.strafe=this.stroke3D.strafe;}
       if(m.skillsOn&&p.kit)this.thinkSkill(incoming);

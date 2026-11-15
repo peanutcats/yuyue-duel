@@ -9,12 +9,17 @@
     const u=Math.max(.7,p.k*r1),v=Math.max(.6,q.k*r2);
     g.beginPath();g.moveTo(p.x+nx*u,p.y+ny*u);g.lineTo(q.x+nx*v,q.y+ny*v);g.quadraticCurveTo(q.x+dx/L*v,q.y+dy/L*v,q.x-nx*v,q.y-ny*v);g.lineTo(p.x-nx*u,p.y-ny*u);g.quadraticCurveTo(p.x-dx/L*u,p.y-dy/L*u,p.x+nx*u,p.y+ny*u);g.closePath();
     const gradient=g.createLinearGradient(p.x-nx*u,p.y-ny*u,p.x+nx*u,p.y+ny*u);
-    gradient.addColorStop(0,Y.shade(color,.76));gradient.addColorStop(.45,color);gradient.addColorStop(.72,Y.shade(color,1.13));gradient.addColorStop(1,Y.shade(color,.88));
+    gradient.addColorStop(0,Y.shade(color,.92));gradient.addColorStop(.45,color);gradient.addColorStop(.72,Y.shade(color,1.06));gradient.addColorStop(1,Y.shade(color,.95));
     g.fillStyle=gradient;g.fill();if(outline){g.lineWidth=.65;g.strokeStyle='#101b2bba';g.stroke();}
   };
   V.modelChain=function(g,a,j,b,widths,color){const A=this.project(...a),J=this.project(...j),B=this.project(...b);Y.CharacterArt.limb(g,[A.x,A.y],[J.x,J.y],[B.x,B.y],widths.map((v,i)=>v*(i<2?A.k:i===2?J.k:B.k)),color,'#182332b0',.65);};
   V.modelBody=function(g,F,look,art){
     const H=mix(F.H1,F.H2,.5),S=mix(F.S1,F.S2,.5),n=12,rings=[];
+    if(look.identity==='pupil'){
+      const back=add(mix(H,S,.58),mul(F.forward,-.20));
+      this.modelLimb(g,add(back,[0,-.17,0]),add(back,[0,.15,0]),.19,.17,'#e9bb50');
+      this.modelLimb(g,add(back,mul(F.forward,-.13)),add(add(back,mul(F.forward,-.13)),[0,-.12,0]),.12,.10,'#65c6b8');
+    }
     // Rounded horizontal sections provide a waist, ribcage and sloping shoulder.
     for(const [u,w,d]of [[-.05,.16,.12],[.17,.17,.135],[.66,.235,.14],[.91,.24,.115],[1.05,.125,.085]]){
       const c=mix(H,S,u),width=w*(u<.4?art.waist:art.shoulder)+(look.identity==='basketball'&&u<.8?.045:0);
@@ -26,7 +31,7 @@
       let col=Math.sin(a)>.55?look.shirt2:look.shirt;
       if(look.dress&&j>=3)col=look.skin;
       if(look.prison&&j%2===0)col='#33414e';
-      faces.push({pts,col:Y.shade(col,.86+.19*Math.cos(a-.7)),d:pts.reduce((s,v)=>s+this.project(...v).d,0)/4});
+      faces.push({pts,col:Y.shade(col,.96+.065*Math.cos(a-.7)),d:pts.reduce((s,v)=>s+this.project(...v).d,0)/4});
     }
     faces.sort((a,b)=>b.d-a.d).forEach(f=>this.polygon(g,f.pts,f.col,null));
     const front=F.forward[0]*(this.r.mirror?-1:1)<0?1:-1;
@@ -37,6 +42,7 @@
     }
     this.line(g,point(.06,-.13),point(.06,.13),Y.shade(look.shirt2,.78),1.4);
     this.line(g,point(.95,-.09),point(.83,0),look.trim,1.3);this.line(g,point(.83,0),point(.95,.09),look.trim,1.3);
+    if(look.identity==='pupil')this.polygon(g,[point(.98,-.13,.025),point(.83,0,.025),point(.98,.13,.025),point(.72,.03,.025),point(.57,.08,.025),point(.77,-.06,.025)],'#ef5e4e','#a93432');
     // Small tailored folds and hem. No flat square chest panel.
     for(const s of[-1,1])this.line(g,point(.28,s*.07),point(.19,s*.12),Y.shade(look.shirt,.83),.7);
     const center=this.project(...point(.55,0,.015)),right=this.project(...point(.55,.1,.015)),up=this.project(...point(.75,0,.015));
@@ -59,9 +65,9 @@
     if(look.marketTier>=3){for(const s of[-1,1])this.line(g,point(.15,s*.1,.025),point(.85,s*.13,.025),look.marketColor,1.8);}
     if(!look.identity&&look.num){const q=this.project(...point(.3,.015,.025));this.label(g,look.num,q.x,q.y,Math.max(4,q.k*.09),look.panel);}
     if(look.dress){
-      // Two thin straps above a dark satin bodice, and a flared opaque skirt.
+      // Thin straps and the fitted opaque satin skirt match her portrait.
       for(const side of[-1,1])this.line(g,point(1,side*.12,.025),point(.69,side*.16,.025),look.shirt,2.2);
-      const top=[],hem=[];for(let i=0;i<12;i++){const a=i/12*TAU;top.push(add(H,add(mul(F.across,Math.sin(a)*.17),mul(F.forward,Math.cos(a)*.13))));hem.push(add(add(H,[0,-.29,0]),add(mul(F.across,Math.sin(a)*.28),mul(F.forward,Math.cos(a)*.19))));}
+      const top=[],hem=[];for(let i=0;i<12;i++){const a=i/12*TAU;top.push(add(H,add(mul(F.across,Math.sin(a)*.17),mul(F.forward,Math.cos(a)*.13))));hem.push(add(add(H,[0,-.29,0]),add(mul(F.across,Math.sin(a)*.19),mul(F.forward,Math.cos(a)*.145))));}
       const faces=top.map((q,i)=>[q,top[(i+1)%12],hem[(i+1)%12],hem[i]]).sort((a,b)=>this.project(...b[2]).d-this.project(...a[2]).d);
       faces.forEach((pts,i)=>this.polygon(g,pts,i%2?look.shirt:look.shirt2,null));for(let i=0;i<12;i++)this.line(g,hem[i],hem[(i+1)%12],look.trim,.65);
     }
@@ -83,7 +89,12 @@
       if(look.marketTier===1){this.polygon(g,[pt(-.12,.01,-.09),pt(.23,.01,-.09),pt(.23,.01,.09),pt(-.12,.01,.09)],'#826f51','#d1bd8a',1);for(const sign of[-1,1])this.line(g,pt(.05,.09,0),pt(.12,.02,sign*.075),'#efd18a',2);}
       return;
     }
-    const front=frame.stanceForward||frame.forward,across=frame.stanceAcross||frame.across,art=look.shoeArt;
+    const baseFront=frame.stanceForward||frame.forward,baseAcross=frame.stanceAcross||frame.across,art=look.shoeArt;
+    // Feet follow their own lower-leg lane with a small natural toe-out.
+    // Rotate in world space, so front, back and mirrored cameras agree.
+    const side=index===0?1:-1,lateral=(F[0]-K[0])*baseAcross[0]+(F[2]-K[2])*baseAcross[2];
+    const yaw=clamp(side*.065+lateral*.24,-.17,.17),c=Math.cos(yaw),s=Math.sin(yaw);
+    const front=add(mul(baseFront,c),mul(baseAcross,s)),across=add(mul(baseAcross,c),mul(baseFront,-s));
     const roll=frame.footRoll?.[index]||0;
     const pt=(x,y,z)=>add(F,add(mul(front,x),[across[0]*z,y+Math.max(0,.16-x)*Math.sin(roll*.24),across[2]*z]));
     const verts=[pt(-.1,.025,-.07),pt(.2,.02,-.08),pt(.24,.07,0),pt(.2,.08,.09),pt(-.09,.1,.07),pt(-.105,.15,-.055),pt(.07,.135,-.065),pt(.16,.1,.07),pt(-.085,.15,.06)];
@@ -145,26 +156,38 @@
     const r=this.r,look=r.lookOf(m,p.idx),art=Y.CharacterArt.profile(look),cast=r.characterCasts?.[p.idx];
     const action=!ghost&&cast?Y.CharacterArt.action(cast.id,r.time-cast.start):null;
     const F=Y.courtPose3D(p,m,this.time,{look,art,action}),base=this.project(p.x,0,p.z);
+    if(look.identity==='pupil'){
+      const duck=p.cnt?.school?.visit&&p.cnt.school.visit.phase!=='visit',height=duck?.61:.87;
+      for(const key of ['H1','H2','S1','S2','K1','K2','F1','F2','W','E','W2','E2','hd','N'])if(F[key]){F[key]=F[key].slice();if(key!=='W'||!p.swing)F[key][1]=p.y+(F[key][1]-p.y)*height;}
+    }
     g.save();g.globalAlpha*=alpha;if(ghost)g.globalAlpha*=ghost==='teacher'?.82:.4;
     const shadow=g.createRadialGradient(base.x,base.y,0,base.x,base.y,base.k*.55);shadow.addColorStop(0,'#06101c66');shadow.addColorStop(1,'#06101c00');g.save();g.translate(base.x,base.y);g.scale(1,.34);g.fillStyle=shadow;g.beginPath();g.arc(0,0,base.k*(.48+art.waist*.12),0,TAU);g.fill();g.restore();
     this.marketRig(g,p,F,look);
-    const leg=(H,K,Ft,back,index)=>{const shade=c=>back?Y.shade(c,.88):c;this.modelChain(g,H,K,Ft,[.078,.09,.05,.066,.033].map(v=>v*art.limb),shade(look.stockings||look.skin));this.modelLimb(g,mix(K,Ft,.65),mix(K,Ft,.95),.049,.042,shade(look.sock));this.modelShoe(g,Ft,K,F,look,index);this.modelLimb(g,H,mix(H,K,.49),.11*art.waist,.095*art.limb,back?look.shorts2:look.shorts);this.line(g,mix(H,K,.18),mix(H,K,.48),look.stripe,1);};
-    const arm=(S,E,W,back)=>{this.modelChain(g,S,E,W,[.056,.064,.035,.047,.028].map(v=>v*art.limb),back?look.skin2:look.skin);if(!look.tank)this.modelLimb(g,S,mix(S,E,.43),.077*art.shoulder,.061*art.limb,back?look.shirt2:look.shirt);this.modelLimb(g,mix(E,W,.79),mix(E,W,.94),.041,.039,look.wrist);const q=this.project(...W);g.fillStyle=look.skin;g.beginPath();g.ellipse(q.x,q.y,q.k*.039,q.k*.047,-.4,0,TAU);g.fill();g.strokeStyle=look.skin2;g.lineWidth=.55;g.stroke();};
+    const leg=(H,K,Ft,back,index)=>{const shade=c=>back?Y.shade(c,.88):c;this.modelChain(g,H,K,Ft,[.084,.098,.055,.072,.038].map(v=>v*art.limb),shade(look.stockings||look.skin));this.modelLimb(g,mix(K,Ft,.65),mix(K,Ft,.95),.049,.042,shade(look.sock));this.modelShoe(g,Ft,K,F,look,index);this.modelLimb(g,H,mix(H,K,.49),.11*art.waist,.095*art.limb,back?look.shorts2:look.shorts);this.line(g,mix(H,K,.18),mix(H,K,.48),look.stripe,1);};
+    const arm=(S,E,W,back)=>{this.modelChain(g,S,E,W,[.064,.074,.041,.055,.034].map(v=>v*art.limb),back?look.skin2:look.skin);if(!look.tank)this.modelLimb(g,S,mix(S,E,.43),.077*art.shoulder,.064*art.limb,back?look.shirt2:look.shirt);this.modelLimb(g,mix(E,W,.79),mix(E,W,.94),.044,.041,look.wrist);};
+    const hand=a=>{const e=this.project(...a.e),w=this.project(...a.w),h=this.project(...F.headR);g.save();g.translate(w.x,w.y);g.scale(w.k,w.k);Y.CharacterArt.hand(g,[(e.x-w.x)/w.k,(e.y-w.y)/w.k],[0,0],look,a.main?{gesture:'grip',angle:Math.atan2(h.y-w.y,h.x-w.x)}:'relaxed');g.restore();};
     const legs=[{h:F.H1,k:F.K1,f:F.F1,index:0},{h:F.H2,k:F.K2,f:F.F2,index:1}].sort((a,b)=>this.project(...b.k).d-this.project(...a.k).d);
-    legs.forEach((l,i)=>leg(l.h,l.k,l.f,i===0,l.index));
     const bodyDepth=this.project(...mix(F.S1,F.S2,.5)).d;
     const arms=[{s:F.S1,e:F.E,w:F.W,main:true},{s:F.S2,e:F.E2,w:F.W2,main:false}];
-    for(const a of arms)if(this.project(...a.e).d>bodyDepth)arm(a.s,a.e,a.w,true);
+    const paintedBack=r.modelAngle!=null?Math.cos(r.modelAngle)<0:p.dir*(r.mirror?-1:1)*Math.cos(F.spinAngle||0)>0;
+    const projected=Object.fromEntries(['H1','H2','S1','S2','K1','K2','F1','F2','E','W','E2','W2','N','hd'].map(key=>[key,this.project(...F[key])]));
+    const painted=Y.CharacterSprites?.drawRig(g,look,projected,{back:paintedBack,
+      shoe:paintedBack||look.shoeArt||look.marketTier>=0?(index=>this.modelShoe(g,F[index?'F2':'F1'],F[index?'K2':'K1'],F,look,index)):null});
+    if(!painted){
+    legs.forEach((l,i)=>leg(l.h,l.k,l.f,i===0,l.index));
+    for(const a of arms)if(this.project(...a.e).d>bodyDepth){arm(a.s,a.e,a.w,true);if(!a.main)hand(a);}
     this.modelBody(g,F,look,art);this.marketRig(g,p,F,look,true);
     this.modelLimb(g,F.N,F.hd,.05,.048,look.skin2);
-    const hp=this.project(...F.hd),scale=hp.k*.151*art.head*(look.headScale||1);
+    const hp=this.project(F.hd[0],F.hd[1]+Y.CharacterArt.style.headLift,F.hd[2]),scale=hp.k*Y.CharacterArt.style.head3D*(1+(art.head-1)*.3)*Y.CharacterArt.headScale(look);
     const back=r.modelAngle!=null?Math.cos(r.modelAngle)<0:p.dir*(r.mirror?-1:1)*Math.cos(F.spinAngle||0)>0;
     g.save();g.translate(hp.x,hp.y);g.rotate(clamp(F.torsoYaw*.09,-.12,.12)+(action?.id==='liubai'?-.22*action.e:0));g.scale(scale,scale);Y.CharacterArt.head(g,look,{back,turn:F.torsoYaw,time:this.time,focus:!!p.swing,gaze:Y.clubHintHidden?.(m,p.idx)?0:clamp((m.shuttle.z-p.z)*.2,-1,1),quality:r.quality});g.restore();
-    for(const a of arms)if(this.project(...a.e).d<=bodyDepth)arm(a.s,a.e,a.w,false);
+    for(const a of arms)if(this.project(...a.e).d<=bodyDepth){arm(a.s,a.e,a.w,false);if(!a.main)hand(a);}
+    }
     if(!Y.CharacterArt.mechanical(m,p)){
       this.modelRacket(g,F,look);
       if(!ghost&&Y.clubInkReady?.(m,p)){const q=this.project(...F.headR),w=this.project(...F.W);Y.SkillFX?.inkRacket?.(g,q.x,q.y,q.k/42,this.time,Math.atan2(q.y-w.y,q.x-w.x)-Math.PI/2);}
     }
+    if(painted)Y.CharacterSprites.grip(g,look,this.project(...F.W),this.project(...F.headR));else hand(arms[0]);
     if(look.prison){
       const chain=(a,b,sag)=>{let prev;for(let i=0;i<=10;i++){const u=i/10,q=mix(a,b,u);q[1]-=Math.sin(Math.PI*u)*sag;if(prev)this.line(g,prev,q,i%2?'#7b8899':'#e4ecf3',i%2?1.5:2.2);prev=q;}};
       for(const [a,b]of[[F.E,F.W],[F.E2,F.W2],[F.K1,F.F1],[F.K2,F.F2]])this.modelLimb(g,mix(a,b,.78),mix(a,b,.94),.063,.063,'#9caab6');

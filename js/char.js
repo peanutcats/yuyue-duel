@@ -154,15 +154,18 @@
     const split = play && !sw && !air ? Math.sin(Math.PI * clamp(1-(motion.split||0)/.18,0,1)) * (1-run*.7) : 0;
     const lunge = shot && !air ? shot.lunge * (shot.style==='lift' && Math.abs(p.x)>2.8 ? .55 : 1) : 0;
     const weight = shot ? shot.weight : 0, identity=o.identity||YY.CharacterArt?.motionFor(p)||{stance:1,lean:0};
+    const personal=identity.idle?.posture,personalWeight=air?0:(1-run)*(1-weight)*(1-slide);
     const action=!sw?o.action:null, mechanical=o.mechanical;
     const brake = clamp(motion.accel || 0, -1, 1);
     const breathe = Math.sin(t*(3.2+tiredK*4)+p.idx)*(.008+tiredK*.012)*(1-run);
     let hipY = .86 - slide*.12 + breathe - .13*landing - .055*split - tiredK*.04 - lunge*.17 - (shot ? shot.load : 0);
+    if(personal)hipY+=personal[3]*personalWeight;
     if (mood==='sad') hipY-=.04;
     if (mood==='tired') hipY-=.1;
     if (mood==='cheer') hipY+=.025;
     if(action)hipY-=action.crouch;
     let F1=[.23*identity.stance,0], F2=[-.21*identity.stance,0];
+    if(personal){F1=mixPoint(F1,[personal[0],0],personalWeight);F2=mixPoint(F2,[personal[1],personal[5]],personalWeight);}
     if (!air) {
       const gait1=foot(ph,fwd),gait2=foot(ph+Math.PI,fwd), stride=run*(1-lunge*.85)*(1-weight*.7);
       F1=mixPoint(F1,[gait1[0]+.06,gait1[1]],stride);
@@ -189,7 +192,7 @@
       const cross=slide*(p.cnt.club.ready?.ouzhou?.second?1:-1);
       F1[0]+=.22*cross;F2[0]-=.22*cross;F2[1]+=.13*slide;
     }
-    const H=[(shot?shot.hipX:0)+lunge*.09+brake*.025,hipY];
+    const H=[(shot?shot.hipX:0)+lunge*.09+brake*.025+(personal?personal[2]*personalWeight:0),hipY];
     const hipYaw=(shot?shot.hipYaw:-run*fwd*.15)+turn*.45;
     const chestYaw=(shot?shot.chestYaw:-run*fwd*.28)+turn*.8+(action?.yaw||0)+(mechanical?.punch||0)*.32;
     const H1=[H[0]+Math.sin(hipYaw)*.055,H[1]],H2=[H[0]-Math.sin(hipYaw)*.055,H[1]-.012];
@@ -198,6 +201,7 @@
     if(reach>.925&&!air){const drop=Math.min(.16,reach-.925);H[1]-=drop;H1[1]-=drop;H2[1]-=drop;}
     const K1=ik(...H1,...F1,.47,.47,1),K2=ik(...H2,...F2,.47,.47,1);
     let lean=.1+slide*.22*slideDir+run*.12*fwd+brake*.055+lunge*.24+tiredK*.1+(shot?shot.lean:0);
+    if(personal)lean+=personal[4]*personalWeight;
     if(air)lean-=.07*(1-weight);
     if(!sw)lean+=(MOOD_LEAN[mood]||0)+(action?action.lean*action.e:0)+identity.lean+(mechanical?.punch||0)*.16;
     const ux=Math.sin(lean),uy=Math.cos(lean), shoulderTurn=Math.sin(chestYaw)*.14;
@@ -207,7 +211,8 @@
     const tilt=action?.id==='liubai'?-.3*action.e:MOOD_HEAD[mood]!=null?MOOD_HEAD[mood]+Math.sin(t*2.1+p.idx)*.03:-clamp((o.gazeY||0)*.12,-.2,.35);
     const hd=[N[0]+Math.sin(lean+tilt*.5)*.16-(action?.id==='liubai'?.1*action.e:0),N[1]+Math.cos(lean+tilt*.5)*.16];
 
-    let A=45, bend=1.05, O=22, ob=.6;
+    const readyArms=identity.idle?.arms||[45,1.05,22,.6];
+    let [A,bend,O,ob]=readyArms;
     // 自抛后的蓄势：拍举过肩、负手指球，挑球随挥直接接进扣杀引拍。
     const toss=clamp(o.tossReady||0,0,1), bob=Math.sin(t*7+p.idx)*3;
     const tossArm=[150+bob,1.45,104+bob*.6,.18];
@@ -226,14 +231,14 @@
       else if(mood==='rest'){A=-82+Math.sin(t*1.6+p.idx)*3;bend=.3;O=-95;ob=2.2;}
       else if(mood==='wave'||mood==='smile'||mood==='talk'){A=40+Math.sin(t*3+p.idx)*4;O=mood==='wave'?125+Math.sin(t*8)*22:mood==='talk'?20+Math.sin(t*5)*18:22;ob=mood==='wave'?.35:1.3;}
       else if(air){A=105;bend=1.2;O=90;ob=.25;}
-      else {A+=Math.sin(t*3+p.idx)*2-run*10;O+=Math.sin(ph+Math.PI)*24*run;}
+      else {A+=Math.sin(t*(identity.idle?.tempo||3)+p.idx)*2-run*10;O+=Math.sin(ph+Math.PI)*24*run;}
     } else {O=shot.off;ob=shot.offBend;}
     if(!shot&&o.action){const ac=o.action;A=lerp(A,ac.arm[0],ac.e);bend=lerp(bend,ac.arm[1],ac.e);O=lerp(O,ac.arm[2],ac.e);ob=lerp(ob,ac.arm[3],ac.e);}
     let U=shot?shot.arm[0]*D2R:A*D2R-bend*.75;
     let Fa=shot?shot.arm[1]*D2R:A*D2R+bend*.55;
     let Rk=shot?shot.arm[2]*D2R:A*D2R+bend*.62;
     if (shot) {
-      let rest = air ? [105,1.2,90,.25] : [45+Math.sin(t*3+p.idx)*2-run*10,1.05,22+Math.sin(ph+Math.PI)*24*run,.6];
+      let rest = air ? [105,1.2,90,.25] : [readyArms[0]+Math.sin(t*(identity.idle?.tempo||3)+p.idx)*2-run*10,readyArms[1],readyArms[2]+Math.sin(ph+Math.PI)*24*run,readyArms[3]];
       if (toss>0) rest = rest.map((v,i)=>lerp(v,tossArm[i],toss));
       const blend = smooth(0,.025,shot.t)*(1-smooth(.205,.3,shot.t));
       U=lerp(rest[0]*D2R-rest[1]*.75,U,blend);
@@ -350,7 +355,12 @@
   }
   YY.tint = tint;
 
-  function shoe(ctx, F, K, look, lw, flat, pulse = 0, time = 0, air = false) {
+  function shoe(ctx, F, K, look, lw, flat, pulse = 0, time = 0, air = false, frontFacing = false) {
+    if(frontFacing&&!flat&&YY.CharacterArt?.figureShoe&&!(look.marketTier>=0)){
+      ctx.save();ctx.translate(F[0],F[1]+.09);ctx.scale(.0035,-.0035);
+      YY.CharacterArt.figureShoe(ctx,{ankle:[0,0],angle:clamp(Math.atan2(F[0]-K[0],K[1]-F[1])*.3,-.22,.22)},look);
+      ctx.restore();return;
+    }
     const a = look.shoeArt;
     const ang = Math.atan2(F[1] - K[1], F[0] - K[0]);
     const toe = clamp(ang + Math.PI / 2, -0.5, 0.6);
@@ -661,19 +671,42 @@
     o={...o,art:o.art||art,identity:o.identity||YY.CharacterArt?.motionFor(p,look)};
     const base = o.pose || pose(p, o.time || 0, o);
     const P = o.pose || (o.showcase && YY.CharacterArt ? YY.CharacterArt.displayPose(p,o.time||0,look,base) : base);
+    if(look.identity==='pupil'){
+      const duck=p.cnt?.school?.visit&&p.cnt.school.visit.phase!=='visit',height=duck?.61:.87;
+      for(const key of ['H','H1','H2','K1','K2','F1','F2','S','S2','E','E2','W','W2','N','hd']){
+        if(!P[key])continue;P[key]=P[key].slice();
+        if(key!=='W'||!p.swing)P[key][1]*=height;
+      }
+    }
     const lw = 0.0115;
     const flat = o.flat || null;
-    const bw = art?.limb || (look.slim ? 0.72 : look.buff ? 1.22 : 1), hs = (look.headScale || 1)*(art?.head||1);
-    const dark = (c) => (flat ? flat : shade(c, 0.78));
+    if(!flat&&YY.CharacterSprites?.rig2D(ctx,look,P,{shoe:look.shoeArt||look.marketTier>=0?index=>{
+      ctx.save();ctx.scale(1,-1);shoe(ctx,P[index?'F2':'F1'],P[index?'K2':'K1'],look,lw,null,o.shoePulse||0,o.time,!p.onGround,!!o.showcase);ctx.restore();
+    }:null})){
+      if(!o.hideRacket&&P.showRacket!==false&&!o.mechanical)racket(ctx,P,look,lw,null,o.glow||0,o.racketPulse||0);
+      if(o.inkReady&&!o.mechanical){const h=YY.racketHead(P);ctx.save();ctx.translate(h[0],h[1]);ctx.scale(1,-1);YY.SkillFX?.inkRacket?.(ctx,0,0,1/42,o.time||0,-P.Rk);ctx.restore();}
+      YY.CharacterSprites.grip2D(ctx,look,P);
+      return P;
+    }
+    const bw = (art?.limb || (look.slim ? 0.82 : look.buff ? 1.22 : 1))*1.08;
+    const hs = (YY.CharacterArt?.headScale(look)||1)*(1+((art?.head||1)-1)*.3);
+    const dark = (c) => (flat ? flat : shade(c, 0.90));
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
+    if(look.identity==='pupil'&&!flat){
+      const bx=P.N[0]-.28,by=P.N[1]-.43;
+      ctx.fillStyle='#e7b947';ctx.strokeStyle='#815329';ctx.lineWidth=.014;
+      YY.rr(ctx,bx,by,.25,.35,.065);ctx.fill();ctx.stroke();
+      ctx.fillStyle='#75c6ba';YY.rr(ctx,bx+.03,by+.03,.19,.15,.035);ctx.fill();ctx.stroke();
+      ctx.fillStyle='#fff1bc';ctx.beginPath();ctx.arc(bx+.13,by+.12,.035,0,Math.PI*2);ctx.fill();
+    }
     // 后腿
     if (!flat && look.marketTier >= 3) YY.MarketArt?.back(ctx,P,look,p,o);
     (YY.CharacterArt?.limb||jointFallback)(ctx,P.H2,P.K2,P.F2,[.086,.096,.054,.072,.042].map(v=>v*bw),dark(look.stockings||look.skin),flat?null:look.outline,lw);
     if (!flat) limb(ctx, [lerp(P.K2[0], P.F2[0], 0.72), lerp(P.K2[1], P.F2[1], 0.72)], P.F2, 0.05, 0.047, shade(look.sock, 0.85), null, lw, look.outline);
     if(!flat && look.marketTier>=3) YY.MarketArt?.limb(ctx,P.K2,P.F2,look,'shin');
-    shoe(ctx, P.F2, P.K2, look, lw, flat ? flat : null, o.shoePulse || 0, o.time, !p.onGround);
+    shoe(ctx, P.F2, P.K2, look, lw, flat ? flat : null, o.shoePulse || 0, o.time, !p.onGround,!!o.showcase);
     // Resting hands can come in front of the shirt to actually hold a prop.
     const freeArm=()=>{
     (YY.CharacterArt?.limb||jointFallback)(ctx,P.S2,P.E2,P.W2,[.058,.068,.040,.052,.034].map(v=>v*bw),dark(look.skin),flat?null:look.outline,lw);
@@ -696,7 +729,7 @@
     (YY.CharacterArt?.limb||jointFallback)(ctx,P.H1,P.K1,P.F1,[.090,.101,.056,.077,.044].map(v=>v*bw),flat||look.stockings||look.skin,flat?null:look.outline,lw);
     if (!flat) limb(ctx, [lerp(P.K1[0], P.F1[0], 0.72), lerp(P.K1[1], P.F1[1], 0.72)], P.F1, 0.051, 0.048, look.sock, null, lw, look.outline);
     if(!flat && look.marketTier>=3) YY.MarketArt?.limb(ctx,P.K1,P.F1,look,'shin');
-    shoe(ctx, P.F1, P.K1, look, lw, flat ? flat : null, o.shoePulse || 0, o.time, !p.onGround);
+    shoe(ctx, P.F1, P.K1, look, lw, flat ? flat : null, o.shoePulse || 0, o.time, !p.onGround,!!o.showcase);
     shortsPanel(ctx,P.H1,P.K1,.108*bw,look.shorts,look,lw,flat);
     if (!flat) {
       // 短裤侧条
@@ -706,14 +739,14 @@
       if (look.prison) YY.MarketArt?.prisonLegs(ctx, P, look, o.time || 0);
     }
     if(look.dress||['bow','star'].includes(art?.detail)){
-      const x=P.H[0],y=P.H[1],sway=clamp(p.vx||0,-5,5)*.006;
-      ctx.beginPath();ctx.moveTo(x-.14,y+.025);ctx.lineTo(x+.15,y+.025);ctx.quadraticCurveTo(x+.22+sway,y-.12,x+.26+sway,y-.30);ctx.quadraticCurveTo(x,y-.35,x-.24+sway,y-.30);ctx.closePath();const skirtColor=look.dress?look.shirt:look.shorts,skirt=ctx.createLinearGradient(x-.22,y,x+.25,y-.3);skirt.addColorStop(0,shade(skirtColor,.87));skirt.addColorStop(.38,shade(skirtColor,1.10));skirt.addColorStop(1,skirtColor);ctx.fillStyle=flat||skirt;ctx.fill();
-      if(!flat){ctx.strokeStyle=look.outline;ctx.lineWidth=lw;ctx.stroke();ctx.strokeStyle=look.trim;ctx.lineWidth=.008;ctx.beginPath();ctx.moveTo(x-.22+sway,y-.29);ctx.quadraticCurveTo(x,y-.33,x+.24+sway,y-.29);ctx.stroke();}
+      const x=P.H[0],y=P.H[1],sway=clamp(p.vx||0,-5,5)*.006,hem=look.dress?.18:.25;
+      ctx.beginPath();ctx.moveTo(x-.14,y+.025);ctx.lineTo(x+.15,y+.025);ctx.quadraticCurveTo(x+.21+sway,y-.12,x+hem+.01+sway,y-.30);ctx.quadraticCurveTo(x,y-.34,x-hem+.01+sway,y-.30);ctx.closePath();const skirtColor=look.dress?look.shirt:look.shorts,skirt=ctx.createLinearGradient(x-.22,y,x+.25,y-.3);skirt.addColorStop(0,shade(skirtColor,.94));skirt.addColorStop(.38,shade(skirtColor,1.10));skirt.addColorStop(1,skirtColor);ctx.fillStyle=flat||skirt;ctx.fill();
+      if(!flat){ctx.strokeStyle=look.outline;ctx.lineWidth=lw;ctx.stroke();ctx.strokeStyle=look.trim;ctx.lineWidth=.007;ctx.beginPath();ctx.moveTo(x-hem+.015+sway,y-.29);ctx.quadraticCurveTo(x,y-.325,x+hem-.005+sway,y-.29);ctx.stroke();}
     }
     // 头
     if (flat) {
       ctx.fillStyle = flat;
-      ctx.beginPath(); ctx.arc(P.hd[0], P.hd[1], 0.14, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(P.hd[0], P.hd[1]+(YY.CharacterArt?.style.headLift||0), YY.CharacterArt?.style.head2D||.14, 0, Math.PI * 2); ctx.fill();
     } else {limb(ctx,P.N,[P.hd[0],P.hd[1]-.07],.046,.043,look.skin2,null,lw,look.outline);scaleHead(() => YY.CharacterArt?.head2D?YY.CharacterArt.head2D(ctx,P,look,o):head(ctx,P,look,o,lw));}
     if(!flat && look.marketTier>=3)scaleHead(()=>YY.MarketArt?.visor(ctx,P,look));
     // 持拍手（最前）
@@ -743,7 +776,7 @@
     if(P.freeFront&&!flat)YY.CharacterArt?.hand(ctx,P.E2,P.W2,look,P.freeGesture||false);
     // 手
     ctx.fillStyle = flat || look.skin;
-    if(!flat&&YY.CharacterArt?.hand)YY.CharacterArt.hand(ctx,P.E,P.W,look,P.handGesture||true);else{ctx.beginPath();ctx.arc(P.W[0],P.W[1],.04,0,Math.PI*2);ctx.fill();}
+    if(!flat&&YY.CharacterArt?.hand)YY.CharacterArt.hand(ctx,P.E,P.W,look,P.showRacket!==false?{gesture:'grip',angle:P.Rk}:P.handGesture||true);else{ctx.beginPath();ctx.arc(P.W[0],P.W[1],.04,0,Math.PI*2);ctx.fill();}
     if (!flat && look.prison) YY.MarketArt?.prisonCuffs(ctx, P, look, o.time || 0);
     return P;
   };
@@ -795,17 +828,7 @@
   YY.characterIllustration=function(look,width=360,height=460){
     const c=YY.platform.createCanvas();c.width=width;c.height=height;const g=c.getContext('2d');
     YY.illustrationBackdrop(g,look,width,height);
-    const player={idx:0,dir:1,vx:0,vy:0,onGround:true,swing:null,runPhase:0,land:0,x:0,y:0,buff:{}},opts={time:.4,showcase:true,gazeX:.4,quality:1};
-    const P=YY.CharacterArt.displayPose(player,.4,look,pose(player,.4)),bounds=YY.CharacterArt.displayBounds(P);
-    const minX=bounds.minX-.05,maxX=bounds.maxX+.05,maxY=bounds.maxY;
-    const footY=height*.905,k=Math.min(footY*.9/maxY,width*.82/(maxX-minX)),cx=width*.5-(minX+maxX)*.5*k;
-    // 站立高光柱：人物身后的柔光，避免与暗背景糊在一起。
-    const halo=g.createRadialGradient(cx,height*.42,0,cx,height*.42,k*.95);
-    halo.addColorStop(0,YY.tint(shade(look.shirt,1.5),.19));halo.addColorStop(1,'#00000000');
-    g.fillStyle=halo;g.fillRect(0,0,width,height);
-    g.save();g.translate(cx,footY);g.scale(1,.19);
-    const shadow=g.createRadialGradient(0,0,0,0,0,k*.62);shadow.addColorStop(0,'#000000b0');shadow.addColorStop(.7,'#00000040');shadow.addColorStop(1,'#00000000');g.fillStyle=shadow;g.beginPath();g.arc(0,0,k*.62,0,Math.PI*2);g.fill();g.restore();
-    g.save();g.translate(cx,footY);g.scale(k,-k);YY.drawCharacter(g,player,look,opts);g.restore();
+    YY.CharacterArt.fitFigure(g,look,width*.035,height*.015,width*.93,height*.905,.4);
     // 名牌：色条 + 姓名，左下角。
     const pad=width*.075,plateH=Math.max(16,height*.058),py=height-plateH-pad*.9;
     g.save();
@@ -815,12 +838,16 @@
     g.fillText(look.name,pad*.7+plateH*.34,py+plateH*.52);
     g.restore();
     g.save();g.globalAlpha=.5;g.fillStyle='#ffffff';g.font='600 '+Math.round(width*.024)+'px '+YY.FONT;g.fillText('Y U Y U E   /   C L U B',pad*.7,height*.075);g.restore();
+    if(YY.CharacterSprites&&!YY.CharacterSprites.ready(look,'portrait'))YY.CharacterSprites.watch(look,'portrait',()=>{
+      const painted=YY.characterIllustration(look,width,height);g.clearRect(0,0,width,height);g.drawImage(painted,0,0);
+    });
     return c;
   };
 
   /** 头像：与立绘同一套头与配色，深色底 + 角色色光 + 肩线，小尺寸也能看清表情。 */
   YY.portrait = function (look, size) {
     const c=YY.platform.createCanvas();c.width=c.height=size;const g=c.getContext('2d'),a=YY.CharacterArt?.acting(look)||{tilt:0,hip:0,expression:'confident'};
+    if(YY.CharacterSprites?.avatar(g,look,size))return c;
     const tone=look.shirt,tone2=look.shirt2||shade(tone,.7),trim=look.trim||'#f3d9a4';
     const bg=g.createLinearGradient(0,0,size,size);bg.addColorStop(0,shade(tone2,.46));bg.addColorStop(1,shade(tone2,.26));g.fillStyle=bg;g.fillRect(0,0,size,size);
     const glow=g.createRadialGradient(size*.5,size*.42,0,size*.5,size*.42,size*.62);
@@ -830,15 +857,20 @@
     // 肩与领口：和立绘同一躯干色，给头像一个“半身像”的底。
     g.save();g.translate(size*.5,size*1.06);g.rotate(a.tilt*.22);g.scale(size*.58,size*.58);
     const torso=g.createLinearGradient(-.5,0,.5,0);torso.addColorStop(0,shade(tone,.72));torso.addColorStop(.45,tone);torso.addColorStop(1,shade(tone,1.12));
-    g.fillStyle=torso;g.beginPath();g.moveTo(-1.0,.26);g.quadraticCurveTo(-1.02,-.62,-.4,-.78);g.quadraticCurveTo(0,-.55,.4,-.78);g.quadraticCurveTo(1.02,-.62,1.0,.26);g.closePath();g.fill();
+    g.fillStyle=look.tank?look.skin:torso;g.beginPath();g.moveTo(-1.0,.26);g.quadraticCurveTo(-1.02,-.62,-.4,-.78);g.quadraticCurveTo(0,-.55,.4,-.78);g.quadraticCurveTo(1.02,-.62,1.0,.26);g.closePath();g.fill();
     g.strokeStyle=shade(tone2,.7);g.lineWidth=.05;g.stroke();
+    if(look.tank){
+      YY.CharacterArt.vectorPath(g,'M-.70 -.42 Q0 -.06 .70 -.42 L.88 .26 L-.88 .26 Z',torso,look.outline,.028);
+      g.strokeStyle=tone;g.lineWidth=look.dress?.065:.16;g.beginPath();g.moveTo(-.48,-.70);g.lineTo(-.53,-.30);g.moveTo(.48,-.70);g.lineTo(.53,-.30);g.stroke();
+    }
     g.strokeStyle=trim;g.lineWidth=.075;g.beginPath();g.moveTo(-.42,-.74);g.quadraticCurveTo(0,-.34,.42,-.74);g.stroke();
     g.globalAlpha=.9;YY.CharacterArt?.emblem(g,YY.CharacterArt.profile(look).motif,-.62,-.34,.11,trim);g.globalAlpha=1;g.restore();
-    g.save();g.translate(size*.5,size*.47);g.rotate(a.tilt*.7);g.scale(size*.285,size*.285);
+    g.save();g.translate(size*.5,size*.49);g.rotate(a.tilt*.4);g.scale(size*.294,size*.294);
     if(YY.CharacterArt)YY.CharacterArt.head(g,look,{expression:a.expression,turn:a.hip,time:.4,gaze:a.tilt*2});else{g.scale(1/.147,-1/.147);head(g,{hd:[0,0],N:[0,-.15]},look,{time:.4,mood:'focus'},.009);}
     g.restore();
     const vign=g.createRadialGradient(size*.5,size*.5,size*.34,size*.5,size*.5,size*.72);
     vign.addColorStop(0,'#00000000');vign.addColorStop(1,'#00000055');g.fillStyle=vign;g.fillRect(0,0,size,size);
+    YY.CharacterSprites?.watch(look,'avatar',img=>{g.clearRect(0,0,size,size);g.drawImage(img,0,0,size,size);});
     return c;
   };
 })(typeof GameGlobal !== 'undefined' ? GameGlobal : typeof window !== 'undefined' ? window : globalThis);

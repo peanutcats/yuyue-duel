@@ -12,7 +12,7 @@
   nan:npc('nan','老南','zhu',{shirt:'#314b7a',shirt2:'#192d50',panel:'#6d91c4',hair:'gray',hairC:'#b6c7e0',hairHi:'#eff6ff',glasses:null,whistle:false,num:'96',racket:'#a8d8f5'}),
   academy:npc('academy','南岸学员','xiaohong',{shirt:'#57c9eb',shirt2:'#287d9e',panel:'#bde8ff',num:'NA',glasses:null}),
   provincial:npc('provincial','省赛对手','ruibao',{shirt:'#9c88ed',shirt2:'#60518e',panel:'#c9c1f5',num:'22'}),
-  ruima:npc('ruima','瑞妈','ranran',{hair:'pony',shirt:'#dc856a',shirt2:'#985048',panel:'#f0b499',num:'',blush:0}),
+  ruima:npc('ruima','岩妈','ranran',{hair:'pony',shirt:'#dc856a',shirt2:'#985048',panel:'#f0b499',num:'',blush:0}),
   wangba:npc('wangba','王爸','zhu',{shirt:'#7297bf',shirt2:'#415e89',whistle:false,num:'',glasses:'rect'}),
   grandma:npc('grandma','外婆','zhu',{shirt:'#aa90c5',shirt2:'#6a558a',hair:'gray',whistle:false,num:''}),
   goose:npc('goose','大将军','ruibao',{shirt:'#e9e2cc',shirt2:'#bebda0',num:''}),

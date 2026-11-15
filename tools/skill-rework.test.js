@@ -105,7 +105,7 @@ test('ranran: the ribbon is aimed, wraps the incoming ball and releases a chosen
   assert.ok(cast(m, 0, 'hongxian', { x: .85, y: .5 })); assert.ok(m.entOf('ribbon', 0));
   let got = false; run(m, 0.5, () => { const c = m.shuttle.ctl; if (c && c.k === 'tether') got = true; });
   assert.ok(got && m.shuttle.ctl && m.shuttle.ctl.k === 'tether', 'the ribbon wraps the ball and pulls it in');
-  m.events.length = 0; p.skillCd = 0; assert.ok(cast(m, 0, 'hongxian', { x: .9, y: .2 }));
+  m.events.length = 0; p.skillCd = 0; assert.ok(cast(m, 0, 'hongxian', { x: -.9, y: .2 }));
   const s = m.shuttle; assert.equal(s.ctl, null); assert.equal(s.lastHitter, 0); assert.ok(s.vx>0,'released toward the opponent');const path=YY.simulate(s.x,s.y,s.vx,s.vy,6,false,false,m.physEnv());assert.ok(!path.netHit&&path.landX>0&&path.landX<C.HALF,'short return is legal');
   assert.ok(ev(m, 'skillProc').some(e => e.id === 'hongxian' && /回旋压短/.test(e.label)));
   assert.ok(ev(m, 'hit').some(e => e.p === 0 && e.skill === 'hongxian'));

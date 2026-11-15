@@ -88,12 +88,13 @@
     const stanceForward=rotate([Math.cos(pelvisYaw),0,Math.sin(pelvisYaw)]),stanceAcross=rotate([-Math.sin(pelvisYaw),0,Math.cos(pelvisYaw)]);
     const reach=shot&&p.onGround?shot.lunge:0;
     const identity=Y.CharacterArt?.motionFor(p,opt.look)||{coil:1,stance:1,lean:0,follow:1},mechanical=Y.CharacterArt?.mechanical(m,p);
+    const personal=identity.idle?.posture,personalWeight=p.onGround?(1-run)*(1-weight)*(1-glide):0;
     const land=clamp((p.motion?.land||0)/.2,0,1),split=p.onGround&&!sw?Math.sin(Math.PI*clamp((p.motion?.split||0)/.18,0,1)):0;
     const fatigue=clamp((40-(p.stamina??100))/40,0,1);
     const breath=Math.sin(time*(3+fatigue*3)+p.idx)*(.008+fatigue*.013)*(1-run);
     const lean=(act?.hip||0)*rest*.35+glide*.18+reach*.14+(shot?.lean||0)*.6+(!sw?(art.lean||0):0);
     const castLean=(!sw&&action?action.lean*action.e:0)+(mechanical?.punch||0)*.14+identity.lean;
-    const hipX=(shot?.hipX||0)*.7+reach*.07,hipY=.805-(!sw&&action?action.crouch:0)-glide*.12-.045*split-.115*reach-.065*Math.sin(land*Math.PI)-.035*run-(shot?.load||0)*.55+breath-(p.stamina<25?.04:0);
+    const hipX=(shot?.hipX||0)*.7+reach*.07+(personal?personal[2]*personalWeight:0),hipY=.805-(!sw&&action?action.crouch:0)-glide*.12-.045*split-.115*reach-.065*Math.sin(land*Math.PI)-.035*run-(shot?.load||0)*.55+breath-(p.stamina<25?.04:0)+(personal?personal[3]*personalWeight*.8:0);
     const H=toWorld(hipX,hipY,0),H1=add(H,mul(stanceAcross,.135*art.waist)),H2=add(H,mul(stanceAcross,-.135*art.waist));
     const bank=clamp(((p.motion?.bank||0)*.05+(p.vz||0)*.012)*p.dir,-.11,.11);
     const chest=toWorld(hipX+.025+lean+castLean,hipY+.47,bank);
@@ -108,6 +109,7 @@
       let x=.025+side*.055+(act?(side>0?act.front-.23:act.back+.21)*.6*rest:0)+along*step.travel*.44*stride+(side>0?.45:-.15)*reach;
       let z=side*width+sideways*step.travel*.095*stride;
       let y=step.lift*.17*stride;
+      if(personal){x+=(side>0?personal[0]-.23:personal[1]+.21)*personalWeight*.8;if(side<0)y+=personal[5]*personalWeight*.65;}
       x+=side*glide*.3;
       if(p.onGround){
         if(shot?.overhead){x+=side*.07*weight;y+=side<0?.065*weight*shot.scissor:0;}
@@ -126,7 +128,8 @@
     // the corresponding foot instead of swapping the opponent's two legs.
     const K1=ik(H1,F1,.46,.46,add(stanceForward,mul(stanceAcross,.1))),K2=ik(H2,F2,.46,.46,add(stanceForward,mul(stanceAcross,-.1)));
     let N=toWorld(hipX+.025+lean*.86+castLean,hipY+.58,0),hd=toWorld(hipX+.025+lean*.75+castLean,hipY+.77,0);
-    const ready=toWorld(.38+(act?.hip||0)*.6+Math.cos(phase)*run*.045,1.57+(act?Math.sin(act.arm[0]*Math.PI/180)*.10:0)+Math.sin(phase)*run*.025,.44+(act?.tilt||0)*.4);
+    const ownReady=identity.idle?.racket||[.38,1.57,.44];
+    const ready=toWorld(ownReady[0]+(act?.hip||0)*.6+Math.cos(phase)*run*.045,ownReady[1]+(act?Math.sin(act.arm[0]*Math.PI/180)*.05:0)+Math.sin(phase)*run*.025,ownReady[2]+(act?.tilt||0)*.4);
     const fore=(a,b)=>mix(a,b,backhand);
     const lowBack=under?.62:style==='kill'?1.4:1.02;
     const lowFinish=under?1.56:style==='kill'?.78:1.1+clip.follow*.004;
@@ -169,7 +172,8 @@
     }
     const arm=grip(S1,headR,lag,twist,forward,across);
     let W=arm.wrist,E=arm.elbow,racketAxis=arm.axis;
-    let W2=toWorld(.18+(act?.hip||0),1.05+(act?(act.arm[2]-75)*.0025:0),-.36-(act?.tilt||0)*.3);
+    const ownFree=identity.idle?.free||[.18,1.05,-.36];
+    let W2=toWorld(ownFree[0]+(act?.hip||0),ownFree[1]+(act?(act.arm[2]-75)*.001:0),ownFree[2]-(act?.tilt||0)*.3);
     if(run)W2=mix(W2,toWorld(-.06+Math.cos(phase)*.16,1.06,-.34),run);
     if(sw){
       const point=toWorld(low?-.08:.12,low?1.2:drive?1.45:1.75,-.44);

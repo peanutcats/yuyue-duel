@@ -3,25 +3,10 @@
   'use strict';const Y=G.YY,TAU=Math.PI*2;
   Y.skillDescription=function(id,mode){
     const base=Y.SKILLS[id];if(!base)return null;if(mode!=='3d')return base;
-    const overrides={
-      bianpai:'准备{8秒}内的2次旋转回球。向网推杆漂长、后推急坠，横推选侧旋；再按切换。过网后弧线更弯，旋力越高越明显。',
-      fuzhi:'在身侧球道放一个{8秒}复制体，推杆选展开方向。它同步跳、挥拍和放技能，可接力；不会自己追球。',
-      jingxiang:'把球分成{1真2假}，假球飞向两侧球道；真球保持原线路，只有它计分。',
-      shuizhong:'回球过网后留水纹；再按按摇杆方向改真球球道，原落点留虚影；进入对手接球范围后不能再改。',
-      yueqiu:'部署{8秒}球道投影，拦住进入预约区的来球。',
-      xuanpai:'双头拍绕身水平环扫，拦住{1次}范围内的来球；出球方向由摇杆选择，过载时范围更大。',
-      shuangji:'冻结对方约{2.8米×2.1米}地面，0.35秒后生效，持续10秒；区内急停、转向会{打滑}，跳起可躲，习惯区会加宽。'
-    };
-    const desc=overrides[id]||base.desc
-      .replaceAll('向前拖','向网推杆').replaceAll('向后拖','向后推杆')
-      .replaceAll('向上拖','向网推杆').replaceAll('向下拖','向后推杆')
-      .replaceAll('前拖','向网推杆').replaceAll('后拖','向后推杆')
-      .replaceAll('上拖','向网推杆').replaceAll('下拖','向后推杆')
-      .replaceAll('拖动','推杆').replaceAll('松手','确认');
-    return {...base,desc,detail:'',aim:null,moveAim:!base.passive,mode:'3d'};
+    return {...base,desc:base.help?.desc3d||base.desc,detail:'',aim:null,moveAim:!base.passive,mode:'3d'};
   };
   Y.drawSkillModePreview=function(ctx,id,mode,x,y,w,h,time){
-    if(['kandong','jiezou','tingyixia','diban','huiguo','baozi'].includes(id)&&Y.drawSkillGuidePreview)return Y.drawSkillGuidePreview(ctx,id,mode,x,y,w,h,time);
+    if(Y.drawSkillGuidePreview)return Y.drawSkillGuidePreview(ctx,id,mode,x,y,w,h,time);
     const sk=Y.SKILLS[id],c=sk?.color||'#7dfcff',spatial=mode==='3d',u=(time*.45)%1;
     ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();
     ctx.fillStyle='#0c1c30';ctx.fillRect(x,y,w,h);
@@ -43,11 +28,11 @@
     }
     if(['tangqiu','hongxian','jiewang','youyou'].includes(id)){
       const p=pt(-3,1.4,-.8),q=pt(-1.5,1.8,.7),phase=u*3;
-      if(id==='tangqiu'){const d=u<.5?u*2:(1-u)*2,from=pt(-3,.12,-.8),to=pt(-3+d*1.55,.12,spatial?-.8+d:.0);Y.CharacterArt?.ribbon(ctx,from,to,time,2);Y.CharacterArt?.butterfly(ctx,...to,7,time);}
+      if(id==='tangqiu'){const d=u<.5?u*2:(1-u)*2,from=pt(-3,.12,-.8),to=pt(-3+d*1.9,.12,spatial?-.8+d:.0);Y.CharacterArt?.ribbon(ctx,from,to,time,2);Y.CharacterArt?.butterfly(ctx,...to,7,time);}
       if(id==='hongxian'){const d=u<.5?u*2:2-u*2,to=[p[0]+(q[0]-p[0])*d,p[1]+(q[1]-p[1])*d];Y.CharacterArt?.ribbon(ctx,p,to,time,2.4);Y.CharacterArt?.butterfly(ctx,...to,5,time);}
       if(id==='jiewang'){const bow=pt(0,1.6,0),end=pt(1.1,.1,1);Y.CharacterArt?.butterfly(ctx,...bow,8,time);line([-3,1.8,-.8],[0,1.6,0],c);line([0,1.6,0],[1.1,.1,1],c);const v=u<.5?[p[0]+(bow[0]-p[0])*u*2,p[1]+(bow[1]-p[1])*u*2]:[bow[0]+(end[0]-bow[0])*(u-.5)*2,bow[1]+(end[1]-bow[1])*(u-.5)*2];ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(...v,3,0,Math.PI*2);ctx.fill();}
       if(id==='youyou'){const d=phase<1?phase:phase<2?1:3-phase,to=[p[0]+(q[0]-p[0])*d,p[1]+(q[1]-p[1])*d];ctx.strokeStyle=c;ctx.beginPath();ctx.moveTo(...p);ctx.lineTo(...to);ctx.stroke();Y.CharacterArt?.flywheel(ctx,...to,9,time*6,phase>=1&&phase<2?3:0,phase%1);}
-      ctx.font='600 11px '+(Y.FONT||'sans-serif');ctx.fillStyle=c;ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText(({tangqiu:'穿花抢位 → 解结折返',hongxian:'牵球回旋 → 自选长短',jiewang:'蝶结上弦 → 过网变线',youyou:'飞轮截球 → 合齿弹射 / 带回'})[id],x+10,y+8);ctx.restore();return;
+      ctx.font='600 11px '+(Y.FONT||'sans-serif');ctx.fillStyle=c;ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText(({tangqiu:'穿花抢网 → 免费折返',hongxian:'牵球回旋 → 自选长短',jiewang:'蝶域截流 → 亲手长短压迫',youyou:'飞轮截球 → 合齿弹射 / 带回'})[id],x+10,y+8);ctx.restore();return;
     }
     const device=['fanshe','shuangji','yueliang','fuzhi','jibei','biaozhi','yueqiu','haomao','fengkou'].includes(id);
     if(device){const p=pt(-1.7,.4,-1.4);ctx.strokeStyle=c;ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p[0],p[1],16,spatial?6:14,0,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=.18;ctx.fillStyle=c;ctx.fill();ctx.globalAlpha=1;}

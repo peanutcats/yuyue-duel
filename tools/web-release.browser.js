@@ -1,6 +1,7 @@
 // Playwright CLI run-code --filename, against tools/serve.py on a local checkout.
 async page=>{
  const origin=new URL(page.url()).origin,errors=[],missing=[],music=[],checks=[];
+ await page.route('**/*',route=>route.continue());
  const check=(value,message)=>{if(!value)throw Error(message);};
  page.on('pageerror',e=>errors.push(e.message));
  page.on('response',r=>{const u=new URL(r.url());if(u.origin===origin&&r.status()>=400&&!u.pathname.includes('favicon'))missing.push({url:u.pathname,status:r.status()});});
@@ -8,7 +9,7 @@ async page=>{
  await page.mouse.click(8,8);
  await page.waitForFunction(()=>YY.Audio.musicVoices.some(v=>v.id==='menu'&&v.ready&&v.media.currentTime>0),{},{timeout:15000});
  const catalog=await page.evaluate(()=>({physics:YY.PHYSICS_VERSION,characters:YY.CHARS.length,skills:Object.keys(YY.SKILLS).length,account:!!App.account,matchmaking:App.matchNet.configured()}));
- check(catalog.physics===28&&catalog.characters===20&&catalog.skills===80,'latest gameplay catalog');check(!catalog.account&&!catalog.matchmaking,'unconfigured optional services stay disabled');
+ check(catalog.physics===34&&catalog.characters===21&&catalog.skills===84,'latest gameplay catalog');check(!catalog.account&&!catalog.matchmaking,'unconfigured optional services stay disabled');
  await page.evaluate(()=>{App.releaseSoundscape=App.updateSoundscape;App.updateSoundscape=dt=>YY.Audio.updateMusic(dt);});
  for(const id of await page.evaluate(()=>Object.keys(YY.Soundtrack.TRACKS))){
   await page.evaluate(id=>YY.Audio.musicScene(id),id);
@@ -29,7 +30,7 @@ async page=>{
  await page.evaluate(()=>App.startTraining({char:'ruibao',skills:true}));await page.waitForTimeout(250);
  check(await page.evaluate(()=>App.mode==='practice'&&App.practice?.cfg.char==='ruibao'),'training setup');
  await page.evaluate(()=>{App.startAttract();App.show('team');});await page.waitForTimeout(100);
- check(await page.evaluate(()=>!!document.querySelector('#scr-team .skill-box')),'character and skill explanation');
+ check(await page.evaluate(()=>!!document.querySelector('#scr-team .skill-row')),'character and skill explanation');
  await page.evaluate(()=>App.show('menu'));
  for(const viewport of [{width:844,height:390},{width:667,height:375}]){
   await page.setViewportSize(viewport);await page.waitForTimeout(150);

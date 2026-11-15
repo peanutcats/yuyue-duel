@@ -278,6 +278,11 @@
     }
     /** 选手 i 所在半场的长度（坐标平移、短场练习会改变） */
     halfOf(i) { return this.sk.half[i]; }
+    // 归属半场不变；仅串门期间允许身体在对方半场移动。
+    playerSide(p) { return p.side; }
+    contactAllowed(p, ball, toss = false) {
+      return !this.shuttle.netHit && (this.shuttle.crossedNet || toss) && p.side * ball.x > C.SHUTTLE_R;
+    }
 
     updatePlayer(p, dt) {
       const oldV = p.vx, wasGround = p.onGround;
@@ -312,9 +317,9 @@
       }
       p.x += p.vx * dt + p.push * dt; p.push = 0; // push：潮水等外力
       this.runCost(p, dt);
-      const dist = clamp(p.side * p.x, C.X_NEAR, Math.min(C.X_FAR, this.halfOf(p.idx) + 0.6));
-      if (dist !== p.side * p.x) p.vx = 0;
-      p.x = p.side * dist;
+      const physicalSide = this.playerSide(p), dist = clamp(physicalSide * p.x, C.X_NEAR, Math.min(C.X_FAR, this.halfOf(p.idx) + 0.6));
+      if (dist !== physicalSide * p.x) p.vx = 0;
+      p.x = physicalSide * dist;
 
       if (!p.onGround) {
         const g = C.G;
@@ -600,14 +605,14 @@
       const toss = s.selfToss === p.idx; // 自抛自扣：允许这一次连续触球
       if (!s.live || s.held || (s.lastHitter === p.idx && !toss)) return;
       if (s.ctl && s.ctl.k !== 'tether' && !(s.ctl.k === 'orbit' && s.ctl.o === p.idx)) return; // 月亮里绕圈的球：星星自己可以直接挥拍打走
-      if (previous && !s.netHit && s.crossedNet && !toss) return this.checkSweptContact(p, dt, previous, flightTime);
+      if (previous && !s.netHit && !toss) return this.checkSweptContact(p, dt, previous, flightTime);
       if (sw.t < C.SW_W0) return;
       if (sw.t > C.SW_W1) {
         if (!sw.judged) { sw.judged = true; this.judgeWhiff(p); }
         return;
       }
       // 必须实际越过球网且球头完全进入己方半场；扑救容差不能越网或救回下网球。
-      if (s.netHit || (!s.crossedNet && !toss) || p.side * s.x <= C.SHUTTLE_R) { sw.prevE = 99; return; }
+      if (!this.contactAllowed(p, s, toss)) { sw.prevE = 99; return; }
       const e = this.ringError(p, s);
       const reach = this.reachFor(p);
       if (e < reach && (e > sw.prevE + 1e-4 || e < 0.07 || sw.t + dt > C.SW_W1)) {
@@ -629,8 +634,8 @@
         for (let i = 0; i <= n; i++) {
           const u = lo + (hi - lo) * i / n, f = Math.min(1, u * dt / duration);
           const q = { x: YY.lerp(previous.x, end.x, f), y: YY.lerp(previous.y, end.y, f) };
-          if (p.side * q.x <= C.SHUTTLE_R || q.y <= C.SHUTTLE_R + 1e-8) continue;
-          const player = { dir: p.dir, x: YY.lerp(old.x, p.x, u), y: YY.lerp(old.y, p.y, u) };
+          if (!this.contactAllowed(p, q) || q.y <= C.SHUTTLE_R + 1e-8) continue;
+          const player = { dir: p.dir, cnt:p.cnt, x: YY.lerp(old.x, p.x, u), y: YY.lerp(old.y, p.y, u) };
           const e = this.ringError(player, q); lastE = e;
           if (!best || e < best.e) best = { e, u, q, player };
         }
@@ -1365,11 +1370,6 @@
         case 'zangshu': return this.entsOf('dirty', p.idx).length ? '脏数据球还在场上' : null;
         case 'yueqiu': return this.entOf('appoint', p.idx) ? '已经有预约' : null;
         case 'shuangji': return this.entOf('pane', p.idx) ? '冻结窗格还在' : null;
-        case 'meida': return this.incomingTo(p) && !s.ctl && s.crossedNet && p.side * s.x > 0.2 && this.racketGap(p, s.x, s.y) < 1.6 ? null : '球不在拍前';
-        case 'jingxiang':
-          if (!(s.live && s.lastHitter === p.idx && !s.netHit && !s.ctl && s.selfToss !== p.idx)) return '先把球打出去';
-          return this.entsOf('fake', p.idx).length ? '镜像还没散' : s.y < 1.0 && s.vy < 0 ? '球太低了' : null;
-        case 'shuizhong': return s.live && s.lastHitter === p.idx && !s.netHit ? (p.cnt.wob ? '水纹已经布下' : null) : '先把球打出去';
         case 'tingyixia': return this.entOf('teacherPlan',p.idx) ? '请君入瓮 · 仍有待用回球' : null;
         case 'yati': return this.entOf('replace', p.idx) ? '替换规则已经生效' : null;
         case 'dangteng': return p.buff.vine > 0 ? '已经在藤上' : null;
@@ -1385,15 +1385,17 @@
       const id = p.kit && p.kit.act[slot], def = id && SKD(id);
       if (!this.skillsOn || !def || def.passive) return false;
       let raw = YY.cleanSkillAim(pr && pr.aim);
+      if(YY.DEPTH_SKILLS.has(id)){if(pr?.aim==null)raw=clamp(this.inputs[p.idx].move||0,-1,1);if(typeof raw==='number'&&raw)raw={x:raw,y:0};}
       // 鱼跃、踏风：不拖动技能键，按住的移动方向就是释放方向（+1 向网 / −1 向后）
       if (def.moveAim) { const mv = clamp(this.inputs[p.idx].move || 0, -1, 1); raw = typeof raw === 'number' && raw ? raw : Math.abs(mv) > 0.25 ? Math.sign(mv) : 0; }
       const vector = YY.skillVector(id, raw);
       const aim = typeof raw === 'object' ? raw.x : raw;
+      if(id==='jingxiang')vector.mirageAim=pr?.mirageAim||this.mirageAim(p,aim);
       if (this.phase !== 'rally' && this.phase !== 'serve' && !(this.practice && this.phase === 'idle')) return false;
       if(this.phase!=='rally'&&def.recast&&YY.skillRecastReady(this,p,id))return false;
       // 二段输入可提前 0.1 秒排队；记录原始方向，不能在执行时被移动键覆盖。
       if (def.recast && p.skillCd > 0 && p.skillCd <= .1 && YY.skillRecastReady(this, p, id)) {
-        p.cnt.skillBuffer = { slot, aim: raw, until: this.time + .12,...(['diban','baozi'].includes(id)?{cookTarget:this.cookTarget(p,vector)}:{}) }; return true;
+        p.cnt.skillBuffer = { slot, aim: raw, until: this.time + .12,...(id==='jingxiang'?{mirageAim:{...vector.mirageAim}}:{}),...(['diban','baozi'].includes(id)?{cookTarget:this.cookTarget(p,vector)}:{}) }; return true;
       }
       if(pr?.cookTarget)vector.cookTarget=pr.cookTarget;
       if (def.recast && p.skillCd <= 0 && this.recast(p, id, aim, vector)) { p.skillCd = Math.max(p.skillCd, 0.16); if(id!=='shensuo')this.emit({type:'skillMotion',p:p.idx,id,stage:'recast'}); return true; }
@@ -1504,7 +1506,7 @@
           b.jiewang = 6; p.cnt.slings = 2;
           break;
         }
-        // —— 王瑞 ——
+        // —— 磐岩 ——
         case 'diban': {
           if(this.panContact(p))this.startSlam(p,v);
           else {b.panReady=8;this.cookState(p).panAim={...v};this.proc(p,id,'锅台备好 · 下一拍砸地');}
@@ -1620,8 +1622,8 @@
         }
         // —— 老陈 ——
         case 'yati': { // 两次真实手动触球执行替换，挥空、发球和装置不消耗规则。
-          this.addEnt('replace', p.idx, o.x, o.y + 2.6, 10, { mode:fwd?1:0, n:2, warm:.18 });
-          this.proc(p, id, '批量替换 ×2 → ' + (fwd ? '网前小球' : '高球'));
+          this.addEnt('replace', p.idx, o.x, o.y + 2.6, 10, { mode:back?1:0, n:2, warm:.18 });
+          this.proc(p, id, '批量替换 ×2 → ' + (back ? '网前小球' : '高球'));
           break;
         }
         case 'yueqiu': { // 预约半场：投影在半场中间等着，对手的球落进来就替你接
@@ -1658,32 +1660,9 @@
           this.proc(p, id, '红包雨！'); break;
         }
         case 'qiquan': this.marketGain(p, -50, '一掷千金'); b.gold = 6; this.proc(p, id, '金砖球备好了'); break;
-        // —— 田楚 ——
-        case 'jingxiang': { // 一分为三：近 / 中 / 远，方向键决定真球走哪条
-          const H = this.halfOf(o.idx), cur = this.landOf(1), want = [Math.max(1.1, cur - 1.9), Math.min(H - 0.3, cur + 1.9)];
-          const ks = [1, this.solveVx(want[0]), this.solveVx(want[1])], pick = fwd ? 1 : back ? 2 : 0, vx0 = s.vx;
-          ks.forEach((k, i) => { if (i !== pick) this.addFake(p, s.x, s.y, vx0 * k, s.vy, s.shot); });
-          s.vx = vx0 * ks[pick]; s.ver++;
-          if (this.pred) this.pred = Object.assign(YY.simulate(s.x, s.y, s.vx, s.vy, 6, true, false, this.physEnv()), { t0: this.time, hidden: this.pred.hidden });
-          o.fooled = true; o.cnt.fakeT = this.time;
-          break;
-        }
-        case 'meida': { // 虚挥一拍：假回球飞向对手，真球被垫起留在身前
-          const tx = o.side * clamp(o.side * o.x > 3.4 ? 1.7 : 5.3, 1.2, this.halfOf(o.idx) - 0.5);
-          const vx0 = s.x, vy0 = clamp(s.y, 0.8, 2.6), a = Math.abs(tx) > 3 ? 48 : 20;
-          const v = YY.solveSpeed(vx0, vy0, p.dir, a, Math.abs(tx - vx0), this.env), r = a * Math.PI / 180;
-          s.vx = p.dir * 0.35; s.vy = 4.4; s.ctl = null;
-          p.swing = { t: 0, btn: 'clear', kind: 'side', dur: 0.26, hit: true, prevE: 99, judged: true }; // 虚挥：动作是真的
-          this.touchShuttle(p, 'lift', '假拍', id, 0.5, true); // 不弹字：假回球要看起来像真的
-          s.selfToss = p.idx; s.tossSkill = id;
-          this.addFake(p, vx0, vy0, Math.cos(r) * v * p.dir, Math.sin(r) * v, Math.abs(tx) > 3 ? 'clear' : 'drop');
-          o.fooled = true; o.cnt.fakeT = this.time;
-          break;
-        }
-        case 'shuizhong': p.cnt.wob = 1; p.cnt.wobAim = aim; break;
-        // —— 朱老师 ——
+        // —— 静川 ——
         case 'jiezou': this.teacherCast(p); break;
-        case 'biaozhi': this.addEnt('cone', p.idx, o.side * clamp(o.side * o.x + (back ? 1.0 : -1.0), 0.7, this.halfOf(o.idx) - 0.3), 0, 4.5); break;
+        case 'biaozhi': this.addEnt('cone', p.idx, o.side * clamp(o.side * o.x + (fwd ? 1.0 : -1.0), 0.7, this.halfOf(o.idx) - 0.3), 0, 4.5); break;
         case 'tingyixia':
           this.addEnt('teacherPlan',p.idx,p.x,0,10,{z:p.z||0,n:2});
           this.proc(p,id,'请君入瓮 · 两拍设局');
@@ -1702,12 +1681,6 @@
         case 'yueliang': if (c && c.k === 'orbit' && c.o === p.idx) { this.releaseOrbit(); return true; } return false;
         case 'huichao': if (c && c.k === 'rewind' && c.o === p.idx) { this.releaseRewind(); return true; } return false;
         case 'dangteng': if (p.cnt.vine) { this.releaseVine(p, vector); return true; } return false;
-        case 'shuizhong': {
-          const r = this.entOf('ripple', p.idx);
-          if (r) { this.dropEnt(r); this.wobble(p.idx, aim); return true; }
-          if (p.cnt.wob) { this.emit({ type: 'skillFail', p: p.idx, id, label: '过网后才能变轨' }); return true; }
-          return false;
-        }
         case 'zhongli': if (b.gravOn > 0) { this.endGravity(p); return true; } return false;
         case 'diban': {
           if(p.buff.panReady>0)return true;
@@ -1812,8 +1785,9 @@
     /** 丝带牵住的球：按拖动的角度与力度随拍击出；点按自动打向对手空当 */
     ribbonFling(p, v) {
       const s = this.shuttle, o = this.players[1 - p.idx];
-      const deep=this.courtMode==='3d'?(this.inputs[p.idx].move||0)<-.25:!!v?.manual&&(v.x<-.25||v.y>.45);
-      const depth=deep?this.halfOf(o.idx)-.7:1.2,type=deep||s.y<1.55?'lift':'drop';
+      const deep=this.courtMode==='3d'?(this.inputs[p.idx].move||0)>.25:!!v?.manual&&v.x>.25;
+      const depth=deep?this.halfOf(o.idx)-.55:p.side*p.x<=2.8?.85:1.2,type=deep||s.y<1.55?'lift':'drop';
+      if(p.cnt.ribbon)p.cnt.ribbon.catchUntil=0;
       s.ctl=null;
       if(this.courtMode==='3d')Object.assign(s,YY.solveShot3D(s,{x:p.dir*depth,z:clamp(this.shotTarget(p,type).z,-2.15,2.15)},type,1,this.physEnv()));
       else [s.vx,s.vy]=this.launchFrom(s.x,s.y,p.dir,deep?58:s.y<1.55?48:24,depth,.15);
@@ -1840,7 +1814,7 @@
     cookTarget(p,v) {
       if(v?.cookTarget)return{deep:v.cookTarget.deep!==false,z:clamp(Number(v.cookTarget.z)||0,-2.2,2.2)};
       const s=this.shuttle,space=this.courtMode==='3d',input=this.inputs[p.idx]||{},a=space?(input.move||0):(v?.manual?v.x:0);
-      return {deep:a<=.25,z:space?clamp((s.z||0)+(input.strafe||0)*3.6,-2.2,2.2):0};
+      return {deep:a>=-.25,z:space?clamp((s.z||0)+(input.strafe||0)*3.6,-2.2,2.2):0};
     },
     startSlam(p,v,manualHit=false) {
       const s=this.shuttle,heldWok=s.wok?.o===p.idx?s.wok:null;
@@ -2168,7 +2142,7 @@
       const r = a * Math.PI / 180;
       return [v * Math.cos(r) * dir, v * Math.sin(r)];
     },
-    /** 回锅再炒：沿弧线折返己方，落到王瑞头顶前方，等他自己再打一拍 */
+    /** 回锅再炒：沿弧线折返己方，落到磐岩头顶前方，等他自己再打一拍 */
     recallWok(p) {
       const s = this.shuttle; s.wok.used = 1;
       const ex = p.side * clamp(p.side * p.x - 0.4, 1.4, this.halfOf(p.idx) - 0.6), ey = 2.7;
@@ -2418,7 +2392,7 @@
       if (c.skillBuffer) {
         const q = c.skillBuffer;
         if (this.time > q.until) c.skillBuffer = null;
-        else if (p.skillCd <= 0) { c.skillBuffer = null; if (YY.skillRecastReady(this, p, p.kit?.act[q.slot])) this.useSkill(p, q.slot, { aim:q.aim,...(q.cookTarget?{cookTarget:q.cookTarget}:{}) }); }
+        else if (p.skillCd <= 0) { c.skillBuffer = null; if (YY.skillRecastReady(this, p, p.kit?.act[q.slot])) this.useSkill(p, q.slot, { aim:q.aim,...(q.mirageAim?{mirageAim:q.mirageAim}:{}),...(q.cookTarget?{cookTarget:q.cookTarget}:{}) }); }
       }
       p.hist.push({ t: this.time, x: p.x }); while (p.hist.length && p.hist[0].t < this.time - 1.1) p.hist.shift();
       p.still = p.onGround && Math.abs(p.vx) < 0.15 ? p.still + dt : 0;
@@ -2509,12 +2483,7 @@
         if (e.k === 'foot' && e.n >= 1) { this.dropEnt(e); this.gainEnergy(p, 15); this.proc(p, 'yihan', '补上了 +15 能量'); break; }
         if (e.k === 'coin' && !e.got) { e.got = 1; this.proc(p, 'jihui', '捡到机会'); }
       }
-      // 影子慢半拍：急停 / 转向时留下残影
-      c.shCd = (c.shCd || 0) - dt;
-      if(Math.abs(p.vx)>3 && (!c.shadowV || Math.sign(c.shadowV)===Math.sign(p.vx))) c.shadowV=p.vx;
-      if (this.hasPassive(p, 'canying') && this.phase==='rally' && c.shCd <= 0 && Math.abs(c.shadowV || 0) > 3 && (Math.sign(p.vx) !== Math.sign(c.shadowV) || Math.abs(p.vx) < 0.8)) {
-        this.addEnt('shadow', p.idx, p.x, p.y, 0.55, { v: c.shadowV }); c.shCd = 0.5; c.shadowV=0;
-      }
+      this.mirageMove(p, dt);
       c.pvx = p.vx;
     },
     /** 鱼跃：球拍贴地划过，碰到低球就挑起来 */
@@ -2557,11 +2526,9 @@
       if (s.live && !s.ctl && !s.held) { (s.path = s.path || []).push([s.x, s.y, s.vx, s.vy]); if (s.path.length > 480) s.path.shift(); }
       for (const p of this.players) {
         // 水中月：球一过网就起水纹，0.6 秒后（或再按一次）变轨
-        if (p.cnt.wob && s.live && s.lastHitter === p.idx && s.crossedNet && !s.netHit && !s.ctl && !this.entOf('ripple', p.idx)) this.addEnt('ripple', p.idx, s.x, s.y, 0.6);
-        if (p.cnt.wob && (!s.live || s.lastHitter !== p.idx || s.netHit)) { p.cnt.wob = 0; const r = this.entOf('ripple', p.idx); if (r) this.dropEnt(r); }
       }
       for(const p of this.players)if(p.cnt.cook){if(!(p.buff.bunReady>0))delete p.cnt.cook.filling;if(!(p.buff.panReady>0))delete p.cnt.cook.panAim;}
-      // 王瑞的球：地板球弹过网、肉包裂开、回旋失效
+      // 磐岩的球：地板球弹过网、肉包裂开、回旋失效
       if(!s.live){s.bun=null;s.wok=null;s.floorBy=null;s.cookShot=null;}
       if(s.slam?.outlet&&s.live&&!s.ctl)this.slamOutlet(this.players[s.slam.o]);
       if(s.cookShot&&s.lastHitter!==s.cookShot.o)s.cookShot=null;
@@ -2578,9 +2545,9 @@
       }
       // 蝴蝶结：她的网前球一过网，网带上多一个结
       if (s.bowBy != null && s.live && s.crossedNet && !s.netHit) {
-        const bows = this.entsOf('bow');
-        if (bows.length >= 2) this.dropEnt(bows[0]);
-        this.addEnt('bow', s.bowBy, 0, C.NET_H, 99, { z: this.courtMode==='3d'?(s.z||0):(this.entsOf('bow').length? .65:-.65) }); s.bowBy = null;
+        const owner=this.players[s.bowBy];
+        if(owner&&s.lastHitter===owner.idx&&s.x*owner.dir>0)this.ribbonEarn(owner,s.z||0);
+        s.bowBy = null;
       }
       for (let i = this.ents.length - 1; i >= 0; i--) {
         const e = this.ents[i]; if (!e) continue;
@@ -2593,7 +2560,7 @@
           case 'bunFly': this.bunFlyStep(e, p, dt); break;
           case 'guide': e.x = p.x; e.y = p.y + C.SHOULDER; break; // 辅助线跟着她的拍子
           case 'replace': { const o = this.players[1 - e.o]; e.x = o.x; e.y = o.y + 2.6; break; } // Ctrl+H 标签挂在对手头顶
-          case 'shadow': e.x += e.v * dt * 0.7; break;
+          case 'shadow': e.x += e.v * dt * 0.7; e.z=(e.z||0)+(e.vz||0)*dt*.7; break;
           case 'appoint': this.appointStep(e, p, dt); break;
           case 'peel': if (e.fly > 0) { e.fly -= dt; e.y = Math.max(0, Math.sin(clamp(e.fly / 0.55, 0, 1) * Math.PI) * 1.6); } else e.y = 0; break;
           case 'clone': { // 复制体：原地不动，同步本体的跳跃与挥拍
@@ -2644,9 +2611,9 @@
           }
           case 'fake': {
             const f = { x: e.x, y: e.y, vx: e.vx, vy: e.vy, netHit: true };
-            const r = YY.stepShuttle(f, dt, this.env);
-            e.x = f.x; e.y = f.y; e.vx = f.vx; e.vy = f.vy;
-            if (r === 'floor' || (e.vy < 0 && e.y < 1.0)) { e.t = 0; this.addEnt('splash', e.o, e.x, Math.max(0.2, e.y), 0.6); } // 碎成水花
+            const r = e.mirage?YY.stepMirage(e,dt,this.env,this.shuttleScale()):YY.stepShuttle(f, dt, this.env);
+            if(!e.mirage){e.x = f.x; e.y = f.y; e.vx = f.vx; e.vy = f.vy;}
+            if (r === 'floor' || (e.vy < 0 && e.y < (e.mirage?.65:1.0))) { e.t = 0; this.addEnt('splash', e.o, e.x, Math.max(0.2, e.y), 0.6); } // 碎成水花
             break;
           }
           case 'ripple': if (s.live) { e.x = s.x; e.y = s.y; } if (e.t <= 0 && s.live && s.lastHitter === e.o) this.wobble(e.o, p.cnt.wobAim); break;
@@ -2661,12 +2628,14 @@
       if (e.ph === 0) {
         e.L = Math.min(RIBBON_L, e.L + 16 * dt); this.ribbonHead(p, e);
         if (s.live && !s.ctl && !s.held && !s.netHit && s.lastHitter !== p.idx && s.crossedNet && p.side * s.x > 0.05 && this.phase === 'rally') {
-          const hit = this.ribbonContact?this.ribbonContact(e):segDist(e.ox,e.oy,e.x,e.y,s.x,s.y)<.42;
+          const hit = this.ribbonContact?this.ribbonContact(e):segDist(e.ox,e.oy,e.x,e.y,s.x,s.y)<(p.side*p.x<=2.8&&p.side*s.x<=2.8?.58:.42);
           if (hit) {
             e.ph = 1; e.got = 1; e.t = Math.max(e.t, 2.2);
-            p.skillCd=Math.min(p.skillCd,.06);s.ctl = { k: 'tether', o: p.idx, t: 1.0 }; s.vx = 0; s.vy = 0; s.ver++;
+            const net=p.side*p.x<=2.8&&p.side*s.x<=2.8;
+            if(net){const st=p.cnt.ribbon||(p.cnt.ribbon={});st.catchUntil=this.time+2;}
+            p.skillCd=Math.min(p.skillCd,.06);s.ctl = { k: 'tether', o: p.idx, t: net?1.25:1.0 }; s.vx = 0; s.vy = 0; s.ver++;
             this.hitstop = Math.max(this.hitstop, 0.04);
-            this.proc(p, 'hongxian', '牵住了 · 再按压短／向后挑长');
+            this.proc(p, 'hongxian', '牵住了 · 前推挑深／后推压浅');
             return;
           }
         }
@@ -2729,25 +2698,6 @@
         }
       }
     },
-    /** 水中月：横向变轨，落点留下虚影 */
-    wobble(o, aim) {
-      const s = this.shuttle, opp = this.players[1 - o];
-      // 对手已经进入接触区时不再突然改线，自动到时同样遵守这个边界。
-      if (this.racketGap(opp, s.x, s.y) < 1.6 || (this.pred && this.realT(this.pred.t - (this.time - this.pred.t0)) < .25)) {
-        this.players[o].cnt.wob = 0; this.proc(o, 'shuizhong', '来球已近 · 保持原线'); return false;
-      }
-      const cur = this.landOf(1), H = this.halfOf(opp.idx);
-      if (aim == null) aim = this.players[o].cnt.wobAim || 0;
-      const short = aim > 0.3 ? true : aim < -0.3 ? false : cur > 3.6;
-      const want = short ? Math.max(1.3, cur - 2.3) : Math.min(H - 0.4, cur + 2.4);
-      this.players[o].cnt.wob = 0;
-      this.addEnt('ghost', o, opp.side * cur, 0, 1.6);
-      s.vx *= this.solveVx(want); s.ver++;
-      opp.fooled = true;
-      if (this.pred) this.pred = Object.assign(YY.simulate(s.x, s.y, s.vx, s.vy, 6, true, false, this.physEnv()), { t0: this.time, hidden: this.pred.hidden });
-      this.proc(o, 'shuizhong', '变轨！');
-    },
-
     /** 球与装置的碰撞（反射板、挡板、风口、月亮、星门、卧推、挂网、弹线）。返回 true 表示这一帧球被装置接管 */
     skShuttle(previous, r) {
       const s = this.shuttle;
@@ -2858,8 +2808,8 @@
         this.proc(sling, 'jiewang', mine ? '借网过去！' : '弹起来了！');
         return true;
       }
-      const bows = this.entsOf('bow');
-      if (bows.length) {
+      const bows = this.entsOf('bow',s.lastHitter);
+      if (bows.length && !s.isServe && !s.crossedNet && (previous?.y??s.y)>C.NET_H-.4) {
         this.dropEnt(bows[0]);
         s.netHit = false; s.crossedNet = false; s.x = -d * 0.07; s.y = C.NET_H + 0.1; s.vx = d * 0.45; s.vy = 3.4; s.ver++;
         this.proc(bows[0].o, 'hudie', '蝴蝶结托了一下');
@@ -2967,7 +2917,7 @@
       if (p.buff.xingmen > 0 && (!ctx.device || ctx.skill === 'yueliang') && this.phase === 'rally') {
         p.buff.xingmen = 0;
         const sp = Math.hypot(s.vx, s.vy) || 1, H = this.halfOf(o.idx), od = o.side * o.x;
-        const ga = p.cnt.gateAim || 0, back = ga < -.2 ? true : ga > .2 ? false : od < 3.6;
+        const ga = p.cnt.gateAim || 0, back = ga > .2 ? true : ga < -.2 ? false : od < 3.6;
         const ex = back ? H - .4 : .6, L = back ? clamp(od + 1.5, 2.6, H - 1.3) : clamp(od - 1.8, 1.1, 2.8);
         this.addEnt('gate', p.idx, s.x + s.vx / sp * 0.55, s.y + s.vy / sp * 0.55, 1.6, { pair: 0 });
         this.addEnt('gate', p.idx, o.side * ex, back ? 2.4 : 2.7, 1.6, { pair: 1, L, a: back ? 18 : 26 });
@@ -2992,7 +2942,7 @@
         if(p.cnt.starCount>=2){p.cnt.starCount=0;const n=Math.min(6,18-(p.cnt.starGain||0));if(n>0){p.cnt.starGain=(p.cnt.starGain||0)+n;this.gainEnergy(p,n);this.proc(p,'yekong','双星回响 +'+n);}}
       }
       if (!ctx.device && !ctx.ownSide && !['zipao','meida'].includes(ctx.skill)) this.practicePassive(p,shot,q,ctx);
-      if (this.hasPassive(p, 'hudie') && { net: 1, tumble: 1, block: 1, drop: 1 }[shot.type]) s.bowBy = p.idx;
+      if (this.hasPassive(p, 'hudie') && ctx.ribbonNet && { net: 1, tumble: 1, block: 1, drop: 1, slice:1 }[shot.type]) s.bowBy = p.idx;
       if (p.market && !ctx.device && !ctx.ownSide && !['zipao','meida'].includes(ctx.skill)) this.marketGain(p, 15 + (q >= .85 ? 15 : 0));
       // 一掷千金：接金砖球的人被震退；这一拍是自己的金砖球就记下来，直接得分另有奖励
       if (gold && gold.o !== p.idx) { p.buff.knock = 0.28; p.cnt.kbV = p.side * 4; this.proc(p, 'qiquan', '被金砖震退'); }
@@ -3169,7 +3119,7 @@
       p.buff = q[0]; p.passive = q[1] || null; p.kit = p.passive ? { passive: p.passive, act: [] } : null;
       p.cnt = { bun: q[2], charge: q[3], diveW: q[4], streak: q[5] || 0, guess: q[6] ? { front: q[6] === 2 ? 1 : 0 } : null,
         combo: q[8] || 0, cloud: q[9] ? {} : null, recall:q[11] ? { ...q[11] } : null };
-      Object.assign(p.cnt,q[12]||{});if(q[12]?.cook)p.cnt.cook=JSON.parse(JSON.stringify(q[12].cook));p.skillCd=q[13]||0;
+      Object.assign(p.cnt,q[12]||{});for(const key of ['cook','ribbon'])if(q[12]?.[key])p.cnt[key]=JSON.parse(JSON.stringify(q[12][key]));p.skillCd=q[13]||0;
       p.market = q[10] ? { ...q[10] } : null;
     });
   };
@@ -3289,7 +3239,7 @@
       }
       case 'diban': {
         if(s.slam?.o===p.idx){
-          const target={deep:!v.manual||v.x<=.25,z:s.z||0},f=YY.cookFlight(m,p,{...target,cap:Math.min(38,27+(s.slam.n||0)*2+(s.slam.steam?5:0))});
+          const target={deep:!v.manual||v.x>=-.25,z:s.z||0},f=YY.cookFlight(m,p,{...target,cap:Math.min(38,27+(s.slam.n||0)*2+(s.slam.steam?5:0))});
           if(!f||s.y<.85)return {label:'已预选 · 等反弹升高后出锅',good:true};
           const pr=YY.simulate(s.x,s.y,f.vx,f.vy,6,true,false,env);return{pts:pr.pts,land:pr.landX,good:true,label:target.deep?'起锅 · 追身长球':'起锅 · 贴网短球'};
         }
@@ -3312,7 +3262,7 @@
       }
       case 'baozi': {
         if(s.bun?.o===p.idx){
-          const f=s.lastHitter===p.idx&&!s.ctl&&!s.netHit&&(s.bun.st||0)>=3?YY.cookFlight(m,p,{deep:!v.manual||v.x<=.25,z:s.z||0,cap:Math.min(34,24+s.bun.st*.4)}):null;
+          const f=s.lastHitter===p.idx&&!s.ctl&&!s.netHit&&(s.bun.st||0)>=3?YY.cookFlight(m,p,{deep:!v.manual||v.x>=-.25,z:s.z||0,cap:Math.min(34,24+s.bun.st*.4)}):null;
           if(!f)return {label:s.lastHitter!==p.idx?'先亲手回球，再拆包':'已到球尾 · 保留肉包',good:false};
           const r=YY.simulate(s.x,s.y,f.vx,f.vy,6,true,false,env);
           return {pts:r.pts,land:r.landX,good:true,label:f.deep?'爆馅 · 加速追后场':'漏馅 · 急落网前'};
@@ -3369,7 +3319,7 @@
   const ent=(m,p,id)=>p&&m?.ents?.find(e=>e.k==='newskill'&&e.o===p.idx&&e.sid===id&&e.t>0);
   const add=(m,p,id,t,data={})=>m.addEnt('newskill',p.idx,p.x,p.y,t,{sid:id,T:t,...data});
   const mode=v=>!v?.manual?0:v.y>.35?1:-1;
-  const spinUp=p=>{ns(p).spin=Math.min(2,(ns(p).spin||0)+1);};
+  const spinUp=p=>{ns(p).spin=Math.min(3,(ns(p).spin||0)+1);};
   const old={};
   for(const k of ['castCheck','cast','recast','mods','updatePlayer','handlePress','beginSwing','doHit','skShot','skAfterHit','skStep','skReset','touchShuttle','physEnv','shuttleScale','realT','skHitQ','skPointEnd','useSkill'])old[k]=Match.prototype[k];
   function onFossil(m,p,e){return !!e&&Math.abs(p.x-e.x)<=1.15&&(!YY.spatialNear||YY.spatialNear(m,p,e,.9));}
@@ -3410,9 +3360,14 @@
     return add(m,p,id,T,{from:p.x,to:p.side*clamp(p.side*toX,C.X_NEAR,m.halfOf(p.idx)+.2),fromZ:p.z||0,toZ:clamp(toZ||0,-2.55,2.55),y0:p.y,air:!p.onGround,v0:p.vx||0,vz0:p.vz||0,endV:(m.inputs[p.idx].move||0)*p.dir*m.maxSpeed(p),endZ:(m.inputs[p.idx].strafe||0)*m.maxSpeed(p),hop});
   }
   function slide(m,p,e,v){
-    const d=moveVector(m,p,v);startMove(m,p,'splitBurst',p.x+d.x*2.25,(p.z||0)+d.z*2.25,.34);
+    const d=moveVector(m,p,v),air=!p.onGround,length=air?2.15:2.65;
+    startMove(m,p,'splitBurst',p.x+d.x*length,(p.z||0)+d.z*length,air?.23:.28);
     const st=ns(p);st.slideUntil=m.time+2;st.slideDir=d.x;st.slideZ=d.z;st.spinTurn=Math.sign(d.z)||st.spinTurn||1;
-    spinUp(p);e.n--;e.cool=m.time+.22;if(e.n<=0)m.dropEnt(e);
+    st.flowUntil=m.time+.62;st.flowKind='step';st.stepBank={t:Math.max(e.t,1),refunded:!!e.refunded};
+    // Only a completed stroke can be cancelled: movement never erases a fresh hitbox.
+    if(p.swing?.hit){p.swing=null;p.cooldown=0;}p.slow=0;
+    if(air)p.vy=Math.max(p.vy,-.75);
+    spinUp(p);e.n--;e.cool=m.time+.18;if(e.n<=0)m.dropEnt(e);
   }
   // Hermite travel preserves the entry velocity and eases into braking. No teleport.
   function travel(e,u,a,b,v,end=0){
@@ -3444,21 +3399,30 @@
     const shot=at(speed,yaw),r=pathOf(m,shot,env);
     return !r.netHit&&p.dir*r.landX>.4&&p.dir*r.landX<m.halfOf(1-p.idx)-.12&&(!spatial||Math.abs(r.landZ)<2.45)&&Math.hypot(r.landX-target.x,spatial?r.landZ-target.z:0)<.3?shot:null;
   }
-  function rotateShot(m,p,shot,power,setting,turn=0){
+  function rotateShot(m,p,shot,power,setting,turn=0,flow=false){
     const env={...old.physEnv.call(m)},base=pathOf(m,shot,env),a=Math.atan2(shot.vy,Math.hypot(shot.vx,shot.vz||0))*180/Math.PI;
     const up=setting||(['clear','flatclear','lift'].includes(shot.type)?1:-1),n=clamp(power/2,0,1),depth=clamp(p.dir*base.landX+(up>0?.85+.35*n:-.85-.45*n),.85,m.halfOf(1-p.idx)-.4);
     const target={x:p.dir*depth,z:clamp(base.landZ||0,-2.1,2.1)};
     for(const strength of[1,.72]){
-      const curve={dir:p.dir,lift:up*(.9+.48*n)*strength,side:(m.courtMode==='3d'?(turn||Math.sign(shot.vz)||1)*(.38+.18*n)*p.dir:0)*strength};
+      const curve={dir:p.dir,lift:up*(.9+.48*n)*(flow?1.18:1)*strength,side:(m.courtMode==='3d'?(turn||Math.sign(shot.vz)||1)*(.38+.18*n)*(flow?1.25:1)*p.dir:0)*strength};
       const curved={...env,curve};
+      if(flow){
+        let best=null;
+        for(const angle of[-22,-10,0,10,20,32,44,56]){
+          const v=arcAt(m,p,target,angle,curved,48);if(!v)continue;
+          const flight=pathOf(m,v,curved);
+          if(flight.t>=.32&&(!best||flight.t<best.t))best={v,t:flight.t};
+        }
+        if(best){Object.assign(shot,best.v,{reason:null});return curve;}
+      }
       for(const delta of[up>0?-14:-10,up>0?-3:2,up>0?8:14]){
-        const v=arcAt(m,p,target,clamp(a+delta,-32,72),curved,Math.min(40,Math.max(18,Math.hypot(shot.vx,shot.vy,shot.vz||0)*1.18)));
+        const v=arcAt(m,p,target,clamp(a+delta-(flow?7:0),-32,72),curved,Math.min(flow?48:40,Math.max(18,Math.hypot(shot.vx,shot.vy,shot.vz||0)*(flow?1.45:1.18))));
         if(v){Object.assign(shot,v,{reason:null});return curve;}
       }
     }
     return null;
   }
-  // 马哥：手动接球当拍借力；折纸改变空气阻力与升力，沿同一物理轨迹飞行。
+  // 逐晨：手动接球当拍借力；折纸改变空气阻力与升力，沿同一物理轨迹飞行。
   const OFFICE=YY.OFFICE_FLIGHT=Object.freeze({pressure:1,return:2,dart:4,glide:8});
   function pressureAt(m,p,ctx){
     if(!m.hasPassive(p,'gongxiu')||!filmReturn(m,p,ctx))return null;
@@ -3541,7 +3505,7 @@
     m.proc(p,'sanbu','慢镜取景');
   }
   function editMode(m,v){
-    const aim=m._skillAim3D?.y??v?.y??0;
+    const aim=m._skillAim3D?.y??(v?.manual?(Math.abs(v.x)>.27?v.x:v.y):0);
     return Math.abs(aim)>.27?Math.sign(aim):0;
   }
   function filmReturn(m,p,ctx){
@@ -3688,8 +3652,8 @@
       if(!N_IDS.has(id))return old.castCheck.call(this,p,id);
       if(this.phase!=='rally')return '发球后才能用';
       if(ent(this,p,id))return '技能已经准备好';
-      if(id==='jieli_jump'&&!p.onGround)return '落地后才能转体起跳';
-      if(id==='dianbu'&&!p.onGround)return '落地后才能滑步';
+      if(id==='jieli_jump'&&!p.onGround&&ns(p).airTurn)return '这一跳已转体，落地后再起势';
+      if(['dianbu','jieli_jump'].includes(id)&&(p.buff.prone>0||p.buff.slip>0||this.mods(p).fix||this.mods(p).noSwing))return '恢复站姿后再连招';
       if(['yimo','jieli_jump'].includes(id)&&this.mods(p).noJump)return '当前不能起跳';
       if(['yimo','jieli_jump'].includes(id)&&this.shuttle.ctl?.o===p.idx)return '先打出手里的球';
       return null;
@@ -3706,15 +3670,20 @@
         ns(p).platform=0;this.addEnt('newskill',p.idx,p.x,p.y,.6,{sid:'wingBurst',boost});
       }
       if(id==='dianbu'){e.n=2;slide(this,p,e,v);}
-      if(id==='bianpai'){e.n=2;e.turn=Math.sign(this._skillAim3D?.x)||ns(p).spinTurn||1;}
+      if(id==='bianpai'){e.mode=editMode(this,v);e.n=2;e.t=e.T=10;e.turn=Math.sign(this._skillAim3D?.x)||ns(p).spinTurn||1;}
       if(id==='jieli_jump'){
-        p.land=0;old.handlePress.call(this,p,{btn:'jump'});if(!p.onGround){p.vy*=1.16;spinUp(p);e.hang=0;const burst=ent(this,p,'splitBurst');if(burst||ns(p).slideUntil>this.time){p.vx=(ns(p).slideDir||p.dir)*6.5;p.vz=(ns(p).slideZ||0)*6.5;e.driftX=p.vx;e.driftZ=p.vz;ns(p).slideUntil=0;if(burst)this.dropEnt(burst);}}
+        const air=!p.onGround;p.land=0;
+        if(air){p.vy=Math.max(p.vy,3.6);this.spend(p,5);}
+        else old.handlePress.call(this,p,{btn:'jump'});
+        if(!p.onGround){p.vy*=air?1:1.28;spinUp(p);e.hang=0;e.dived=false;ns(p).airTurn=true;const burst=ent(this,p,'splitBurst');
+          if(burst||ns(p).slideUntil>this.time){p.vx=(ns(p).slideDir||p.dir)*6.5;p.vz=(ns(p).slideZ||0)*6.5;e.driftX=p.vx;e.driftZ=p.vz;ns(p).slideUntil=0;if(burst)this.dropEnt(burst);}
+        }
       }
       if(['tongqin','gongwei','jiaban'].includes(id)){e.n=2;e.t=e.T=12;}
       if(id==='sanbu'){e.n=2;e.t=e.T=9;takeLens(this,p,e);}
       if(id==='yipai'){e.n=2;e.mode=editMode(this,v);}
       if(id==='jingmo')e.n=2;
-      if(['dianbu','tongqin','gongwei','jieli_jump','jiaban','sanbu','yipai','jingmo'].includes(id))p.skillCd=Math.min(p.skillCd,.12);
+      if(['dianbu','bianpai','tongqin','gongwei','jieli_jump','jiaban','sanbu','yipai','jingmo'].includes(id))p.skillCd=Math.min(p.skillCd,.12);
       this.proc(p,id,YY.SKILLS[id].name+' · 就绪');
     },
     recast(p,id,aim,v){
@@ -3725,17 +3694,23 @@
       if(id==='yimo'){this.dropEnt(e);p.vy=-2;return true;}
       if(id==='jibei'){e.raised=!e.raised;this.proc(p,id,e.raised?'高台升起':'降台接低球');return true;}
       if(id==='yipai'){e.mode=editMode(this,v)||(e.mode<0?1:-1);this.proc(p,id,e.mode<0?'复映 · 切近':'复映 · 切深');return true;}
-      if(id==='bianpai'){e.mode=e.mode>0?-1:1;e.turn=Math.sign(this._skillAim3D?.x)||e.turn;this.proc(p,id,e.mode>0?'燕尾 · 漂长':'燕尾 · 急坠');return true;}
+      if(id==='bianpai'){e.mode=editMode(this,v)||(e.mode>0?-1:1);e.turn=Math.sign(this._skillAim3D?.x)||e.turn;this.proc(p,id,e.mode>0?'燕尾 · 漂长':'燕尾 · 急坠');return true;}
       if(id==='dianbu'){
-        if(!p.onGround||this.time<e.cool){this.proc(p,id,'下一段已保留 · 落稳再滑');return true;}
+        if(this.mods(p).fix||this.mods(p).noSwing||p.buff.slip>0||ent(this,p,'splitBurst')||this.time<e.cool){return false;}
         slide(this,p,e,v);return true;
+      }
+      if(id==='jieli_jump'){
+        if(p.onGround||e.dived||e.age<.16||this.mods(p).fix||this.mods(p).noSwing)return false;
+        const d=moveVector(this,p,v);e.dived=true;e.hang=1;e.driftX=d.x*7.8;e.driftZ=d.z*7.8;p.vy=-4.2;
+        const burst=ent(this,p,'splitBurst');if(burst)this.dropEnt(burst);
+        ns(p).flowUntil=this.time+.5;ns(p).flowKind='dive';spinUp(p);this.proc(p,id,'折翼俯冲 · 手动抢拍');return true;
       }
       return false;
     },
     mods(p){const M=old.mods.call(this,p);if(!this.skillsOn||this.phase!=='rally')return M;
       if(ent(this,p,'yimo')){M.noJump=1;M.move*=1.55;M.accel*=2;M.reach*=1.35;M.timing*=1.2;}
       if(ent(this,p,'weichui'))M.reach*=1.12;
-      if(ent(this,p,'jieli_jump')){M.reach*=1.2;M.timing*=1.16;}
+      if(ent(this,p,'jieli_jump')){M.reach*=1.28;M.timing*=1.16;}
       if(this.hasPassive(p,'lvyue')&&activeLens(this,p)){M.move*=1.16;M.accel*=1.26;M.reach*=1.19;}
       if(this.hasPassive(p,'gongxiu')&&ent(this,p,'tongqin')){M.reach*=1.25;M.timing*=1.3;}
       if(MOVE_IDS.some(id=>ent(this,p,id))){M.reach*=1.12;M.timing*=1.12;}
@@ -3758,7 +3733,7 @@
         if(u>=1){if(!movement.air){p.y=0;p.vy=0;p.onGround=true;}this.dropEnt(movement);
         }
       }else if(st.movePose){st.movePose.w*=Math.exp(-22*dt);if(st.movePose.w<.01)delete st.movePose;}
-      p.x=p.side*clamp(p.side*p.x,C.X_NEAR,Math.min(C.X_FAR,this.halfOf(p.idx)+.6));
+      p.x=this.playerSide(p)*clamp(this.playerSide(p)*p.x,C.X_NEAR,Math.min(C.X_FAR,this.halfOf(p.idx)+.6));
       const glide=ent(this,p,'yimo'),pad=ent(this,p,'jibei'),st0=ns(p);
       const height=fossilHeight(pad),near=onFossil(this,p,pad);
       if(glide){
@@ -3776,12 +3751,13 @@
         st.turnPose=Math.sin(Math.PI*clamp(roll.age/1.15,0,1));
         st.turnAngle=Math.PI*2*clamp(roll.age/.78,0,1);
         if(p.onGround&&roll.age>.2){this.dropEnt(roll);delete st.turnPose;delete st.turnAngle;}
-        else{if(p.vy<0&&roll.hang<.32){p.vy=Math.max(p.vy,-.65);roll.hang+=dt;}
+        else{if(p.vy<0&&roll.hang<.42){p.vy=Math.max(p.vy,-.65);roll.hang+=dt;}
           if(roll.driftX!=null&&!movement){const mix=1-Math.exp(-3*dt);roll.driftX=YY.lerp(roll.driftX,(this.inputs[p.idx].move||0)*p.dir*this.maxSpeed(p),mix);p.x=before+roll.driftX*dt;p.vx=roll.driftX;
             if(this.courtMode==='3d'){roll.driftZ=YY.lerp(roll.driftZ,(this.inputs[p.idx].strafe||0)*this.maxSpeed(p),mix);p.z=clamp(from.z+roll.driftZ*dt,-2.65,2.65);p.vz=roll.driftZ;}}
         }
       }else {delete st.turnPose;delete st.turnAngle;}
-      p.x=p.side*clamp(p.side*p.x,C.X_NEAR,Math.min(C.X_FAR,this.halfOf(p.idx)+.6));
+      if(p.onGround&&!roll)st.airTurn=false;
+      p.x=this.playerSide(p)*clamp(this.playerSide(p)*p.x,C.X_NEAR,Math.min(C.X_FAR,this.halfOf(p.idx)+.6));
       const dx=Math.hypot(p.x-before,this.courtMode==='3d'?p.z-from.z:0);
       if(this.hasPassive(p,'dingzhou')&&st.travelUntil>this.time){st.travel=(st.travel||0)+dx;if(st.travel>=1.15){spinUp(p);st.travelUntil=0;if((st.recoveries||0)<3){st.recoveries=(st.recoveries||0)+1;p.stamina=Math.min(C.STAM_MAX,p.stamina+4);}}}
       for(const e of this.ents)if(e.k==='newskill'&&e.o===p.idx&&e.sid!=='jibei'){e.x=p.x;e.y=p.y;}
@@ -3795,6 +3771,7 @@
     beginSwing(p,...args){return old.beginSwing.call(this,p,...args);},
     skHitQ(p,q,ctx){
       q=old.skHitQ.call(this,p,q,ctx);if(!this.skillsOn)return q;
+      if(this.hasPassive(p,'dingzhou'))ctx.miaoQuality=q;
       if(ent(this,p,'yimo'))return Math.max(q,.86);
       if(this.hasPassive(p,'lvyue')&&activeLens(this,p)&&filmReturn(this,p,ctx))return Math.max(q,.83);
       const pressure=pressureAt(this,p,ctx);if(pressure)return Math.max(q,ent(this,p,'tongqin')?.95:.72+.14*pressure.power);
@@ -3809,14 +3786,18 @@
       if((wing||tail)&&boboDive(this,p,shot,!!tail,originalShot)){ctx.skill=tail?'weichui':'yimo';ctx.big=1;ctx.boboDive=true;add(this,p,'diveFx',.65,{tail:!!tail});}
       if(curve||(st.spin||0)>0){
         const n=st.spin||0,setting=curve?.mode||0;
-        rotation=rotateShot(this,p,shot,curve?n:n*.45,setting,curve?.turn||st.spinTurn);
-        if(rotation){ctx.newcomerSolved=true;sp=rotation.lift*p.dir;ctx.skill=curve?'bianpai':'dingzhou';ctx.big=n===2;
-          st.spin=0;if(curve&&--curve.n<=0)this.dropEnt(curve);add(this,p,'curveFx',.55,{mode:Math.sign(rotation.lift),power:n});}
+        const roll=ent(this,p,'jieli_jump'),timed=st.flowUntil>this.time||roll&&!p.onGround&&Math.abs(p.vy)<1.2;
+        const manual=this.shuttle.lastHitter===1-p.idx&&this.shuttle.selfToss!==p.idx&&!this.cloneHitting;
+        const flow=this.hasPassive(p,'dingzhou')&&manual&&(ctx.miaoQuality||0)>=.82&&n>=2&&(timed||n>=3);
+        rotation=rotateShot(this,p,shot,curve?n:n*.65,setting,curve?.turn||st.spinTurn,flow);
+        if(rotation){ctx.newcomerSolved=true;sp=rotation.lift*p.dir;ctx.skill=curve?'bianpai':'dingzhou';ctx.big=flow;ctx.miaoFlow=flow;ctx.miaoSpin=n;
+          st.spin=0;if(curve&&--curve.n<=0)this.dropEnt(curve);add(this,p,'curveFx',.65,{mode:Math.sign(rotation.lift),power:n,flow});}
       }
       officeShot(this,p,shot,ctx);
       playEdit(this,p,shot,ctx);
       if(sp||rotation||tail||ctx.boboDive||ctx.edit||ctx.office)ctx.nFlight={spin:sp,curve:rotation,
         fast:ctx.editSpeed||1,owner:p.idx,dive:ctx.boboDive?(tail?2:1):0,
+        ...(ctx.miaoFlow?{swallow:true}:{}),
         ...(ctx.edit?{edit:ctx.edit,cutAt:this.time}:{}),
         ...(ctx.office?{office:ctx.office,power:ctx.pressurePower,paper:ctx.officePaper}:{}),
       };
@@ -3834,6 +3815,16 @@
         if((state.pressureRest||0)<6){state.pressureRest=(state.pressureRest||0)+1;p.stamina=Math.min(C.STAM_MAX,p.stamina+2);}
       }
       const st=ns(p),wing=ent(this,p,'yimo');if(wing){wing.n--;add(this,p,'wingBurst',.45,{boost:wing.boost});if(wing.n<=0){this.dropEnt(wing);p.vy=-1;this.proc(p,'yimo','猎航结束');}else this.proc(p,'yimo','猎航余 '+wing.n+' 拍');}
+      if(ctx.miaoFlow){
+        if(p.swing)p.swing.dur=p.swing.t+Math.max(.055,(p.swing.dur-p.swing.t)*.45);p.slow=0;
+        st.flowFx=.7;st.flowUntil=0;
+        if((st.flowRewards||0)<3){st.flowRewards=(st.flowRewards||0)+1;this.gainEnergy(p,6);p.stamina=Math.min(C.STAM_MAX,p.stamina+6);}
+        const step=ent(this,p,'dianbu'),bank=st.stepBank;
+        if(bank&&!bank.refunded){
+          const next=step||add(this,p,'dianbu',Math.min(6,bank.t),{n:0,mode:0});next.n=Math.min(2,next.n+1);next.refunded=true;next.cool=this.time+.12;bank.refunded=true;
+        }
+        this.proc(p,'dingzhou','流转！ · 追击快收');
+      }
       if(this.hasPassive(p,'shihua')&&(st.fossilCount||0)<2){const band=this.shuttle.y<1.3?0:this.shuttle.y<2.8?1:2;st.samples=(st.samples||0)|(1<<band);if(st.samples===7){st.samples=0;st.fossilCount=(st.fossilCount||0)+1;this.gainEnergy(p,8);p.stamina=Math.min(C.STAM_MAX,p.stamina+10);this.proc(p,'shihua','三层采样 +8 能量 / +10 体力');}}
       if(this.hasPassive(p,'dingzhou')){st.travelUntil=this.time+8;st.travel=0;}
       archiveEdit(this,p,shot,ctx);
@@ -3857,6 +3848,7 @@
       }
       if(this.skillsOn&&this.phase==='rally')for(const e of this.ents)if(e.k==='newskill'&&e.sid==='jibei'){const target=e.raised?1.25:0;e.height=(e.height||0)+clamp(target-(e.height||0),-6*dt,4.2*dt);}
       old.skStep.call(this,dt);if(!this.skillsOn||this.phase!=='rally')return;
+      for(const p of this.players){const st=p.cnt.nv;if(st){if(st.flowFx>0)st.flowFx=Math.max(0,st.flowFx-dt);if(st.stepBank){st.stepBank.t-=dt;if(st.stepBank.t<=0)delete st.stepBank;}}}
       const s=this.shuttle;
       for(const e of this.ents.slice())if(e.sid==='sanbu'){
         if(e.active&&(!freeEditBall(this)||e.hit!==this.hitCount||e.until<=this.time)){
@@ -3887,7 +3879,7 @@
     },
   });
   const ready=YY.skillRecastReady;
-  YY.skillRecastReady=(m,p,id)=>N_IDS.has(id)?!!YY.SKILLS[id]?.recast&&!!ent(m,p,id):ready(m,p,id);
+  YY.skillRecastReady=(m,p,id)=>id==='jieli_jump'?!!ent(m,p,id)&&!ent(m,p,id).dived&&!p.onGround:N_IDS.has(id)?!!YY.SKILLS[id]?.recast&&!!ent(m,p,id):ready(m,p,id);
   YY.skillPrepared=(m,p,id)=>({diban:'panReady',huiguo:'wokReady',baozi:'bunReady'}[id]?p.buff?.[{diban:'panReady',huiguo:'wokReady',baozi:'bunReady'}[id]]>0:['tongqin','gongwei','jiaban','sanbu','jingmo'].includes(id)&&!!ent(m,p,id));
   YY.skillRecastWait=(m,p,id)=>Math.max(0,(ent(m,p,id)?.cool||0)-m.time);
   YY.skillRecastText=(m,p,id)=>{
@@ -3904,16 +3896,17 @@
     if(id==='yipai')return(e.mode<0?'近剪':e.mode>0?'深剪':'自动')+' '+e.n;
     if(id==='dianbu')return '滑步 '+e.n;
     if(id==='bianpai')return(e.mode>0?'漂长':e.mode<0?'急坠':'双旋')+' '+e.n;
+    if(id==='jieli_jump')return e.dived?'俯冲中':'再按俯冲';
     return null;
   };
   const preview=YY.skillPreview;
   YY.skillPreview=(m,p,id,v)=>{
     if(id==='jibei'){const x=p.side*clamp(p.side*p.x-v.x*v.r*2.4,.8,(m.halfOf?m.halfOf(p.idx):C.HALF)-.7);return{mark:{x,y:0},line:[[x-1,0],[x+1,0]],good:true,label:id==='jibei'?'高点阵地 · 再按升降':'通勤滑行 · 再按换向'};}
     if(['tongqin','gongwei','jiaban'].includes(id))return{mark:{x:p.x,y:p.y+1.4},good:true,label:YY.SKILLS[id].name+' · 两拍 · 普通击球触发'};
-    if(id==='bianpai')return{line:[[p.x,p.y+1.4],[p.x+p.dir*2,p.y+1.7],[p.x+p.dir*3,p.y+(mode(v)>0?2.1:.5)]],good:true,label:mode(v)>0?'燕尾漂长 · 两拍 · 再按切换':'燕尾急坠 · 两拍 · 再按切换'};
+    if(id==='bianpai')return{line:[[p.x,p.y+1.4],[p.x+p.dir*2,p.y+1.7],[p.x+p.dir*3,p.y+(editMode(m,v)>0?2.1:.5)]],good:true,label:editMode(m,v)>0?'燕尾漂长 · 两拍 · 再按切换':'燕尾急坠 · 两拍 · 再按切换'};
     if(id==='yipai'){const select=editMode(m,v);return{mark:{x:p.dir*(select<0?1.2:select>0?5.9:3.5),y:0},good:true,label:select<0?'复映 · 切近':select>0?'复映 · 切深':'复映 · 按球路构图'};}
     if(id==='weichui'){const up=mode(v),a=up>0?.8:.15;return{line:[[p.x,p.y+1.4],[p.x+p.dir*1.8,p.y+1.4+a*1.8]],good:true,label:(up>0?'预选高弧':'预选压低')+' · 8 秒内普通击球自动触发'};}
-    if(id==='dianbu')return{line:[[p.x,.1],[p.x+(v.x<0?-1:1)*p.dir*2.2,.1]],good:true,label:'滑步积旋 · 第二段保留 6 秒'};
+    if(id==='dianbu')return{line:[[p.x,p.y+.1],[p.x+(v.x<0?-1:1)*p.dir*2.65,p.y+.1]],good:true,label:'空地双滑 · 精准流转可返还一段'};
     return preview(m,p,id,v);
   };
 })(typeof GameGlobal !== 'undefined' ? GameGlobal : typeof window !== 'undefined' ? window : globalThis);
@@ -3935,7 +3928,8 @@
   const effect=(m,p,id,label)=>{state(p).fx={id,t:.65};m.proc(p,id,label);};
   const INK=Y.INK_SURGE=Object.freeze({perfect:2,radius:1.8,blind:1.6,burst:.8});
   const SUN=Y.SUN_STYLE=Object.freeze({step:1,air:2,rhythm:4});
-  const clockWindow=e=>e?.hot?1.3:.8;
+  const clockWindow=e=>e?.hot?2:1.4;
+  Y.sunClockWindow=clockWindow;
   // Search true, finite trajectories. Only a verified shot replaces the input.
   function riskShot(m,p,shot,mode){
     const s=m.shuttle,space=m.courtMode==='3d',H=m.halfOf(1-p.idx),base=path(m,shot);
@@ -4032,10 +4026,11 @@
     const bits=st.styleBits||0,travel=last?Math.hypot(p.x-last.x,(p.z||0)-last.z):0;
     const candidates=[c.clubHoop||!p.onGround&&s.y>=2.4?SUN.air:0,c.clubBuzzer||last&&cat!==last.cat?SUN.rhythm:0,travel>=1.3||this.time-(st.stepAt??-99)<1.5?SUN.step:0];
     const badge=candidates.find(n=>n&&!(bits&n));
-    if(!st.hot&&badge){
-      st.styleBits=bits|badge;
-      if((st.styleBits&(st.styleBits-1))!==0){st.hot=true;st.styleBits=0;effect(this,p,'qiuyou','三威胁 · 热手就绪');}
-      else effect(this,p,'qiuyou',badge===SUN.air?'空接 · 集另一种花式':badge===SUN.rhythm?'节奏 · 集另一种花式':'突破 · 集另一种花式');
+    if(!st.hot){
+      st.possessions=(st.possessions||0)+1;
+      st.styleBits=bits|(badge||0);
+      if((st.styleBits&(st.styleBits-1))!==0||st.possessions>=3){st.hot=true;st.styleBits=0;st.possessions=0;this.gainEnergy(p,6);p.stamina=Math.min(C.STAM_MAX,p.stamina+6);effect(this,p,'qiuyou','热手就绪 · +6 能量 / 体力');}
+      else if(badge)effect(this,p,'qiuyou',badge===SUN.air?'空接 · 集另一种花式':badge===SUN.rhythm?'节奏 · 集另一种花式':'突破 · 集另一种花式');
     }
     st.styleLast={cat,x:p.x,z:p.z||0};delete st.stepAt;
   };
@@ -4052,16 +4047,16 @@
     const def=Y.SKILLS[id],st=state(p),e=st.ready[id]={t:def.dur,n:def.charges||0};
     p.skillCd=.18;p.replan=true;st.fx={id,t:.65};
     if(this.hasPassive(p,'qiuyou')&&st.hot&&['ouzhou','gongdan','kongjie'].includes(id)){e.hot=true;st.hot=false;effect(this,p,'qiuyou','热手强化 · '+def.short);}
-    if(id==='luokuan')e.mode='line';
+    if(id==='luokuan')e.mode=(args[0]||0)<-.25?'net':'line';
     if(id==='liubai'){
       st.silhouette={x:p.x,y:p.y,z:p.z||0,t:1.15};dash(this,p,id,1.15,true);
     }
-    if(id==='ouzhou'){e.second=true;e.steps=e.hot?2:1;e.first=direction(this,p);dash(this,p,id,1.35);}
+    if(id==='ouzhou'){e.second=true;e.steps=e.hot?2:1;e.first=direction(this,p);dash(this,p,id,1.65);st.drive={t:2.4};p.cooldown=Math.min(p.cooldown,.05);}
     if(id==='gongdan'){
-      const predicted=!Y.clubVisibility(this,p.idx).hidden&&this.pred?.pts?.find(q=>q.y>.7&&q.y<2.2&&q.x*p.side>.55&&q.t-(this.time-(this.pred.t0||0))>.22);
-      e.x=p.side*clamp(predicted?p.side*predicted.x:Math.abs(p.x)-.65,.65,this.halfOf(p.idx)-.3);e.z=clamp(predicted?.z??p.z??0,-2.5,2.5);e.y=1.2;e.warm=.22;e.n=e.hot?2:1;if(e.hot)e.t=8;
+      const predicted=!Y.clubVisibility(this,p.idx).hidden&&this.pred?.pts?.find((q,i,a)=>i>0&&q.y<a[i-1].y&&q.y>1.1&&q.y<2.4&&q.x*p.side>.55&&q.t-(this.time-(this.pred.t0||0))>.16);
+      e.x=p.side*clamp(predicted?p.side*predicted.x:Math.abs(p.x)-.65,.65,this.halfOf(p.idx)-.3);e.z=clamp(predicted?.z??p.z??0,-2.5,2.5);e.y=clamp(predicted?.y??1.5,1.2,2);e.warm=.12;e.n=e.hot?2:1;e.radius=e.hot?1.25:1.1;if(e.hot)e.t=9;
     }
-    if(id==='kongjie'&&e.hot)e.t=4;
+    if(id==='kongjie'&&e.hot)e.t=6;
     if(id==='kuorong'){e.height=2.6;e.lowered=false;e.at=this.time;}
     if(id==='rongzai'){
       delete st.overload;delete st.inkBlind;p.cooldown=0;p.slow=0;p.bufferedShot=null;p.bufferT=0;
@@ -4072,21 +4067,29 @@
   P.recast=function(p,id,...args){
     if(!ids.has(id))return old.recast.call(this,p,id,...args);
     const e=ready(p,id),st=state(p);if(!e||this.phase!=='rally')return false;
-    if(id==='luokuan'){e.mode=e.mode==='line'?'net':'line';effect(this,p,id,e.mode==='line'?'落款 · 压线':'落款 · 贴网');return true;}
+    if(id==='luokuan'){const a=args[0]||0;e.mode=a>.25?'line':a<-.25?'net':e.mode==='line'?'net':'line';effect(this,p,id,e.mode==='line'?'落款 · 压线':'落款 · 贴网');return true;}
     if(id==='kuorong'&&!e.lowered){e.lowered=true;e.height=1.95;if(st.cache>0)st.cache--;else e.t=Math.max(.2,e.t-2);effect(this,p,id,'雾幕下沉 · 低于 1.95 米显形');return true;}
-    if(id==='ouzhou'&&e.second&&p.onGround&&!st.dash){e.steps=Math.max(0,(e.steps??1)-1);e.second=e.steps>0;e.t=e.second?1.25:.45;dash(this,p,id,e.second?1.65:e.hot?1.2:1.65);effect(this,p,id,e.hot&&!e.second?'热手 · 第三步':'换手切入');return true;}
+    if(id==='ouzhou'&&e.second&&p.onGround&&!st.dash){e.steps=Math.max(0,(e.steps??1)-1);e.second=e.steps>0;e.t=e.second?1.8:.45;dash(this,p,id,e.hot&&!e.second?1.4:1.9);st.drive={t:2.4};p.cooldown=Math.min(p.cooldown,.05);effect(this,p,id,e.hot&&!e.second?'热手 · 第三步':'换手切入 · 突破回球');return true;}
     return false;
   };
   P.mods=function(p){
     const M=old.mods.call(this,p);if(!this.skillsOn||this.phase!=='rally')return M;
     const debt=p.cnt.club?.overload;if(debt?.n>0&&debt.t>0)M.swing*=1.28;
     if(ready(p,'rongzai')){M.reach*=1.14;M.timing*=1.18;}
+    if(p.cnt.club?.drive?.t>0){M.reach*=1.14;M.timing*=1.2;}
+    if(p.cnt.club?.rebound?.t>0){M.jump*=1.16;M.reach*=1.16;M.timing*=1.25;}
     return M;
   };
   P.skHitQ=function(p,q,c){
     q=old.skHitQ.call(this,p,q,c);
     if(manual(this,p,c)&&p.cnt.club?.overload?.n>0)q=clamp(q-.16,0,1);
     if(manual(this,p,c)&&ready(p,'rongzai'))q=Math.max(q,.86);
+    if(manual(this,p,c)){
+      const st=state(p),clock=ready(p,'kongjie');
+      if(st.drive?.t>0)q=Math.max(q,.86);
+      if(this.shuttle.selfToss===p.idx&&this.shuttle.tossSkill==='gongdan')q=Math.max(q,.94);
+      if(clock)q=Math.max(q,clock.t<=clockWindow(clock)?.96:.88);
+    }
     c.clubQ=q;return q;
   };
   P.skShot=function(p,shot,c){
@@ -4095,6 +4098,7 @@
     c.clubReturn=true;c.clubUsed=[];c.clubIncoming=oldFlight?.owner===1-p.idx?{...oldFlight}:null;
     const st=state(p),risk=ready(p,'luokuan'),clock=ready(p,'kongjie'),q=c.clubQ??p.swing?.q??.7;
     const buzzer=clock&&clock.t<=clockWindow(clock);c.clubBuzzer=!!buzzer;
+    c.clubDrive=st.drive?.t>0;c.clubFinish=!!clock;
     if(ready(p,'rongzai')){c.clubUsed.push('rongzai');c.clubCounter={cache:st.cache||0,rush:clamp(.26+Math.max(0,(c.incomingSpeed||0)-10)*.018+(st.cache||0)*.12,.26,.75)};}
     // Read the already-earned charge before this hit earns perfect progress.
     c.clubInkEligible=this.hasPassive(p,'moyun')&&s.selfToss!==p.idx;
@@ -4103,7 +4107,7 @@
       const mode=risk?.mode||(short(shot.type)?'net':'line');
       const v=q>=.55?riskShot(this,p,shot,mode):null;
       if(v){Object.assign(shot,{vx:v.vx,vy:v.vy,...(this.courtMode==='3d'?{vz:v.vz}:{}),reason:null});c.clubRisk=v;c.newcomerSolved=true;}
-      this.spend(p,q>=.85?0:8*this.costMul(p,true));
+      if(risk)this.spend(p,q>=.85?0:8*this.costMul(p,true));
       if(risk)c.clubUsed.push('luokuan');if(buzzer)c.clubUsed.push('kongjie');
       if(!v)effect(this,p,risk?'luokuan':'kongjie','险球失准 · 保留原球路');
     }
@@ -4111,6 +4115,7 @@
     if(ready(p,'liubai')){c.clubUsed.push('liubai');c.clubDecoy=.6;}
     if(ready(p,'lingxin')){c.clubUsed.push('lingxin');c.clubLoad=true;}
     c.clubHoop=s.tossSkill==='gongdan'&&s.selfToss===p.idx;
+    if(clock&&!c.clubUsed.includes('kongjie'))c.clubUsed.push('kongjie');
     if(c.clubUsed.length)c.skill=c.clubUsed.at(-1);
   };
   P.touchShuttle=function(p,...args){
@@ -4140,7 +4145,13 @@
     }
     for(const id of c.clubUsed||[])consume(p,id);
     if(c.clubHide||c.clubLoad||c.clubRisk||c.clubInk||c.clubCounter)s.clubShot={owner:p.idx,at:this.time,delay:.16,hide:c.clubHide||0,load:!!c.clubLoad,ink:!!c.clubInk,counter:!!c.clubCounter,risk:c.clubRisk?{mode:c.clubRisk.mode,...c.clubRisk.target}:null};
-    if(c.clubUsed.includes('kongjie')&&c.clubRisk){s.rush=.42;effect(this,p,'kongjie','压哨出手！');}
+    if(c.clubDrive||c.clubHoop||c.clubFinish){
+      s.rush=Math.max(s.rush||0,c.clubBuzzer?.6:c.clubHoop?.42:c.clubFinish?.3:.24);
+      if(c.clubDrive){delete st.drive;p.stamina=Math.min(C.STAM_MAX,p.stamina+4);}
+      if(c.clubHoop){delete st.rebound;p.stamina=Math.min(C.STAM_MAX,p.stamina+5);}
+      if(p.swing)p.swing.dur=Math.max(p.swing.t+.08,p.swing.dur*.78);
+      effect(this,p,c.clubFinish?'kongjie':c.clubHoop?'gongdan':'ouzhou',c.clubBuzzer?'压哨绝杀！':c.clubHoop?'篮板补扣 · 二次进攻':c.clubFinish?'强投命中 · 加速回球':'突破出手 · 快速收拍');
+    }
     if(c.clubCounter){
       st.cache=0;delete st.overload;delete st.inkBlind;s.rush=Math.max(s.rush||0,c.clubCounter.rush);
       p.stamina=Math.min(C.STAM_MAX,p.stamina+c.clubCounter.cache*4);if(p.swing)p.swing.dur=Math.max(p.swing.t+.09,p.swing.dur*.72);
@@ -4194,9 +4205,10 @@
       const a={x:previous?.x??s.x,y:previous?.y??s.y,z:previous?.z??this._previous3D?.z??s.z??0},b={x:s.x,y:s.y,z:s.z||0},delta=[b.x-a.x,b.y-a.y,b.z-a.z];
       const n=delta.reduce((sum,v)=>sum+v*v,0)||1,u=clamp(((e.x-a.x)*delta[0]+(e.y-a.y)*delta[1]+(e.z-a.z)*delta[2])/n,0,1);
       const x=lerp(a.x,b.x,u),y=lerp(a.y,b.y,u),z=lerp(a.z,b.z,u);
-      if(Math.hypot(x-e.x,(y-e.y)*.7,z-e.z)>.85)continue;
+      if(Math.hypot(x-e.x,(y-e.y)*.7,z-e.z)>(e.radius||1.1))continue;
       const ink=this.clubInkContact(p);
-      Object.assign(s,{x,y:Math.max(.85,y),z,vx:clamp((p.x+p.dir*.35-x)*1.6,-3.2,3.2),vy:5.8,vz:clamp(((p.z||0)-z)*1.6,-3,3),netHit:false,crossedNet:false,ctl:null,lastHitter:p.idx,selfToss:p.idx,tossSkill:'gongdan',clubShot:null});
+      Object.assign(s,{x,y:Math.max(.85,y),z,vx:clamp((p.x+p.dir*.35-x)*1.6,-3.2,3.2),vy:7.2,vz:clamp(((p.z||0)-z)*1.6,-3,3),netHit:false,crossedNet:false,ctl:null,lastHitter:p.idx,selfToss:p.idx,tossSkill:'gongdan',clubShot:null});
+      state(p).rebound={t:2.4};p.cooldown=0;p.slow=0;if(p.swing?.hit)p.swing=null;
       s.ver++;this.hitCount++;if(--e.n<=0)delete state(p).ready.gongdan;else e.warm=.45;this.rePred();
       this.emit({type:'hit',p:p.idx,shot:'lift',name:'篮板空接',q:.8,x:s.x,y:s.y,z:s.z,vx:s.vx,vy:s.vy,vz:s.vz,skill:'gongdan',device:true});effect(this,p,'gongdan','篮板托起 · 自己起跳扣下');if(ink)this.clubInkBurst(p,ink);return true;
     }return false;
@@ -4204,8 +4216,8 @@
   P.skStep=function(dt){
     old.skStep.call(this,dt);if(!this.skillsOn||this.phase!=='rally')return;
     for(const p of this.players){const st=p.cnt.club;if(!st)continue;
-      for(const[id,e]of Object.entries(st.ready)){e.t=Math.max(0,e.t-dt);if(e.warm>0)e.warm-=dt;if(!e.t){if(id==='kongjie'){if(!e.hot)this.spend(p,6*this.costMul(p,true));effect(this,p,id,e.hot?'热手压哨 · 安全落幕':'压哨超时 · 失去 6 体力');}delete st.ready[id];}}
-      for(const key of ['fx','overload','silhouette','inkBlind','inkBurst','counterFx'])if(st[key]&&(st[key].t-=dt)<=0)delete st[key];
+      for(const[id,e]of Object.entries(st.ready)){e.t=Math.max(0,e.t-dt);if(e.warm>0)e.warm-=dt;if(!e.t){if(id==='kongjie')effect(this,p,id,'压哨结束');delete st.ready[id];}}
+      for(const key of ['fx','overload','silhouette','inkBlind','inkBurst','counterFx','drive','rebound'])if(st[key]&&(st[key].t-=dt)<=0)delete st[key];
       if(st.decoy){const d=st.decoy;d.t-=dt;d.age+=dt;const r=Y.stepShuttle(d,dt*this.shuttleScale(),this.physEnv());if(r==='floor'||r==='net'||d.t<=0)delete st.decoy;}
       this.clubTiming(p);
     }
@@ -4214,11 +4226,11 @@
     const carry=this.players.map(p=>Object.fromEntries(Object.entries(p.cnt.club?.ready||{}).filter(([id])=>persist.has(id))));
     const ink=this.players.map(p=>({inkCount:p.cnt.club?.inkCount||0,inkReady:!!p.cnt.club?.inkReady}));
     const heat=this.players.map(p=>!!p.cnt.club?.hot);
-    const timed=this.players.map(p=>Object.fromEntries(['overload','silhouette','inkBlind','cache'].filter(k=>p.cnt.club?.[k]!=null).map(k=>[k,p.cnt.club[k]])));
+    const timed=this.players.map(p=>Object.fromEntries(['overload','silhouette','inkBlind','cache','styleBits','possessions','drive'].filter(k=>p.cnt.club?.[k]!=null).map(k=>[k,p.cnt.club[k]])));
     old.skReset.call(this,first);this.shuttle.clubShot=null;
     this.players.forEach((p,i)=>{p.cnt.club={ready:first?{}:carry[i],...(!first?{...ink[i],hot:heat[i],...timed[i]}:{})};});
   };
-  P.scorePoint=function(...args){const value=old.scorePoint.apply(this,args);this.shuttle.clubShot=null;for(const p of this.players){const st=p.cnt.club;if(st){for(const key of ['dash','decoy','inkBurst','styleBits','styleLast','stepAt','timing','counterFx'])delete st[key];for(const id of Object.keys(st.ready))if(!persist.has(id))delete st.ready[id];}}return value;};
+  P.scorePoint=function(...args){const value=old.scorePoint.apply(this,args);this.shuttle.clubShot=null;for(const p of this.players){const st=p.cnt.club;if(st){for(const key of ['dash','decoy','inkBurst','styleLast','stepAt','timing','counterFx','rebound'])delete st[key];for(const id of Object.keys(st.ready))if(!persist.has(id))delete st.ready[id];}}return value;};
   const prepared=Y.skillPrepared,recastReady=Y.skillRecastReady,text=Y.skillRecastText;
   Y.skillPrepared=(m,p,id)=>ids.has(id)?!!ready(p,id):prepared(m,p,id);
   Y.skillRecastReady=(m,p,id)=>ids.has(id)?m.phase==='rally'&&!!ready(p,id)&&(id==='luokuan'||id==='kuorong'&&!ready(p,id).lowered||id==='ouzhou'&&ready(p,id).second):recastReady(m,p,id);
@@ -4232,10 +4244,30 @@
 (function(G){
   'use strict';
   const Y=G.YY,P=Y.Match.prototype,{clamp,lerp}=Y,C=Y.C;
-  const old={};for(const k of ['castCheck','cast','recast','updatePlayer','skHitQ','skAfterHit','skShuttle','skStep','skReset','scorePoint','yoyoCatch','yoyoRelease','skControl'])old[k]=P[k];
+  const old={};for(const k of ['castCheck','cast','recast','mods','updatePlayer','skHitQ','afterHit','skAfterHit','skShuttle','skStep','skReset','scorePoint','yoyoCatch','yoyoRelease','skControl'])old[k]=P[k];
   const ownBow=(m,p)=>(m.ents||[]).find(e=>e.k==='bow'&&e.o===p.idx&&e.t>0),state=p=>p.cnt.ribbon||(p.cnt.ribbon={});
   const fx=(m,p,id,x=p.x,y=p.y+.3,extra={})=>m.addEnt('atelier',p.idx,x,y,.65,{sid:id,z:p.z||0,...extra});
   const manual=c=>!c.serve&&!c.device&&!c.ownSide;
+  const netShots=new Set(['net','tumble','block','drop','slice','drive','push','kill','halfsmash']);
+  const front=p=>p.side*p.x<=2.8;
+  const incoming=(m,p,c)=>m.skillsOn&&m.phase==='rally'&&manual(c)&&!m.cloneHitting&&m.shuttle.live&&!m.shuttle.held&&m.shuttle.lastHitter===1-p.idx&&m.shuttle.crossedNet&&m.shuttle.selfToss!==p.idx&&p.side*m.shuttle.x>0;
+  const netContact=(m,p)=>front(p)&&p.side*m.shuttle.x>0&&p.side*m.shuttle.x<=2.8&&m.shuttle.y<=3.35;
+  P.mods=function(p){
+    const M=old.mods.call(this,p);if(!this.skillsOn||this.phase!=='rally'||!front(p))return M;
+    if(this.hasPassive(p,'hudie')&&netContact(this,p)){M.reach*=1.12;M.timing*=1.2;}
+    const f=p.cnt.ribbon?.field;
+    if(p.buff.silkReady>0&&f&&f.warm<=0&&(this.courtMode!=='3d'||Math.abs((p.z||0)-f.z)<=f.width)){M.move*=1.16;M.accel*=1.25;}
+    return M;
+  };
+  P.ribbonEarn=function(p,z){
+    const bows=this.entsOf('bow',p.idx),st=state(p);if(bows.length>=3)this.dropEnt(bows[0]);
+    this.addEnt('bow',p.idx,0,C.NET_H,99,{z:this.courtMode==='3d'?z:(bows.length%3-1)*.65});
+    if((st.rewards||0)<4){st.rewards=(st.rewards||0)+1;this.gainEnergy(p,3);p.stamina=Math.min(100,p.stamina+5);this.proc(p,'hudie','织结控网 · +3能量 +5体力');}
+  };
+  P.afterHit=function(p,shot,q,c){
+    c.ribbonReturn=incoming(this,p,c);c.ribbonNet=c.ribbonReturn&&netContact(this,p);
+    return old.afterHit.call(this,p,shot,q,c);
+  };
   function direction(m,p,v){
     const i=m.inputs?.[p.idx]||{},spatial=m.courtMode==='3d';
     let x=spatial?(i.move||0)*p.dir:(v?.manual?v.x:i.move||0)*p.dir,z=spatial?(i.strafe||0):0;
@@ -4243,28 +4275,34 @@
     const n=Math.hypot(x,z)||1;return{x:x/n,z:z/n};
   }
   P.ribbonDash=function(p,v,second=false){
-    const st=state(p),d=direction(this,p,v),length=second?1.8:1.55;
-    st.dash={t:.3,T:.3,x:p.x,z:p.z||0,to:p.side*clamp(p.side*(p.x+d.x*length),C.X_NEAR,this.halfOf(p.idx)+.15),toZ:clamp((p.z||0)+d.z*length,-2.85,2.85),dx:d.x,dz:d.z};
-    st.stepUntil=this.time+2.5;st.window=this.time+2.1;st.second=second;p.skillCd=.14;p.land=0;p.cooldown=Math.min(p.cooldown,.035);
-    fx(this,p,'tangqiu',p.x,.12,{to:st.dash.to,toZ:st.dash.toZ,second});this.proc(p,'tangqiu',second?'解结 · 折返穿花':'穿花步 · 自己衔接下一拍');
+    const st=state(p),d=direction(this,p,v),length=second?2.1:1.9;
+    st.dash={t:.26,T:.26,x:p.x,z:p.z||0,to:p.side*clamp(p.side*(p.x+d.x*length),C.X_NEAR,this.halfOf(p.idx)+.15),toZ:clamp((p.z||0)+d.z*length,-2.85,2.85),dx:d.x,dz:d.z};
+    st.stepUntil=this.time+3;st.window=this.time+3;st.second=second;p.skillCd=.14;p.land=0;p.cooldown=Math.min(p.cooldown,.035);
+    fx(this,p,'tangqiu',p.x,.12,{to:st.dash.to,toZ:st.dash.toZ,second});this.proc(p,'tangqiu',second?'折返穿花 · 稳住网前':'穿花抢网 · 三秒内免费折返');
   };
   P.castCheck=function(p,id){
     if(this.phase!=='rally')return old.castCheck.call(this,p,id);
     if(id==='tangqiu')return !p.onGround?'落地后才能穿花':p.cnt.ribbon?.dash?'正在穿花':this.mods(p).fix||p.buff.prone>0?'站稳后才能穿花':null;
-    if(id==='jiewang')return p.buff.silkReady>0?'蝶结弹弓已经备好':!ownBow(this,p)?'先用网前球系一个蝴蝶结':null;
+    if(id==='jiewang')return p.buff.silkReady>0?'蝶域正在展开':null;
     return old.castCheck.call(this,p,id);
   };
   P.cast=function(p,id,aim,v){
     v=v||Y.skillVector(id,aim);
     if(id==='tangqiu'){this.ribbonDash(p,v);return;}
-    if(id==='jiewang'){const bow=ownBow(this,p);if(!bow)return;this.dropEnt(bow);p.skillCd=.14;p.buff.silkReady=6;state(p).deep=(aim||0)<-.25;fx(this,p,id,0,C.NET_H,{z:bow.z||0,deep:state(p).deep});this.proc(p,id,state(p).deep?'蝶结上弦 · 挑后场':'蝶结上弦 · 压网前');return;}
+    if(id==='jiewang'){
+      const bow=ownBow(this,p),st=state(p);if(bow)this.dropEnt(bow);
+      p.skillCd=.14;p.buff.silkReady=8;st.deep=(aim||0)>.25;st.shots=bow?3:2;
+      st.field={z:clamp(p.z||0,-2.2,2.2),width:bow?1.45:1.15,guards:bow?2:1,warm:.3,seen:-1};
+      fx(this,p,id,p.side*.55,C.NET_H,{z:st.field.z,deep:st.deep});
+      this.proc(p,id,bow?'蝶域织网 · 三拍两截':'蝶域织网 · 两拍一截');return;
+    }
     old.cast.call(this,p,id,aim,v);
     if(id==='hongxian')fx(this,p,id,p.x,p.y+1.2);
     if(id==='youyou'){const e=this.entOf('yoyo',p.idx);if(e){e.clockwork=1;e.spin=0;}fx(this,p,id,p.x,p.y+1.45);}
   };
   P.recast=function(p,id,aim,v){
-    if(id==='tangqiu'){const st=state(p),bow=ownBow(this,p);if(st.window>this.time&&!st.second){if(st.dash||!p.onGround)return true;if(!bow)return false;this.dropEnt(bow);this.ribbonDash(p,v,true);return true;}return false;}
-    if(id==='jiewang'&&p.buff.silkReady>0){const st=state(p);st.deep=!st.deep;this.proc(p,id,st.deep?'弹弓 · 挑后场':'弹弓 · 压网前');return true;}
+    if(id==='tangqiu'){const st=state(p);if(st.window>this.time&&!st.second){if(st.dash||!p.onGround)return true;this.ribbonDash(p,v,true);return true;}return false;}
+    if(id==='jiewang'&&p.buff.silkReady>0){const st=state(p);st.deep=Math.abs(aim||0)>.25?aim>0:!st.deep;this.proc(p,id,st.deep?'蝶域 · 挑后场':'蝶域 · 压网前');return true;}
     if(id==='youyou'){const e=this.entOf('yoyo',p.idx);if(e?.ph===3&&e.clockwork){this.yoyoSling(p,e,v);return true;}}
     return old.recast.call(this,p,id,aim,v);
   };
@@ -4277,26 +4315,59 @@
     if(!d.t){p.y=0;p.vy=0;p.onGround=true;delete st.dash;}
   };
   P.updatePlayer=function(p,dt){old.updatePlayer.call(this,p,dt);if(this.courtMode!=='3d')this.ribbonMove(p,dt);};
-  P.skHitQ=function(p,q,c){q=old.skHitQ.call(this,p,q,c);if(this.skillsOn&&manual(c)&&p.cnt.ribbon?.stepUntil>this.time)q=Math.max(q,.8);return q;};
+  P.skHitQ=function(p,q,c){
+    q=old.skHitQ.call(this,p,q,c);if(!incoming(this,p,c))return q;
+    const st=p.cnt.ribbon,net=netContact(this,p);
+    if(this.hasPassive(p,'hudie')&&net)q=Math.max(q,.86);
+    if(st?.stepUntil>this.time)q=Math.max(q,net?.92:.84);
+    if(st?.catchUntil>this.time&&net)q=Math.max(q,.96);
+    return q;
+  };
   P.skAfterHit=function(p,shot,q,c){
-    old.skAfterHit.call(this,p,shot,q,c);const s=this.shuttle;s.silkShot=null;if(!this.skillsOn||!manual(c))return;
-    const st=p.cnt.ribbon;if(st?.stepUntil>this.time){st.stepUntil=0;fx(this,p,'tangqiu',s.x,s.y,{z:s.z||0});}
-    if(p.buff.silkReady>0){p.buff.silkReady=0;s.silkShot={o:p.idx,deep:!!st?.deep,z:this.courtMode==='3d'?clamp(this.shotTarget(p,'drop').z,-2.1,2.1):0};fx(this,p,'jiewang',s.x,s.y,{z:s.z||0,deep:s.silkShot.deep});this.proc(p,'jiewang',s.silkShot.deep?'丝路已定 · 过网挑长':'丝路已定 · 过网压短');}
+    old.skAfterHit.call(this,p,shot,q,c);const s=this.shuttle;s.silkShot=null;if(!this.skillsOn||!c.ribbonReturn)return;
+    const st=p.cnt.ribbon||(this.hasPassive(p,'hudie')?state(p):null);if(!st)return;
+    if(st.stepUntil>this.time){st.stepUntil=0;fx(this,p,'tangqiu',s.x,s.y,{z:s.z||0});}
+    if(c.ribbonNet&&this.hasPassive(p,'hudie')){
+      p.slow=Math.min(p.slow,.08);p.cooldown=Math.min(p.cooldown,.08);
+      if(p.swing)p.swing.dur=p.swing.t+Math.max(0,p.swing.dur-p.swing.t)*.7;
+    }
+    st.catchUntil=0;
+    if(p.buff.silkReady>0&&st.shots>0&&c.ribbonNet&&netShots.has(shot.type)){
+      s.silkShot={o:p.idx,deep:!!st.deep,z:this.courtMode==='3d'?clamp(this.shotTarget(p,'drop').z,-2.1,2.1):0};
+      fx(this,p,'jiewang',s.x,s.y,{z:s.z||0,deep:st.deep});this.proc(p,'jiewang',st.deep?'织网出拍 · 过网挑长':'织网出拍 · 过网压短');
+    }
+  };
+  // A visible, fixed lane brakes one low crossing. It never returns the ball or
+  // changes its owner: Ranran must still reach it and make the next stroke.
+  P.ribbonIntercept=function(previous){
+    const s=this.shuttle;if(!previous||!s.live||s.held||s.ctl||s.netHit||!s.crossedNet||s.isServe)return;
+    for(const p of this.players){
+      const st=p.cnt.ribbon,f=st?.field;if(!(p.buff.silkReady>0)||!f||f.guards<=0||f.warm>0||f.seen===this.hitCount||!front(p)||s.lastHitter!==1-p.idx)continue;
+      if(!(previous.x*p.side<.55&&s.x*p.side>=.55)||s.vx*p.side<=0)continue;
+      const u=clamp((p.side*.55-previous.x)/(s.x-previous.x),0,1),y=lerp(previous.y,s.y,u),z=lerp(previous.z||0,s.z||0,u);
+      if(y<C.NET_H||y>2.65||s.y<.4||s.x*p.side>=2.1||this.courtMode==='3d'&&(Math.abs(z-f.z)>f.width||Math.abs((p.z||0)-f.z)>f.width))continue;
+      const a=50*Math.PI/180,sp=Y.solveSpeed(s.x,s.y,p.side,50,2.15-s.x*p.side,this.physEnv());
+      s.vx=p.side*sp*Math.cos(a);s.vy=sp*Math.sin(a);if(this.courtMode==='3d')s.vz=0;
+      f.guards--;f.seen=this.hitCount;s.ver++;s.speed=Math.hypot(s.vx,s.vy);this.rePred();p.replan=true;
+      fx(this,p,'jiewang',s.x,s.y,{z:s.z||0,burst:1});this.proc(p,'jiewang','蝶域截流 · 上网亲手回击');return;
+    }
   };
   P.skShuttle=function(previous,result){
     const s=this.shuttle,f=s.silkShot,handled=old.skShuttle.call(this,previous,result);
-    if(handled||!f||!this.skillsOn||this.phase!=='rally'||!s.live||s.ctl||s.netHit||f.o!==s.lastHitter)return handled;
-    const p=this.players[f.o];if(previous&&previous.x*p.side>=0&&s.x*p.side<0){
-      s.silkShot=null;if(s.y>C.NET_H+1.8){this.proc(p,'jiewang','球路太高 · 蝶结散开');return handled;}
-      const depth=f.deep?this.halfOf(1-p.idx)-.7:1.05,type=f.deep?'lift':'drop';
+    if(handled||!this.skillsOn||this.phase!=='rally')return handled;
+    this.ribbonIntercept(previous);
+    if(!f||!s.live||s.ctl||s.netHit||f.o!==s.lastHitter)return handled;
+    const p=this.players[f.o],st=state(p);if(previous&&previous.x*p.side>=0&&s.x*p.side<0){
+      s.silkShot=null;if(s.y>C.NET_H+1.8||!(p.buff.silkReady>0)||!(st.shots>0))return handled;
+      const depth=f.deep?this.halfOf(1-p.idx)-.55:.82,type=f.deep?'lift':'drop';
       if(this.courtMode==='3d')Object.assign(s,Y.solveShot3D(s,{x:p.dir*depth,z:f.z},type,1,this.physEnv()));else [s.vx,s.vy]=this.launchFrom(s.x,s.y,p.dir,f.deep?62:-12,depth,.12);
-      s.ver++;s.speed=Math.hypot(s.vx,s.vy,s.vz||0);this.rePred();fx(this,p,'jiewang',s.x,s.y,{z:s.z||0,burst:1,deep:f.deep});this.proc(p,'jiewang',f.deep?'蝶结弹弓 · 越顶':'蝶结弹弓 · 急坠');
+      st.shots--;s.ver++;s.speed=Math.hypot(s.vx,s.vy,s.vz||0);this.rePred();fx(this,p,'jiewang',s.x,s.y,{z:s.z||0,burst:1,deep:f.deep});this.proc(p,'jiewang',f.deep?'蝶域 · 越顶压后场':'蝶域 · 贴网急坠');
     }return handled;
   };
   P.yoyoCatch=function(p,e){old.yoyoCatch.call(this,p,e);if(e.clockwork){p.skillCd=Math.min(p.skillCd,.06);e.catchAt=this.time;e.charge=0;this.shuttle.ctl.t=1.35;fx(this,p,'youyou',e.x,e.y,{z:e.z||0,burst:1});this.proc(p,'youyou','棘轮锁球 · 再按张弦弹射');}};
   P.yoyoSling=function(p,e,v){
     const s=this.shuttle;if(s.ctl?.k!=='yoyo'||s.ctl.e!==e.id)return;
-    const age=this.time-e.catchAt,perfect=age>=.12&&age<=.42,deep=this.courtMode==='3d'?(this.inputs[p.idx]?.move||0)<-.25:v?.manual?(v.y>.45||v.x<-.25):(this.inputs[p.idx]?.move||0)<-.25;
+    const age=this.time-e.catchAt,perfect=age>=.12&&age<=.42,deep=this.courtMode==='3d'?(this.inputs[p.idx]?.move||0)>.25:v?.manual?v.x>.25:(this.inputs[p.idx]?.move||0)>.25;
     const target=deep?this.halfOf(1-p.idx)-.65:1.25,shot=deep?(perfect?'flatclear':'lift'):s.y>1.8?(perfect?'drive':'drop'):'lift';
     s.ctl=null;s.x=e.x;s.y=e.y;if(this.courtMode==='3d')s.z=e.z??s.z;
     if(this.courtMode==='3d')Object.assign(s,Y.solveShot3D(s,{x:p.dir*target,z:clamp(this.shotTarget(p,shot).z,-2.2,2.2)},shot,perfect?1.12:1,this.physEnv()));else [s.vx,s.vy]=this.launchFrom(s.x,s.y,p.dir,deep?(perfect?38:56):s.y>1.8?(perfect?2:15):48,target,.15);
@@ -4309,17 +4380,27 @@
     if(e?.clockwork&&e.ph===3){e.charge=clamp((this.time-e.catchAt)/.42,0,1);if(this.time-e.catchAt<.46){c.t-=dt;this.shuttle.x=e.x;this.shuttle.y=e.y;if(this.courtMode==='3d')this.shuttle.z=e.z||0;return;}}
     old.skControl.call(this,dt);
   };
-  P.skStep=function(dt){old.skStep.call(this,dt);if(this.phase!=='rally'){for(const p of this.players){const st=p.cnt.ribbon;if(st)for(const key of ['window','stepUntil'])if(st[key]>this.time-dt)st[key]+=dt;}return;}if(this.shuttle.silkShot&&(!this.shuttle.live||this.shuttle.netHit||this.shuttle.ctl||this.shuttle.lastHitter!==this.shuttle.silkShot.o))this.shuttle.silkShot=null;for(const e of this.ents)if(e.k==='yoyo'&&e.clockwork)e.spin=(e.spin||0)+dt*(e.ph===3?24:14);};
-  P.skReset=function(...a){old.skReset.apply(this,a);this.shuttle.silkShot=null;for(const p of this.players)if(p.cnt.ribbon)delete p.cnt.ribbon.dash;};
-  P.scorePoint=function(...a){const r=old.scorePoint.apply(this,a);this.shuttle.silkShot=null;for(const p of this.players){if(p.cnt.ribbon)delete p.cnt.ribbon.dash;}return r;};
+  P.skStep=function(dt){
+    old.skStep.call(this,dt);
+    for(const p of this.players){const st=p.cnt.ribbon;if(!st)continue;
+      if(this.phase!=='rally'){for(const key of ['window','stepUntil','catchUntil'])if(st[key]>this.time-dt)st[key]+=dt;continue;}
+      if(p.buff.silkReady>0&&st.field)st.field.warm=Math.max(0,st.field.warm-dt);
+      else {delete st.field;st.shots=0;}
+    }
+    if(this.phase!=='rally')return;
+    if(this.shuttle.silkShot&&(!this.shuttle.live||this.shuttle.netHit||this.shuttle.ctl||this.shuttle.lastHitter!==this.shuttle.silkShot.o))this.shuttle.silkShot=null;
+    for(const e of this.ents)if(e.k==='yoyo'&&e.clockwork)e.spin=(e.spin||0)+dt*(e.ph===3?24:14);
+  };
+  P.skReset=function(...a){old.skReset.apply(this,a);this.shuttle.silkShot=null;for(const p of this.players)if(p.cnt.ribbon){delete p.cnt.ribbon.dash;p.cnt.ribbon.rewards=0;p.cnt.ribbon.catchUntil=0;if(p.cnt.ribbon.field)p.cnt.ribbon.field.seen=-1;}};
+  P.scorePoint=function(...a){const r=old.scorePoint.apply(this,a);this.shuttle.silkShot=null;for(const p of this.players)if(p.cnt.ribbon){delete p.cnt.ribbon.dash;p.cnt.ribbon.catchUntil=0;}return r;};
   const ready=Y.skillRecastReady,text=Y.skillRecastText,prepared=Y.skillPrepared,preview=Y.skillPreview;
-  Y.skillRecastReady=(m,p,id)=>id==='tangqiu'?!!(p.cnt.ribbon?.window>m.time&&!p.cnt.ribbon.second&&ownBow(m,p)):id==='jiewang'?p.buff.silkReady>0:ready(m,p,id);
+  Y.skillRecastReady=(m,p,id)=>id==='tangqiu'?!!(p.cnt.ribbon?.window>m.time&&!p.cnt.ribbon.second):id==='jiewang'?p.buff.silkReady>0:ready(m,p,id);
   Y.skillPrepared=(m,p,id)=>id==='jiewang'?p.buff.silkReady>0:prepared(m,p,id);
-  Y.skillRecastText=(m,p,id)=>id==='tangqiu'&&Y.skillRecastReady(m,p,id)?'解结折返':id==='jiewang'&&p.buff.silkReady>0?(p.cnt.ribbon?.deep?'挑后场':'压网前'):id==='youyou'&&(m.ents||[]).find(e=>e.k==='yoyo'&&e.o===p.idx)?.ph===3?'张弦弹射':text(m,p,id);
-  Y.skillPreview=function(m,p,id,v){if(id==='tangqiu'){const d=direction(m,p,v),x=p.side*clamp(p.side*(p.x+d.x*1.55),C.X_NEAR,m.halfOf(p.idx)+.15);return{line:[[p.x,.1],[x,.1]],mark:{x,y:.1},label:'穿花接近 · 有结可再按折返',good:true};}if(id==='jiewang')return{mark:{x:0,y:C.NET_H},label:'消耗一个蝴蝶结 · 下一拍过网变线',good:!!ownBow(m,p)||p.buff.silkReady>0};if(id==='hongxian'&&m.shuttle.ctl?.k==='tether')return{mark:{x:p.dir*(v.manual&&(v.x<-.25||v.y>.45)?m.halfOf(1-p.idx)-.7:1.2),y:0},label:v.manual&&(v.x<-.25||v.y>.45)?'回旋挑长':'回旋压短',good:true};return preview(m,p,id,v);};
+  Y.skillRecastText=(m,p,id)=>id==='tangqiu'&&Y.skillRecastReady(m,p,id)?'免费折返':id==='jiewang'&&p.buff.silkReady>0?(p.cnt.ribbon?.deep?'挑深':'压浅')+' · '+(p.cnt.ribbon?.shots||0)+'拍':id==='youyou'&&(m.ents||[]).find(e=>e.k==='yoyo'&&e.o===p.idx)?.ph===3?'张弦弹射':text(m,p,id);
+  Y.skillPreview=function(m,p,id,v){if(id==='tangqiu'){const d=direction(m,p,v),x=p.side*clamp(p.side*(p.x+d.x*(p.cnt.ribbon?.window>m.time&&!p.cnt.ribbon.second?2.1:1.9)),C.X_NEAR,m.halfOf(p.idx)+.15);return{line:[[p.x,.1],[x,.1]],mark:{x,y:.1},label:'穿花抢网 · 三秒内免费折返',good:true};}if(id==='jiewang')return{mark:{x:p.side*.55,y:C.NET_H},label:'八秒蝶域 · 网前两拍一截 · 有结强化',good:true};if(id==='hongxian'&&m.shuttle.ctl?.k==='tether')return{mark:{x:p.dir*(v.manual&&v.x>.25?m.halfOf(1-p.idx)-.55:p.side*p.x<=2.8?.85:1.2),y:0},label:v.manual&&v.x>.25?'回旋挑长':'回旋压短',good:true};return preview(m,p,id,v);};
 })(typeof GameGlobal!=='undefined'?GameGlobal:typeof window!=='undefined'?window:globalThis);
 
-/* 朱老师 · 长短布局与 AI 幻象。权威比赛、Web 与小游戏共用，计时只在回合中推进。 */
+/* 静川 · 长短布局与 AI 幻象。权威比赛、Web 与小游戏共用，计时只在回合中推进。 */
 (function(G){
   'use strict';
   const Y=G.YY,P=Y.Match.prototype,C=Y.C,{clamp}=Y;
@@ -4491,4 +4572,382 @@
   const pack=Y.skPack,unpack=Y.skUnpack;
   Y.skPack=function(m){const k=pack(m);if(!k)return k;k.teacher=m.players.map(p=>p.cnt.teacher?{...p.cnt.teacher}:null);k.teacherFlight={trap:m.shuttle.teacherTrap?{...m.shuttle.teacherTrap}:null,target:m.shuttle.teacherTarget?{...m.shuttle.teacherTarget}:null};return k;};
   Y.skUnpack=function(v,a,b,u){unpack(v,a,b,u);const k=b??a;v.players.forEach((p,i)=>{if(k?.teacher?.[i])p.cnt.teacher={...k.teacher[i]};else if(p.cnt)delete p.cnt.teacher;});v.shuttle.teacherTrap=k?.teacherFlight?.trap?{...k.teacherFlight.trap}:null;v.shuttle.teacherTarget=k?.teacherFlight?.target?{...k.teacherFlight.target}:null;};
+})(typeof GameGlobal!=='undefined'?GameGlobal:typeof window!=='undefined'?window:globalThis);
+
+/* 小学生：有限的规则例外。球权与得分半场不变；移动、接球、二段均由服务器结算。 */
+(function(G){
+  'use strict';
+  const Y=G.YY,P=Y.Match.prototype,C=Y.C,{clamp,lerp}=Y;
+  const ids=new Set(['dixia','chuanmen','huanzuo']);
+  const state=p=>p.cnt.school||(p.cnt.school={ready:0,excited:0,last:null,rewards:0,quick:0});
+  const manual=(m,p,c)=>m.skillsOn&&m.phase==='rally'&&!c.serve&&!c.device&&!c.ownSide&&!m.cloneHitting&&m.shuttle.lastHitter!==p.idx&&m.shuttle.selfToss!==p.idx;
+  const old={};for(const name of ['castCheck','cast','recast','playerSide','contactAllowed','ringError','skShot','afterHit','updatePlayer','newcomerMove','skControl','rePred','skStep','skReset','scorePoint','mods'])old[name]=P[name];
+  P.schoolSuccess=function(p,id){
+    if(!this.hasPassive(p,'kejian'))return;
+    const st=state(p);
+    if(st.excited>0&&st.last===id)return;
+    if(st.excited>0&&st.last&&st.rewards<3){st.rewards++;this.gainEnergy(p,6);p.stamina=Math.min(C.STAM_MAX,p.stamina+8);st.quick=8;this.proc(p,'kejian','课间连招 · +6能量 +8体力');}
+    st.last=id;st.excited=10;
+  };
+  P.schoolSeatTarget=function(p,v={}){
+    const o=this.players[1-p.idx],raw=this._skillAim3D,manual=raw||v.manual;
+    const direction=raw?raw.y:v.x,depth=manual&&Math.abs(direction)>.2?(direction>0?5.25:1.35):Math.abs(o.x)<3.2?5.25:1.35;
+    return{x:o.side*clamp(depth,.8,(this.halfOf?.(o.idx)||this.sk?.half?.[o.idx]||C.HALF)-.4),z:clamp((o.z||0)+(raw?raw.x*2.8:0),-2.25,2.25)};
+  };
+  P.castCheck=function(p,id){
+    if(!ids.has(id))return old.castCheck.call(this,p,id);
+    const st=state(p),s=this.shuttle;
+    if(this.phase!=='rally')return '发球后才能用';
+    if(id==='dixia')return st.ready>0?'网底球已备好':s.ctl?.k==='schoolRoll'&&s.ctl.o===p.idx?'球还在滑行':null;
+    if(id==='chuanmen'){
+      if(st.visit)return '正在串门，或按技能返回';
+      if(st.seatMove||!p.onGround||p.buff.prone>0||p.buff.slip>0||this.mods(p).fix)return '落地站稳后再串门';
+      return p.x*p.side>.15&&p.x*p.side<=2.2?null:'走到距网2.2米内再钻网';
+    }
+    const o=this.players[1-p.idx];
+    return st.seat||o.cnt.school?.seatMove?'座位还在调整':o.cnt.school?.visit?'等对方串门回去再安排座位':null;
+  };
+  P.cast=function(p,id,aim,v){
+    if(!ids.has(id))return old.cast.call(this,p,id,aim,v);
+    const st=state(p);
+    if(id==='dixia'){st.ready=8;this.proc(p,id,'网底球待命 · 手动接低球');}
+    if(id==='chuanmen'){
+      st.visit={phase:'enter',t:.28,T:.28,from:p.x,to:p.dir*1.15,z:p.z||0,hitAt:this.hitCount};
+      p.vx=0;p.vz=0;p.drive=null;p.replan=true;
+      this.proc(p,id,'我要串门啦 · 等对手触球');
+    }
+    if(id==='huanzuo'){
+      const o=this.players[1-p.idx],target=this.schoolSeatTarget(p,v);
+      st.seat={t:.65,T:.65,x:o.x,z:o.z||0,to:target.x,toZ:target.z,half:.62,width:.65};
+      this.proc(p,id,'换座位 · 走出或起跳可躲');
+    }
+  };
+  P.schoolReturn=function(p,instant=false){
+    const st=state(p),v=st.visit;if(!v)return;
+    if(instant){p.x=p.side*1.1;p.z=v.z;p.vx=0;p.vz=0;p.y=0;p.vy=0;p.onGround=true;delete st.visit;}
+    else if(v.phase!=='return'){Object.assign(v,{phase:'return',from:p.x,to:p.side*1.1,t:.24,T:.24,fromZ:p.z||0});p.replan=true;}
+  };
+  P.recast=function(p,id,...args){
+    const st=p.cnt.school,c=this.shuttle.ctl;
+    if(id==='dixia'&&c?.k==='schoolRoll'&&c.o===p.idx){if(!c.pop){c.pop=true;this.schoolPlanPop(c);}return true;}
+    if(id==='chuanmen'&&st?.visit){this.schoolReturn(p);return true;}
+    return old.recast.call(this,p,id,...args);
+  };
+  P.mods=function(p){const m=old.mods.call(this,p),v=p.cnt.school?.visit;if(this.skillsOn&&v&&v.phase!=='visit'){m.noSwing=1;m.noJump=1;}return m;};
+  P.playerSide=function(p){const v=p.cnt.school?.visit;return v&&v.phase==='visit'?-p.side:old.playerSide.call(this,p);};
+  P.schoolCanSteal=function(p,ball){
+    const s=this.shuttle,v=p.cnt.school?.visit;
+    return !!(this.skillsOn&&v?.phase==='visit'&&!v.done&&this.hitCount>v.hitAt&&s.lastHitter===1-p.idx&&!s.netHit&&!s.ctl&&ball.x*p.dir>C.SHUTTLE_R);
+  };
+  P.contactAllowed=function(p,ball,toss){
+    if(p.cnt.school?.visit)return this.schoolCanSteal(p,ball);
+    return old.contactAllowed.call(this,p,ball,toss);
+  };
+  // 串门的前后手均可触球，仍用真实距离和挥拍窗口，不自动吸球。
+  P.ringError=function(p,s){
+    if(p.cnt?.school?.visit?.phase==='visit')return Math.abs(Math.hypot(s.x-p.x,s.y-p.y-C.SHOULDER,(s.z||0)-(p.z||0))-C.ARM);
+    return old.ringError.call(this,p,s);
+  };
+  P.skShot=function(p,shot,ctx){
+    old.skShot.call(this,p,shot,ctx);
+    if(!manual(this,p,ctx)||!this.schoolCanSteal(p,this.shuttle))return;
+    const s=this.shuttle,inp=this.inputs[p.idx],depth=inp.move<-.25?1.0:5.2,target={x:p.dir*depth,z:clamp((s.z||0)+(inp.strafe||0)*3,-2.2,2.2)};
+    const direction=Math.sign(target.x-s.x)||p.dir;
+    shot.type='push';
+    if(this.courtMode==='3d')Object.assign(shot,Y.solveShot3D(s,target,'push',1,this.physEnv()));
+    else{const speed=Y.solveSpeed(s.x,s.y,direction,30,Math.max(.2,Math.abs(target.x-s.x)),this.physEnv()),r=Math.PI/6;shot.vx=direction*Math.cos(r)*speed;shot.vy=Math.sin(r)*speed;}
+    ctx.schoolSteal=true;ctx.skill='chuanmen';ctx.newcomerSolved=true;
+  };
+  P.afterHit=function(p,shot,q,ctx={}){
+    const st=p.cnt.school,s=this.shuttle,ok=manual(this,p,ctx),roll=ok&&st?.ready>0&&!st.visit&&s.y<=1.9&&p.side*s.x>C.SHUTTLE_R;
+    const quick=ok&&st?.quick>0;
+    old.afterHit.call(this,p,shot,q,ctx);
+    if(quick){st.quick=0;if(p.swing)p.swing.dur=p.swing.t+Math.max(0,p.swing.dur-p.swing.t)*.62;}
+    if(ctx.schoolSteal){s.crossedNet=true;st.visit.done=true;this.schoolSuccess(p,'chuanmen');this.proc(p,'chuanmen','抢答成功 · 回家！');}
+    if(roll){
+      st.ready=0;
+      Object.assign(s,{netHit:false,crossedNet:false,skillTag:'dixia',isServe:false,bun:null,slam:null,nf:null,clubShot:null,silkShot:null,cookShot:null,teacherTrap:null,grav:null,wok:null,gust:null,gold:null,monkey:false,hide:false,veil:0});
+      s.ctl={k:'schoolRoll',o:p.idx,t:2.4,age:0,startX:s.x,startY:s.y,z:s.z||0,dir:p.dir,pop:false,popX:p.dir*3.2,speed:7.4};
+      s.vx=p.dir*7.4;s.vy=0;s.vz=0;s.speed=7.4;this.rePred();
+    }
+  };
+  P.schoolPlanPop=function(c){
+    const p=this.players[c.o],d=Math.max(.95,c.dir*this.shuttle.x+.74);
+    c.popX=c.dir*Math.min(d,this.halfOf(1-p.idx)-.65);this.rePred();
+  };
+  P.schoolPop=function(c){
+    const s=this.shuttle,p=this.players[c.o];
+    Object.assign(s,{ctl:null,y:.14,vx:c.dir*.6,vy:6.2,vz:0,speed:6.23,netHit:false,crossedNet:true,schoolBounce:{o:c.o,t:.75,x:s.x,z:s.z||0},ver:(s.ver||0)+1});
+    this.rePred(false);this.proc(p,'dixia','蹦起来 · 现在可以接球');
+  };
+  P.schoolPrediction=function(){
+    const s=this.shuttle,c=s.ctl;if(c?.k!=='schoolRoll')return;
+    const delay=Math.max(0,.14-c.age)+Math.max(0,(c.popX-s.x)*c.dir/c.speed),ball={...s,x:c.popX,y:.14,vx:c.dir*.6,vy:6.2,vz:0,ctl:null,netHit:false,crossedNet:true};
+    const path=this.courtMode==='3d'?Y.simulate3D(ball,this.physEnv()):Y.simulate(ball.x,ball.y,ball.vx,ball.vy,6,true,false,this.physEnv());
+    this.pred={...path,t:delay+path.t,pts:path.pts.map(q=>({...q,t:q.t+delay,...(this.courtMode==='3d'?{z:c.z,vz:0}:{})})),t0:this.time,hidden:false,schoolRoll:true};
+  };
+  P.rePred=function(...args){if(this.shuttle.ctl?.k==='schoolRoll')return this.schoolPrediction();return old.rePred.apply(this,args);};
+  P.skControl=function(dt){
+    const s=this.shuttle,c=s.ctl;if(c?.k!=='schoolRoll')return old.skControl.call(this,dt);
+    c.age+=dt;c.t-=dt;const before=s.x;
+    s.x+=c.dir*c.speed*Math.min(dt,Math.max(0,c.age-.14));s.y=lerp(c.startY,.14,clamp(c.age/.14,0,1));s.z=c.z;s.vx=c.dir*c.speed;s.vy=0;s.vz=0;
+    if(!c.crossed&&s.x*c.dir>C.SHUTTLE_R){c.crossed=true;s.crossedNet=true;this.schoolSuccess(this.players[c.o],'dixia');}
+    if(s.x*c.dir>=c.popX*c.dir||c.t<=0){s.x=c.popX;this.schoolPop(c);}
+    else if(before*c.dir<.1&&s.x*c.dir>=.1)this.rePred();
+  };
+  P.schoolMove=function(p,dt){
+    const st=p.cnt.school;if(!st||this.phase!=='rally'||!this.skillsOn)return;
+    const v=st.visit;
+    if(v){
+      if(v.phase==='visit'){p.x=p.dir*clamp(p.x*p.dir,.45,3.6);v.t-=dt;if(v.done||v.t<=0)this.schoolReturn(p);}
+      else{
+        v.t-=dt;const u=clamp(1-v.t/v.T,0,1),smooth=u*u*(3-2*u);
+        p.x=lerp(v.from,v.to,smooth);p.vx=0;p.vz=0;p.y=0;p.vy=0;p.onGround=true;
+        if(v.phase==='return')p.z=lerp(v.fromZ,v.z,smooth);
+        if(v.t<=0){if(v.phase==='enter'){v.phase='visit';v.t=1.8;v.T=1.8;}else delete st.visit;}
+      }
+    }
+    const move=st.seatMove;
+    if(move){
+      move.t-=dt;const u=clamp(1-move.t/.25,0,1),f=u*u*(3-2*u);
+      p.x=lerp(move.from,move.to,f);p.z=lerp(move.fromZ,move.toZ,f);p.vx=0;p.vz=0;
+      if(move.t<=0)delete st.seatMove;
+    }
+  };
+  P.newcomerMove=function(p,dt,from){old.newcomerMove.call(this,p,dt,from);this.schoolMove(p,dt);};
+  P.skStep=function(dt){
+    old.skStep.call(this,dt);if(!this.skillsOn||this.phase!=='rally')return;
+    for(const p of this.players){
+      const st=p.cnt.school;if(!st)continue;
+      for(const key of ['ready','excited','quick'])st[key]=Math.max(0,(st[key]||0)-dt);
+      if(st.visit?.done)this.schoolReturn(p);
+      const e=st.seat;if(!e)continue;
+      e.t-=dt;
+      if(e.t<=0){
+        const o=this.players[1-p.idx];
+        if(o.onGround&&o.y<=.05&&!o.cnt.school?.visit&&Math.abs(o.x-e.x)<=e.half&&(this.courtMode!=='3d'||Math.abs((o.z||0)-e.z)<=e.width)){
+          if(Math.hypot(e.to-o.x,e.toZ-(o.z||0))<.2){delete st.seat;continue;}
+          state(o).seatMove={t:.25,from:o.x,fromZ:o.z||0,to:e.to,toZ:e.toZ};o.replan=true;
+          this.schoolSuccess(p,'huanzuo');this.proc(p,'huanzuo','换座位成功');
+        }else this.proc(p,'huanzuo','躲开了换座位');
+        delete st.seat;
+      }
+    }
+    if(this.shuttle.schoolBounce){this.shuttle.schoolBounce.t-=dt;if(this.shuttle.schoolBounce.t<=0)delete this.shuttle.schoolBounce;}
+  };
+  P.skReset=function(first){
+    const kept=this.players.map(p=>p.cnt.school?{ready:p.cnt.school.ready,excited:p.cnt.school.excited,last:p.cnt.school.last,quick:p.cnt.school.quick}:null);
+    old.skReset.call(this,first);delete this.shuttle.schoolBounce;
+    this.players.forEach((p,i)=>{if(p.passive==='kejian'||kept[i])p.cnt.school={ready:0,excited:0,last:null,quick:0,...(!first?kept[i]:{}),rewards:0};});
+  };
+  P.scorePoint=function(...args){
+    const result=old.scorePoint.apply(this,args);delete this.shuttle.schoolBounce;
+    for(const p of this.players)if(p.cnt.school){this.schoolReturn(p,true);delete p.cnt.school.seat;delete p.cnt.school.seatMove;}
+    return result;
+  };
+  const prepared=Y.skillPrepared,recast=Y.skillRecastReady,label=Y.skillRecastText,preview=Y.skillPreview;
+  Y.skillPrepared=(m,p,id)=>id==='dixia'?p.cnt?.school?.ready>0:id==='chuanmen'?!!p.cnt?.school?.visit:id==='huanzuo'?!!p.cnt?.school?.seat:prepared(m,p,id);
+  Y.skillRecastReady=(m,p,id)=>id==='dixia'?m.shuttle.ctl?.k==='schoolRoll'&&m.shuttle.ctl.o===p.idx&&!m.shuttle.ctl.pop:id==='chuanmen'?!!p.cnt?.school?.visit&&p.cnt.school.visit.phase!=='return':recast(m,p,id);
+  Y.skillRecastText=(m,p,id)=>id==='dixia'?(m.shuttle.ctl?.k==='schoolRoll'&&m.shuttle.ctl.o===p.idx?(m.shuttle.ctl.pop?'即将弹起':'再按弹起'):p.cnt?.school?.ready>0?'低球待命':null):id==='chuanmen'&&p.cnt?.school?.visit?(p.cnt.school.visit.phase==='visit'?'返回 '+p.cnt.school.visit.t.toFixed(1)+'s':'钻网中'):id==='huanzuo'&&p.cnt?.school?.seat?'换座 '+p.cnt.school.seat.t.toFixed(1)+'s':label(m,p,id);
+  Y.skillPreview=function(m,p,id,v){if(id==='huanzuo'){const o=m.players[1-p.idx],to=P.schoolSeatTarget.call(m,p,v);return{line:[[o.x,.05],[to.x,.05]],mark:{x:to.x,y:.05},label:'旧座位 → 新座位 · 跳起可躲',good:!p.cnt?.school?.seat};}return preview(m,p,id,v);};
+  const pack=Y.skPack,unpack=Y.skUnpack;
+  Y.skPack=function(m){const k=pack(m);if(k){k.school=m.players.map(p=>p.cnt.school?JSON.parse(JSON.stringify(p.cnt.school)):null);k.schoolRoll=m.shuttle.ctl?.k==='schoolRoll'?{...m.shuttle.ctl}:null;k.schoolBounce=m.shuttle.schoolBounce?{...m.shuttle.schoolBounce}:null;}return k;};
+  Y.skUnpack=function(v,a,b,u){unpack(v,a,b,u);const k=b??a;v.players.forEach((p,i)=>{if(k?.school?.[i])p.cnt.school=JSON.parse(JSON.stringify(k.school[i]));else if(p.cnt)delete p.cnt.school;});if(k?.schoolRoll)v.shuttle.ctl={...k.schoolRoll};v.shuttle.schoolBounce=k?.schoolBounce?{...k.schoolBounce}:null;};
+})(typeof GameGlobal!=='undefined'?GameGlobal:typeof window!=='undefined'?window:globalThis);
+
+/* 田楚：折影蓄势、双拍镜像、假拍续攻、主动水月。 */
+(function(G){
+  'use strict';const Y=G.YY,P=Y.Match.prototype,C=Y.C,{clamp}=Y;
+  const ids=new Set(['jingxiang','meida','shuizhong']),state=p=>p.cnt.mirage||(p.cnt.mirage={ready:{},focus:0});
+  const ready=(p,id)=>p.cnt?.mirage?.ready?.[id];
+  const old={};for(const k of ['castCheck','cast','recast','mods','skHitQ','skShot','afterHit','touchShuttle','skShuttle','skStep','skReset','scorePoint'])old[k]=P[k];
+  const manual=(m,p,c)=>m.skillsOn&&m.phase==='rally'&&!c.serve&&!c.device&&!c.ownSide&&m.shuttle.live&&!m.shuttle.held&&!m.shuttle.ctl&&!m.shuttle.netHit&&m.shuttle.x*p.side>0&&((m.shuttle.lastHitter===1-p.idx&&m.shuttle.crossedNet)||(m.shuttle.selfToss===p.idx&&m.shuttle.tossSkill==='meida'));
+  const outgoing=(m,p)=>m.shuttle.live&&!m.shuttle.held&&!m.shuttle.isServe&&!m.shuttle.netHit&&!m.shuttle.ctl&&m.shuttle.lastHitter===p.idx&&m.shuttle.selfToss!==p.idx&&m.shuttle.y>.75;
+  const consume=(p,id)=>{const e=ready(p,id);if(e&&--e.n<=0)delete state(p).ready[id];};
+  const AIM_DEAD=.25;
+  Y.MIRAGE_MOTION=Object.freeze({onset:.18,lead:.6,brake:.12,hold:.14,recover:.2,slow:.22,fast:1.55});
+  // A decoy traverses its continuous flight with a visible hesitation and
+  // catch-up. No visual identity, opacity change or true-ball marker is used.
+  Y.miragePace=function(e,age=e.age||0){
+    if(!e.mirage)return 1;
+    const c=Y.MIRAGE_MOTION,u=age-(e.feintAt??c.onset),ease=t=>{t=clamp(t,0,1);return t*t*(3-2*t);};
+    if(u<=0)return 1;
+    if(u<c.brake)return 1+(c.slow-1)*ease(u/c.brake);
+    if(u<c.brake+c.hold)return c.slow;
+    return c.slow+(c.fast-c.slow)*ease((u-c.brake-c.hold)/c.recover);
+  };
+  // AI may recognize only the motion that has already been displayed.
+  Y.mirageMotionReadable=e=>!!(e?.k==='fake'&&e.mirage&&(e.age||0)>=(e.feintAt??Y.MIRAGE_MOTION.onset)+Y.MIRAGE_MOTION.brake);
+  Y.stepMirage=function(e,dt,env,baseScale=1){
+    const pace=Y.miragePace(e,Math.max(0,(e.age||0)-dt*.5));
+    const ball={x:e.x,y:e.y,z:e.z||0,vx:e.vx,vy:e.vy,vz:e.vz||0,space3D:!!e.space3D,netHit:true};
+    const result=Y.stepShuttle(ball,dt*pace*baseScale,env);
+    Object.assign(e,{x:ball.x,y:ball.y,z:ball.z||0,vx:ball.vx,vy:ball.vy,vz:ball.vz||0,pace});return result;
+  };
+  Y.mirageAimLabel=a=>!a||!a.depth&&!a.lane?'随击球':(a.depth>0?'深场':a.depth<0?'浅场':'原深度')+(a.lane<0?'·左':a.lane>0?'·右':'');
+  P.mirageAim=function(p,aim=0){
+    const d=this.courtMode==='3d'?Y.courtDirection(this.inputs[p.idx]):{move:aim,strafe:0};
+    return{depth:Math.abs(d.move)>AIM_DEAD?Math.sign(d.move):0,lane:Math.abs(d.strafe)>AIM_DEAD?Math.sign(d.strafe):0};
+  };
+  P.mirageAimShot=function(p,shot,aim){
+    if(!aim||!aim.depth&&!aim.lane)return true;
+    const s=this.shuttle,spatial=this.courtMode==='3d',env=this.physEnv();
+    const base=spatial?Y.simulate3D({...s,...shot,netHit:false},env,false):Y.simulate(s.x,s.y,shot.vx,shot.vy,6,false,false,env);
+    const depth=aim.depth<0?1.35:aim.depth>0?this.halfOf(1-p.idx)-.55:clamp(Math.abs(base.landX),1.35,this.halfOf(1-p.idx)-.55);
+    const z=aim.lane?aim.lane*2.05:clamp(base.landZ??s.z??0,-2.3,2.3),type=aim.depth<0?'drop':aim.depth>0?'clear':shot.type||shot.shot||'clear';
+    const v=this.mirageVelocity(p,depth,z,type);
+    if(!v||Math.abs(v.lx-p.dir*depth)>.18||spatial&&Math.abs(v.lz-z)>.18)return false;
+    Object.assign(shot,{vx:v.vx,vy:v.vy,...(spatial?{vz:v.vz}:{}),type,reason:null,...(spatial?{direction3D:{x:depth,z}}:{})});return true;
+  };
+  P.mirageMotion=function(){
+    const s=this.shuttle;if(!this.skillsOn||this.phase!=='rally')return;
+    const pending=this.ents.filter(e=>e.k==='fake'&&e.mirage&&(e.age||0)<(e.feintAt??Y.MIRAGE_MOTION.onset));if(!pending.length)return;
+    const o=this.players[1-s.lastHitter],elapsed=this.time-(this.pred?.t0??this.time);
+    // Fast/low arrivals begin the same physical hesitation earlier, so the
+    // receiving player can observe it before needing to commit a swing.
+    const contact=o&&this.pred?.pts?.find(q=>q.t>=elapsed&&q.x*o.side>.2&&q.y>.45&&q.y<=3.2);
+    const urgent=!!o&&(Math.hypot(s.x-o.x,s.y-o.y-C.SHOULDER,(s.z||0)-(o.z||0))<2.8||contact&&this.realT(contact.t-elapsed)<=Y.MIRAGE_MOTION.lead);
+    if(urgent)for(const e of pending)e.feintAt=Math.min(e.feintAt??Y.MIRAGE_MOTION.onset,e.age||0);
+  };
+  P.mirageClear=function(){for(const e of this.entsOf('fake'))if(e.mirage)this.dropEnt(e);};
+  P.mirageMove=function(p,dt){
+    if(!this.skillsOn||this.phase!=='rally'||!this.hasPassive(p,'canying'))return;
+    const st=state(p),vx=p.vx||0,vz=this.courtMode==='3d'?p.vz||0:0,speed=Math.hypot(vx,vz),last=st.heading;
+    st.turnCd=Math.max(0,(st.turnCd||0)-dt);
+    if(last&&st.turnCd<=0&&p.onGround&&(speed<.9||vx*last.x+vz*last.z<-.1)){
+      this.addEnt('shadow',p.idx,p.x,p.y,.8,{v:last.x,vz:last.z,z:p.z||0,mirage:true});
+      st.focus=Math.min(2,st.focus+1);st.turnCd=1.2;st.flow=.8;delete st.heading;
+      this.proc(p,'canying','折影 '+st.focus+'/2 · 下拍精准');
+    }else if(speed>2.6&&(!last||vx*last.x+vz*last.z>0))st.heading={x:vx,z:vz};
+  };
+  // Every replacement is simulated before committing. No teleport or hidden score.
+  P.mirageVelocity=function(p,depth,z=0,type='clear',origin=this.shuttle){
+    const spatial=this.courtMode==='3d',target=p.dir*clamp(depth,.85,this.halfOf(1-p.idx)-.35),env=this.physEnv();
+    let candidates=[];
+    if(spatial)candidates=[Y.solveShot3D(origin,{x:target,z:clamp(z,-2.3,2.3)},type,1,env)];
+    else for(const angle of type==='drop'?[18,30,46,62]:[42,56,68]){
+      const dir=Math.sign(target-origin.x)||p.dir,speed=Y.solveSpeed(origin.x,origin.y,dir,angle,Math.abs(target-origin.x),env),rad=angle*Math.PI/180;
+      if(Number.isFinite(speed)&&speed<44)candidates.push({vx:Math.cos(rad)*speed*dir,vy:Math.sin(rad)*speed,vz:0});
+    }
+    for(const v of candidates){
+      const r=spatial?Y.simulate3D({...origin,...v,netHit:false},env,false):Y.simulate(origin.x,origin.y,v.vx,v.vy,6,false,false,env);
+      if(!r.netHit&&Number.isFinite(r.landX)&&r.landX*p.dir>.45&&r.landX*p.dir<this.halfOf(1-p.idx)-.1&&(!spatial||Number.isFinite(r.landZ)&&Math.abs(r.landZ)<2.45))return{...v,lx:r.landX,lz:r.landZ||0};
+    }return null;
+  };
+  P.mirageFake=function(p,depth,z,type='clear',origin=this.shuttle){
+    const v=this.mirageVelocity(p,depth,z,type,origin);if(!v)return null;
+    const e=this.addEnt('fake',p.idx,origin.x,origin.y,4,{...v,z:origin.z||0,kind:type,mirage:true,feintAt:Y.MIRAGE_MOTION.onset,space3D:this.courtMode==='3d'});this.mirageMotion();return e;
+  };
+  P.mirageSplit=function(p,count=2){
+    for(const e of this.entsOf('fake',p.idx))if(e.mirage)this.dropEnt(e);
+    const s=this.shuttle,H=this.halfOf(1-p.idx),near=clamp(Math.max(1.3,s.x*p.dir+.6),1.3,H-.6);
+    const depth=Math.abs(this.pred?.landX||H-.6),lane=this.pred?.landZ||0,spatial=this.courtMode==='3d';
+    const targets=[{depth,lane}],choices=[near,(near+H-.55)/2,H-.55].flatMap(depth=>(spatial?[-2.05,0,2.05]:[0]).map(lane=>({depth,lane})));
+    for(let i=0;i<count;i++){
+      choices.sort((a,b)=>Math.min(...targets.map(t=>Math.hypot(b.depth-t.depth,b.lane-t.lane)))-Math.min(...targets.map(t=>Math.hypot(a.depth-t.depth,a.lane-t.lane))));
+      const q=choices.shift();targets.push(q);this.mirageFake(p,q.depth,q.lane,q.depth<3?'drop':'clear');
+    }
+    const o=this.players[1-p.idx];o.fooled=true;o.cnt.fakeT=this.time;o.replan=true;
+    this.proc(p,'jingxiang',count>1?'镜花水月 · 一真两假':'折影回击 · 虚实双线');
+  };
+  P.mirageMoon=function(p){
+    this.shuttle.mirageMoon={o:p.idx};consume(p,'shuizhong');this.proc(p,'shuizhong','水月已附 · 过网再按变线');
+  };
+  P.castCheck=function(p,id){
+    if(!ids.has(id))return old.castCheck.call(this,p,id);
+    if(this.phase!=='rally')return '发球后才能用';
+    if(ready(p,id)||id==='shuizhong'&&this.shuttle.mirageMoon?.o===p.idx)return '技能已准备 · 按提示衔接';
+    return null;
+  };
+  P.cast=function(p,id,aim=0,...args){
+    if(!ids.has(id))return old.cast.call(this,p,id,aim,...args);
+    const st=state(p),def=Y.SKILLS[id];st.ready[id]={t:def.dur,n:id==='jingxiang'?2:1};p.skillCd=.18;
+    if(id==='jingxiang')st.ready[id].aim={...(args[0]?.mirageAim||this.mirageAim(p,aim))};
+    this.proc(p,id,id==='jingxiang'?'镜像就绪 · 两拍分化':id==='meida'?'假拍就绪 · 近身接引':'水月就绪 · 下一拍附水纹');
+    if(id==='jingxiang'&&outgoing(this,p)){
+      const s=this.shuttle,o=this.players[1-p.idx];
+      if(!s.crossedNet&&this.racketGap(o,s.x,s.y)>2.8){const shot={vx:s.vx,vy:s.vy,vz:s.vz||0,type:s.shot};if(this.mirageAimShot(p,shot,st.ready[id].aim)){Object.assign(s,{vx:shot.vx,vy:shot.vy,vz:shot.vz||0,shot:shot.type});s.speed=Math.hypot(s.vx,s.vy,s.vz);s.ver++;this.rePred();}else this.proc(p,id,'无安全选线 · 保留原球路');}
+      else if(st.ready[id].aim.depth||st.ready[id].aim.lane)this.proc(p,id,'球已近对手 · 选线用于下一拍');
+      this.mirageSplit(p);consume(p,id);
+    }
+    if(id==='shuizhong'&&outgoing(this,p))this.mirageMoon(p);
+    if(id==='meida')this.mirageCatch();
+  };
+  P.recast=function(p,id,aim,...args){
+    if(id==='jingxiang'&&ready(p,id)&&this.phase==='rally'){ready(p,id).aim={...(args[0]?.mirageAim||this.mirageAim(p,aim))};this.proc(p,id,'镜像瞄准已更新 · 下一拍生效');return true;}
+    if(id!=='shuizhong')return old.recast.call(this,p,id,aim,...args);
+    if(this.phase!=='rally')return false;
+    if(this.shuttle.mirageMoon?.o===p.idx){this.wobble(p.idx,aim);return true;}
+    if(ready(p,id)){this.proc(p,id,'先手动回球 · 过网后变线');return true;}
+    return false;
+  };
+  P.wobble=function(owner,aim=0){
+    const s=this.shuttle,p=this.players[owner],o=this.players[1-owner];
+    if(!this.skillsOn||this.phase!=='rally'||s.mirageMoon?.o!==owner||!outgoing(this,p))return false;
+    if(!s.crossedNet){this.proc(p,'shuizhong','过网后再按变线');return false;}
+    if(this.racketGap(o,s.x,s.y)<1.6||s.y<.8||this.pred&&this.realT(this.pred.t-(this.time-this.pred.t0))<.25){this.proc(p,'shuizhong','来球已近 · 保持原线');return false;}
+    const spatial=this.courtMode==='3d',d=spatial?Y.courtDirection(this.inputs[owner]):{move:aim||0,strafe:0};
+    const near=d.move<-.25?true:d.move>.25?false:Math.abs(o.x)>3.4,H=this.halfOf(o.idx);
+    const depth=near?clamp(Math.max(1.25,s.x*p.dir+.65),1.25,H-.45):H-.45,z=spatial?(Math.abs(d.strafe)>.2?Math.sign(d.strafe)*2.1:-Math.sign(o.z||1)*2.1):0;
+    const v=this.mirageVelocity(p,depth,z,near?'drop':'clear');if(!v){this.proc(p,'shuizhong','无安全变线 · 保留原线');return false;}
+    const ghost={...s},target={x:this.pred?.landX??s.x,z:this.pred?.landZ??s.z??0};
+    this.mirageClear();this.addEnt('fake',owner,s.x,s.y,2,{vx:s.vx,vy:s.vy,vz:s.vz||0,z:s.z||0,lx:target.x,lz:target.z,kind:s.shot,mirage:true,feintAt:Y.MIRAGE_MOTION.onset,space3D:spatial});
+    Object.assign(s,{vx:v.vx,vy:v.vy,vz:v.vz||0,mirageMoon:null,shot:near?'drop':'clear'});s.ver++;
+    s.speed=Math.hypot(s.vx,s.vy,s.vz);this.rePred();o.fooled=true;o.replan=true;o.cnt.fakeT=this.time;
+    this.mirageMotion();this.addEnt('splash',owner,ghost.x,ghost.y,.5,{z:ghost.z||0});this.proc(p,'shuizhong',near?'水月折返 · 压短':'水月换线 · 送深');return true;
+  };
+  P.mods=function(p){const M=old.mods.call(this,p);if(this.skillsOn&&this.phase==='rally'){const st=p.cnt.mirage;if(st?.flow>0){M.accel*=1.22;M.move*=1.12;}if(st?.follow>0){M.reach*=1.16;M.timing*=1.2;}}return M;};
+  P.skHitQ=function(p,q,c){
+    q=old.skHitQ.call(this,p,q,c);if(!manual(this,p,c))return q;
+    const st=p.cnt.mirage;if(!st)return q;c.mirageFocus=st.focus||0;
+    if(st.focus)q=Math.max(q,st.focus===2?.94:.88);
+    if(ready(p,'jingxiang'))q=Math.max(q,.9);
+    if(this.shuttle.selfToss===p.idx&&this.shuttle.tossSkill==='meida'){q=Math.max(q,.96);c.mirageFollow=true;}
+    return q;
+  };
+  P.skShot=function(p,shot,c){
+    const hand=manual(this,p,c);old.skShot.call(this,p,shot,c);if(!hand||!p.cnt.mirage)return;
+    c.mirageReturn=true;const e=ready(p,'jingxiang');
+    if(e&&(e.aim?.depth||e.aim?.lane)){if(this.mirageAimShot(p,shot,e.aim))c.newcomerSolved=true;else this.proc(p,'jingxiang','无安全选线 · 保留原球路');}
+  };
+  P.afterHit=function(p,shot,q,c={}){
+    this.mirageClear();this.shuttle.mirageMoon=null;old.afterHit.call(this,p,shot,q,c);
+    if(!this.skillsOn||!c.mirageReturn||!p.cnt.mirage)return;
+    const st=state(p),s=this.shuttle,focus=c.mirageFocus||0;
+    if(focus){st.focus=0;this.gainEnergy(p,focus===2?5:3);p.stamina=Math.min(C.STAM_MAX,p.stamina+(focus===2?5:3));this.proc(p,'canying','折影兑现 · 精准回球');}
+    if(c.mirageFollow){st.follow=0;s.rush=Math.max(s.rush||0,.28);p.stamina=Math.min(C.STAM_MAX,p.stamina+4);this.proc(p,'meida','假拍成真 · 反击');}
+    if(ready(p,'jingxiang')){this.mirageSplit(p);consume(p,'jingxiang');}else if(focus===2)this.mirageSplit(p,1);
+    if(ready(p,'shuizhong'))this.mirageMoon(p);
+  };
+  P.touchShuttle=function(...args){this.mirageClear();this.shuttle.mirageMoon=null;return old.touchShuttle.apply(this,args);};
+  P.mirageCatch=function(){
+    const s=this.shuttle;if(!this.skillsOn||this.phase!=='rally'||!s.live||s.held||s.netHit||s.ctl||!s.crossedNet)return false;
+    for(const p of this.players){
+      if(!ready(p,'meida')||s.lastHitter===p.idx||s.x*p.side<.2||s.y<.45||this.racketGap(p,s.x,s.y)>1.7||p.buff.prone>0||this.mods(p).fix)continue;
+      const o=this.players[1-p.idx],source={...s},deep=Math.abs(o.x)<3.4;consume(p,'meida');
+      Object.assign(s,{vx:clamp((p.x+p.dir*.45-s.x)*1.8,-2.2,2.2),vy:6.4,vz:clamp(((p.z||0)-(s.z||0))*1.8,-2,2),ctl:null});
+      this.touchShuttle(p,'lift','假拍接引','meida',.8,true);s.selfToss=p.idx;s.tossSkill='meida';s.crossedNet=false;s.speed=Math.hypot(s.vx,s.vy,s.vz||0);
+      p.swing=null;p.cooldown=0;p.slow=0;p.bufferedShot=null;p.bufferT=0;p.shotQueue3D=null;state(p).follow=2.4;
+      this.mirageFake(p,deep?this.halfOf(o.idx)-.55:1.35,-Math.sign(o.z||1)*2,'clear',source);
+      o.fooled=true;o.replan=true;o.cnt.fakeT=this.time;this.rePred();this.proc(p,'meida','假球先行 · 真球亲手回击');return true;
+    }return false;
+  };
+  P.skShuttle=function(...args){if(this.mirageCatch())return true;return old.skShuttle.apply(this,args);};
+  P.skStep=function(dt){
+    old.skStep.call(this,dt);if(!this.skillsOn||this.phase!=='rally')return;
+    for(const p of this.players){const st=p.cnt.mirage;if(!st)continue;for(const[id,e]of Object.entries(st.ready)){e.t-=dt;if(e.t<=0)delete st.ready[id];}st.flow=Math.max(0,(st.flow||0)-dt);st.follow=Math.max(0,(st.follow||0)-dt);}
+    const s=this.shuttle;if(s.mirageMoon&&(!s.live||s.netHit||s.ctl||s.lastHitter!==s.mirageMoon.o))s.mirageMoon=null;
+    this.mirageMotion();
+  };
+  P.skReset=function(first){const carry=this.players.map(p=>p.cnt.mirage);old.skReset.call(this,first);this.shuttle.mirageMoon=null;this.players.forEach((p,i)=>{if(!first&&carry[i])p.cnt.mirage={ready:carry[i].ready,focus:carry[i].focus,turnCd:carry[i].turnCd||0,flow:carry[i].flow||0};});};
+  P.scorePoint=function(...args){const r=old.scorePoint.apply(this,args);this.mirageClear();this.shuttle.mirageMoon=null;for(const p of this.players)if(p.cnt.mirage){delete p.cnt.mirage.heading;p.cnt.mirage.follow=0;}return r;};
+  const prepared=Y.skillPrepared,recast=Y.skillRecastReady,label=Y.skillRecastText;
+  Y.skillPrepared=(m,p,id)=>ids.has(id)?!!ready(p,id)||id==='shuizhong'&&m.shuttle.mirageMoon?.o===p.idx:prepared(m,p,id);
+  Y.skillRecastReady=(m,p,id)=>id==='jingxiang'?m.phase==='rally'&&!!ready(p,id):id==='shuizhong'?m.phase==='rally'&&m.shuttle.mirageMoon?.o===p.idx&&m.shuttle.crossedNet:recast(m,p,id);
+  Y.skillRecastText=(m,p,id)=>ids.has(id)?id==='shuizhong'&&m.shuttle.mirageMoon?.o===p.idx?(m.shuttle.crossedNet?'再按变线':'过网后变线'):ready(p,id)?id==='jingxiang'?Y.mirageAimLabel(ready(p,id).aim)+' · 余'+ready(p,id).n+'拍':id==='meida'?'近身假拍待命':'下一拍附水月':null:label(m,p,id);
+  const preview=Y.skillPreview;
+  Y.skillPreview=function(m,p,id,v){if(id==='jingxiang'){const aim=P.mirageAim.call(m,p,v?.manual?v.x:0),x=p.dir*(aim.depth>0?1.35:aim.depth<0?m.halfOf(1-p.idx)-.55:3.35);return{mark:{x,y:.03},line:[[p.x,p.y+1.4],[x,.03]],label:'真球 · '+Y.mirageAimLabel(aim),good:true};}return preview(m,p,id,v);};
+  const pack=Y.skPack,unpack=Y.skUnpack,copy=v=>v?JSON.parse(JSON.stringify(v)):null;
+  Y.skPack=function(m){const k=pack(m);if(k){k.mirage=m.players.map(p=>copy(p.cnt.mirage));k.mirageMoon=copy(m.shuttle.mirageMoon);}return k;};
+  Y.skUnpack=function(v,a,b,u){unpack(v,a,b,u);const k=b??a;v.players.forEach((p,i)=>{if(k?.mirage?.[i])p.cnt.mirage=copy(k.mirage[i]);else if(p.cnt)delete p.cnt.mirage;});v.shuttle.mirageMoon=copy(k?.mirageMoon);};
 })(typeof GameGlobal!=='undefined'?GameGlobal:typeof window!=='undefined'?window:globalThis);

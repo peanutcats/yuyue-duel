@@ -17,7 +17,7 @@ function createPrediction(YY, N) {
       if (!sn?.pp || sn.wait || sn.ph === 'over') { this.display = null; return; }
       // 荡藤、松手飞出：位置由服务器的技能决定，直接用快照
       const own = sn.pp[this.index]?.cnt;
-      if (own && (own.vine || own.fling != null)) { this.display = null; return; }
+      if (own && (own.vine || own.fling != null || own.school?.visit || own.school?.seatMove || sn.k?.e?.some(e=>e.o===this.index&&e.k==='newskill'&&['splitBurst','jieli_jump'].includes(e.sid)))) { this.display = null; return; }
       const m = Object.create(YY.Match.prototype);
       m.players = sn.pp.map(p => ({ ...p, st: { ...p.st }, buff: { ...p.buff }, cnt: { ...p.cnt, ...(p.cnt.teacher ? {teacher:{...p.cnt.teacher}} : {}) }, hist: (p.hist || []).slice(), swing: p.swing ? { ...p.swing } : null }));
       m.inputs = [{ move: 0, presses: [] }, { move: 0, presses: [] }];

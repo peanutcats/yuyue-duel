@@ -112,7 +112,7 @@
       if (['lobby', 'countdown'].includes(d.phase)) {
         if(!n.features.includes('match-prep-v2'))return n.fail('比赛服务需要更新后才能使用赛前准备');
         if(this.matchPreparedId!==n.matchId){this.matchPreparedId=n.matchId;this.syncMatchLoadout();}
-        if (this.screen !== 'matching' && !(this.screen==='team'&&this.teamBack==='matching')) this.show('matching'); this.renderMatching();
+        if (this.screen !== 'matching' && !(['team','armory','kit','skill'].includes(this.screen)&&this.teamBack==='matching')) this.show('matching'); this.renderMatching();
       }
       return;
     }
@@ -160,7 +160,7 @@
     const id=Y.Profile.sel.char,requestId=(this.matchConfigSerial||0)+1;this.matchConfigSerial=requestId;this.matchConfigPending=requestId;this.matchConfigGeneration=n.generation;
     if(!n.send({t:'configure',requestId,matchId:n.matchId,revision:r.revision,configRevision:r.players[n.player]?.configRevision,char:id,kit:Y.Profile.kit(id),gear:Y.Profile.gear(id),title:Y.AIChallenge?.equipped()?.id||null}))this.matchConfigPending=null;
   };
-  const show = A.show; A.show = function (name) { const editing=this.screen==='team'&&this.teamBack==='matching'; show.call(this, name); if(name==='matching'&&editing)this.syncMatchLoadout(); if (name === 'matchmaking' && this.matchNet) this.renderMatchSetup(); };
+  const show = A.show; A.show = function (name) { const editing=['team','armory','kit','skill'].includes(this.screen)&&this.teamBack==='matching'; show.call(this, name); if(name==='matching'&&editing)this.syncMatchLoadout(); if (name === 'matchmaking' && this.matchNet) this.renderMatchSetup(); };
   const reset = A.reset; A.reset = function () { reset.call(this); this.matchResultAt = null; this.matchEndReason = null; };
   const restart = A.restart; A.restart = function () { if (this.mode === 'online') return this.startMatchmaking(); return restart.call(this); };
   const quit = A.quit; A.quit = function () { this.matchNet?.close(); this.matchRoom = null; return quit.call(this); };
@@ -168,7 +168,7 @@
   const tick = A.tick; A.tick = function (dt) { if (this.mode === 'online') { this.sendT -= dt; if (this.sendT <= 0) this.sendMatchedInput(); return; } tick.call(this, dt); };
   const frame = A.frame; A.frame = function (now) {
     this.matchNet?.update();if (this.screen === 'matching' && now - (this.matchUIAt || 0) > 200) { this.matchUIAt = now; this.renderMatching(); }
-    const editing=this.screen==='team'&&this.teamBack==='matching'&&this.matchRoom?.phase==='lobby';
+    const editing=['team','armory','kit','skill'].includes(this.screen)&&this.teamBack==='matching'&&this.matchRoom?.phase==='lobby';
     $('matchPrepTimer').classList.toggle('hidden',!editing);if(editing)$('matchPrepTimer').textContent=`准备剩余 ${this.matchRoom.confirmRemaining} 秒 · 选择完成后点击左上角返回`;
     frame.call(this, now);
   };

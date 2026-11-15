@@ -3,17 +3,18 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-  <meta name="theme-color" content="#070a1f">
+  <meta name="theme-color" content="#0b1624">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="description" content="羽跃对决：打开网页即可游玩的侧视羽毛球对战游戏，支持 AI 对战、好友对战与自由练习。">
+  <meta name="description" content="羽跃对决：打开网页即可游玩的侧视羽毛球对战游戏，支持 21 位球友、2D / 3D 对战、好友联机与故事冒险。">
   <title>羽跃对决 · 网页羽毛球对战</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23ff4b55'/%3E%3Cpath d='M22 40 L46 14 L52 20 L28 46Z' fill='%23fff'/%3E%3Ccircle cx='22' cy='44' r='8' fill='%23ffd23f'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="css/style.css?v=web-131-20261113">
-  <link rel="stylesheet" href="css/court3d.css?v=web-131-20261113">
-  <link rel="stylesheet" href="css/story-sixteen.css?v=web-131-20261113">
-  <link rel="stylesheet" href="css/matchmaking.css?v=web-131-20261113">
-  <link rel="stylesheet" href="css/account.css?v=web-131-20261113">
+  <link rel="stylesheet" href="css/style.css?v=web-132-20261115">
+  <link rel="stylesheet" href="css/court3d.css?v=web-132-20261115">
+  <link rel="stylesheet" href="css/story-sixteen.css?v=web-132-20261115">
+  <link rel="stylesheet" href="css/matchmaking.css?v=web-132-20261115">
+  <link rel="stylesheet" href="css/account.css?v=web-132-20261115">
+  <link rel="stylesheet" href="css/clubhouse.css?v=web-132-20261115">
 </head>
 <body>
   <!-- 图标 -->
@@ -46,94 +47,68 @@
   <div id="landNotice" class="hidden" role="status"></div>
 
   <div id="ui">
-    <!-- 主菜单 -->
-    <section id="scr-menu" class="screen menu-screen">
-      <div class="menu-left">
-        <div class="brand">
-          <div class="brand-mark"><svg><use href="#i-shuttle"/></svg></div>
-          <div>
-            <h1 class="logo">羽跃对决</h1>
-            <div class="logo-en">YUYUE&nbsp;DUEL</div>
+    <!-- 与小游戏一致的球馆主页 -->
+    <section id="scr-menu" class="screen clubhouse-screen">
+      <div class="clubhouse">
+        <header class="club-header"><div class="club-brand"><svg aria-hidden="true"><use href="#i-shuttle"/></svg><div><h1>羽跃对决</h1><small>YUYUE DUEL / 羽友俱乐部</small></div></div><div class="club-header-tools"><span class="status-dot">球馆已开放</span><button class="btn quiet" data-go="settings" aria-label="设置" title="设置">⚙</button><button class="btn quiet" id="btnLand" aria-label="全屏游玩" title="全屏游玩">⛶</button></div></header>
+        <div class="club-home-grid">
+          <aside class="menu-left club-profile">
+            <button class="club-character" data-go="team" aria-label="查看出战角色"><div class="stage-grid" aria-hidden="true"></div><span class="eyebrow">今日出战</span><img id="homeCharacter" alt="出战角色立绘"><div class="stage-name"><small id="homeRole"></small><strong id="homeName"></strong><em id="homeTitle"></em><i aria-hidden="true">↗</i></div></button>
+          </aside>
+          <div class="club-home-main">
+            <button class="club-story" data-go="story"><img id="homeStoryImage" src="assets/story/sixteen/stringing.svg" alt=""><div class="story-hero-copy"><span class="eyebrow">故事模式 / 十六根羽毛</span><h2 id="homeChapter">听见，一个夏天。</h2><p id="menuStoryNote">十六根羽毛 · 听见一个夏天</p><div class="story-hero-bottom"><span id="homeProgress"></span><strong>走进故事 <span aria-hidden="true">↗</span></strong></div></div></button>
+            <nav class="club-main-entries" aria-label="主要玩法">
+              <button class="club-tile" data-go="battle"><span class="tile-icon"><svg><use href="#i-racket"/></svg></span><span><small>PLAY YOUR WAY</small><b>自由对战</b><em>人机切磋 · 训练场 · 专项课程</em></span><i>↗</i></button>
+              <button class="club-tile" data-go="friend"><span class="tile-icon"><svg><use href="#i-duo"/></svg></span><span><small>MEET ON COURT</small><b>联机对决</b><em>在线匹配 · 好友房间 · 同屏双人</em></span><i>↗</i></button>
+              <button class="club-tile secondary" data-go="team"><span class="tile-icon"><svg><use href="#i-cards"/></svg></span><span><b>角色装备</b><em>21 位球友，各有好球</em></span><i>↗</i></button>
+              <button class="club-tile secondary" data-go="armory"><span class="tile-icon"><svg><use href="#i-bag"/></svg></span><span><b>器械库</b><em>找到适合你的手感</em></span><i>↗</i></button>
+            </nav>
+            <nav class="club-footer-links" aria-label="更多内容"><button data-go="journal">羽毛册 <span>↗</span></button><button data-go="codex">羽球图鉴 <em id="codexBadge" class="badge hidden"></em></button><button data-ai-challenges="menu">挑战成就 <span>↗</span></button><button data-go="help">操作指南 <span>↗</span></button></nav>
           </div>
         </div>
-        <p class="tagline">调动对手 · 制造空当 · 抓住机会</p>
-        <nav class="main-nav">
-          <button class="nav-item hot" data-go="story">
-            <span class="ni-icon"><svg><use href="#i-story"/></svg></span>
-            <span class="ni-text"><b>故事模式</b><small id="menuStoryNote">十六根羽毛 · 听见一个夏天</small></span>
-            <span class="ni-arrow">›</span>
-          </button>
-          <button class="nav-item" data-go="ai">
-            <span class="ni-icon"><svg><use href="#i-racket"/></svg></span>
-            <span class="ni-text"><b>快速对战</b><small>挑战四档 AI · 赢取专属称号</small></span>
-            <span class="ni-arrow">›</span>
-          </button>
-          <button class="nav-item" data-go="friend">
-            <span class="ni-icon"><svg><use href="#i-duo"/></svg></span>
-            <span class="ni-text"><b>联机对决</b><small>在线匹配 · 好友房间 · 同屏双人</small></span>
-            <span class="ni-arrow">›</span>
-          </button>
-          <button class="nav-item" data-go="practice">
-            <span class="ni-icon"><svg><use href="#i-target"/></svg></span>
-            <span class="ni-text"><b>自由练习</b><small>发球机陪练 · 落点与时机提示</small></span>
-            <span class="ni-arrow">›</span>
-          </button>
-        </nav>
-        <div class="sub-nav">
-          <button class="chip-btn" data-ai-challenges="menu"><svg><use href="#i-star"/></svg><span>挑战成就</span></button>
-          <button class="chip-btn" data-go="team"><svg><use href="#i-bag"/></svg><span>角色与装备</span></button>
-          <button class="chip-btn" data-go="codex"><svg><use href="#i-cards"/></svg><span>羽球图鉴</span><em id="codexBadge" class="badge hidden"></em></button>
-          <button class="chip-btn" data-go="help"><svg><use href="#i-book"/></svg><span>操作</span></button>
-        </div>
-        <div class="settings">
-          <label><input id="optMusic" type="checkbox" checked>场景配乐</label>
-          <label class="switch"><input type="checkbox" id="optSound" checked><span></span>音效</label>
-          <label class="switch"><input type="checkbox" id="optHint" checked><span></span>落点提示</label>
-          <button class="pill touch-only" id="btnLand"><svg><use href="#i-full"/></svg><span>横屏全屏</span></button>
-        </div>
-      </div>
-      <div class="menu-right">
-        <div class="now-venue"><small>NOW PLAYING</small><b id="menuVenue">星光体育馆</b></div>
+        <footer class="club-footer"><span>调动对手 · 制造空当 · 接住下一拍</span><span id="menuVenue">星光体育馆</span></footer>
       </div>
     </section>
-
+    <section id="scr-battle" class="screen panel-screen hidden"><div class="panel wide club-page">
+      <header class="ph"><button class="icon-btn" data-go="menu" aria-label="返回主页"><svg><use href="#i-back"/></svg></button><div><small>COURT / PLAY</small><h2>自由对战</h2></div><button class="btn" data-ai-challenges="battle">挑战成就 ↗</button></header>
+      <div class="mode-grid">
+        <button class="mode-tile" data-go="ai"><span class="mode-index">01 / MATCH</span><div class="mode-illustration versus"><img src="assets/characters/painted/lingfeng/portrait.png" alt=""><span>VS</span><img src="assets/characters/painted/canglan/portrait.png" alt=""></div><h3>快速对战</h3><p>选好球友和场馆，来一场认真切磋。</p><div class="mode-tags"><span>四档难度</span><span>2D / 3D</span></div><strong>选择对手 <i>↗</i></strong></button>
+        <button class="mode-tile training" data-go="training"><span class="mode-index">02 / TRAINING</span><div class="mode-illustration court-art"><svg viewBox="0 0 260 150" aria-hidden="true"><path d="M55 25h150l35 100H20zM38 75h184M130 25v100M65 25l-18 100M195 25l18 100"/><path class="flight" d="M60 111Q155-20 193 90"/><circle cx="193" cy="90" r="8"/></svg></div><h3>训练场</h3><p>调好发球机，慢慢找到自己的手感。</p><div class="mode-tags"><span>全部角色</span><span>自由试招</span></div><strong>开始练球 <i>↗</i></strong></button>
+        <button class="mode-tile courses" data-go="practice"><span class="mode-index">03 / LESSONS</span><div class="mode-illustration lessons-art"><span>01<small>先到位</small></span><span>02<small>再挥拍</small></span><span>03<small>打空当</small></span></div><h3>专项课程</h3><p>从接球到战术，把每一拍练扎实。</p><div class="mode-tags"><span>落点目标</span><span>时机提示</span></div><strong>选择课程 <i>↗</i></strong></button>
+      </div><footer class="page-action"><div id="battleLoadout"></div><button class="btn primary big" id="battleQuick">沿用配置 · 快速开打</button></footer>
+    </div></section>
     <!-- 快速对战 -->
     <section id="scr-ai" class="screen panel-screen hidden">
       <div class="panel wide">
-        <header class="ph"><button class="icon-btn" data-go="menu" aria-label="返回"><svg><use href="#i-back"/></svg></button><div><h2>快速对战</h2><small>选择场馆与对手</small></div><button class="btn challenge-entry" data-ai-challenges="ai">挑战成就 ›</button></header>
-        <div class="loadout-row">
-          <div class="lo-me" id="loMe"></div>
-          <label class="switch"><input type="checkbox" id="optSkill" checked><span></span>角色技能</label>
-          <button class="btn" id="btnLoEdit">更换角色 / 装备</button>
-        </div>
+        <header class="ph"><button class="icon-btn" data-go="battle" aria-label="返回"><svg><use href="#i-back"/></svg></button><div><h2>快速对战</h2><small>选择场馆与对手</small></div><button class="btn challenge-entry" data-ai-challenges="ai">挑战成就 ›</button></header>
+        <div class="setup-players"><article class="setup-player"><span class="eyebrow">01 / 我方出战</span><div class="lo-me" id="loMe"></div><div class="setup-actions"><button class="btn" id="btnLoEdit">角色与技能</button><button class="btn" data-web-armory="ai">搭配器械</button></div></article><span class="setup-vs" aria-hidden="true">VS</span><article class="setup-player"><span class="eyebrow">02 / 对手</span><button id="quickOpponent" class="opponent-card" aria-label="选择电脑对手"></button><label class="ai-opponent-label visually-hidden">AI 角色 <select id="aiOpponent" aria-label="选择 AI 对手"></select></label><button class="btn" id="quickOpponentKit">对手技能</button></article></div>
+        <div class="setup-options"><div class="setup-rules"><div class="eyebrow">03 / 比赛规则</div><div data-court-mount="ai"></div><div class="match-format" role="group" aria-label="比赛分制"></div><label class="switch"><input type="checkbox" id="optSkill" checked><span></span>角色技能</label></div><div class="setup-venue">
         <div class="sect-title">场馆</div>
-        <div class="match-format" role="group" aria-label="比赛分制"></div>
         <div class="venue-pick"></div>
-        <label class="ai-opponent-label">AI 角色 <select id="aiOpponent" aria-label="选择 AI 对手"></select></label>
-        <div class="sect-title">对手难度</div>
+</div></div><div class="sect-title">对手难度 <small>选好难度，再开始比赛</small></div>
         <div class="cards four">
-          <button class="card diff" data-level="easy">
+          <button class="card diff" data-quick-level="easy">
             <span class="ai-face" data-look="1"></span>
             <span class="stars"><svg><use href="#i-star"/></svg></span>
             <b>简单</b><span>反应慢、回位慢，常打高远球。适合熟悉操作、练出连续回合。</span>
           </button>
-          <button class="card diff" data-level="normal">
+          <button class="card diff" data-quick-level="normal">
             <span class="ai-face" data-look="1"></span>
             <span class="stars"><svg><use href="#i-star"/></svg><svg><use href="#i-star"/></svg></span>
             <b>普通</b><span>会前后调动你，看到高球就起跳扣杀。</span>
           </button>
-          <button class="card diff" data-level="hard">
+          <button class="card diff" data-quick-level="hard">
             <span class="ai-face" data-look="1"></span>
             <span class="stars"><svg><use href="#i-star"/></svg><svg><use href="#i-star"/></svg><svg><use href="#i-star"/></svg></span>
             <b>困难</b><span>预判快、回位及时，会针对你反复使用的球路提前站位。</span>
           </button>
-          <button class="card diff nightmare" data-level="nightmare">
+          <button class="card diff nightmare" data-quick-level="nightmare">
             <span class="ai-face" data-look="1"></span>
             <span class="stars"><svg><use href="#i-star"/></svg><svg><use href="#i-star"/></svg><svg><use href="#i-star"/></svg><svg><use href="#i-star"/></svg></span>
             <b>噩梦</b><span>极限反应，全力预判。击败全部角色，获得「噩梦终结者」。</span>
           </button>
         </div>
-        <p class="note">可指定任意角色或随机对手，AI 携带推荐器械。每场完整胜利都会记录挑战进度。</p>
+        <footer class="page-action"><p id="quickSummary" class="note"></p><button id="quickStart" class="btn primary big">准备好了 · 开始比赛</button></footer>
       </div>
     </section>
 
@@ -224,7 +199,7 @@
     <!-- 练习 -->
     <section id="scr-practice" class="screen panel-screen hidden">
       <div class="panel wide">
-        <header class="ph"><button class="icon-btn" data-go="menu" aria-label="返回"><svg><use href="#i-back"/></svg></button><div><h2>自由练习</h2><small>发球机陪练 · 落点与挥拍提示</small></div></header>
+        <header class="ph"><button class="icon-btn" data-go="menu" aria-label="返回"><svg><use href="#i-back"/></svg></button><div><h2>专项课程</h2><small>发球机陪练 · 落点与挥拍提示</small></div></header>
         <div class="cards four">
           <button class="card drill" data-drill="receive"><span class="drill-no">01</span><b>接球</b><span>发球机随机喂高远、吊球、扣杀和平抽，练判断与移动。</span></button>
           <button class="card drill" data-drill="clear"><span class="drill-no">02</span><b>高远球</b><span>头顶高点击球，把球送进对方后场目标区。</span></button>
@@ -372,26 +347,18 @@
       </div>
     </section>
 
-    <!-- 角色与装备 -->
-    <section id="scr-team" class="screen panel-screen hidden">
-      <div class="panel wide team">
-        <header class="ph"><button class="icon-btn" id="btnTeamBack" aria-label="返回"><svg><use href="#i-back"/></svg></button><div><h2>角色与装备</h2><small>角色决定技能，装备改变击球与移动</small></div></header>
-        <div class="team-wrap">
-          <div class="team-col">
-            <div class="sect-title">出战角色</div>
-            <div class="char-list" id="charList"></div>
-            <div class="char-detail" id="charDetail"></div>
-          </div>
-          <div class="team-col">
-            <div class="gear-tabs" id="gearTabs"></div>
-            <div class="gear-list" id="gearList"></div>
-            <div class="sect-title">综合能力 <small>（100 = 标准，绿色为装备加成）</small></div>
-            <div class="stat-box" id="statBox"></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
+    <section id="scr-team" class="screen panel-screen hidden"><div class="panel wide club-page team">
+      <header class="ph"><button class="icon-btn" id="btnTeamBack" aria-label="返回"><svg><use href="#i-back"/></svg></button><div><small>ROSTER / 球友图鉴</small><h2>角色装备</h2></div><span class="page-caption">点选预览 · 确认出战</span></header>
+      <div class="roster-layout"><aside class="roster-directory"><div class="roster-filters" id="rosterFilters" role="group" aria-label="角色定位"></div><div class="char-list" id="charList"></div><p class="roster-count" id="rosterCount"></p></aside><div class="char-detail" id="charDetail"></div></div>
+    </div></section>
+    <section id="scr-armory" class="screen panel-screen hidden"><div class="panel wide club-page armory">
+      <header class="ph"><button class="icon-btn" id="armoryBack" aria-label="返回"><svg><use href="#i-back"/></svg></button><div><small>EQUIPMENT / 手感工坊</small><h2>器械库</h2></div><span id="armoryOwner" class="page-caption"></span></header>
+      <nav class="gear-tabs" id="gearTabs" aria-label="器械分类"></nav><div class="armory-layout"><div class="gear-list" id="gearList"></div><aside class="gear-detail" id="gearDetail"></aside></div><footer class="page-action"><p class="note">每位角色独立保存搭配 · 故事模式沿用关卡解锁规则</p><button class="btn" id="gearRecommended">恢复推荐搭配</button></footer>
+    </div></section>
+    <section id="scr-skill" class="screen panel-screen hidden"><div class="panel wide club-page skill-study"><header class="ph"><button class="icon-btn" id="skillBack" aria-label="返回"><svg><use href="#i-back"/></svg></button><div><small>SKILL / 技能研习</small><h2 id="skillHeading"></h2></div><div class="segmented" id="skillModes" role="group" aria-label="技能说明模式"></div></header><div class="skill-study-layout"><div class="skill-demo"><canvas id="skillDemo" width="760" height="350" aria-label="技能分阶段示意"></canvas><nav id="skillStages" class="skill-stages" aria-label="演示阶段"></nav><div class="skill-playback"><button class="btn" id="skillPlay">暂停演示</button><button class="btn" id="skillReplay">重播</button><button class="btn" id="skillSpeed">1× 速度</button></div><div id="skillSiblings" class="skill-siblings"></div></div><article class="skill-reading"><div class="segmented" id="skillTabs" role="group" aria-label="技能说明分类"></div><div id="skillText"></div><button class="btn primary big" id="skillTry">去训练场亲手试招</button></article></div></div></section>
+    <section id="scr-roster" class="screen panel-screen hidden"><div class="panel wide club-page"><header class="ph"><button class="icon-btn" id="rosterCancel" aria-label="取消选择"><svg><use href="#i-back"/></svg></button><div><small>CHOOSE YOUR PLAYER</small><h2 id="rosterTitle">选择球友</h2></div></header><div class="picker-layout"><div id="pickerGrid" class="char-list"></div><aside id="pickerPreview"></aside></div><footer class="page-action"><p class="note">浏览不会更改当前选择</p><button class="btn primary big" id="rosterConfirm">确认选择</button></footer></div></section>
+    <section id="scr-training" class="screen panel-screen hidden"><div class="panel wide club-page"><header class="ph"><button class="icon-btn" data-go="battle" aria-label="返回自由对战"><svg><use href="#i-back"/></svg></button><div><small>TRAINING / 自由试招</small><h2>训练场</h2></div></header><div id="trainingSetup"></div><footer class="page-action"><p class="note">试用所有角色 · 按自己的节奏练球</p><button class="btn primary big" id="trainingStart">进入训练场</button></footer></div></section>
+    <section id="scr-settings" class="screen panel-screen hidden"><div class="panel wide club-page"><header class="ph"><button class="icon-btn" id="settingsBack" aria-label="返回"><svg><use href="#i-back"/></svg></button><div><small>PREFERENCES / 按你的习惯</small><h2>设置</h2></div></header><div class="settings-grid"><section><h3>声音与提示</h3><label class="setting-row" for="optMusic"><span><b>场景配乐</b><small>球馆、剧情与赛场音乐</small></span><input id="optMusic" type="checkbox" checked></label><label class="setting-row" for="optSound"><span><b>游戏音效</b><small>击球、脚步与技能反馈</small></span><input id="optSound" type="checkbox" checked></label><label class="setting-row" for="optHint"><span><b>落点提示</b><small>辅助判断真实球路</small></span><input id="optHint" type="checkbox" checked></label></section><section><h3>显示与操作</h3><label class="setting-row"><span><b>减少界面动态效果</b><small>保留比赛动作，减少页面装饰动画</small></span><input id="optReducedMotion" type="checkbox"></label><div class="setting-row"><span><b>横屏全屏</b><small>在手机上获得更宽的球场视野</small></span><button id="settingsFull" class="btn">切换全屏</button></div><button class="setting-link" data-go="help">查看键盘与触屏操作 <span>↗</span></button><p class="note">进度自动保存在本机，也可在个人资料中关联微信云存档。</p></section></div></div></section>
     <!-- 图鉴 -->
     <section id="scr-codex" class="screen panel-screen hidden">
       <div class="panel wide codex">
@@ -411,7 +378,7 @@
           <button class="btn primary big" id="btnResume">继续比赛</button>
           <button class="btn" id="btnRestart">重新开始</button>
           <button class="btn" id="btnHelp2">操作说明</button>
-          <button class="btn ghost" id="btnQuit">返回主菜单</button>
+          <button class="btn ghost" id="btnQuit">退出比赛</button>
         </div>
       </div>
     </section>
@@ -430,7 +397,7 @@
         <div id="resChallenge" class="challenge-result hidden" role="status"><span id="resChallengeText"></span><button class="btn" data-ai-challenges="result">查看挑战 ›</button></div>
         <div class="row">
           <button class="btn primary big" id="btnAgain">再来一局</button>
-          <button class="btn" id="btnResMenu">返回菜单</button>
+          <button class="btn" id="btnResMenu">返回赛前</button>
         </div>
       </div>
     </section>
@@ -453,55 +420,59 @@
     <button class="btn ghost" id="btnRotateOk">继续竖屏</button>
   </div>
 
-  <script src="js/core.js?v=web-131-20261113"></script>
-  <script src="js/achievements.js?v=web-131-20261113"></script>
-  <script src="js/roster.js?v=web-131-20261113"></script>
-  <script src="js/gear-looks.js?v=web-131-20261113"></script>
-  <script src="js/market-art.js?v=web-131-20261113"></script>
-  <script src="js/skill-icons.js?v=web-131-20261113"></script>
-  <script src="js/cloud-save.js?v=web-131-20261113"></script>
-  <script src="js/player-identity.js?v=web-131-20261113"></script>
-  <script src="js/match.js?v=web-131-20261113"></script>
-  <script src="js/court3d.js?v=web-131-20261113"></script>
-  <script src="js/court3d-skills.js?v=web-131-20261113"></script>
-  <script src="js/court3d-skill-info.js?v=web-131-20261113"></script>
-  <script src="js/skill-guide.js?v=web-131-20261113"></script>
-  <script src="js/ai.js?v=web-131-20261113"></script>
-  <script src="js/court3d-ai.js?v=web-131-20261113"></script>
-  <script src="js/practice.js?v=web-131-20261113"></script>
-  <script src="js/character-art.js?v=web-131-20261113"></script>
-  <script src="js/char.js?v=web-131-20261113"></script>
-  <script src="js/venues.js?v=web-131-20261113"></script>
-  <script src="js/render.js?v=web-131-20261113"></script>
-  <script src="js/court3d-motion.js?v=web-131-20261113"></script>
-  <script src="js/court3d-render.js?v=web-131-20261113"></script>
-  <script src="js/character-model3d.js?v=web-131-20261113"></script>
-  <script src="js/emote.js?v=web-131-20261113"></script>
-  <script src="js/skillfx.js?v=web-131-20261113"></script>
-  <script src="js/scenes.js?v=web-131-20261113"></script>
-  <script src="js/foley.js?v=web-131-20261113"></script>
-  <script src="js/soundtrack.js?v=web-131-20261113"></script>
-  <script src="js/audio.js?v=web-131-20261113"></script>
-  <script src="js/input.js?v=web-131-20261113"></script>
-  <script src="js/court3d-input.js?v=web-131-20261113"></script>
-  <script src="js/net.js?v=web-131-20261113"></script>
-  <script src="js/campaign.js?v=web-131-20261113"></script>
-  <script src="js/knowledge.js?v=web-131-20261113"></script>
-  <script src="js/story.js?v=web-131-20261113"></script>
-  <script src="js/story-play.js?v=web-131-20261113"></script>
-  <script src="js/story-games.js?v=web-131-20261113"></script>
-  <script src="js/story-art.js?v=web-131-20261113"></script>
-  <script src="js/story-rules.js?v=web-131-20261113"></script>
-  <script src="js/gameplay.js?v=web-131-20261113"></script>
-  <script src="js/main.js?v=web-131-20261113"></script>
-  <script src="js/court3d-web.js?v=web-131-20261113"></script>
-  <script src="js/achievements-web.js?v=web-131-20261113"></script>
-  <script src="js/story-web.js?v=web-131-20261113"></script>
-  <script src="js/online-config.js?v=web-131-20261113"></script>
-  <script src="js/socket-network.js?v=web-131-20261113"></script>
-  <script src="js/player-prediction.js?v=web-131-20261113"></script>
-  <script src="js/matchmaking-web.js?v=web-131-20261113"></script>
-  <script src="js/account-client.js?v=web-131-20261113"></script>
-  <script src="js/account-web.js?v=web-131-20261113"></script>
+  <script src="js/core.js?v=web-132-20261115"></script>
+  <script src="js/achievements.js?v=web-132-20261115"></script>
+  <script src="js/roster.js?v=web-132-20261115"></script>
+  <script src="js/gear-looks.js?v=web-132-20261115"></script>
+  <script src="js/market-art.js?v=web-132-20261115"></script>
+  <script src="js/skill-icons.js?v=web-132-20261115"></script>
+  <script src="js/cloud-save.js?v=web-132-20261115"></script>
+  <script src="js/player-identity.js?v=web-132-20261115"></script>
+  <script src="js/match.js?v=web-132-20261115"></script>
+  <script src="js/court3d.js?v=web-132-20261115"></script>
+  <script src="js/court3d-skills.js?v=web-132-20261115"></script>
+  <script src="js/court3d-skill-info.js?v=web-132-20261115"></script>
+  <script src="js/skill-guide.js?v=web-132-20261115"></script>
+  <script src="js/ai.js?v=web-132-20261115"></script>
+  <script src="js/court3d-ai.js?v=web-132-20261115"></script>
+  <script src="js/practice.js?v=web-132-20261115"></script>
+  <script src="js/character-art.js?v=web-132-20261115"></script>
+  <script src="js/character-sprite-data.js?v=web-132-20261115"></script>
+  <script src="js/character-sprites.js?v=web-132-20261115"></script>
+  <script src="js/char.js?v=web-132-20261115"></script>
+  <script src="js/venues.js?v=web-132-20261115"></script>
+  <script src="js/render.js?v=web-132-20261115"></script>
+  <script src="js/court3d-motion.js?v=web-132-20261115"></script>
+  <script src="js/court3d-render.js?v=web-132-20261115"></script>
+  <script src="js/character-model3d.js?v=web-132-20261115"></script>
+  <script src="js/emote.js?v=web-132-20261115"></script>
+  <script src="js/skillfx.js?v=web-132-20261115"></script>
+  <script src="js/scenes.js?v=web-132-20261115"></script>
+  <script src="js/foley.js?v=web-132-20261115"></script>
+  <script src="js/soundtrack.js?v=web-132-20261115"></script>
+  <script src="js/audio.js?v=web-132-20261115"></script>
+  <script src="js/input.js?v=web-132-20261115"></script>
+  <script src="js/court3d-input.js?v=web-132-20261115"></script>
+  <script src="js/net.js?v=web-132-20261115"></script>
+  <script src="js/campaign.js?v=web-132-20261115"></script>
+  <script src="js/knowledge.js?v=web-132-20261115"></script>
+  <script src="js/story.js?v=web-132-20261115"></script>
+  <script src="js/story-play.js?v=web-132-20261115"></script>
+  <script src="js/story-games.js?v=web-132-20261115"></script>
+  <script src="js/story-art.js?v=web-132-20261115"></script>
+  <script src="js/story-rules.js?v=web-132-20261115"></script>
+  <script src="js/gameplay.js?v=web-132-20261115"></script>
+  <script src="js/main.js?v=web-132-20261115"></script>
+  <script src="js/court3d-web.js?v=web-132-20261115"></script>
+  <script src="js/achievements-web.js?v=web-132-20261115"></script>
+  <script src="js/story-web.js?v=web-132-20261115"></script>
+  <script src="js/online-config.js?v=web-132-20261115"></script>
+  <script src="js/socket-network.js?v=web-132-20261115"></script>
+  <script src="js/player-prediction.js?v=web-132-20261115"></script>
+  <script src="js/matchmaking-web.js?v=web-132-20261115"></script>
+  <script src="js/account-client.js?v=web-132-20261115"></script>
+  <script src="js/account-web.js?v=web-132-20261115"></script>
+  <script src="js/gear-art.js?v=web-132-20261115"></script>
+  <script src="js/ui-web.js?v=web-132-20261115"></script>
 </body>
 </html>

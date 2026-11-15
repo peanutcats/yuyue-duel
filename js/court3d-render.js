@@ -164,6 +164,7 @@
     }
     device(ctx,e,m){
       const p=this.project(e.x,e.y||0,e.z||0),color=Y.SKILLS[e.sid]?.color||(['pane','pool'].includes(e.k)?'#83ddff':e.k==='moon'?'#d0bcff':'#ffda83');
+      if(e.k==='bow'){Y.CharacterArt?.butterfly(ctx,p.x,p.y,clamp(p.k*.17,5,11),this.time);return;}
       if(e.k==='newskill'&&Y.SkillFX?.officeSkill?.(e.sid)){
         const owner=m.players[e.o],q=this.project(owner.x,owner.y+2.05,owner.z);
         Y.SkillFX.officeReady(ctx,e,q.x,q.y,clamp(q.k/38,.72,1.15));
@@ -176,6 +177,7 @@
       }
       if(e.k==='teacherEcho'){const owner=m.players[e.o];this.player(ctx,{...owner,x:e.x,y:0,z:e.z||0,vx:e.vx,vz:e.vz,runPhase:e.runPhase,onGround:true,vy:0,swing:e.sw,buff:{},cnt:{},motion:{speed:e.vx*owner.dir,air:0,land:0,split:0},castPose3D:null,hitPose3D:null},m,'teacher');return;}
       if(e.k==='clone'){this.player(ctx,{...m.players[e.o],x:e.x,y:e.y,z:e.z,vx:0,vz:0,swing:e.sw},m,true);return;}
+      if(e.k==='shadow'){ctx.save();ctx.globalAlpha=clamp(e.t/.8,0,1)*.38;this.player(ctx,{...m.players[e.o],x:e.x,y:e.y,z:e.z||0,vx:e.v||0,vz:e.vz||0,swing:null,cnt:{},buff:{}},m,true);ctx.restore();return;}
       if(['fake','dirty'].includes(e.k)){this.shuttle(ctx,{...e,live:true});return;}
       if(e.k==='wall'){
         const z=e.z||0,half=.72,fade=clamp(e.t/.25,0,1)*(e.used?.25:.8);
@@ -263,7 +265,10 @@
         this.line(ctx,[x,.02,z],end,'#ffe19a88',2);
         const tip=this.project(...end);ctx.fillStyle='#ffe19aaa';ctx.beginPath();ctx.arc(tip.x,tip.y,2.5,0,TAU);ctx.fill();
       }
-      if(!vision.hidden&&!s.hide&&!(s.veil>0)&&o.landHint&&m.pred&&!m.pred.hidden&&s.live&&!s.ctl){const q=m.pred;if(o.landHint.some(i=>s.lastHitter!==i)){this.ring(ctx,q.landX,q.landZ||0,.34,'#6cf1ef',.95);this.ring(ctx,q.landX,q.landZ||0,.5+Math.sin(this.time*6)*.05,'#6cf1ef',.4);this.line(ctx,[q.landX,0,q.landZ||0],[q.landX,.35,q.landZ||0],'#b6ffff88',2);}}
+      if(!vision.hidden&&!s.hide&&!(s.veil>0)&&o.landHint&&m.pred&&!m.pred.hidden&&s.live&&!s.ctl){
+        const hints=[{o:s.lastHitter,lx:m.pred.landX,lz:m.pred.landZ},...(m.ents||[]).filter(e=>e.k==='fake'||e.k==='dirty')];
+        for(const q of hints)if(Number.isFinite(q.lx)&&o.landHint.some(i=>q.o!==i&&m.players[i]?.side*q.lx>0)){this.ring(ctx,q.lx,q.lz||0,.34,'#6cf1ef',.95);this.ring(ctx,q.lx,q.lz||0,.5+Math.sin(this.time*6)*.05,'#6cf1ef',.4);this.line(ctx,[q.lx,0,q.lz||0],[q.lx,.35,q.lz||0],'#b6ffff88',2);}
+      }
       if(m.landMark&&['point','over'].includes(m.phase))this.ring(ctx,m.landMark.x,m.landMark.z||0,.3+(m.time-m.landMark.t)*.12,m.landMark.inB?'#9effcd':'#ff7d7d',.8);
       this.footprints=(this.footprints||[]).filter(f=>(f.t-=dt)>0);
       for(const f of this.footprints)this.ring(ctx,f.x,f.z,.13+(1-f.t/.28)*.16,f.turn?'#ffdb9b':'#c6eadc',f.t/.28*.28);
@@ -283,7 +288,10 @@
       for(const p of m.players)if(Y.teacherAlpha?.(m,p,this.teacherViewer)!==0)this.resources(ctx,p,m);
       for(const p of m.players)if(Y.teacherAlpha?.(m,p,this.teacherViewer)!==0){const q=this.project(p.x,p.y+2.8,p.z);Y.SkillFX?.cookPlayer?.(ctx,p,q.x,q.y,clamp(q.k/42,.7,1));}
       Y.SkillFX?.teacherCourt?.(ctx,m,(x,y,z)=>this.project(x,y,z||0),this.teacherViewer,clamp(H/480,.75,1.2));
-      if(m.skillsOn)for(const p of m.players){if(Y.teacherAlpha?.(m,p,this.teacherViewer)===0)continue;const q=this.project(p.x,p.y+2.35,p.z);Y.SkillFX?.clubPlayer?.(ctx,p,q.x,Math.max(r.H*.15,q.y),clamp(q.k/42,.7,1.05),m.time);}
+      Y.SkillFX?.schoolCourt?.(ctx,m,(x,y,z)=>this.project(x,y,z||0),clamp(H/480,.75,1.2));
+      Y.SkillFX?.swallowCourt?.(ctx,m,(x,y,z)=>this.project(x,y,z||0),clamp(H/480,.75,1.2));
+      Y.SkillFX?.ribbonCourt?.(ctx,m,(x,y,z)=>this.project(x,y,z||0),clamp(H/480,.75,1.2));
+      if(m.skillsOn)for(const p of m.players){if(Y.teacherAlpha?.(m,p,this.teacherViewer)===0)continue;const q=this.project(p.x,p.y+2.35,p.z);Y.SkillFX?.clubPlayer?.(ctx,p,q.x,Math.max(r.H*.15,q.y),clamp(q.k/42,.7,1.05),m.time,this.teacherViewer);}
       for(let i=1;!vision.hidden&&i<this.trail.length;i++){const a=this.trail[i-1],b=this.trail[i];ctx.save();ctx.globalAlpha=i/this.trail.length*.6;this.line(ctx,[a.x,a.y,a.z],[b.x,b.y,b.z],s.fire?'#ff9d5b':['smash','halfsmash','kill'].includes(s.shot)?'#ffc578':'#e6fffb',1+i/this.trail.length*3);ctx.restore();}
       if(!vision.hidden&&(s.live||s.held)){ctx.save();if(vision.ghost)ctx.globalAlpha*=.24;this.shuttle(ctx,s);ctx.restore();}
       if(!vision.hidden)Y.SkillFX?.cookBall?.(ctx,s,(x,y,z)=>this.project(x,y,z),this.time);

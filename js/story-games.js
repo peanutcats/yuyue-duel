@@ -50,7 +50,7 @@
     if(!cover&&Math.abs(diff)<.2&&this.alarm<=0){this.errors++;this.alarm=1.5;Object.assign(p,this.lastCover||{x:91,y:389});this.target=null;this.note='手电扫过来了，回到阴影，再等一次。';Y.Audio.storyAction?.('switch');}
     if(cover)this.lastCover={...p};
     this.n=Math.max(this.n,Math.floor(p.x/210));
-    if(p.x>841&&p.y<160){if(this.team.ruibao&&this.team.houzi){this.done=true;this.note='找到了后门。里面的球，每只都贴着一个名字。';}else{this.note='瑞宝还没藏好，猴子的直播也还开着。先安排好他们。';p.x=825;}}
+    if(p.x>841&&p.y<160){if(this.team.ruibao&&this.team.houzi){this.done=true;this.note='找到了后门。里面的球，每只都贴着一个名字。';}else{this.note='阿岩还没藏好，猴子的直播也还开着。先安排好他们。';p.x=825;}}
    }
   }
   coverAt(p){return [{x:65,y:316,w:136,h:114},{x:256,y:224,w:149,h:129},{x:484,y:285,w:159,h:132},{x:672,y:123,w:123,h:161}].some(r=>p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h);}
@@ -84,7 +84,7 @@
     if(name===f.type){this.bins[name]+=f.batch;this.n++;this.note=name==='waste'?'这一组有缺损，整组留作废料。':'抽检合格 · 同批四根入筐。';Y.Audio.storyAction?.('paper');if(this.progress>=16)this.done=true;}
     else{this.errors++;this.note=f.type==='waste'?'这根有缺口，应该去废料筐。':'看羽轴弯曲的方向，再试一次。';}
    }else if(this.game==='stealth'){
-    if(name==='ruibao'||name==='houzi'){this.team[name]=!this.team[name];this.note=name==='houzi'?'猴子：好好好，这次真关了。':'瑞宝躲到货架后面。';return;}
+    if(name==='ruibao'||name==='houzi'){this.team[name]=!this.team[name];this.note=name==='houzi'?'猴子：好好好，这次真关了。':'阿岩躲到货架后面。';return;}
     const dir={left:[-1,0],right:[1,0],up:[0,-1],down:[0,1]}[name];if(dir){this.target={x:clamp(this.player.x+dir[0]*83,60,887),y:clamp(this.player.y+dir[1]*80,80,409)};}
    }
   }
@@ -108,7 +108,7 @@
   if(a.game==='stringing')return[{id:a.phase==='route'?'thread':'pull',text:a.phase==='route'?'穿好这一组 · 空格':a.phase==='tie'?(a.holding?'亮起时松开':'轻拉收尾 · 按住'):(a.holding?'到目标磅数时松开':'按住拉线'),x:689,y:321,w:226,h:62,hold:a.phase==='tension'||a.phase==='tie'}];
   if(a.game==='sorting')return[{id:'left',text:'左翅毛 · A',x:91,y:336,w:213,h:69},{id:'waste',text:'废料 · X',x:373,y:336,w:213,h:69},{id:'right',text:'右翅毛 · D',x:656,y:336,w:213,h:69}];
   if(a.game==='baozi')return[{id:'left',text:'←',x:46,y:379,w:108,h:61},{id:'right',text:'→',x:164,y:379,w:108,h:61},{id:'jump',text:'垫步 · 空格',x:720,y:379,w:188,h:61}];
-  return[{id:'ruibao',text:a.team.ruibao?'✓ 瑞宝藏好了':'瑞宝留在阴影',x:55,y:13,w:213,h:43},{id:'houzi',text:a.team.houzi?'✓ 猴子关麦了':'让猴子关闭直播',x:281,y:13,w:213,h:43},...['left','up','down','right'].map((id,i)=>({id,text:{left:'←',up:'↑',down:'↓',right:'→'}[id],x:462+i*113,y:426,w:101,h:43}))];
+  return[{id:'ruibao',text:a.team.ruibao?'✓ 阿岩藏好了':'阿岩留在阴影',x:55,y:13,w:213,h:43},{id:'houzi',text:a.team.houzi?'✓ 猴子关麦了':'让猴子关闭直播',x:281,y:13,w:213,h:43},...['left','up','down','right'].map((id,i)=>({id,text:{left:'←',up:'↑',down:'↓',right:'→'}[id],x:462+i*113,y:426,w:101,h:43}))];
  };
  Y.drawStoryGame=function(g,a,x,y,w,h,theme){
   const sx=w/CW,sy=h/CH;g.save();g.translate(x,y);g.scale(sx,sy);g.beginPath();g.rect(0,0,CW,CH);g.clip();

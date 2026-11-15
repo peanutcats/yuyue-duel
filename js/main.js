@@ -256,6 +256,7 @@
       $('netInfo').classList.add('hidden');
     },
     enterGame(venue) {
+      for(const look of this.match?.looks||[]){YY.CharacterSprites?.load(look,['rig','avatar']);if(YY.CharacterSprites?.info(look)?.hair)YY.CharacterSprites.load(look,['hair']);}
       this.show(null);
       $('btnPause').classList.remove('hidden');
       $('btnFull').classList.toggle('hidden', !YY.isTouch());
@@ -646,6 +647,7 @@
       this.show('result');
     },
     lookURL(look) {
+      const painted=YY.CharacterSprites?.url(look,'avatar');if(painted)return painted;
       this._pu = this._pu || new Map();
       if (!this._pu.has(look)) this._pu.set(look, YY.portrait(look, 160).toDataURL());
       return this._pu.get(look);
@@ -979,12 +981,15 @@
       const peek = sel.char;
       const c = YY.char(peek), own = true, sk = YY.SKILLS[c.skill], lk = YY.lookOf(peek);
       const kit=P.kit(peek),pairs=[[c.acts[0],c.acts[1]],[c.acts[0],c.acts[2]],[c.acts[1],c.acts[2]]];
-      this._bodyArt=this._bodyArt||new Map();if(!this._bodyArt.has(peek))this._bodyArt.set(peek,YY.characterIllustration(lk,360,460).toDataURL());
+      this._bodyArt=this._bodyArt||new Map();if(!this._bodyArt.has(peek))this._bodyArt.set(peek,YY.CharacterSprites?.url(lk,'portrait')||YY.characterIllustration(lk,360,460).toDataURL());
       $('charDetail').innerHTML = own
         ? `<img class="character-keyart" src="${this._bodyArt.get(peek)}" alt="${lk.name}的角色立绘"><div class="cd-head" style="--cc:${lk.shirt}"><b>${lk.name}</b><span>${c.title}</span></div><p>${c.bio}</p>` +
           `<div class="skill-mode-tabs" role="group" aria-label="技能说明模式"><button data-skill-mode="2d" aria-pressed="${(this.skillInfoMode||this.settings.courtMode||'2d')==='2d'}">2D 横版技能</button><button data-skill-mode="3d" aria-pressed="${(this.skillInfoMode||this.settings.courtMode||'2d')==='3d'}">3D 纵深技能</button></div>` +
           `<fieldset class="kit-pairs"><legend>携带技能 · 三选二</legend><p>选择一组搭配，按 I / O 或点按技能键使用。</p>${pairs.map((pair,i)=>`<button type="button" data-kit-pair="${i}" aria-pressed="${pair.every(k=>kit.includes(k))}" aria-label="搭配 ${pair.map(k=>YY.SKILLS[k].name).join(' + ')}">${pair.map((k,j)=>`<span><kbd>${j?'O':'I'}</kbd>${YY.SkillIcons.svg(k)}${YY.SKILLS[k].short}</span>`).join('<i>＋</i>')}<b>${pair.every(k=>kit.includes(k))?'已携带':'选择'}</b></button>`).join('')}</fieldset>` +
-          [c.passive,...c.acts].map(id=>{const skill=YY.skillDescription?YY.skillDescription(id,this.skillInfoMode||this.settings.courtMode):YY.SKILLS[id];return `<div class="skill-box" style="--sk:${skill.color}"><b>${YY.SkillIcons.svg(id)}${skill.passive?'被动 · ':''}${skill.name}</b><span>${richHTML(skill.desc)}</span>${skill.detail?`<details class="sk-more"><summary>详细玩法</summary><canvas class="skill-mode-preview" data-skill-preview="${id}" width="600" height="120"></canvas><p>${richHTML(skill.detail).replaceAll('\n','<br>')}</p>${skill.tip?`<p class="sk-tip">应对：${esc(skill.tip)}</p>`:''}</details>`:''}</div>`;}).join('') +
+          [c.passive,...c.acts].map(id=>{
+            const mode=this.skillInfoMode||this.settings.courtMode||'2d',skill=YY.skillDescription(id,mode),guide=YY.skillGuide(id,mode);
+            return `<div class="skill-box" style="--sk:${skill.color}"><b>${YY.SkillIcons.svg(id)}${skill.passive?'被动 · ':''}${skill.name}</b><span>${richHTML(skill.desc)}</span><details class="sk-more"><summary>完整效果与操作</summary><canvas class="skill-mode-preview" data-skill-preview="${id}" width="600" height="120"></canvas><p><b>技能效果</b><br>${richHTML(guide.summary)}</p><p><b>怎么用</b><br>${richHTML(guide.operation)}</p><p><b>释放条件</b><br>${richHTML(guide.condition)}</p><p><b>限制与代价</b><br>${richHTML(guide.limits)}</p>${guide.tactic!==guide.operation?`<p><b>使用思路</b><br>${richHTML(guide.tactic)}</p>`:''}</details></div>`;
+          }).join('') +
           `<div class="cd-tags">${YY.fxTags(c.fx).map((t) => `<i class="${t.good ? 'g' : 'b'}">${t.text}</i>`).join('') || '<i>各项均衡</i>'}</div>`
         : `<div class="cd-head locked"><b>未解锁角色</b><span>${YY.lockText(c.lock)}</span></div><p>继续推进故事，认识更多伙伴。</p>`;
       $('charDetail').querySelectorAll('[data-skill-mode]').forEach(b=>b.addEventListener('click',()=>{this.skillInfoMode=b.dataset.skillMode;this.renderTeam();}));

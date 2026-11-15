@@ -634,10 +634,12 @@
             ctx.restore();
             break;
           }
-          case 'fake': { // 镜像假球：和真球一模一样（拖尾、落点提示都有），下落到 1 米高时碎成水花
+          case 'fake': {
             const tr = fakeTrail(R, e), sp = Math.hypot(e.vx, e.vy);
+            ctx.save();
             if (tr.length > 2) R.drawTrail(ctx, tr, e.kind, false);
             R.drawShuttle(ctx, { x: e.x, y: Math.max(0.07, e.y), vx: e.vx, vy: e.vy, live: true, speed: sp, shot: e.kind });
+            ctx.restore();
             break;
           }
           case 'dirty': { // 脏数据球：对手看到的和真球一模一样（拖尾、落点圈）；只有路先森看得到数据代码
@@ -697,7 +699,7 @@
             if (e.n > 0) { timer(R, ctx, e.x, 1.45, 0.14, e.t / 7, '#ffcf5a'); tag(R, ctx, e.warm>0?'准备协防…':'守场 · 剩余 1 次', e.x, 1.8, '#ffcf5a', 0.9); }
             break;
           }
-          case 'shadow': ghostOf(R, ctx, m, p, e.x, e.y, clamp(e.t / 0.55, 0, 1) * 0.38, '#9ff0ff'); break;
+          case 'shadow': ghostOf(R, ctx, m, p, e.x, e.y, clamp(e.t / (e.mirage?.8:.55), 0, 1) * 0.38, '#9ff0ff'); break;
           case 'ribbon': {
             const a=W(R,e.ox??p.x+p.dir*.3,e.oy??p.y+1.45),b=W(R,e.x,e.y);
             YY.CharacterArt.ribbon(ctx,a,b,t,k*.045);YY.CharacterArt.butterfly(ctx,...b,k*.14,t);
@@ -880,7 +882,6 @@
       const t = R.time, k = R.sc, s = m.shuttle, sk = m.sk || {};
       const humans = o && o.landHint ? o.landHint : [];
       FX.aim(R,ctx,m,o);
-      for(const p of m.players)if(p.buff?.silkReady>0){const [X,Y]=W(R,p.x,p.y+2.15);YY.CharacterArt.butterfly(ctx,X,Y,k*.13,t);tag(R,ctx,p.cnt.ribbon?.deep?'蝶弓 · 挑长':'蝶弓 · 压短',p.x,p.y+2.48,'#ffc2dc',.85);}
       if(s.live&&s.silkShot){const [X,Y]=W(R,s.x,s.y);YY.CharacterArt.butterfly(ctx,X,Y-k*.19,k*.1,t);}
 
       FX.tossHint(R, ctx, m, humans);
@@ -1004,7 +1005,7 @@
         }
         else {ctx.beginPath();ctx.arc(TX,TY,k*(a.id==='yueliang'?.85:.2),0,TAU);ctx.stroke();}
         const angle=Math.atan2(TY-Y,TX-X);ctx.beginPath();ctx.moveTo(TX,TY);ctx.lineTo(TX-12*Math.cos(angle-.45),TY-12*Math.sin(angle-.45));ctx.moveTo(TX,TY);ctx.lineTo(TX-12*Math.cos(angle+.45),TY-12*Math.sin(angle+.45));ctx.stroke();ctx.restore();
-        const label=a.cancelled?'取消施放':!a.aim?'默认施放':YY.SKILLS[a.id]?.aim==='choice'?(v.x<0?'后场 / 反向':'前场 / 正向'):'瞄准 · '+Math.round(Math.atan2(v.y,v.x)*180/Math.PI)+'°';
+        const label=a.cancelled?'取消施放':!a.aim?'默认施放':YY.DEPTH_SKILLS?.has(a.id)?(v.x<0?'浅场 / 短球':'深场 / 长球'):YY.SKILLS[a.id]?.aim==='choice'?(v.x<0?'后场 / 反向':'前场 / 正向'):'瞄准 · '+Math.round(Math.atan2(v.y,v.x)*180/Math.PI)+'°';
         tag(R,ctx,label,p.x,p.y+2.5,color,.95);
       }
     },
@@ -1278,15 +1279,15 @@
   };
 
   // Club visuals share projections between 2D and 3D and never mutate match state.
-  FX.clubPlayer=function(g,p,x,y,scale,time){
+  FX.clubPlayer=function(g,p,x,y,scale,time,viewer=null){
     const st=p.cnt?.club;if(!st)return;
     const list=Object.entries(st.ready||{}).filter(([,e])=>e.t>0);
     g.save();g.translate(x,y);g.scale(scale,scale);
     list.forEach(([id,e],i)=>{
       const sk=YY.SKILLS[id],cx=(i-(list.length-1)/2)*83;
-      const label=id==='luokuan'?(e.mode==='net'?'贴网':'压线'):id==='kongjie'?(e.t<=(e.hot?1.3:.8)?'压哨！':e.t.toFixed(1)+'s'):id==='kuorong'?e.height+'m':id==='ouzhou'?(e.second?'可换手'+(e.steps>1?' ×2':''):'切入'):id==='rongzai'?'接球反压':id==='gongdan'?'托球余 '+e.n+' 次':'下一拍';
+      const label=id==='luokuan'?(e.mode==='net'?'贴网':'压线'):id==='kongjie'?(e.t<=YY.sunClockWindow(e)?'压哨绝杀':e.t.toFixed(1)+'s · 强投'):id==='kuorong'?e.height+'m':id==='ouzhou'?(e.second?'可换手'+(e.steps>1?' ×2':''):'切入'):id==='rongzai'?'接球反压':id==='gongdan'?'托球余 '+e.n+' 次':'下一拍';
       g.fillStyle='#101b2bea';YY.rr(g,cx-40,-13,80,29,8);g.fill();
-      g.strokeStyle=e.hot?'#ffd681':sk.color;g.lineWidth=e.hot||id==='kongjie'&&e.t<=.8?2:1;g.stroke();
+      g.strokeStyle=e.hot?'#ffd681':sk.color;g.lineWidth=e.hot||id==='kongjie'&&e.t<=YY.sunClockWindow(e)?2:1;g.stroke();
       YY.SkillIcons?.draw(g,id,cx-27,0,17);
       g.font='600 10px '+YY.FONT;g.textAlign='left';g.textBaseline='middle';g.fillStyle=sk.color;g.fillText(sk.short,cx-14,-4);
       g.font='9px '+YY.FONT;g.fillStyle='#e5e9df';g.fillText(label,cx-14,7);
@@ -1300,9 +1301,19 @@
       g.textAlign='left';g.fillStyle='#dae0f2';g.font='600 9px '+YY.FONT;g.fillText(st.inkReady?'下拍附墨':'墨涌 '+n+'/2',15,y+1);
     }
     if(p.kit?.passive==='qiuyou'){
-      const y=list.length?34:9;g.font='600 9px '+YY.FONT;g.textAlign='center';
+      const y=list.length?-31:9;g.font='600 9px '+YY.FONT;g.textAlign='center';
       ['突破','空接','节奏'].forEach((label,i)=>{const on=st.hot||(st.styleBits||0)&(1<<i);g.fillStyle=on?'#eeb86b':'#283342';YY.rr(g,-48+i*34,y-8,31,17,4);g.fill();g.fillStyle=on?'#261d13':'#9babb8';g.fillText(label,-32+i*34,y+1);});
-      if(st.hot){g.fillStyle='#ffe2a3';g.font='700 10px '+YY.FONT;g.fillText('热手 · 下一招强化',0,y+23);}
+      if(st.hot){g.fillStyle='#ffe2a3';g.font='700 10px '+YY.FONT;g.fillText('热手 · 下一招强化',0,y-17);}
+      else{g.fillStyle='#f3d8b2';g.font='9px '+YY.FONT;g.fillText('稳定回球 '+(st.possessions||0)+'/3',0,y-17);}
+      if(st.drive?.t>0||st.rebound?.t>0){g.fillStyle='#ffe6b4';g.fillText(st.rebound?'篮板补拍 · 94%':'突破回球 · 86%',0,y-32);}
+    }
+    const mirage=p.cnt?.mirage;
+    if(mirage){
+      g.textAlign='center';g.font='600 10px '+YY.FONT;
+      const active=Object.entries(mirage.ready||{}).filter(([,e])=>e.t>0);
+      active.forEach(([id,e],i)=>{const cx=(i-(active.length-1)/2)*91;g.fillStyle='#102736ed';YY.rr(g,cx-43,-13,86,30,8);g.fill();g.strokeStyle='#83dce9';g.lineWidth=1;g.stroke();g.fillStyle='#c5f5fc';g.fillText(YY.SKILLS[id].short+(id==='jingxiang'?' ×'+e.n:'待命'),cx,-2);g.fillStyle='#8eb9c7';g.font='9px '+YY.FONT;g.fillText(id==='jingxiang'&&viewer===p.idx?YY.mirageAimLabel(e.aim):e.t.toFixed(1)+'s',cx,10);});
+      const y=active.length?-24:6;g.fillStyle='#b7f5ff';g.font='600 10px '+YY.FONT;g.fillText('折影 '+(mirage.focus||0)+'/2'+(mirage.focus?' · 下拍精准':''),0,y);
+      if(mirage.follow>0){g.fillStyle='#e6fcff';g.fillText('真球补拍 · 96%',0,y-16);}
     }
     g.restore();
   };
@@ -1360,6 +1371,7 @@
     const polygon=(points,fill,stroke)=>{g.beginPath();points.forEach((a,i)=>{const p=project(...a);if(i)g.lineTo(p.x,p.y);else g.moveTo(p.x,p.y);});g.closePath();g.fillStyle=fill;g.fill();if(stroke){g.strokeStyle=stroke;g.lineWidth=1;g.stroke();}};
     g.save();
     for(const p of m.players){const st=p.cnt?.club;if(!st)continue;const r=st.ready||{};
+      if(p.cnt?.mirage?.flow>0||m.shuttle.mirageMoon?.o===p.idx){const q=project(p.x,.04,p.z||0);g.save();g.strokeStyle='#8de9f2';g.lineWidth=1.5;g.globalAlpha=.65;g.beginPath();g.ellipse(q.x,q.y,q.k*.7,q.k*.17,0,0,TAU);g.stroke();if(m.shuttle.mirageMoon?.o===p.idx){g.font='600 10px '+YY.FONT;g.textAlign='center';g.fillStyle='#c8f6ff';g.fillText(m.shuttle.crossedNet?'水月 · 再按换线':'水月 · 等待过网',q.x,q.y+18);}g.restore();}
       if(r.kuorong?.t>0)FX.clubFog(g,m,p,r.kuorong,project,spatial);
       if(r.gongdan?.t>0){const e=r.gongdan,c=project(e.x,e.y,e.z),k=c.k;g.save();g.translate(c.x,c.y);g.globalAlpha=e.warm>0?.4:.9;g.strokeStyle='#fbc77e';g.fillStyle='#172b39bb';g.lineWidth=2;YY.rr(g,-k*.55,-k*.5,k*1.1,k*.67,4);g.fill();g.stroke();g.strokeRect(-k*.2,-k*.32,k*.4,k*.3);g.beginPath();g.ellipse(0,k*.18,k*.5,k*.12,0,0,TAU);g.stroke();g.lineWidth=1;for(let i=-2;i<=2;i++){g.beginPath();g.moveTo(i*k*.16,k*.21);g.lineTo(i*k*.11,k*.52);g.stroke();}g.restore();line([e.x,0,e.z],[e.x,e.y-.7,e.z],'#fbc77e66',2);}
       if(r.rongzai?.t>0||st.counterFx){const q=project(p.x,p.y+1.1,p.z||0),k=q.k,pulse=st.counterFx?1-st.counterFx.t/st.counterFx.T:0;g.save();g.translate(q.x,q.y);g.strokeStyle='#b5ead6';g.lineWidth=1.8;g.globalAlpha=.7;for(let i=0;i<3;i++){g.beginPath();g.ellipse(0,0,k*(.4+pulse*.35),k*(.65+pulse*.25),0,i*TAU/3+.2,i*TAU/3+1.5);g.stroke();}g.strokeStyle='#ffd2a1';g.lineWidth=3;for(let i=0;i<(st.cache||0);i++){g.beginPath();g.moveTo(k*.4,-k*.26+i*k*.22);g.lineTo(k*.53,-k*.12+i*k*.22);g.stroke();}g.restore();}
@@ -1446,7 +1458,7 @@
     for(const p of m.players){const st=p.cnt?.club,shadow=st?.silhouette;
       if(shadow){g.save();g.globalAlpha=.25*clamp(shadow.t/.6,0,1);const ghost={...p,...shadow,swing:null,vx:0,vy:0,runPhase:0};R.drawCharAt(g,ghost,R.lookOf(m,p.idx),R.charOpts(ghost,m,{flat:'#dca6c1'}));g.restore();}
       if(st?.decoy){const d=st.decoy;g.save();g.globalAlpha*=clamp(d.t/.13,0,1);R.drawShuttle(g,d);if(d.t<.18){g.fillStyle='#ebb5d1';const q=project(d.x,d.y);for(let i=0;i<6;i++){const a=i*TAU/6+m.time;g.beginPath();g.ellipse(q.x+Math.cos(a)*15,q.y+Math.sin(a)*13,4,2,a,0,TAU);g.fill();}}g.restore();}
-      const[x,y]=W(R,p.x,p.y+2.35);FX.clubPlayer(g,p,x,Math.max(90,y),clamp(R.sc/42,.7,1.05),m.time);
+      const[x,y]=W(R,p.x,p.y+2.35);FX.clubPlayer(g,p,x,Math.max(90,y),clamp(R.sc/42,.7,1.05),m.time,o.labels?.[0]&&o.labels?.[1]?null:R.mirror?1:0);
     }
   };
   // Shared, read-only cooking telegraphs for 2D, 3D and guest snapshots.
@@ -1566,4 +1578,116 @@
     }
   };
   F.top=function(R,g,m,o,dt){top.call(this,R,g,m,o,dt);F.teacherCourt(g,m,(x,y,z)=>R.P(x,y,z),R.teacherViewer,clamp(R.sc/45,.75,1.1));};
+})(typeof GameGlobal!=='undefined'?GameGlobal:typeof window!=='undefined'?window:globalThis);
+
+/* 粉笔游戏：落点预告、串门出口与座位连线，两种投影使用同一份公开状态。 */
+(function(G){
+  'use strict';const Y=G.YY,F=Y.SkillFX,TAU=Math.PI*2;
+  F.schoolCourt=function(g,m,project,k=1){
+    const pt=(x,y=0,z=0)=>{const q=project(x,y,z);return Array.isArray(q)?q:[q.x,q.y];};
+    const line=(points,color,dash=false)=>{g.beginPath();points.forEach((p,i)=>{const q=pt(...p);i?g.lineTo(...q):g.moveTo(...q);});g.strokeStyle=color;g.lineWidth=1.8*k;g.setLineDash(dash?[4*k,4*k]:[]);g.stroke();g.setLineDash([]);};
+    const text=(s,x,y,z,color)=>{const q=pt(x,y,z);g.font='800 '+Math.round(11*k)+'px '+Y.FONT;g.textAlign='center';g.textBaseline='middle';const w=g.measureText(s).width+12*k;g.fillStyle='#14243de8';Y.rr(g,q[0]-w/2,q[1]-10*k,w,20*k,5*k);g.fill();g.fillStyle=color;g.fillText(s,...q);};
+    const box=(x,z,half,width,color)=>{const pts=[[x-half,.035,z-width],[x+half,.035,z-width],[x+half,.035,z+width],[x-half,.035,z+width],[x-half,.035,z-width]];line(pts,color);};
+    g.save();
+    const c=m.shuttle.ctl;
+    if(c?.k==='schoolRoll'){
+      line([[m.shuttle.x,.06,c.z||0],[c.popX,.06,c.z||0]],'#ffdb78',true);
+      box(c.popX,c.z||0,.25,.28,'#fff1ae');
+      const q=pt(m.shuttle.x,m.shuttle.y,c.z||0);g.strokeStyle='#ffdc79';g.lineWidth=2*k;g.beginPath();g.ellipse(q[0],q[1],9*k,5*k,0,0,TAU);g.stroke();
+      text(c.pop?'即将弹起':'滑行中 · 再按弹起',c.popX,.6,c.z||0,'#ffe3a0');
+    }
+    for(const p of m.players){
+      const st=p.cnt?.school;if(!st)continue;
+      const e=st.seat;
+      if(e){box(e.x,e.z,e.half,e.width,'#ffae9a');box(e.to,e.toZ,.45,.45,'#ffe5b9');line([[e.x,.06,e.z],[e.to,.06,e.toZ]],'#ffb7a4',true);text('换座 '+Math.max(0,e.t).toFixed(1)+'s',e.x,.78,e.z,'#ffbcaa');text('新座位',e.to,.45,e.toZ,'#ffe5b9');}
+      const v=st.visit;
+      if(v){
+        box(p.dir*1.15,v.z,.32,.4,'#86eee0');line([[p.side*1.1,.06,v.z],[p.dir*1.15,.06,v.z]],'#86eee0',true);
+        text(v.phase==='visit'?'串门 '+Math.max(0,v.t).toFixed(1)+'s · 可返回':v.phase==='enter'?'钻网串门':'回家啦',p.x,p.y+2.1,p.z||0,'#98f4e4');
+      }else if(st.excited>0&&p.passive==='kejian'){
+        text('课间 '+Math.ceil(st.excited)+'s · 连招 '+st.rewards+'/3',p.x,p.y+2.12,p.z||0,'#ffe097');
+      }
+      if(st.ready>0)text('网底球待命',p.x,p.y+2.58,p.z||0,'#ffe097');
+      if(st.seatMove){
+        const q=pt(p.x,.2,p.z||0);g.strokeStyle='#ffb998';g.lineWidth=2*k;g.beginPath();g.moveTo(q[0]-9*k,q[1]);g.lineTo(q[0]+9*k,q[1]);g.moveTo(q[0]-7*k,q[1]);g.lineTo(q[0]-7*k,q[1]+8*k);g.moveTo(q[0]+7*k,q[1]);g.lineTo(q[0]+7*k,q[1]+8*k);g.stroke();
+      }
+    }
+    g.restore();
+  };
+  const top=F.top;
+  F.top=function(R,g,m,o,dt){top.call(this,R,g,m,o,dt);F.schoolCourt(g,m,(x,y,z)=>{const q=R.P(x,y,0);return[q[0],q[1]+(z||0)*R.sc*.2];},Y.clamp(R.sc/45,.75,1.1));};
+})(typeof GameGlobal!=='undefined'?GameGlobal:typeof window!=='undefined'?window:globalThis);
+
+/* 苗苗 · 青金双燕：窄带轨迹与羽片围绕真实人物/真球，不遮挡半场。 */
+(function(G){
+ 'use strict';const Y=G.YY,F=Y.SkillFX,{clamp}=Y,TAU=Math.PI*2;
+ F.swallowCourt=function(g,m,project,k=1){
+  const pt=(x,y,z=0)=>{const q=project(x,y,z);return Array.isArray(q)?q:[q.x,q.y];};
+  const feather=(x,y,r,angle,color,alpha)=>{g.save();g.globalAlpha*=alpha;g.translate(x,y);g.rotate(angle);g.fillStyle=color;g.beginPath();g.moveTo(-r,0);g.quadraticCurveTo(0,-r*.64,r,0);g.quadraticCurveTo(0,r*.18,-r,0);g.fill();g.strokeStyle='#effffb';g.lineWidth=.6*k;g.beginPath();g.moveTo(-r*.7,0);g.lineTo(r*.75,0);g.stroke();g.restore();};
+  g.save();
+  for(const p of m.players){
+   if(p.passive!=='dingzhou'&&p.kit?.passive!=='dingzhou')continue;
+   const st=p.cnt?.nv||{},dash=m.ents?.find(e=>e.o===p.idx&&e.sid==='splitBurst'),roll=m.ents?.find(e=>e.o===p.idx&&e.sid==='jieli_jump');
+   const hot=(st.spin||0)>=2&&(st.flowUntil>m.time||roll&&Math.abs(p.vy)<1.2)||(st.spin||0)>=3;
+   const q=pt(p.x,p.y+2.48,p.z||0),flow=st.flowFx>0;
+   g.font='800 '+Math.round(10*k)+'px '+Y.FONT;g.textAlign='center';g.textBaseline='middle';
+   const label=flow?'流转！':hot?'合拍窗口':null;
+   if(label){g.fillStyle='#0b2735df';Y.rr(g,q[0]-34*k,q[1]-10*k,68*k,20*k,8*k);g.fill();g.fillStyle=flow?'#ffda88':'#a7ffe4';g.fillText(label,q[0],q[1]);}
+   for(let i=0;i<3;i++)feather(q[0]+(i-1)*13*k,q[1]+(label?17:0)*k,6*k,-.6,i<(st.spin||0)?'#ffda88':'#49766d',i<(st.spin||0)?1:.6);
+   if(dash||roll){
+    const base=pt(p.x,p.y+.85,p.z||0),alpha=dash?.62:.4;
+    for(let i=0;i<2;i++){
+     const col=i?'#ffda88':'#78efdc';g.strokeStyle=col;g.lineWidth=(i?1.4:2.3)*k;g.globalAlpha=alpha;
+     g.beginPath();for(let j=0;j<=18;j++){const u=j/18,angle=u*Math.PI*1.65+m.time*7+i*Math.PI;
+      const wx=p.x-Math.cos(angle)*.58-(p.vx||0)*u*.055,wy=p.y+.75+Math.sin(angle)*.45,wz=(p.z||0)+Math.sin(angle)*.38;
+      const q=pt(wx,wy,wz);j?g.lineTo(...q):g.moveTo(...q);
+     }g.stroke();g.globalAlpha=1;
+     for(let j=0;j<3;j++)feather(base[0]-(p.vx||p.dir*3)*(3+j*2)*k,base[1]+(j-1)*9*k,7*k,-.45+i*.8,col,(.5-j*.12));
+    }
+   }
+   if(flow){const q=pt(p.x,p.y+1.2,p.z||0),u=1-st.flowFx/.7;for(let i=0;i<6;i++){const a=i*TAU/6+u;feather(q[0]+Math.cos(a)*(12+u*24)*k,q[1]+Math.sin(a)*(10+u*16)*k,8*k,a,i%2?'#ffdf92':'#80f4db',1-u);}}
+  }
+  const s=m.shuttle;if(s.live&&s.nf?.swallow){
+   const q=pt(s.x,s.y,s.z||0),tail=pt(s.x-s.vx*.055,s.y-s.vy*.055,(s.z||0)-(s.vz||0)*.055),a=Math.atan2(q[1]-tail[1],q[0]-tail[0]);
+   for(let i=0;i<2;i++){const side=i?1:-1;g.strokeStyle=i?'#ffdb82':'#77f0de';g.lineWidth=(i?1.8:2.5)*k;g.beginPath();g.moveTo(tail[0],tail[1]+side*6*k);g.quadraticCurveTo((tail[0]+q[0])/2,(tail[1]+q[1])/2+side*11*k,q[0],q[1]);g.stroke();feather(q[0]-Math.cos(a)*9*k,q[1]-Math.sin(a)*9*k+side*5*k,7*k,a, i?'#ffdf92':'#9affe6',.85);}
+  }
+  g.restore();
+ };
+ const top=F.top,air=F.air;
+ F.air=function(R,g,m,o,dt){
+  air.call(this,R,g,m,o,dt);if(R.quality===0)return;
+  for(const p of m.players){if(p.passive!=='dingzhou'||!m.ents?.some(e=>e.o===p.idx&&e.sid==='splitBurst'))continue;
+   for(let i=2;i>0;i--){const ghost={...p,x:p.x-p.vx*.025*i,y:Math.max(0,p.y-p.vy*.025*i)};g.save();g.globalAlpha=.09/i;R.drawCharAt(g,ghost,R.lookOf(m,p.idx),R.charOpts(ghost,m,{flat:i===1?'#ffdc87':'#77efda'}));g.restore();}
+  }
+ };
+ F.top=function(R,g,m,o,dt){top.call(this,R,g,m,o,dt);F.swallowCourt(g,m,(x,y,z)=>R.P(x,y,z||0),clamp(R.sc/45,.75,1.1));};
+})(typeof GameGlobal!=='undefined'?GameGlobal:typeof window!=='undefined'?window:globalThis);
+
+/* 冉冉 · 公开的局部蝶域：边界、低球高度带与剩余截流次数。 */
+(function(G){
+  'use strict';const Y=G.YY,F=Y.SkillFX,{clamp}=Y;
+  F.ribbonCourt=function(g,m,project,k=1){
+    if(m.skillsOn===false)return;
+    const pt=(x,y,z=0)=>{const q=project(x,y,z);return Array.isArray(q)?q:[q.x,q.y];};
+    const line=(points,color,dashed=false,fill=false)=>{g.beginPath();points.forEach((p,i)=>{const q=pt(...p);i?g.lineTo(...q):g.moveTo(...q);});if(fill){g.closePath();g.fillStyle=fill;g.fill();}g.strokeStyle=color;g.lineWidth=1.5*k;g.setLineDash(dashed?[5*k,4*k]:[]);g.stroke();g.setLineDash([]);};
+    const label=(text,x,y,z)=>{const q=pt(x,y,z);g.font='800 '+Math.round(10*k)+'px '+Y.FONT;g.textAlign='center';g.textBaseline='middle';const w=g.measureText(text).width+12*k;g.fillStyle='#342132e8';Y.rr(g,q[0]-w/2,q[1]-9*k,w,18*k,6*k);g.fill();g.fillStyle='#ffd0e2';g.fillText(text,...q);};
+    g.save();
+    for(const p of m.players){
+      const st=p.cnt?.ribbon,f=st?.field,active=p.buff?.silkReady>0&&f;
+      if(active){
+        const z=f.z||0,w=f.width||1.15,awake=f.warm<=0&&p.side*p.x<=2.8&&(m.courtMode!=='3d'||Math.abs((p.z||0)-z)<=w),col=awake?'#ff9bc8':'#aa7896';
+        line([[p.side*.25,.025,z-w],[p.side*2.8,.025,z-w],[p.side*2.8,.025,z+w],[p.side*.25,.025,z+w],[p.side*.25,.025,z-w]],col,!awake,'#f28bb414');
+        if(f.guards>0){
+          line([[p.side*.55,1.55,z-w],[p.side*.55,2.65,z-w],[p.side*.55,2.65,z+w],[p.side*.55,1.55,z+w]],col,true,'#ffb0d00d');
+          for(const dz of[-w,w]){const q=pt(p.side*.55,1.55,z+dz);Y.CharacterArt?.butterfly(g,...q,7*k,m.time);}
+        }
+        label((awake?'蝶域':'蝶域待位')+' '+Math.ceil(p.buff.silkReady)+'s · '+(st.deep?'深':'浅')+' · '+(st.shots||0)+'拍/'+f.guards+'截',p.side*1.55,.2,z);
+      }
+      if(p.passive==='hudie'){
+        const n=(m.ents||[]).filter(e=>e.k==='bow'&&e.o===p.idx&&e.t>0).length;
+        if(n){const q=pt(p.x,p.y+2.05,p.z||0);for(let i=0;i<n;i++)Y.CharacterArt?.butterfly(g,q[0]+(i-(n-1)/2)*13*k,q[1],5*k,m.time+i);}
+      }
+    }g.restore();
+  };
+  const top=F.top;F.top=function(R,g,m,o,dt){top.call(this,R,g,m,o,dt);F.ribbonCourt(g,m,(x,y,z)=>{const q=R.P(x,y,0);return[q[0],q[1]+(z||0)*R.sc*.2];},clamp(R.sc/45,.75,1.1));};
 })(typeof GameGlobal!=='undefined'?GameGlobal:typeof window!=='undefined'?window:globalThis);

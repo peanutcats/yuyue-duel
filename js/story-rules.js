@@ -27,7 +27,7 @@
    }
    if(step.relay)m.opt.target=7;
    if(step.shoulder||step.relay)this.assist=(Y.Profile.d.campaign.failures[app.story.st.id]||0)>=3;
-   if(step.relay&&this.assist)this.say('朱老师：别守习惯区。丢一分换人，五分之后田楚会接下一棒。',7);
+   if(step.relay&&this.assist)this.say('静川老师：别守习惯区。丢一分换人，五分之后田楚会接下一棒。',7);
    const emit=m.emit.bind(m),physics=m.step.bind(m),press=m.handlePress.bind(m),shot=m.resolveShot.bind(m),land=m.onLand.bind(m);
    m.emit=e=>{emit(e);this.event(e);};
    m.step=dt=>{if(this.done||this.preview>0){this.preview=Math.max(0,this.preview-dt);return;}physics(dt);this.update(dt);};
@@ -59,7 +59,7 @@
    if(e.type==='skill'){
     if(e.p===0){this.lastSkill=e.id;this.skills.add(e.id);this.pointSkills.add(e.id);}
     if(e.p===1&&Y.Profile.stars('3-2')&&Y.SKILLS[e.id]?.tip){this.say(Y.SKILLS[e.id].tip,4.5);}
-    if(s.shoulder&&e.p===1&&['jingxiang','meida','shuizhong'].includes(e.id)){this.shoulderAt=3;this.say(this.assist?'朱老师：看松下来的肩膀。':'别看拍子，看肩膀。',3);}
+    if(s.shoulder&&e.p===1&&['jingxiang','meida','shuizhong'].includes(e.id)){this.shoulderAt=3;this.say(this.assist?'静川老师：看松下来的肩膀。':'别看拍子，看肩膀。',3);}
    }
    if(e.type==='whiff'&&e.p===0)this.counts.whiff=(this.counts.whiff||0)+1;
    if(e.type==='fakeHit'&&e.p===0)this.counts.fake=(this.counts.fake||0)+1;

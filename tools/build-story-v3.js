@@ -11,7 +11,7 @@ const lessonUpdates={
  '几何反射板':['消耗25能量。拖动放置后0.45秒生效，持续10秒、拦截一次；消耗校准标记时可拦截两次。最多三块按编号接力。','每块板朝固定落区出球，落区在放置时标在地面上。可拦截过网后的对方来球、自己的自抛球和板间接力球；己方发球与普通出球直接穿过。'],
  '辅助线':['消耗20能量，在8秒内辅助两次手动回球：击球时机判定放宽20%，击球质量至少82%。由你选择高远、吊球或扣杀。','正常球路按原样打出，预计下网或出界时尝试修正到同类安全落区。需要自己走位、够球和挥拍；挥空不消耗次数。'],
 };
-const speakers = { '丁丁':'dingding', '小丁丁':'dingding', '瑞宝':'ruibao', '王瑞':'ruibao', '小红':'xiaohong', '星星':'xingxing', '冉冉':'ranran', '猴子':'houzi', '波波':'bobo', '苗苗':'miaomiao', '沧澜':'canglan', '凌风':'lingfeng', '田楚':'tianchu', '少年田楚':'tianchu', '老南':'nan', '二十八岁的南振':'nan', '朱老师':'zhu', '果哥':'guoge', '路先森':'lu', '老陈':'laochen', '瑞妈':'ruima', '王爸':'wangba', '外婆':'grandma', '苗苗外婆':'grandma', '大将军':'goose' };
+const speakers = { '丁丁':'dingding', '小丁丁':'dingding', '阿岩':'ruibao', '磐岩':'ruibao', '小红':'xiaohong', '星星':'xingxing', '冉冉':'ranran', '猴子':'houzi', '波波':'bobo', '苗苗':'miaomiao', '沧澜':'canglan', '凌风':'lingfeng', '田楚':'tianchu', '少年田楚':'tianchu', '老南':'nan', '二十八岁的南振':'nan', '静川老师':'zhu', '果哥':'guoge', '路先森':'lu', '老陈':'laochen', '岩妈':'ruima', '王爸':'wangba', '外婆':'grandma', '苗苗外婆':'grandma', '大将军':'goose' };
 const chapterInfo = [
   ['序章 · 掉磅','6.26','stringing','线穿好之后会慢慢松掉，叫“掉磅”。人也一样。'],
   ['第一章 · 移动城墙','6.28—7.5','bakery','包子、七个老粉和一张垫蒸笼的纸。我们心里的墙，长什么样？'],
@@ -43,7 +43,7 @@ const baseScenes = {
 const match = (as, opp, field='empty', extra={}) => ({t:'match',as,opp,field,level:'normal',target:7,cap:11,allowLoss:true,stars:[],...extra});
 const mini = (game, title, extra={}) => ({t:'minigame',game,title,...extra});
 const inspect = (scene, title, rows) => ({t:'inspect',scene,title,items:rows.map(([id,label,text],i)=>({id,label,text,clue:id,x:.17+(i%3)*.31,y:.28+Math.floor(i/3)*.22}))});
-const footwork = {t:'footwork',as:'dingding',def:{name:'朱老师的米字步',need:6,total:12,life:3.2,minLife:2.2},stars:[]};
+const footwork = {t:'footwork',as:'dingding',def:{name:'静川老师的米字步',need:6,total:12,life:3.2,minLife:2.2},stars:[]};
 const drill = (name,judge,extra={}) => ({t:'drill',as:'dingding',skills:false,def:{name,judge,goal:{need:4,total:10},feeds:{intro:1},...extra},stars:[]});
 const choose = (key,q,opts) => ({t:'pick',key,q,o:opts.map(([label,value,note])=>({label,value,reply:value,note,ok:true})),exp:'没有标准答案。这句话会留在羽毛册里。'});
 const D = (scene,lines,when) => ({t:'dialog',scene,lines,when});
@@ -52,7 +52,7 @@ const events = {};
 function before(id, anchor, ...steps) { (events[id] ||= []).push({anchor,steps}); }
 before('0-1','（小游戏结束）',mini('stringing','给刘姨穿一支二十四磅',{tension:24}));
 before('0-2','（第一个球打中',drill('先到位，再挥拍','receive'));
-before('0-2','**瑞宝**（喘着气捡球）',drill('把轻球放到网前','drop',{feeds:{drop:1}}));
+before('0-2','**阿岩**（喘着气捡球）',drill('把轻球放到网前','drop',{feeds:{drop:1}}));
 before('0-3','（比赛）',match('dingding','xiaohong','reality',{skills:false,level:'easy'}));
 before('0-3','（**小段操作**',drill('接住冉冉的网前小球','receive',{goal:{need:1,total:99},feeds:{intro:1},gentle:true}));
 before('0-4','**丁丁**（救起',match('dingding','xiaohong','memory',{target:3,cap:5,training:true,intentSide:0,intents:['冉冉在看','冉冉在看','冉冉还在看'],venue:'memorycourt'}));
@@ -107,8 +107,8 @@ before('6-5','（比赛中，苗苗',match('lingfeng','miaomiao','league',{predi
 before('7-3','【意图】（高一的星星）这个人',match('xiaohong','xingxing','memory',{target:2,cap:3,gentle:true,age:[15,15],intentSide:1,intents:['这个人好认真，好好笑','她笑起来眼睛是弯的','……要怎么算才能让她多笑一下'],venue:'starcourt'}));
 before('7-3','【演出】**中途切换**',match('xingxing','xiaohong','memory',{target:2,cap:3,gentle:true,age:[15,15],intentSide:0,intents:['明天还想跟他打','后天也想'],venue:'starcourt',switching:true}));
 before('7-4','【演出】丁丁走过去',inspect('bakery-night','凌晨三点，只有揉面的声音',[
- ['bakery-form','垫蒸笼的纸','2026 年普通高校招生志愿确认单·王瑞。确认截止：7 月 5 日。签名栏是空的。'],
- ['bakery-dough','没有音乐的后厨','瑞宝独自揉面。父亲要手术，母亲一个人撑不起店。'],
+ ['bakery-form','垫蒸笼的纸','2026 年普通高校招生志愿确认单·磐岩。确认截止：7 月 5 日。签名栏是空的。'],
+ ['bakery-dough','没有音乐的后厨','阿岩独自揉面。父亲要手术，母亲一个人撑不起店。'],
  ['bakery-fan','老王包子','躺在楼上的王爸，每次看直播都刷“稳住”。他只是想看看儿子打球。'],
 ]));
 before('7-5','（比赛中，每次',match('dingding','ruibao','empty',{level:'hard',timeLimit:480,wallBreak:6}));
@@ -129,7 +129,7 @@ before('10-4','（**接力比赛开始**', {t:'relay',as:'dingding',opp:'nan',fi
 before('10-5','【意图】还有两分',match('nan','zhu','memory',{skills:false,target:15,cap:15,startScore:[13,4],oldScoring:true,fear:true,gentle:true,age:[28,30],intentSide:0,intents:['还有两分','别输','别输','别杀，杀出界就完了','别输别输别输'],venue:'historicourt'}));
 before('10-5','【演出】**最后一回合',match('zhu','nan','reality',{skills:false,target:1,cap:1,rallyGoal:16,gentle:true,freeze:true,age:[60,58],venue:'homecourt'}));
 before('11-1','（**探索**',inspect('townsquare','和每个人说一声再见',[
- ['farewell-ruibao','王记包子铺','瑞宝：明年六月，我再考一次。反正包子一直都在。王爸：稳住。'],
+ ['farewell-ruibao','王记包子铺','阿岩：明年六月，我再考一次。反正包子一直都在。王爸：稳住。'],
  ['farewell-houzi','网吧二楼','直播间在线 8 人。新来的 ID 叫“师兄”，每次都刷“还行”。'],
  ['farewell-bobo','采石场','波波还在希望那是羽毛；苗苗决定读运动科学。大将军在吃草。'],
  ['farewell-stars','气象站天台','第三十七页只有一行星星的字：结论，不用写。'],
@@ -138,7 +138,7 @@ before('11-1','（**探索**',inspect('townsquare','和每个人说一声再见'
  ['farewell-lu','实习办公室','模型无法预测十六个人。原因：他们会变。'],
  ['farewell-nan','穿线铺门口','老南在第十五根羽毛上画了打开的罐子。剩下那根，你自己写。'],
 ]));
-before('11-4','【演出】**玩家操控丁丁',match('dingding','nan','memory',{target:1,cap:1,gentle:true,rallyGoal:12,intentSide:0,intents:['冉冉在看','冉冉在看','接住，接住','瑞宝在喊','师兄在看','……她在那边','赢了就说','这次一定说'],venue:'homecourt'}));
+before('11-4','【演出】**玩家操控丁丁',match('dingding','nan','memory',{target:1,cap:1,gentle:true,rallyGoal:12,intentSide:0,intents:['冉冉在看','冉冉在看','接住，接住','阿岩在喊','师兄在看','……她在那边','赢了就说','这次一定说'],venue:'homecourt'}));
 before('11-5','【意图】他终于来打球了',match('ranran','dingding','memory',{skills:false,target:1,cap:1,gentle:true,rallyGoal:3,intentSide:0,intents:['他终于来打球了','四年了','给他一个接得到的','接住啦'],venue:'memorycourt'}));
 
 const sceneChanges = [
@@ -150,7 +150,7 @@ const sceneChanges = [
  ['【演出】羽场里，是三天前','oldgym'],['【演出】九月。清晨','bakery'],
 ];
 const cgs = [
- ['第一次进入羽场','cg-entry'],['瑞宝笑得从凳子上滑下去','cg-thought'],['车门打开，下来一个','cg-return'],
+ ['第一次进入羽场','cg-entry'],['阿岩笑得从凳子上滑下去','cg-thought'],['车门打开，下来一个','cg-return'],
  ['他身后没有影子','cg-no-shadow'],['两只球并排躺着','cg-drawer'],['跑过来把他拉起来','cg-hand'],
  ['像一颗流星','cg-meteor'],['抱成一团，满身面粉','cg-flour'],['整片拍面像花一样炸开','cg-break'],
  ['伸缩长拍伸出去，拍头碰到球','cg-ribbon'],['两只苍老的手一起拧开','cg-jar'],['球停在半空中，离地板还有一指','cg-last'],

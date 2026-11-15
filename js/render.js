@@ -2026,7 +2026,8 @@
       else if (o.landHint && m.pred && m.shuttle.live && !m.pred.hidden) {
         for (const i of o.landHint) if (m.shuttle.lastHitter !== i) this.drawHint(ctx, m, i, { landX: m.pred.landX }, false);
       }
-      // 镜像假球带着一模一样的落点提示：提示不再能替你分辨真假
+      this.mirageViewer=o.labels?.[0]&&o.labels?.[1]?null:this.mirror?1:0;
+      // All decoys keep ordinary landing hints; motion alone supplies the tell.
       if (o.landHint && m.ents) for (const e of m.ents) if (e.k === 'fake' && e.lx != null) for (const i of o.landHint) if (e.o !== i) this.drawHint(ctx, m, i, { landX: e.lx }, false);
       // 脏数据球也带着和真球一样的落点圈（只给被骗的一方；朝自己半场飞来时才画）
       if (o.landHint && m.ents) for (const e of m.ents) if (e.k === 'dirty' && e.lx != null) for (const i of o.landHint) if (e.o !== i && m.players[i] && Math.sign(e.lx) === m.players[i].side) this.drawHint(ctx, m, i, { landX: e.lx }, false);
@@ -2175,7 +2176,7 @@
         if(!this.clubVision.hidden){ctx.save();if(this.clubVision.ghost)ctx.globalAlpha*=.24;this.drawHighShuttle(ctx,m);ctx.restore();}
         // 镜像假球同样优先显示，不能用 HUD 遮挡泄露哪只是真球。
         for(const e of m.ents||[]) if(e.k==='fake'||e.k==='dirty') this.drawHighShuttle(ctx,m,
-          {x:e.x,y:e.y,vx:e.vx,vy:e.vy,live:true,held:false,shot:e.kind||s.shot,speed:Math.hypot(e.vx,e.vy)},this.fakeTrails?.[e.id]||[]);
+          {...e,live:true,held:false,shot:e.kind||s.shot,speed:Math.hypot(e.vx,e.vy)},this.fakeTrails?.[e.id]||[]);
       }
     }
   }

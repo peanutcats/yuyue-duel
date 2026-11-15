@@ -2,6 +2,7 @@
 
 - 本机预览：`python3 tools/serve.py [端口]`，默认 8765。
 - 自动回归：`node --test --test-concurrency=2 tools/*.test.js`，覆盖物理、技能、发球、训练、联机快照、TURN 与静态资源依赖。
+- UI 验收：Playwright CLI `run-code --filename tools/web-ui-upgrade.browser.js`，覆盖确认/取消、独立器械与技能搭配、刷新持久化、技能试招、训练配置及四种视口。
 - 浏览器验收：在本机预览上使用 Playwright CLI 的 `run-code --filename tools/web-release.browser.js`，检查手势解锁、15 首音乐、2D / 3D 对局、训练、技能说明和手机布局。截图保存于 `output/playwright/`。
 - 配乐：`node tools/build-score.js` 重新制作，`node tools/score-audit.js` 解码检查并生成试听；需要 FFmpeg / ffprobe。
 - 故事：`build-story-v3.js` 编排剧本；`export-story-art.js` 导出故事场景。
