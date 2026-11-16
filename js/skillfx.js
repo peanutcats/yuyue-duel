@@ -466,7 +466,7 @@
           case 'gust': { const [X, Y] = W(R, e.x, e.y); ctx.save(); ctx.globalAlpha = clamp(e.t / 0.5, 0, 1); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(X, Y, k * (0.5 - e.t) * 1.2, 0, TAU); ctx.stroke(); ctx.restore(); break; }
           case 'board': { // 几何反射板：旋转的晶体棱镜；编号 = 弹射顺序，虚线 = 线路
             const mine = m.ents.filter(q => q.k === 'board' && q.o === e.o && q.n>0).sort((u, v) => u.id - v.id), idx = mine.indexOf(e), next = mine[idx + 1];
-            const [X, Y] = W(R, e.x, e.y), r = k * 0.34, hot = e.hitT == null || m.time == null ? 0 : clamp(1 - (m.time - e.hitT) / .5, 0, 1);
+            const [X, Y] = W(R, e.x, e.y), r = k * (e.radius?e.radius*.76:.34), hot = e.hitT == null || m.time == null ? 0 : clamp(1 - (m.time - e.hitT) / .5, 0, 1);
             if (next) { // 线路：流动的箭头虚线
               const [NX, NY] = W(R, next.x, next.y);
               ctx.save(); ctx.strokeStyle = 'rgba(255,170,120,.55)'; ctx.lineWidth = Math.max(1.5, k * .025); ctx.setLineDash([5, 7]); ctx.lineDashOffset = -t * 30;
@@ -741,13 +741,18 @@
             if (e.n) tag(R, ctx, '×' + e.n + ' 加速', e.x, e.y + 0.5, '#ffb36a', 1 - u);
             break;
           }
-          case 'guide': { // 小型量角器与两个校准点，不再横贯球场
+          case 'geometryPrep': {
+            const ox=p.x+p.dir*.6,oy=p.y+C.SHOULDER,[X,Y]=W(R,ox,oy);
+            ctx.save();ctx.strokeStyle='#ffcb72';ctx.lineWidth=1.6;ctx.setLineDash([4,4]);ctx.beginPath();ctx.arc(X,Y,k*.45,-2.8,.4);ctx.stroke();ctx.restore();
+            tag(R,ctx,'自抛待接 '+Math.ceil(e.t)+'s',p.x,p.y+2.7,'#ffcb72',.9);break;
+          }
+          case 'guide': { // 量角器与剩余校准点
             const ox=p.x+p.dir*.55,oy=p.y+C.SHOULDER+.15,[X,Y]=W(R,ox,oy),r=k*.34;
             ctx.save();ctx.globalAlpha=.8;ctx.strokeStyle='#ffda69';ctx.lineWidth=1.4;
             ctx.beginPath();ctx.arc(X,Y,r,-2.7,.7);ctx.stroke();
             for(let i=0;i<7;i++){const a=-2.7+i*.55;ctx.beginPath();ctx.moveTo(X+Math.cos(a)*r*.82,Y+Math.sin(a)*r*.82);ctx.lineTo(X+Math.cos(a)*r,Y+Math.sin(a)*r);ctx.stroke();}
-            for(let i=0;i<2;i++){ctx.fillStyle=i<(e.n??2)?'#ffdf7c':'#555d70';ctx.beginPath();ctx.arc(X+(i-.5)*9,Y-r-7,2.5,0,TAU);ctx.fill();}ctx.restore();
-            if((o?.landHint||[]).includes(e.o))tag(R,ctx,'稳拍 ×'+(e.n??2)+(p.cnt?.calibrate?' · 反射+1':''),ox,oy+.65,'#ffdc75',.9);break;
+            for(let i=0;i<(e.max||2);i++){ctx.fillStyle=i<(e.n??2)?'#ffdf7c':'#555d70';ctx.beginPath();ctx.arc(X+(i-((e.max||2)-1)/2)*9,Y-r-7,2.5,0,TAU);ctx.fill();}ctx.restore();
+            if((o?.landHint||[]).includes(e.o))tag(R,ctx,'稳拍 ×'+(e.n??2)+(p.cnt?.calibrate?' · 校准就绪':''),ox,oy+.65,'#ffdc75',.9);break;
           }
           case 'lineFlash': {
             const u=clamp(e.t/.45,0,1),[X,Y]=W(R,e.x,e.y),[EX,EY]=W(R,e.x+Math.cos(e.a)*1.2*e.d,e.y+Math.sin(e.a)*1.2);
@@ -898,7 +903,7 @@
         const b = p.buff || {}, cnt = p.cnt || {},yoyoBusy=s.ctl?.k==='yoyo'&&s.ctl.o===p.idx||s.live&&s.selfToss===p.idx&&s.tossSkill==='youyou';
         if (p.market) wallet(R, ctx, p, t);
         if (b.grab > 0) tag(R, ctx, '弯腰捡红包…', p.x, p.y + 2.3, '#ff7a6a', 0.95);
-        if(cnt.calibrate&&!m.ents?.some(e=>e.k==='guide'&&e.o===p.idx)) tag(R,ctx,'反射 +1',p.x,p.y+2.8,'#ffb02e',.8);
+        if(cnt.calibrate&&!m.ents?.some(e=>e.k==='guide'&&e.o===p.idx)) tag(R,ctx,'校准就绪',p.x,p.y+2.8,'#ffb02e',.8);
         if(cnt.compile) tag(R,ctx,'编译 ×1',p.x,p.y+2.8,'#7fd6ff',.8);
         if(b.rocketReady>0) tag(R,ctx,'火箭推进就绪',p.x,p.y+2.5,'#ffcf5a',.9);
         if(b.overclock>0&&!yoyoBusy) tag(R,ctx,'机械过载',p.x,p.y+2.4,'#7dffcf',.85);

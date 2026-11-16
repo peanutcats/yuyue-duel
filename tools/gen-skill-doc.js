@@ -4,7 +4,7 @@ const fs = require('node:fs'), path = require('node:path');
 globalThis.window = globalThis;
 for (const f of ['core', 'char', 'roster', 'court3d-skill-info', 'skill-guide']) require(path.join(__dirname, '../js', f + '.js'));
 const YY = globalThis.YY;
-const clientVersion = '1.32';
+const clientVersion = '1.33';
 
 const THEME = { pupil:'课间规则发明家', zhuzhu:'书法控球',sun:'篮球步法与流程连携',dong:'安全防御与资源调度', bobo:'骨翼腾空',miaomiao:'空地滑步与精准流转',mage:'折纸反击',nan:'回羽剪辑',
   lingfeng: '空中机动', canglan: '潮水', xiaohong: '几何', ranran: '蝶结穿花与控网', ruibao: '锅台火候与连携', xingxing: '星空与重力',

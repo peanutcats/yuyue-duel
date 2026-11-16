@@ -4,7 +4,7 @@
   Y.SKILL3D_NOTES={
     pupil:'网底球保留接球球道，早按近弹晚按滑远；串门可横移抢拍，调座位支持前后与左右。',
     lingfeng:'鱼跃与踏风可横向扑救；风口只作用于覆盖的球道。',canglan:'潮水覆盖己方半场；回潮完整倒放三维球迹。',
-    xiaohong:'反射板独立布置球道，出口落点固定；辅助线校准两个方向。',ranran:'穿花双轴抢网与免费折返；蝶域固定当前球道，低球截流后需亲手回击。前推深、后推浅，横推选落点。',
+    xiaohong:'反射板固定球道守线；先备自抛再近身垫高，校准可强化三个主动，辅助线保留手选球道。',ranran:'穿花双轴抢网与免费折返；蝶域固定当前球道，低球截流后需亲手回击。前推深、后推浅，横推选落点。',
     ruibao:'反弹后再按出锅；前推打深、后推压浅、横推选球道。肉包真实横向投掷，回锅保留蓄力。',xingxing:'月亮与星门可以横向布置；重力作用于完整三维飞行。',
     dingding:'飞轮有限球道锁球，金窗再按弹射，或带回拍前亲手打。',houzi:'筋斗云追向来球，藤蔓支持横向荡动，小猴巡逻协防。',
     lu:'分身留在真实三维位置；接力连到本体或分身；假球分散落区。',laochen:'两拍批量替换保持所选球道；对方冰区影响双轴抓地，可绕行或跳过。',
@@ -20,7 +20,7 @@
     for(const e of this.ents){
       if(['fake','dirty'].includes(e.k)&&!e.mirage)oldFake.set(e.id,{...e});
       if(e.k==='spin'){const p=this.players[e.o];e.z=p.z;const angle=e.ph0+e.w*e.age;e.head3D=[p.x+Math.cos(angle)*e.r,p.y+1.3,p.z+Math.sin(angle)*e.r];if(!e.used&&this.devHit(p)&&s.crossedNet&&Math.hypot(s.x-p.x,s.z-p.z,s.y-p.y-1.3)<e.r+.18){e.used=1;this.deviceReturn(p,s.y>2.1?'smash':'clear',.86,'xuanpai',null,true);this.proc(p,'xuanpai','环扫接回');}}
-      if(['guide','replace'].includes(e.k))e.z=this.players[e.k==='replace'?1-e.o:e.o].z;
+      if(['guide','geometryPrep','replace'].includes(e.k))e.z=this.players[e.k==='replace'?1-e.o:e.o].z;
       if(['ripple','rewind'].includes(e.k))e.z=s.z;
       if(e.k==='newskill'&&e.sid!=='jibei')e.z=this.players[e.o].z;
     }

@@ -611,9 +611,9 @@
         chaolai: () => (incoming && lost && landMine) || (afterHit && once('chaolai', .3)),
         tongyin: () => p.stamina < 40 && o.stamina > 65,
         huichao: () => incoming && s.crossedNet && p.side * s.x > 0.6 && (s.path || []).length > 40 && (lost || s.puddle && this.SL.combo || Math.random() < 0.01),
-        pingyi: () => incoming && pl && (pl.band === 'smash' || lost || s.selfToss === this.i) && once('pingyi', .5),
+        pingyi: () => (afterHit && p.cnt.calibrate || incoming && pl && (pl.band === 'smash' || lost || s.selfToss === this.i || p.stamina < 55)) && once('pingyi', .65),
         fanshe: () => incoming && landMine && this.boardOpportunity(),
-        zipao: () => incoming && !s.ctl && pl && pl.band !== 'smash' && pl.band !== 'none' && s.y < 1.7 && close(1.3) && p.stamina > 40 && p.onGround,
+        zipao: () => incoming && landMine && !s.ctl && pl && pl.band !== 'none' && close(2.6) && p.stamina > 28 && p.onGround && once('zipao',.6),
         tangqiu: () => incoming && !s.ctl && p.onGround && (s.crossedNet || pl && pl.tContact-m.time<.7) && close(4.4) && (lost || planGap>.9),
         hongxian: () => incoming && s.crossedNet && (lost || this.SL.combo && once('hongxian', .3)) && p.side * s.x > .3 && close(3.4),
         jiewang: () => !(b.silkReady>0) && p.side*p.x<=2.8 && (afterHit || incoming && close(3.5)),
@@ -690,7 +690,7 @@
     /** 反射板：点按会自动放到来球路线上；路线够得着就值得放（已有板子时更爱连成线路） */
     boardOpportunity() {
       const m=this.m,p=this.p,t=m.skillTarget(p,'fanshe',{manual:false}),el=m.time-(m.pred?.t0 || 0);
-      const onPath=!!m.pred?.pts?.some(k=>k.t>el+.5 && k.t<el+1.35 && Math.hypot(k.x-t.x,k.y-t.y)<.3);
+      const onPath=!!m.pred?.pts?.some(k=>k.t>el+.4 && k.t<el+1.35 && Math.hypot(k.x-t.x,k.y-t.y)<.3);
       return onPath && (m.entsOf('board',this.i).length>0 || Math.random()<.6);
     }
     moonAim() {

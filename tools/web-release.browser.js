@@ -9,7 +9,7 @@ async page=>{
  await page.mouse.click(8,8);
  await page.waitForFunction(()=>YY.Audio.musicVoices.some(v=>v.id==='menu'&&v.ready&&v.media.currentTime>0),{},{timeout:15000});
  const catalog=await page.evaluate(()=>({physics:YY.PHYSICS_VERSION,characters:YY.CHARS.length,skills:Object.keys(YY.SKILLS).length,account:!!App.account,matchmaking:App.matchNet.configured()}));
- check(catalog.physics===34&&catalog.characters===21&&catalog.skills===84,'latest gameplay catalog');check(!catalog.account&&!catalog.matchmaking,'unconfigured optional services stay disabled');
+ check(catalog.physics===35&&catalog.characters===21&&catalog.skills===84,'latest gameplay catalog');check(!catalog.account&&!catalog.matchmaking,'unconfigured optional services stay disabled');
  await page.evaluate(()=>{App.releaseSoundscape=App.updateSoundscape;App.updateSoundscape=dt=>YY.Audio.updateMusic(dt);});
  for(const id of await page.evaluate(()=>Object.keys(YY.Soundtrack.TRACKS))){
   await page.evaluate(id=>YY.Audio.musicScene(id),id);

@@ -13,9 +13,9 @@
     chaolai:["pool",["积水展开","首次落水弹起","补拍续球"],"被动时用积水弹起争取补拍；同一只球第二次落水就判分，别当救命符。"],
     tongyin:["resource",["比较体力","吸取或省耗","保留进攻余力"],"体力落后时吸一口，体力领先时用它省扣杀消耗；满体力时别浪费。"],
     huichao:["reverse",["等来球过网","沿原轨迹倒退","再按低速放开"],"看倒退后的球处在哪一侧再放开；在己方放开仍要避免球直接落地。"],
-    fanshe:["board",["放置反射板","准备后拦球","射向固定落区"],"提前把板放在对手常打的线路上；板有 0.45 秒延迟，别等球到才放。"],
-    zipao:["toss",["拍前截球","自抛垫高","手动再进攻"],"把低位球垫成高点再进攻；垫起不等于得分，记得接下一拍。"],
-    pingyi:["buff",["开启校准","两次稳定回球","站稳再落拍"],"接快球或疲劳时开启，用两次稳定回球度过难关；它不会替你挥拍。"],
+    fanshe:["board",["放板与校准","短暂准备后拦球","接力到固定落区"],"提前把板放在对手常打的线路上；普通板有 0.35 秒准备，别等球到才放。"],
+    zipao:["toss",["提前准备四秒","近身自抛垫高","亲手精准补拍"],"先准备再到位接球，校准让高点补拍更稳；也可以垫向反射板接力。"],
+    pingyi:["buff",["开启辅助线","两次稳拍 / 校准三次","快速收拍衔接"],"接快球或疲劳时开启，稳定回球积校准，再转反射防守或自抛进攻。"],
     tangqiu:["step",["穿花抢位","稳住下一拍","免费折返"],"先抢网稳拍，再用免费第二段追短球或撤回；三秒内决定方向。"],
     hongxian:["hold",["牵住来球","观察站位","二段选长短"],"牵住球后先看对手站位，再决定放短还是挑长；网前持球1.25秒，亲手回击更精准。"],
     jiewang:["curve",["展开固定蝶域","截流后亲手回击","两拍放短或挑深"],"守在蝶域内截住低球，亲手接球打长短；有蝴蝶结可增至三拍两截，高球和边线可绕开。"],
@@ -71,7 +71,7 @@
   const passives = {
     kejian:['成功完成一招','10秒内完成不同招式','回复与快速收拍'],
     yihan:['极限救球','失败留下脚印','下一分拾取补能'], dishui:['完成回球','水滴留场','拾取回复体力'],
-    biaochi:['观察角度线','手动完美回球','反射板多拦一次'], hudie:['抢网稳拍','短球过网织结','回能并护己方擦网'],
+    biaochi:['完美或两次稳定回球','校准回能与体力','强化任一主动技能'], hudie:['抢网稳拍','短球过网织结','回能并护己方擦网'],
     zheteng:['完成一招 · 回能回体','8秒内换另一招','旺火 · 强化下一拍'], yekong:['手动回球','累计两次','额外回复能量'],
     jixie:['装置命中球','进入3秒过载','收招再按回收'], liansha:['连续得分','连胜奖励增加','被终结时对手得能量'],
     rizhi:['记录挥空原因','接回两类来球或记录球路','获得编译标记'], qiandao:['记录对手3次击球位置','同区出现2次','形成习惯区'],
@@ -90,7 +90,7 @@
   const conditions = {
     dixia:'回合中先准备；仅己方半场不超过1.9米的手动接球触发，发球、装置和串门抢拍不触发。',chuanmen:'回合中，己方距网2.2米内落地站稳；串门后必须等对手新触球才能抢。',huanzuo:'回合中，不能同时重复调位；对手串门时不能调位。',
     yuyue:'回合中，落地后使用。', tafeng:'回合中，已在空中；每次起跳只能踏风一次。',
-    diban:'回合中可提前准备；直接砸球要求己方拍前真实来球。', zipao:'来球进入己方拍前范围，且未被装置控制。',
+    diban:'回合中可提前准备；直接砸球要求己方拍前真实来球。', zipao:'回合中可提前准备4秒；靠近已过网的对方非发球来球，拍前1.7米内自动垫起一次。',
     huiguo:'回合中可提前准备；回收须仍为己方出球且未进入对手截击范围。', huichao:'来球已过网进入己方，且已留下足够飞行轨迹。',
     meida:'回合中可提前准备；过网来球到拍前1.7米内时自动接引一次。', tingyixia:'回合中先准备；手动接回对手的来球才消耗次数。', jiezou:'回合中、落地后使用；隐身持续期间不能重复开启。',
     jingxiang:'回合中准备两拍；再按免费重选下一拍，过网后不可用镜像突改当前真球。', shuizhong:'可提前准备，出球过网后再按；对手1.6米拍前范围内、低于0.8米或落地不足0.25秒时不能变线。',
@@ -112,7 +112,7 @@
     const desc=Y.plainText(summary),durations=[...desc.matchAll(/(?:\d+(?:\.\d+)?秒|\d+次|\d+拍)/g)].map(m=>m[0]);
     const condition=sk.passive?'无需按键；按上述条件自动触发。':conditions[id]||'回合中使用，须有足够能量；重复施放限制见下方。';
     const limits=help.limits;
-    const sustained=new Set(['dixia','diban','huiguo','baozi','fengkou','chaolai','tongyin','fanshe','pingyi','tangqiu','jiewang','xingmen','yueliang','zhongli','haomao','fuzhi','zangshu','yati','yueqiu','shuangji','jiepan','qiquan','jiezou','biaozhi','tingyixia','jibei','yimo','weichui','dianbu','bianpai','tongqin','gongwei','jiaban','sanbu','yipai','jingmo','feibai','liubai','luokuan','ouzhou','gongdan','kongjie','lingxin','kuorong','rongzai','jingxiang','meida','shuizhong']);
+    const sustained=new Set(['zipao','dixia','diban','huiguo','baozi','fengkou','chaolai','tongyin','fanshe','pingyi','tangqiu','jiewang','xingmen','yueliang','zhongli','haomao','fuzhi','zangshu','yati','yueqiu','shuangji','jiepan','qiquan','jiezou','biaozhi','tingyixia','jibei','yimo','weichui','dianbu','bianpai','tongqin','gongwei','jiaban','sanbu','yipai','jingmo','feibai','liubai','luokuan','ouzhou','gongdan','kongjie','lingxin','kuorong','rongzai','jingxiang','meida','shuizhong']);
     return {
       id, owner:owner?.id, mode, category:types[type], type, summary, operation,condition,limits,
       steps:sk.passive ? passives[id] : row?.[1],
@@ -252,6 +252,13 @@
     else if(kind==='warp'){ring(-1,1.8,0,19);ring(3,1.5,0,19);if(stage===0)ball(-3+v*2,1.5);if(stage===1)ring(3,1.5,0,23+v*7);if(stage===2)ball(3+v*1.5,1.5*(1-v));}
     else if(kind==='gravity'){path([[-2,1],[0,3],[2,1]],color+'77',true);ball(-2+t*4,1+Math.sin(t*Math.PI)*2);}
     else if(kind==='wind'){for(let i=0;i<3;i++)path([[-1,.5+i*.4],[.6,.8+i*.4],[1.4,.7+i*.4]],color+'88');lineBall();}
+    else if(id==='zipao'){
+      const z=space?-.65:0;path([[-2.5,1.2,z],[-2.5,3.3,z],[3.5,.1,z]],color+'77',true);
+      if(stage===0){ring(-2.5,1.2,z,21);ball(2-v*4.5,1.5,z);}
+      else if(stage===1)ball(-2.5,1.5+Math.sin(v*Math.PI*.8)*1.8,z);
+      else{ball(-2.5+v*6,2.7*(1-v),z);ring(-2.5,2.7,z,10);}
+      const q=pt(1,3.8);g.fillStyle=color;g.font='700 11px '+Y.FONT;g.textAlign='center';g.fillText(['4秒准备 · 到位接球','自抛腾拍 · 自己选择进攻','亲手补拍88% / 校准95%'][stage],...q);
+    }
     else if(kind==='toss'){path([[-2.6,1],[-2.2,3],[-1.8,1.8]],color+'88',true);ball(-2.6+t*.8,1+Math.sin(t*Math.PI)*2);}
     else if(id==='jiewang'){
       const z=space?-.65:0;path([[-.25,.04,z-1.15],[-2.8,.04,z-1.15],[-2.8,.04,z+1.15],[-.25,.04,z+1.15],[-.25,.04,z-1.15]],color+'99');
@@ -271,7 +278,7 @@
         else{g.fillStyle=color;g.beginPath();g.ellipse(p[0],p[1]-(id==='dishui'?7:0),id==='dishui'?4:7,id==='dishui'?7:3,-.35,0,TAU);g.fill();}
       }
       else if(id==='canying'){drawActor(-4.2+v*.7,0,0,true,.22);drawActor(-3.9+v*.7,0,0,true,.1);const q=pt(-3,2.8);g.fillStyle=color;g.font='700 12px '+Y.FONT;g.textAlign='center';g.fillText(stage===2?'折影兑现 · 精准回球':stage===1?'折影 2/2':'折影 1/2',...q);}
-      else if(id==='biaochi'){path([[-3,1.2],[1,3]],color+'aa',true);path([[-3,1.2],[1,.6]],color+'aa',true);ring(-3,1.2,0,24);}
+      else if(id==='biaochi'){path([[-3,1.2],[1,3]],color+'aa',true);path([[-3,1.2],[1,.6]],color+'aa',true);ring(-3,1.2,0,24);const q=pt(1,3.5);g.fillStyle=color;g.font='700 11px '+Y.FONT;g.textAlign='center';g.fillText(['完美一拍 / 稳定两拍','校准 +3能量 / +5体力','反射多拦 / 自抛强化 / 辅助多一拍'][stage],...q);}
       else if(id==='moyun'){const p=pt(stage===2?2:-2,1.6);for(let i=0;i<9;i++){g.fillStyle='#111726';g.beginPath();g.arc(p[0]+Math.sin(i*2.3)*i*2,p[1]+Math.cos(i*2.3)*i*2,3+v*3,0,TAU);g.fill();}}
       else if(['rizhi','qiandao','lvyue','shihua','guance'].includes(id)){
         const p=pt(-5,2.1);g.fillStyle='#0a1728';g.fillRect(p[0]-12,p[1]-10,46,34);for(let i=0;i<3;i++){g.fillStyle=i<=stage?color:'#375464';g.fillRect(p[0]-6,p[1]-4+i*9,28,4);}

@@ -164,6 +164,11 @@
     }
     device(ctx,e,m){
       const p=this.project(e.x,e.y||0,e.z||0),color=Y.SKILLS[e.sid]?.color||(['pane','pool'].includes(e.k)?'#83ddff':e.k==='moon'?'#d0bcff':'#ffda83');
+      if(e.k==='geometryPrep'||e.k==='guide'){
+        const owner=m.players[e.o],q=this.project(owner.x+owner.dir*.6,owner.y+1.45,owner.z);
+        ctx.save();ctx.strokeStyle='#ffcf76';ctx.lineWidth=1.7;ctx.setLineDash(e.k==='geometryPrep'?[4,4]:[]);ctx.beginPath();ctx.arc(q.x,q.y,clamp(q.k*.28,10,22),-2.8,.5);ctx.stroke();ctx.restore();
+        this.label(ctx,e.k==='geometryPrep'?'自抛待接 '+Math.ceil(e.t)+'s':'稳拍 ×'+e.n,q.x,q.y-(e.k==='guide'&&m.ents.some(q=>q.k==='geometryPrep'&&q.o===e.o)?44:26),11,'#ffdf96');return;
+      }
       if(e.k==='bow'){Y.CharacterArt?.butterfly(ctx,p.x,p.y,clamp(p.k*.17,5,11),this.time);return;}
       if(e.k==='newskill'&&Y.SkillFX?.officeSkill?.(e.sid)){
         const owner=m.players[e.o],q=this.project(owner.x,owner.y+2.05,owner.z);

@@ -65,7 +65,7 @@
     grab: { move: 0, noJump: 1 },
   };
   // 场内持续性技能：回合结束不消失，倒计时只在回合进行中走（装置种类 / 状态计时）
-  const PERSIST = { board: 1, wind: 1, moon: 1, mini: 1, peel: 1, pane: 1, cone: 1, appoint: 1, gale: 1, pool: 1, guide: 1, replace: 1, clone: 1,
+  const PERSIST = { board: 1, wind: 1, moon: 1, mini: 1, peel: 1, pane: 1, cone: 1, appoint: 1, gale: 1, pool: 1, guide: 1, geometryPrep: 1, replace: 1, clone: 1,
     packet: 1, gate: 1, dirty: 1, teacherEcho: 1, teacherPlan: 1 };
   // 持续准备与场上装置跨小分；本球慢放、位移动作和短特效不跨分。
   const NEW_PERSIST = new Set(['jibei','yimo','weichui','dianbu','bianpai','tongqin','gongwei','jiaban','sanbu','yipai','jingmo']);
@@ -388,7 +388,8 @@
           else M[f] *= mod[f];
         }
       }
-      if (this.skillsOn && this.entOf('guide', p.idx)) M.timing *= 1.2;
+      if (this.skillsOn && this.phase==='rally' && this.entOf('guide', p.idx)) { M.timing *= 1.25; M.reach *= 1.08; }
+      if (this.geometryFollow(p)) { M.jump *= p.buff.geometryPlus>0?1.2:1.12; M.reach *= 1.1; }
       if (p.market && YY.MARKET_TIERS) {
         const t = YY.marketStyle(p.market);
         M.move *= t.move; M.accel *= t.accel || t.move;
@@ -1354,7 +1355,7 @@
         case 'baozi': return s.bun?'球已经包在肉包里':p.buff.bunReady>0?'肉包已备好':this.entOf('bunFly',p.idx)?'肉包还在飞':null;
         case 'shensuo': case 'xuanpai': case 'youyou': return this.entOf('pole', p.idx) || this.entOf('spin', p.idx) || this.entOf('yoyo', p.idx) ? '球拍还没收回' : null;
         case 'tafeng': return p.onGround ? '在空中才能踏风' : p.cnt.airJ ? '这一跳已经踏过风' : null;
-        case 'zipao': return this.incomingTo(p) && !s.ctl && p.side * s.x > 0.2 && this.racketGap(p, s.x, s.y) < 1.7 ? null : '球不在拍前';
+        case 'zipao': return this.entOf('geometryPrep',p.idx)?'自抛已准备':this.geometryFollow(p)?'先完成自抛补拍':null;
         case 'pingyi': return this.entOf('guide', p.idx) ? '辅助线已经画好' : null;
         case 'hongxian': return this.entOf('ribbon', p.idx) || (s.ctl && s.ctl.k === 'tether' && s.ctl.o === p.idx) ? '丝带还没收回' : null;
         case 'chaolai': return this.entOf('pool', p.idx) ? '积水还在' : null;
@@ -1467,28 +1468,23 @@
           break;
         }
         // —— 小红 ——
-        case 'fanshe': { // 布置后准备半秒；出口在放置时确定，不追踪对手
+        case 'fanshe': { // 短暂准备后启动；出口在放置时确定，不追踪对手
           const t = this.skillTarget(p, id, v), mine = this.entsOf('board', p.idx);
           if (mine.length >= 3) this.dropEnt(mine[0]);
-          const calibrated = v.manual && p.cnt.calibrate > 0;
-          if (calibrated) p.cnt.calibrate = 0;
-          this.addEnt('board', p.idx, t.x, t.y, 10, { n:calibrated ? 2 : 1, cool:0, warm:.45, target:clamp(this.halfOf(1-p.idx)-p.side*t.x,2.2,5.2), calibrated:calibrated ? 1 : 0 });
+          const calibrated = this.spendCalibration(p);
+          this.addEnt('board', p.idx, t.x, t.y, 12, { n:calibrated ? 2 : 1, cool:0, warm:calibrated?.25:.35, radius:.55, target:clamp(this.halfOf(1-p.idx)-p.side*t.x,2.2,5.2), calibrated:calibrated ? 1 : 0 });
           this.proc(p, id, '反射板 ' + Math.min(3, mine.length + 1) + ' / 3');
           break;
         }
-        case 'zipao': { // 拖动：垫球的角度与力度（可以垫向自己的反射板）；点按：垫到头顶
-          const t = YY.tossVel(v);
-          s.vx = t.vx * p.dir; s.vy = t.vy; s.ctl = null;
-          this.touchShuttle(p, 'lift', '自抛', id, 0.6);
-          s.selfToss = p.idx; s.tossSkill = id;
-          // 垫球动作：下手挑起 → 随挥上举，渲染层再接蓄势举拍，直到扣下去。
-          p.swing = { t: 0.07, btn: 'clear', kind: 'under', dur: 0.34, hit: true, prevE: 99, judged: true, style: 'lift', toss: 1, contact: { t: C.SW_SWEET, x: s.x, y: s.y } };
-          p.cnt.tossAt = this.time;
+        case 'zipao': { // 先准备、再靠近接球；方向锁在释放时，不随之后移动改变。
+          const e=this.addEnt('geometryPrep',p.idx,p.x,p.y+C.SHOULDER,4,{aim:{...v}});
+          if(!this.geometryCatch(p,e))this.proc(p,id,'自抛待接 · 4秒内靠近来球');
           break;
         }
-        case 'pingyi': { // 两次亲手回球的校准：保留按键选出的球路，不按拖动角度强制改线
-          this.addEnt('guide', p.idx, p.x, p.y + C.SHOULDER, 8, { n:2 });
-          this.proc(p, id, '校准就绪 · 两次回球');
+        case 'pingyi': { // 校准增加一次辅助；保留玩家选择的球路
+          const calibrated=this.spendCalibration(p),n=calibrated?3:2;
+          this.addEnt('guide', p.idx, p.x, p.y + C.SHOULDER, 10, { n,max:n,calibrated });
+          this.proc(p, id, '辅助线 · '+n+'次稳拍');
           break;
         }
         // —— 冉冉 ——
@@ -1937,6 +1933,25 @@
       this.proc(p, 'diban', where + '反弹 · 加速 ×' + c.n);
     },
     wallsOf(o) { return this.entsOf('wall', o).filter(w => !w.used); },
+    spendCalibration(p) {
+      if(!this.hasPassive(p,'biaochi')||!(p.cnt.calibrate>0))return false;
+      p.cnt.calibrate=0;return true;
+    },
+    geometryFollow(p) {
+      const s=this.shuttle;
+      return this.skillsOn&&this.phase==='rally'&&p.buff.geometryFollow>0&&s.live&&!s.held&&!s.netHit&&!s.ctl&&s.selfToss===p.idx&&s.lastHitter===p.idx&&s.tossSkill==='zipao';
+    },
+    geometryCatch(p,e) {
+      const s=this.shuttle;
+      if(!this.skillsOn||this.phase!=='rally'||e.t<=0||!this.incomingTo(p)||!s.crossedNet||s.ctl||s.isServe||p.side*s.x<=.2||s.y<.3||this.racketGap(p,s.x,s.y)>=1.7||p.buff.prone>0||p.buff.stun>0)return false;
+      const calibrated=this.spendCalibration(p),t=YY.tossVel(e.aim);
+      s.vx=t.vx*p.dir;s.vy=t.vy;s.ctl=null;if(this.courtMode==='3d')s.vz=0;
+      this.touchShuttle(p,'lift','自抛','zipao',.6);s.selfToss=p.idx;s.tossSkill='zipao';
+      p.buff.geometryFollow=2.5;p.buff.geometryPlus=calibrated?2.5:0;
+      p.swing={t:.07,btn:'clear',kind:'under',dur:.28,hit:true,prevE:99,judged:true,style:'lift',toss:1,contact:{t:C.SW_SWEET,x:s.x,y:s.y}};
+      p.cnt.tossAt=this.time;this.dropEnt(e);this.rePred();
+      this.proc(p,'zipao',calibrated?'校准腾拍 · 亲手补拍95%':'自抛接续 · 亲手补拍88%');return true;
+    },
     /** 反射板只处理对方来球、自抛或板间接力。出口为提前标出的固定区域。 */
     boardBounce(e, p) {
       const s=this.shuttle,incoming=s.lastHitter!==p.idx;
@@ -2397,6 +2412,7 @@
       p.hist.push({ t: this.time, x: p.x }); while (p.hist.length && p.hist[0].t < this.time - 1.1) p.hist.shift();
       p.still = p.onGround && Math.abs(p.vx) < 0.15 ? p.still + dt : 0;
       if(this.phase!=='rally')return;
+      const geometryPrep=this.entOf('geometryPrep',p.idx);if(geometryPrep)this.geometryCatch(p,geometryPrep);
       const ice=this.iceAt(p),speed=Math.hypot(p.vx,p.vz||0);
       if(this.skillsOn&&ice&&speed>1.2&&this.time>=(c.iceCue||0)){
         c.iceCue=this.time+.22;this.addEnt('iceSkid',p.idx,p.x,.035,.4,{z:p.z||0,vx:p.vx,vz:p.vz||0});
@@ -2558,7 +2574,7 @@
         switch (e.k) {
           case 'ribbon': this.ribbonStep(e, p, dt); break;
           case 'bunFly': this.bunFlyStep(e, p, dt); break;
-          case 'guide': e.x = p.x; e.y = p.y + C.SHOULDER; break; // 辅助线跟着她的拍子
+          case 'geometryPrep': case 'guide': e.x = p.x; e.y = p.y + C.SHOULDER; if(this.courtMode==='3d')e.z=p.z; break; // 辅助线跟着她的拍子
           case 'replace': { const o = this.players[1 - e.o]; e.x = o.x; e.y = o.y + 2.6; break; } // Ctrl+H 标签挂在对手头顶
           case 'shadow': e.x += e.v * dt * 0.7; e.z=(e.z||0)+(e.vz||0)*dt*.7; break;
           case 'appoint': this.appointStep(e, p, dt); break;
@@ -2729,7 +2745,7 @@
         if (YY.spatialNear && !YY.spatialNear(this,e,s,e.k === 'wind' ? 1.0 : .72)) continue;
         switch (e.k) {
           case 'board': { // 球穿过反射板就被弹射：有下一块板就射向它，最后一块把储的能量全打出去
-            if (s.netHit || e.n<=0 || e.age<(e.warm??.45) || e.cool > this.time || segDist(px, py, s.x, s.y, e.x, e.y) > 0.45) break;
+            if (s.netHit || e.n<=0 || e.age<(e.warm??.45) || e.cool > this.time || segDist(px, py, s.x, s.y, e.x, e.y) > (e.radius??.45)) break;
             if(s.lastHitter===e.o && s.selfToss!==e.o && !(s.prism?.o===e.o))break; // 不拦截己方发球和普通出球
             if (s.lastHitter !== e.o && !s.crossedNet) break;
             if (s.lastHitter === e.o && s.prism && s.prism.o === e.o && s.prism.used.includes(e.id)) break; // 同一条线路不重复弹
@@ -2902,6 +2918,10 @@
     skAfterHit(p, shot, q, ctx) {
       const s = this.shuttle, o = this.players[1 - p.idx], sk = this.sk;
       const gust = s.gust, bun = s.bun, gold = s.gold;
+      if(ctx.geometryFollow||ctx.geometryGuide){
+        if(p.swing)p.swing.dur=p.swing.t+Math.max(0,p.swing.dur-p.swing.t)*.8;
+        if(ctx.geometryFollow){p.buff.geometryFollow=0;p.buff.geometryPlus=0;}
+      }
       if (ctx.skill !== 'fanshe') s.prism = null;
       s.bowBy = null; s.lever = ctx.lever || 0; s.hitAt = this.time; s.gust = null; s.plunge = null; s.monkey = 0;
       s.wok=null;s.floorBy=null;s.rush=0;s.puddle=0;s.slam=null;s.tide=null;s.cookShot=null;
@@ -2962,8 +2982,13 @@
     /** 提示型被动以真实的亲手回球取得有限收益，不奖励故意挥空。 */
     practicePassive(p,shot,q,ctx) {
       const c=p.cnt, s=this.shuttle, cat=YY.SHOT_CAT[ctx.incomingType]||ctx.incomingType;
-      if (this.hasPassive(p,'biaochi') && q>=.85 && !c.calibrate && (c.calEarn||0)<2) {
-        c.calibrate=1;c.calEarn=(c.calEarn||0)+1;this.proc(p,'biaochi','校准完成 · 手动反射板 +1 次');
+      if (this.hasPassive(p,'biaochi')&&!ctx.serve&&!ctx.device&&!ctx.ownSide&&!ctx.geometryFollow&&!['zipao','meida','huiguo','jieli','youyou'].includes(ctx.skill)) {
+        c.calRally=q>=.7?(c.calRally||0)+1:0;
+        if((q>=.85||c.calRally>=2)&&!c.calibrate&&(c.calEarn||0)<3){
+          c.calibrate=1;c.calRally=0;c.calEarn=(c.calEarn||0)+1;
+          this.gainEnergy(p,3);p.stamina=Math.min(C.STAM_MAX,p.stamina+5);
+          this.proc(p,'biaochi','校准就绪 · 强化下个技能 +3能量');
+        }
       }
       if (this.hasPassive(p,'rizhi') && q>=.7 && cat && !c.compile && (c.compileEarn||0)<2) {
         const corrected=c.fixCat===cat; c.debugCats=Array.from(new Set([...(c.debugCats||[]),cat]));
@@ -3022,7 +3047,10 @@
       if (!this.skillsOn) return q;
       const c = p.cnt, b = p.buff, s = this.shuttle;
       if (c.cloud) { q += 0.2; ctx.cloud = 1; }
-      if(this.entOf('guide',p.idx))q=Math.max(q,.82);
+      if(!ctx.serve&&!ctx.device&&!ctx.ownSide){
+        if(this.entOf('guide',p.idx))q=Math.max(q,.86);
+        if(this.geometryFollow(p)){q=Math.max(q,p.buff.geometryPlus>0?.95:.88);ctx.geometryFollow=true;}
+      }
       if(!ctx.serve&&!ctx.device&&!ctx.ownSide){
         ctx.wokReturn=s.selfToss===p.idx&&s.tossSkill==='huiguo';
         if(b.cookFire>0||b.wokFollow>0||ctx.wokReturn)q=Math.max(q,.92);
@@ -3049,8 +3077,8 @@
         ctx.skill = id; ctx.big = 1;
         b.bunSteam = 0; b.vineStrike = 0;
       }
-      if(this.phase==='rally'&&this.lineShot(p,shot)){
-        ctx.skill='pingyi';this.proc(p,'pingyi','校准回球 · '+(this.entOf('guide',p.idx)?.n||0)+' 次余量');
+      if(this.phase==='rally'&&!ctx.serve&&!ctx.device&&!ctx.ownSide&&this.lineShot(p,shot)){
+        ctx.geometryGuide=true;ctx.newcomerSolved=this.courtMode==='3d';ctx.skill='pingyi';this.proc(p,'pingyi','校准回球 · '+(this.entOf('guide',p.idx)?.n||0)+' 次余量');
       }
       if (b.jifeng > 0) {
         b.jifeng = 0; ctx.gust = 1;
@@ -3074,7 +3102,7 @@
     if (!m.skillsOn) return 0;
     const sk = m.sk, s = m.shuttle;
     return {
-      e: m.ents.map((e) => { const o = {}; for (const k in e) if (!ENT_SKIP[k]) o[k] = packVal(e[k]); return o; }),
+      e: m.ents.map((e) => { const o = {}; for (const k in e) if (!ENT_SKIP[k]) o[k] = e.k==='geometryPrep'&&k==='aim'?{...e.aim}:packVal(e[k]); return o; }),
       r: [sk.half.map(r2), r2(sk.netUp || 0), sk.option ? [sk.option.o, sk.option.n || 0] : 0,
         sk.potato ? [sk.potato.o, r2(sk.potato.t)] : 0, 0],
       c: s.ctl ? { k: s.ctl.k, o: s.ctl.o, t: r2(s.ctl.t || 0), r: r2(s.ctl.r || 0), side: s.ctl.side || 0, e:s.ctl.e, thaw:s.ctl.thaw||0, to:s.ctl.to||0, high:s.ctl.high||0 } : 0,
@@ -3088,7 +3116,7 @@
         const c = p.cnt || {};
         return [b, p.passive || 0, c.bun || 0, r2(c.charge || 0), c.diveW || p.dir, c.streak || 0, c.guess ? (c.guess.front ? 2 : 1) : 0,
           0, c.combo || 0, c.cloud ? 1 : 0, p.market ? { ...p.market, bet: p.market.bet ? { ...p.market.bet } : null } : null, c.recall ? { ...c.recall } : null,
-          { cook:c.cook?JSON.parse(JSON.stringify(c.cook)):null, ribbon:c.ribbon?JSON.parse(JSON.stringify(c.ribbon)):null,club:c.club ? JSON.parse(JSON.stringify(c.club)) : null,nv:c.nv ? JSON.parse(JSON.stringify(c.nv)) : null,calibrate:c.calibrate||0,compile:c.compile||0,habit:c.habit,kbV:c.kbV||0,slipV:c.slipV||0,rocketCharge:c.rocketCharge||0 },r2(p.skillCd||0)];
+          { cook:c.cook?JSON.parse(JSON.stringify(c.cook)):null, ribbon:c.ribbon?JSON.parse(JSON.stringify(c.ribbon)):null,club:c.club ? JSON.parse(JSON.stringify(c.club)) : null,nv:c.nv ? JSON.parse(JSON.stringify(c.nv)) : null,calibrate:c.calibrate||0,calRally:c.calRally||0,calEarn:c.calEarn||0,compile:c.compile||0,habit:c.habit,kbV:c.kbV||0,slipV:c.slipV||0,rocketCharge:c.rocketCharge||0 },r2(p.skillCd||0)];
       }),
     };
   };
@@ -3102,7 +3130,7 @@
       return;
     }
     const prev = {}; if (ka && ka !== k) for (const e of ka.e) prev[e.id] = e;
-    v.ents = k.e.map((e) => { const p = prev[e.id]; return p ? Object.assign({}, e, { x: p.x + (e.x - p.x) * u, y: p.y + (e.y - p.y) * u, ...(Number.isFinite(e.z)&&Number.isFinite(p.z)?{z:p.z+(e.z-p.z)*u}:{}) }) : e; });
+    v.ents = k.e.map((entry) => { const e=entry.k==='geometryPrep'?{...entry,aim:{...entry.aim}}:entry; const p = prev[e.id]; return p ? Object.assign({}, e, { x: p.x + (e.x - p.x) * u, y: p.y + (e.y - p.y) * u, ...(Number.isFinite(e.z)&&Number.isFinite(p.z)?{z:p.z+(e.z-p.z)*u}:{}) }) : e; });
     const r = k.r;
     v.sk = { half: r[0], netUp: r[1], option: r[2] ? { o: r[2][0], n: r[2][1] || 0 } : null, potato: r[3] ? { o: r[3][0], t: r[3][1] } : null, beat: null };
     v.shuttle.silkShot=k.silk?{...k.silk}:null;v.shuttle.cookShot=k.cook?{...k.cook}:null;
@@ -3235,7 +3263,7 @@
       case 'zipao': {
         const t = YY.tossVel(v), r = YY.simulate(bx, by, t.vx * p.dir, t.vy, 1.8, true, false, env);
         let apex = r.pts[0]; for (const q of r.pts) if (q.y > apex.y) apex = q;
-        return { pts: r.pts, mark: apex, label: '垫高 ' + deg(t.a) + ' · 力度 ' + Math.round(t.sp / 9.3 * 100) + '%', good: true };
+        return { pts: r.pts, mark: apex, label: '准备4秒 · 垫高 ' + deg(t.a) + ' · 力度 ' + Math.round(t.sp / 9.3 * 100) + '%', good: true };
       }
       case 'diban': {
         if(s.slam?.o===p.idx){
@@ -3272,7 +3300,7 @@
         for (let t = 0; t < 1.8 && y > 0.1; t += 0.05) { pts.push({ x, y }); x += vx * p.dir * 0.05; wy -= BUN_G * 0.05; y += wy * 0.05; }
         return { pts, label: v.manual ? '掷出肉包 ' + deg(Math.atan2(v.y, v.x)) : '自动掷向球', good: true, bun: 1 };
       }
-      case 'pingyi': return {mark:{x:p.x+p.dir*.65,y:p.y+C.SHOULDER},label:'两次亲手回球 · 保留球路，校准失误',good:true};
+      case 'pingyi': return {mark:{x:p.x+p.dir*.65,y:p.y+C.SHOULDER},label:'稳拍2次 · 有校准3次 · 够球与收拍强化',good:true};
       case 'youyou': {
         const distance=v.manual?1.6+3.2*v.r:4.2,tx=p.side*clamp(p.side*(p.x+p.dir*v.x*distance),.25,H(p.idx)+.4),ty=Math.max(.25,p.y+1.5+v.y*distance);
         return {line:[[p.x,p.y+1.5],[tx,ty]],mark:{x:tx,y:ty},label:'接住来球 → 收回拍前 → 自己回击',good:true};
@@ -4950,4 +4978,11 @@
   const pack=Y.skPack,unpack=Y.skUnpack,copy=v=>v?JSON.parse(JSON.stringify(v)):null;
   Y.skPack=function(m){const k=pack(m);if(k){k.mirage=m.players.map(p=>copy(p.cnt.mirage));k.mirageMoon=copy(m.shuttle.mirageMoon);}return k;};
   Y.skUnpack=function(v,a,b,u){unpack(v,a,b,u);const k=b??a;v.players.forEach((p,i)=>{if(k?.mirage?.[i])p.cnt.mirage=copy(k.mirage[i]);else if(p.cnt)delete p.cnt.mirage;});v.shuttle.mirageMoon=copy(k?.mirageMoon);};
+})(typeof GameGlobal!=='undefined'?GameGlobal:typeof window!=='undefined'?window:globalThis);
+
+/* 小红：准备状态同时供技能键、AI 和联机视图读取。 */
+(function(G){
+  const Y=G.YY,prepared=Y.skillPrepared,label=Y.skillRecastText;
+  Y.skillPrepared=(m,p,id)=>id==='zipao'?!!m.ents?.some(e=>e.k==='geometryPrep'&&e.o===p.idx&&e.t>0):id==='pingyi'?!!m.ents?.some(e=>e.k==='guide'&&e.o===p.idx&&e.n>0):prepared(m,p,id);
+  Y.skillRecastText=(m,p,id)=>id==='zipao'&&Y.skillPrepared(m,p,id)?'靠近来球':id==='pingyi'&&Y.skillPrepared(m,p,id)?'稳拍余 '+m.ents.find(e=>e.k==='guide'&&e.o===p.idx).n+' 次':label(m,p,id);
 })(typeof GameGlobal!=='undefined'?GameGlobal:typeof window!=='undefined'?window:globalThis);

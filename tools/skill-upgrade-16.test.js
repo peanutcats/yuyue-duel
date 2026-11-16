@@ -29,11 +29,12 @@ test('pool has two saves across different returns; same ball cannot bounce twice
  m.shuttle.puddle=0;assert.ok(m.poolBounce(-3));m.shuttle.puddle=0;assert.equal(m.poolBounce(-2),false);
  assert.equal(m.entOf('pool',0).n,0);
 });
-test('calibration rewards personal skill and is spent only on a manual reflector',()=>{
+test('calibration rewards personal skill and strengthens automatic or manual reflectors',()=>{
  const m=game('xiaohong',['fanshe','zipao']),p=m.players[0];ball(m);
  m.afterHit(p,{type:'clear'},.9,{device:true});assert.ok(!p.cnt.calibrate);
  ball(m);m.afterHit(p,{type:'clear'},.9,{});assert.equal(p.cnt.calibrate,1);
- cast(m,'fanshe');assert.equal(m.entsOf('board',0)[0].n,1);assert.equal(p.cnt.calibrate,1);
+ cast(m,'fanshe');assert.equal(m.entsOf('board',0)[0].n,2);assert.equal(p.cnt.calibrate,0);
+ ball(m);m.afterHit(p,{type:'clear'},.9,{});assert.equal(p.cnt.calibrate,1);
  cast(m,'fanshe',{x:.5,y:.6});assert.equal(m.entsOf('board',0)[1].n,2);assert.equal(p.cnt.calibrate,0);
 });
 test('night sky extra energy is six per two returns and capped per point',()=>{
