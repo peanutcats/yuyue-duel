@@ -1782,11 +1782,12 @@
     ribbonFling(p, v) {
       const s = this.shuttle, o = this.players[1 - p.idx];
       const deep=this.courtMode==='3d'?(this.inputs[p.idx].move||0)>.25:!!v?.manual&&v.x>.25;
-      const depth=deep?this.halfOf(o.idx)-.55:p.side*p.x<=2.8?.85:1.2,type=deep||s.y<1.55?'lift':'drop';
+      const depth=deep?this.halfOf(o.idx)-.55:p.side*p.x<=2.8?.75+clamp(1.15-s.y,0,.9)*.35:1.2,type=deep||s.y<1.55?'lift':'drop';
+      const flight=this.ribbonFlight(p,{depth,z:this.courtMode==='3d'?clamp(this.shotTarget(p,type).z,-2.15,2.15):0,minAngle:deep?52:-35});
+      if(!flight)return false;
       if(p.cnt.ribbon)p.cnt.ribbon.catchUntil=0;
       s.ctl=null;
-      if(this.courtMode==='3d')Object.assign(s,YY.solveShot3D(s,{x:p.dir*depth,z:clamp(this.shotTarget(p,type).z,-2.15,2.15)},type,1,this.physEnv()));
-      else [s.vx,s.vy]=this.launchFrom(s.x,s.y,p.dir,deep?58:s.y<1.55?48:24,depth,.15);
+      Object.assign(s,flight);
       const e=this.entOf('ribbon',p.idx);if(e){e.ph=2;e.t=Math.min(e.t,.35);}
       p.swing={t:.08,btn:deep?'clear':'drop',kind:'side',dur:.3,hit:true,prevE:99,judged:true,style:deep?'lift':'push',ribbon:1,contact:{t:.08,x:s.x,y:s.y,z:s.z||0}};
       this.hitstop=Math.max(this.hitstop,.035);this.afterHit(p,{type},.88,{skill:'hongxian',device:true});
@@ -2862,7 +2863,7 @@
           if (L < 0.12) { nx = tx + Math.cos(this.time * 7) * 0.05; ny = ty + Math.sin(this.time * 9) * 0.05; }
           nx = p.side * Math.max(0.3, p.side * nx); // 丝带拉不过网
           s.vx = (nx - s.x) / dt; s.vy = (ny - s.y) / dt; s.x = nx; s.y = ny;
-          if (c.t <= 0) this.ribbonFling(p, null); // 时间到：自动甩向空当
+          if (c.t <= 0 && this.ribbonFling(p, null)===false) this.releaseTether(); // 无可行球路也不能无限持球
           break;
         }
         case 'cradle': { // 兼容旧受控球快照：拍面持球，时间到后自动挑出
@@ -4272,14 +4273,63 @@
 (function(G){
   'use strict';
   const Y=G.YY,P=Y.Match.prototype,{clamp,lerp}=Y,C=Y.C;
-  const old={};for(const k of ['castCheck','cast','recast','mods','updatePlayer','skHitQ','afterHit','skAfterHit','skShuttle','skStep','skReset','scorePoint','yoyoCatch','yoyoRelease','skControl'])old[k]=P[k];
+  const old={};for(const k of ['castCheck','cast','recast','mods','updatePlayer','skHitQ','skShot','afterHit','skAfterHit','skShuttle','skStep','skReset','scorePoint','yoyoCatch','yoyoRelease','skControl'])old[k]=P[k];
   const ownBow=(m,p)=>(m.ents||[]).find(e=>e.k==='bow'&&e.o===p.idx&&e.t>0),state=p=>p.cnt.ribbon||(p.cnt.ribbon={});
   const fx=(m,p,id,x=p.x,y=p.y+.3,extra={})=>m.addEnt('atelier',p.idx,x,y,.65,{sid:id,z:p.z||0,...extra});
   const manual=c=>!c.serve&&!c.device&&!c.ownSide;
   const netShots=new Set(['net','tumble','block','drop','slice','drive','push','kill','halfsmash']);
   const front=p=>p.side*p.x<=2.8;
-  const incoming=(m,p,c)=>m.skillsOn&&m.phase==='rally'&&manual(c)&&!m.cloneHitting&&m.shuttle.live&&!m.shuttle.held&&m.shuttle.lastHitter===1-p.idx&&m.shuttle.crossedNet&&m.shuttle.selfToss!==p.idx&&p.side*m.shuttle.x>0;
+  const incoming=(m,p,c)=>m.skillsOn&&m.phase==='rally'&&manual(c)&&!m.cloneHitting&&m.shuttle.live&&!m.shuttle.held&&!m.shuttle.netHit&&!m.shuttle.ctl&&m.shuttle.lastHitter===1-p.idx&&m.shuttle.crossedNet&&m.shuttle.selfToss!==p.idx&&p.side*m.shuttle.x>0;
   const netContact=(m,p)=>front(p)&&p.side*m.shuttle.x>0&&p.side*m.shuttle.x<=2.8&&m.shuttle.y<=3.35;
+  // Solve after ordinary stroke error, against the same cork/net and wind physics
+  // used by live play. Low contacts need a higher arc, not a collision exemption.
+  P.ribbonFlight=function(p,{depth,z=0,minAngle=-35}){
+    const s=this.shuttle,spatial=this.courtMode==='3d',env={...this.physEnv()};
+    // Incoming aerodynamic effects end at contact; persistent gravity does not.
+    if(s.nf){delete env.curve;delete env.paper;delete env.spin;}
+    if((env.g??1)<=0||s.y<=C.SHUTTLE_R+.05)return null;
+    const target={x:p.dir*clamp(depth,.55,this.halfOf(1-p.idx)-.3),z:clamp(z,-2.4,2.4)};
+    const dx=target.x-s.x,dz=spatial?target.z-(s.z||0):0,range=Math.hypot(dx,dz);
+    if(dx*p.dir<=.05)return null;
+    const plane={...env,wind:0,windZ:0},clear=(env.netH||C.NET_H)+C.SHUTTLE_R+.1;
+    const path=(v,ignore=false)=>spatial?Y.simulate3D({...s,...v,netHit:ignore},env,false):Y.simulate(s.x,s.y,v.vx,v.vy,6,false,ignore,env);
+    const candidate=angle=>{
+      const rad=angle*Math.PI/180;
+      let speed=Y.solveSpeed(spatial?0:s.x,s.y,spatial?1:p.dir,angle,spatial?range:Math.abs(dx),spatial?plane:env),yaw=Math.atan2(dz,Math.abs(dx));
+      if(!Number.isFinite(speed)||speed>32)return null;
+      const at=(v,a)=>({vx:p.dir*v*Math.cos(rad)*Math.cos(a),vy:v*Math.sin(rad),...(spatial?{vz:v*Math.cos(rad)*Math.sin(a)}:{})});
+      if(spatial&&(env.wind||env.windZ||env.gFar))for(let i=0;i<5;i++){
+        const r=path(at(speed,yaw),true),ex=target.x-r.landX,ez=target.z-r.landZ;
+        if(Math.hypot(ex,ez)<.012)break;
+        const rv=path(at(speed+.1,yaw),true),ra=path(at(speed,yaw+.01),true);
+        const xx=(rv.landX-r.landX)/.1,xz=(ra.landX-r.landX)/.01,zx=(rv.landZ-r.landZ)/.1,zz=(ra.landZ-r.landZ)/.01,det=xx*zz-xz*zx;
+        if(Math.abs(det)<1e-7)break;
+        speed=clamp(speed+clamp((ex*zz-ez*xz)/det,-6,6),.3,32);yaw=clamp(yaw+clamp((ez*xx-ex*zx)/det,-.3,.3),-1.5,1.5);
+      }
+      const v=at(speed,yaw),r=path(v);
+      if(r.netHit||r.t>=5.5||Math.hypot(r.landX-target.x,spatial?r.landZ-target.z:0)>.04)return null;
+      if(s.x*p.side>0&&(!Number.isFinite(r.netY)||r.netY<clear))return null;
+      return v;
+    };
+    let lo=minAngle,best=candidate(lo);if(best)return best;
+    for(const upper of[45,65,74,78,80,82,84,86,88]){
+      if(upper<=lo)continue;best=candidate(upper);
+      if(!best){lo=upper;continue;}
+      let hi=upper;for(let i=0;i<9;i++){const a=(lo+hi)/2,v=candidate(a);if(v){best=v;hi=a;}else lo=a;}
+      return best;
+    }
+    return null;
+  };
+  P.skShot=function(p,shot,c){
+    old.skShot.call(this,p,shot,c);
+    if(!incoming(this,p,c)||!netContact(this,p)||!this.hasPassive(p,'hudie')||!['net','tumble','block','drop','slice'].includes(shot.type))return;
+    const st=p.cnt.ribbon,linked=st?.stepUntil>this.time||st?.catchUntil>this.time,s=this.shuttle,spatial=this.courtMode==='3d';
+    const aim=spatial?this.shotTarget(p,shot.type):null,move=aim?.move??p.swing?.aim?.y??this.inputs[p.idx].move??0;
+    const depth=clamp((linked?.7:.95)+clamp(move,-1,1)*.3+clamp(1.15-s.y,0,.9)*.35,.55,1.55);
+    const flight=this.ribbonFlight(p,{depth,z:aim?.z||0});if(!flight)return;
+    Object.assign(shot,flight);c.newcomerSolved=true;
+    if(shot.direction3D)shot.direction3D={...shot.direction3D,x:depth,z:aim.z};
+  };
   P.mods=function(p){
     const M=old.mods.call(this,p);if(!this.skillsOn||this.phase!=='rally'||!front(p))return M;
     if(this.hasPassive(p,'hudie')&&netContact(this,p)){M.reach*=1.12;M.timing*=1.2;}
@@ -4387,8 +4437,8 @@
     if(!f||!s.live||s.ctl||s.netHit||f.o!==s.lastHitter)return handled;
     const p=this.players[f.o],st=state(p);if(previous&&previous.x*p.side>=0&&s.x*p.side<0){
       s.silkShot=null;if(s.y>C.NET_H+1.8||!(p.buff.silkReady>0)||!(st.shots>0))return handled;
-      const depth=f.deep?this.halfOf(1-p.idx)-.55:.82,type=f.deep?'lift':'drop';
-      if(this.courtMode==='3d')Object.assign(s,Y.solveShot3D(s,{x:p.dir*depth,z:f.z},type,1,this.physEnv()));else [s.vx,s.vy]=this.launchFrom(s.x,s.y,p.dir,f.deep?62:-12,depth,.12);
+      const flight=this.ribbonFlight(p,{depth:f.deep?this.halfOf(1-p.idx)-.55:.65,z:f.z,minAngle:f.deep?62:-35});
+      if(!flight)return handled;Object.assign(s,flight);
       st.shots--;s.ver++;s.speed=Math.hypot(s.vx,s.vy,s.vz||0);this.rePred();fx(this,p,'jiewang',s.x,s.y,{z:s.z||0,burst:1,deep:f.deep});this.proc(p,'jiewang',f.deep?'蝶域 · 越顶压后场':'蝶域 · 贴网急坠');
     }return handled;
   };
@@ -4425,7 +4475,7 @@
   Y.skillRecastReady=(m,p,id)=>id==='tangqiu'?!!(p.cnt.ribbon?.window>m.time&&!p.cnt.ribbon.second):id==='jiewang'?p.buff.silkReady>0:ready(m,p,id);
   Y.skillPrepared=(m,p,id)=>id==='jiewang'?p.buff.silkReady>0:prepared(m,p,id);
   Y.skillRecastText=(m,p,id)=>id==='tangqiu'&&Y.skillRecastReady(m,p,id)?'免费折返':id==='jiewang'&&p.buff.silkReady>0?(p.cnt.ribbon?.deep?'挑深':'压浅')+' · '+(p.cnt.ribbon?.shots||0)+'拍':id==='youyou'&&(m.ents||[]).find(e=>e.k==='yoyo'&&e.o===p.idx)?.ph===3?'张弦弹射':text(m,p,id);
-  Y.skillPreview=function(m,p,id,v){if(id==='tangqiu'){const d=direction(m,p,v),x=p.side*clamp(p.side*(p.x+d.x*(p.cnt.ribbon?.window>m.time&&!p.cnt.ribbon.second?2.1:1.9)),C.X_NEAR,m.halfOf(p.idx)+.15);return{line:[[p.x,.1],[x,.1]],mark:{x,y:.1},label:'穿花抢网 · 三秒内免费折返',good:true};}if(id==='jiewang')return{mark:{x:p.side*.55,y:C.NET_H},label:'八秒蝶域 · 网前两拍一截 · 有结强化',good:true};if(id==='hongxian'&&m.shuttle.ctl?.k==='tether')return{mark:{x:p.dir*(v.manual&&v.x>.25?m.halfOf(1-p.idx)-.55:p.side*p.x<=2.8?.85:1.2),y:0},label:v.manual&&v.x>.25?'回旋挑长':'回旋压短',good:true};return preview(m,p,id,v);};
+  Y.skillPreview=function(m,p,id,v){if(id==='tangqiu'){const d=direction(m,p,v),x=p.side*clamp(p.side*(p.x+d.x*(p.cnt.ribbon?.window>m.time&&!p.cnt.ribbon.second?2.1:1.9)),C.X_NEAR,m.halfOf(p.idx)+.15);return{line:[[p.x,.1],[x,.1]],mark:{x,y:.1},label:'穿花抢网 · 三秒内免费折返',good:true};}if(id==='jiewang')return{mark:{x:p.side*.55,y:C.NET_H},label:'八秒蝶域 · 网前两拍一截 · 有结强化',good:true};if(id==='hongxian'&&m.shuttle.ctl?.k==='tether')return{mark:{x:p.dir*(v.manual&&v.x>.25?m.halfOf(1-p.idx)-.55:p.side*p.x<=2.8?.75+clamp(1.15-m.shuttle.y,0,.9)*.35:1.2),y:0},label:v.manual&&v.x>.25?'回旋挑长':'回旋压短',good:true};return preview(m,p,id,v);};
 })(typeof GameGlobal!=='undefined'?GameGlobal:typeof window!=='undefined'?window:globalThis);
 
 /* 静川 · 长短布局与 AI 幻象。权威比赛、Web 与小游戏共用，计时只在回合中推进。 */

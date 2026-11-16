@@ -16,9 +16,9 @@
     fanshe:["board",["放板与校准","短暂准备后拦球","接力到固定落区"],"提前把板放在对手常打的线路上；普通板有 0.35 秒准备，别等球到才放。"],
     zipao:["toss",["提前准备四秒","近身自抛垫高","亲手精准补拍"],"先准备再到位接球，校准让高点补拍更稳；也可以垫向反射板接力。"],
     pingyi:["buff",["开启辅助线","两次稳拍 / 校准三次","快速收拍衔接"],"接快球或疲劳时开启，稳定回球积校准，再转反射防守或自抛进攻。"],
-    tangqiu:["step",["穿花抢位","稳住下一拍","免费折返"],"先抢网稳拍，再用免费第二段追短球或撤回；三秒内决定方向。"],
-    hongxian:["hold",["牵住来球","观察站位","二段选长短"],"牵住球后先看对手站位，再决定放短还是挑长；网前持球1.25秒，亲手回击更精准。"],
-    jiewang:["curve",["展开固定蝶域","截流后亲手回击","两拍放短或挑深"],"守在蝶域内截住低球，亲手接球打长短；有蝴蝶结可增至三拍两截，高球和边线可绕开。"],
+    tangqiu:["step",["穿花抢位","接续细搓0.70米","免费折返"],"先抢网再手动搓放，下一拍短球更贴网；低球会抬弧求稳。三秒内用免费第二段追短或撤回。"],
+    hongxian:["hold",["牵住来球","观察站位","二段选长短"],"网前持球1.25秒：再按放短约0.75米，亲手搓放约0.70米；向前选挑长，低位短球适当放宽。"],
+    jiewang:["curve",["展开固定蝶域","截流后亲手回击","两拍放短或挑深"],"截流后亲手上网接球：过网压到约0.65米，或前推挑向底线；有结增至三拍两截，高球和边线可绕开。"],
     diban:["bounce",["备锅 / 拍前砸地","反弹蓄力","再按出锅选长短"],"肉包入锅变成爆馅弹射；出锅后挂回锅，可收回再打一记旺火补拍。"],
     huiguo:["reverse",["下一拍挂回旋","收回保留馅料","旺火补拍 / 再包球"],"先用地板或肉包迫对手移动，再收回改变下一拍；肉包蓄力能带回并重新包球。"],
     baozi:["hold",["上拍 / 投包减速","回球保留蓄力","爆馅选长短"],"慢球诱导走位后爆馅；可把蓄力送进地板弹射，或回锅保馅后再次发动。"],
@@ -71,7 +71,7 @@
   const passives = {
     kejian:['成功完成一招','10秒内完成不同招式','回复与快速收拍'],
     yihan:['极限救球','失败留下脚印','下一分拾取补能'], dishui:['完成回球','水滴留场','拾取回复体力'],
-    biaochi:['完美或两次稳定回球','校准回能与体力','强化任一主动技能'], hudie:['抢网稳拍','短球过网织结','回能并护己方擦网'],
+    biaochi:['完美或两次稳定回球','校准回能与体力','强化任一主动技能'], hudie:['到位手动搓放','贴网落点约0.95米','织结回能再抢拍'],
     zheteng:['完成一招 · 回能回体','8秒内换另一招','旺火 · 强化下一拍'], yekong:['手动回球','累计两次','额外回复能量'],
     jixie:['装置命中球','进入3秒过载','收招再按回收'], liansha:['连续得分','连胜奖励增加','被终结时对手得能量'],
     rizhi:['记录挥空原因','接回两类来球或记录球路','获得编译标记'], qiandao:['记录对手3次击球位置','同区出现2次','形成习惯区'],
@@ -138,7 +138,7 @@
     if(['step','dive','swing','miaoStep'].includes(kind)) actorX += stage===0?v*1.7:stage===1?1.7:1.7*(1-v);
     if(['jump','swing','dive','miaoJump'].includes(kind))actorY=Math.sin(u*Math.PI)*(['dive'].includes(kind)?.35:1.35);
     if(kind==='miaoJump'){actorY=stage===0?v*1.6:stage===1?1.6:1.6*(1-v);actorX=-3+(stage===2?v*1.6:0);}
-    if(id==='jiewang')actorX=-1.6;
+    if(['jiewang','hudie','hongxian'].includes(id))actorX=-1.6;
     if(kind==='platform')actorY=stage?1:.8*v;
     if(kind==='clone')actorX=stage===0?-3:-3+Math.min(1,(stage-1+v))*1.8;
     const drawActor=(a,b,z,owner,opacity=1)=>{const p=pt(a,b,z);g.save();g.globalAlpha=opacity;g.translate(...p);g.scale(scale*.98,-scale*.98);const moving=owner&&['step','dive','swing','miaoStep'].includes(kind),turn=id==='jieli_jump'?{turnAngle:TAU*u,turnPose:Math.sin(Math.PI*u)}:{};const fake={idx:0,dir:owner?1:-1,x:a,y:b,z,vx:moving?3:0,vy:0,onGround:b===0,runPhase:time*4,stamina:100,cnt:{nv:turn},buff:{},motion:{air:b,speed:moving?3:0,land:0,split:0}};Y.drawCharacter(g,fake,Y.lookOf(owner?info.owner:'canglan'),{time,mood:'play',action:owner&&!sk.passive?Y.CharacterArt?.action(id,(stage===0?v*.3:stage===1?.3+v*.2:.5+v*.119)):null});g.restore();};
@@ -223,6 +223,19 @@
       if(id==='tongqin'){ball(xx,yy);const a=pt(-2.4,1.7);Y.SkillFX?.officeSeal(g,...a,1,stage===1?v*.55:.15,false);}
       else {const paper={dir:1,dart:id==='gongwei',glide:id==='jiaban',foldAt:2.8},state=Y.paperAero(xx,paper);Y.SkillFX?.paperBody(g,...q,-.18,4.6,state,{paper,office:id==='gongwei'?Y.OFFICE_FLIGHT.dart:Y.OFFICE_FLIGHT.glide});}
     }
+    else if(['hudie','tangqiu','hongxian'].includes(id)){
+      const z=space?-.65:0,near=id==='hudie'?.95:id==='tangqiu'?.7:.75;
+      if(id==='tangqiu'&&stage!==1){path([[-3,.12,z],[-1.3,.12,z]],color+'88',true);Y.CharacterArt?.butterfly(g,...pt(actorX,.2,z),7,time);}
+      else if(stage===0){path([[2,2.1,z],[-.9,1.8,z]],color+'88',true);ball(2-2.9*v,2.1-.3*v,z);if(id==='hongxian')path([[-1.6,1.4,z],[-1.6+.7*v,1.4+.4*v,z]],color);}
+      else if(id==='hongxian'&&stage===1){path([[-1.6,1.4,z],[-.9,1.8,z]],color);ball(-.9,1.8+Math.sin(time*4)*.04,z);ring(-.9,1.8,z,12);}
+      else{
+        const deep=id==='hongxian'&&v>.5,f=id==='hongxian'?(v%.5)*2:v,end=deep?6.15:near;
+        const points=[[-.9,1.8,z],[0,deep?3.2:1.72,z],[end,.065,z]],u=f<.48?f/.48:(f-.48)/.52,a=f<.48?points[0]:points[1],b=f<.48?points[1]:points[2];
+        path(points,color);ball(a[0]+(b[0]-a[0])*u,a[1]+(b[1]-a[1])*u,z);ring(end,.065,z,8);
+      }
+      const q=pt(.8,3.1);g.fillStyle=color;g.font='800 11px '+Y.FONT;g.textAlign='center';
+      g.fillText(id==='hudie'?['到位手动接球','搓放约0.95m · 低球抬弧','织结回能 · 快收再抢拍'][stage]:id==='tangqiu'?['穿花抢网','接续细搓约0.70m','三秒内免费折返'][stage]:['丝带实际触球','持球1.25s · 可亲手回击','后浅约0.75m / 前深至底线'][stage],...q);
+    }
     else if(kind==='passive'||kind==='resource'){for(let i=0;i<3;i++){const p=pt(-4+i*.65,2.65);g.fillStyle=stage>=i?color:'#47616d';g.fillRect(p[0]-6,p[1]-4,12,8);}if(stage===2)ring(-3,1,0,20+v*12);lineBall();}
     else if(id==='jingxiang'){
       const f=stage===0?.12:stage===1?.12+v*.35:.47+v*.35;
@@ -265,7 +278,7 @@
       path([[-.55,1.55,z-1.15],[-.55,2.65,z-1.15],[-.55,2.65,z+1.15],[-.55,1.55,z+1.15]],color+'99',true);
       if(stage===0){for(const dz of[-1.15,1.15])Y.CharacterArt?.butterfly(g,...pt(-.55,1.55,z+dz),7,time);}
       else if(stage===1){const f=v<.5?v*2:1;path([[2,2.2,z],[-.55,1.8,z],[-1.2,2.4,z]],color+'66',true);ball(v<.5?2-2.55*f:-.55-(v-.5)*1.3,v<.5?2.2-.4*f:1.8+Math.sin((v-.5)*Math.PI)*.6,z);}
-      else{const deep=v>.5,f=(v%.5)*2,end=deep?6.15:.82;path([[-1.1,1.9,z],[0,2.1,z],[end,.05,z]],color);ball(-1.1+(end+1.1)*f,1.9*(1-f)+Math.sin(f*Math.PI)*(deep?2.2:.55),z);}
+      else{const deep=v>.5,f=(v%.5)*2,end=deep?6.15:.65;path([[-1.1,1.9,z],[0,2.1,z],[end,.05,z]],color);ball(-1.1+(end+1.1)*f,1.9*(1-f)+Math.sin(f*Math.PI)*(deep?2.2:.55),z);}
       const q=pt(1,3.3);g.font='800 11px '+Y.FONT;g.textAlign='center';g.fillStyle=color;g.fillText(['8s · 两拍一截 / 有结三拍两截','低球减速抬起 · 必须亲手回击','前推深 / 后推浅 · 高球边线可绕开'][stage],...q);
     }
     else if(kind==='curve'||kind==='glide'){path([[-2.5,1.4],[0,2.3],[4.8,0]],'#5b7e89',true);const near=['jiewang','shuizhong','luokuan'].includes(id),end=near?1.5:5.3;path([[-2.5,1.4],[0,2.5],[end,0]],color);ball(-2.5+(end+2.5)*t,1.4*(1-t)+Math.sin(t*Math.PI)*1.6);}

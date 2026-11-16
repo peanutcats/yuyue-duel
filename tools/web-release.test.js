@@ -8,7 +8,7 @@ test('the static release resolves local scripts, styles and all score files with
   const local=ref.split('?')[0];assert.ok(fs.existsSync(path.join(root,local)),local);assert.ok(!local.startsWith('minigame/'),local);
  }
  const scriptRefs=[...html.matchAll(/<script src="(js\/[^"?]+)(?:\?([^"]+))?"/g)];
- assert.ok(scriptRefs.length>40);assert.ok(scriptRefs.every(([,p,q])=>q==='v=web-1331-20261116'),'cache versions match this release');
+ assert.ok(scriptRefs.length>40);assert.ok(scriptRefs.every(([,p,q])=>q==='v=web-1340-20261116'),'cache versions match this release');
  assert.equal(Object.keys(score.TRACKS).length,15);
  for(const tr of Object.values(score.TRACKS)){
   assert.ok(tr.src.startsWith('assets/audio/score/'));const data=fs.readFileSync(path.join(root,tr.src));assert.ok(data.length>100000);assert.equal(data.toString('ascii',0,3),'ID3');assert.ok(tr.duration>30&&tr.duration<90);
