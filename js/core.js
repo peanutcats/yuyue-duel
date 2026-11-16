@@ -4,7 +4,7 @@
 (function (G) {
   'use strict';
   const YY = (G.YY = G.YY || {});
-  YY.PHYSICS_VERSION = 35;
+  YY.PHYSICS_VERSION = 36;
   // Free matches use these presets; story and training retain their own goals.
   YY.SCORE_RULES = Object.freeze({7: 11, 15: 21, 21: 30});
   YY.matchFormat = value => {

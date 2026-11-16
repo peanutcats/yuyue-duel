@@ -1316,9 +1316,9 @@
     if(mirage){
       g.textAlign='center';g.font='600 10px '+YY.FONT;
       const active=Object.entries(mirage.ready||{}).filter(([,e])=>e.t>0);
-      active.forEach(([id,e],i)=>{const cx=(i-(active.length-1)/2)*91;g.fillStyle='#102736ed';YY.rr(g,cx-43,-13,86,30,8);g.fill();g.strokeStyle='#83dce9';g.lineWidth=1;g.stroke();g.fillStyle='#c5f5fc';g.fillText(YY.SKILLS[id].short+(id==='jingxiang'?' ×'+e.n:'待命'),cx,-2);g.fillStyle='#8eb9c7';g.font='9px '+YY.FONT;g.fillText(id==='jingxiang'&&viewer===p.idx?YY.mirageAimLabel(e.aim):e.t.toFixed(1)+'s',cx,10);});
-      const y=active.length?-24:6;g.fillStyle='#b7f5ff';g.font='600 10px '+YY.FONT;g.fillText('折影 '+(mirage.focus||0)+'/2'+(mirage.focus?' · 下拍精准':''),0,y);
-      if(mirage.follow>0){g.fillStyle='#e6fcff';g.fillText('真球补拍 · 96%',0,y-16);}
+      active.forEach(([id,e],i)=>{const cx=(i-(active.length-1)/2)*91;g.fillStyle='#102736ed';YY.rr(g,cx-43,-13,86,30,8);g.fill();g.strokeStyle='#83dce9';g.lineWidth=1;g.stroke();g.fillStyle='#c5f5fc';g.fillText(YY.SKILLS[id].short+(id==='jingxiang'?' ×'+e.n:id==='meida'&&e.warm>0?'准备中':'待命'),cx,-2);g.fillStyle='#8eb9c7';g.font='9px '+YY.FONT;g.fillText(id==='jingxiang'&&viewer===p.idx?YY.mirageAimLabel(e.aim):e.t.toFixed(1)+'s',cx,10);});
+      const y=active.length?-24:6;g.fillStyle='#b7f5ff';g.font='600 10px '+YY.FONT;g.fillText('折影 '+(mirage.focus||0)+'/2'+(mirage.focus?' · 待接来球':''),0,y);
+      if(mirage.follow>0){g.fillStyle='#e6fcff';g.fillText('真球补拍 · 88%',0,y-16);}
     }
     g.restore();
   };

@@ -12,7 +12,7 @@ async page => {
  page.on('response',r=>{if(r.url().startsWith(origin)&&r.status()>=400)missing.push(r.status()+' '+r.url());});
  await page.setViewportSize({width:1440,height:900});await page.goto(origin+'/');await page.waitForFunction(()=>window.App?.screen==='menu');
  await page.evaluate(()=>{YY.Profile.choose('char','dingding');YY.Profile.setGear('ranran','tension',24);App.show('menu');});
- await assert(()=>YY.CHARS.length===21&&Object.keys(YY.SKILLS).length===84&&YY.PHYSICS_VERSION===35,'shared 21-character / 84-skill catalog and physics 35');
+ await assert(()=>YY.CHARS.length===21&&Object.keys(YY.SKILLS).length===84&&YY.PHYSICS_VERSION===36,'shared 21-character / 84-skill catalog and physics 36');
  await shot('clubhouse-home');
  await click('#scr-menu [data-go=battle]');await assert(()=>App.screen==='battle','home opens the battle hub');
  await click('#scr-battle [data-go=ai]');await click('[data-quick-level=hard]');

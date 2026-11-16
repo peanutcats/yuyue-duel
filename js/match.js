@@ -4790,6 +4790,7 @@
   const ready=(p,id)=>p.cnt?.mirage?.ready?.[id];
   const old={};for(const k of ['castCheck','cast','recast','mods','skHitQ','skShot','afterHit','touchShuttle','skShuttle','skStep','skReset','scorePoint'])old[k]=P[k];
   const manual=(m,p,c)=>m.skillsOn&&m.phase==='rally'&&!c.serve&&!c.device&&!c.ownSide&&m.shuttle.live&&!m.shuttle.held&&!m.shuttle.ctl&&!m.shuttle.netHit&&m.shuttle.x*p.side>0&&((m.shuttle.lastHitter===1-p.idx&&m.shuttle.crossedNet)||(m.shuttle.selfToss===p.idx&&m.shuttle.tossSkill==='meida'));
+  const following=(m,p)=>p.cnt.mirage?.follow>0&&m.shuttle.live&&!m.shuttle.held&&!m.shuttle.netHit&&!m.shuttle.ctl&&m.shuttle.lastHitter===p.idx&&m.shuttle.selfToss===p.idx&&m.shuttle.tossSkill==='meida';
   const outgoing=(m,p)=>m.shuttle.live&&!m.shuttle.held&&!m.shuttle.isServe&&!m.shuttle.netHit&&!m.shuttle.ctl&&m.shuttle.lastHitter===p.idx&&m.shuttle.selfToss!==p.idx&&m.shuttle.y>.75;
   const consume=(p,id)=>{const e=ready(p,id);if(e&&--e.n<=0)delete state(p).ready[id];};
   const AIM_DEAD=.25;
@@ -4841,12 +4842,22 @@
   P.mirageMove=function(p,dt){
     if(!this.skillsOn||this.phase!=='rally'||!this.hasPassive(p,'canying'))return;
     const st=state(p),vx=p.vx||0,vz=this.courtMode==='3d'?p.vz||0:0,speed=Math.hypot(vx,vz),last=st.heading;
-    st.turnCd=Math.max(0,(st.turnCd||0)-dt);
-    if(last&&st.turnCd<=0&&p.onGround&&(speed<.9||vx*last.x+vz*last.z<-.1)){
-      this.addEnt('shadow',p.idx,p.x,p.y,.8,{v:last.x,vz:last.z,z:p.z||0,mirage:true});
-      st.focus=Math.min(2,st.focus+1);st.turnCd=1.2;st.flow=.8;delete st.heading;
-      this.proc(p,'canying','折影 '+st.focus+'/2 · 下拍精准');
-    }else if(speed>2.6&&(!last||vx*last.x+vz*last.z>0))st.heading={x:vx,z:vz};
+    const point={x:p.x,z:this.courtMode==='3d'?p.z||0:0},before=st.runPoint;
+    const moved=before?Math.hypot(point.x-before.x,point.z-before.z):0;
+    st.runPoint=point;st.turnCd=Math.max(0,(st.turnCd||0)-dt);
+    // Count real ground travel, not a changed velocity, forced knockback or teleport.
+    if(!p.onGround||p.buff.prone>0||p.buff.stun>0||p.buff.knock>0||moved>.65){delete st.heading;return;}
+    const turn=last&&(speed<.9||vx*last.x+vz*last.z<-.1);
+    if(turn){
+      delete st.heading;
+      if(st.turnCd<=0&&st.focus<2&&(last.distance||0)>=.8){
+        this.addEnt('shadow',p.idx,p.x,p.y,.8,{v:last.x,vz:last.z,z:p.z||0,mirage:true});
+        st.focus++;st.turnCd=1.8;st.flow=.6;
+        this.proc(p,'canying','折影 '+st.focus+'/2 · 下拍稳准');return;
+      }
+    }
+    if(speed>2.6&&(!last||turn))st.heading={x:vx,z:vz,distance:0};
+    else if(last&&!turn)st.heading={x:last.x,z:last.z,distance:Math.min(2,(last.distance||0)+moved)};
   };
   // Every replacement is simulated before committing. No teleport or hidden score.
   P.mirageVelocity=function(p,depth,z=0,type='clear',origin=this.shuttle){
@@ -4889,9 +4900,9 @@
   };
   P.cast=function(p,id,aim=0,...args){
     if(!ids.has(id))return old.cast.call(this,p,id,aim,...args);
-    const st=state(p),def=Y.SKILLS[id];st.ready[id]={t:def.dur,n:id==='jingxiang'?2:1};p.skillCd=.18;
+    const st=state(p),def=Y.SKILLS[id];st.ready[id]={t:def.dur,n:id==='jingxiang'?2:1,...(id==='meida'?{warm:.18}:{})};p.skillCd=.18;
     if(id==='jingxiang')st.ready[id].aim={...(args[0]?.mirageAim||this.mirageAim(p,aim))};
-    this.proc(p,id,id==='jingxiang'?'镜像就绪 · 两拍分化':id==='meida'?'假拍就绪 · 近身接引':'水月就绪 · 下一拍附水纹');
+    this.proc(p,id,id==='jingxiang'?'镜像就绪 · 两拍分化':id==='meida'?'假拍准备 · 0.18秒后接引':'水月就绪 · 下一拍附水纹');
     if(id==='jingxiang'&&outgoing(this,p)){
       const s=this.shuttle,o=this.players[1-p.idx];
       if(!s.crossedNet&&this.racketGap(o,s.x,s.y)>2.8){const shot={vx:s.vx,vy:s.vy,vz:s.vz||0,type:s.shot};if(this.mirageAimShot(p,shot,st.ready[id].aim)){Object.assign(s,{vx:shot.vx,vy:shot.vy,vz:shot.vz||0,shot:shot.type});s.speed=Math.hypot(s.vx,s.vy,s.vz);s.ver++;this.rePred();}else this.proc(p,id,'无安全选线 · 保留原球路');}
@@ -4924,13 +4935,15 @@
     s.speed=Math.hypot(s.vx,s.vy,s.vz);this.rePred();o.fooled=true;o.replan=true;o.cnt.fakeT=this.time;
     this.mirageMotion();this.addEnt('splash',owner,ghost.x,ghost.y,.5,{z:ghost.z||0});this.proc(p,'shuizhong',near?'水月折返 · 压短':'水月换线 · 送深');return true;
   };
-  P.mods=function(p){const M=old.mods.call(this,p);if(this.skillsOn&&this.phase==='rally'){const st=p.cnt.mirage;if(st?.flow>0){M.accel*=1.22;M.move*=1.12;}if(st?.follow>0){M.reach*=1.16;M.timing*=1.2;}}return M;};
+  P.mods=function(p){const M=old.mods.call(this,p);if(this.skillsOn&&this.phase==='rally'){const st=p.cnt.mirage;if(st?.flow>0){M.accel*=1.15;M.move*=1.08;}if(following(this,p)){M.reach*=1.08;M.timing*=1.1;}}return M;};
   P.skHitQ=function(p,q,c){
     q=old.skHitQ.call(this,p,q,c);if(!manual(this,p,c))return q;
-    const st=p.cnt.mirage;if(!st)return q;c.mirageFocus=st.focus||0;
-    if(st.focus)q=Math.max(q,st.focus===2?.94:.88);
+    const st=p.cnt.mirage;if(!st)return q;
+    const feint=this.shuttle.selfToss===p.idx&&this.shuttle.tossSkill==='meida';
+    c.mirageFocus=feint?0:st.focus||0; // Own toss followups cannot also cash the passive.
+    if(c.mirageFocus)q=Math.max(q,c.mirageFocus===2?.9:.84);
     if(ready(p,'jingxiang'))q=Math.max(q,.9);
-    if(this.shuttle.selfToss===p.idx&&this.shuttle.tossSkill==='meida'){q=Math.max(q,.96);c.mirageFollow=true;}
+    if(feint){if(following(this,p))q=Math.max(q,.88);c.mirageFollow=true;}
     return q;
   };
   P.skShot=function(p,shot,c){
@@ -4942,8 +4955,8 @@
     this.mirageClear();this.shuttle.mirageMoon=null;old.afterHit.call(this,p,shot,q,c);
     if(!this.skillsOn||!c.mirageReturn||!p.cnt.mirage)return;
     const st=state(p),s=this.shuttle,focus=c.mirageFocus||0;
-    if(focus){st.focus=0;this.gainEnergy(p,focus===2?5:3);p.stamina=Math.min(C.STAM_MAX,p.stamina+(focus===2?5:3));this.proc(p,'canying','折影兑现 · 精准回球');}
-    if(c.mirageFollow){st.follow=0;s.rush=Math.max(s.rush||0,.28);p.stamina=Math.min(C.STAM_MAX,p.stamina+4);this.proc(p,'meida','假拍成真 · 反击');}
+    if(focus){st.focus=0;const reward=focus===2?3:2;this.gainEnergy(p,reward);p.stamina=Math.min(C.STAM_MAX,p.stamina+reward);this.proc(p,'canying','折影兑现 · 稳准回球');}
+    if(c.mirageFollow){st.follow=0;this.proc(p,'meida','假拍成真 · 亲手回击');}
     if(ready(p,'jingxiang')){this.mirageSplit(p);consume(p,'jingxiang');}else if(focus===2)this.mirageSplit(p,1);
     if(ready(p,'shuizhong'))this.mirageMoon(p);
   };
@@ -4951,11 +4964,14 @@
   P.mirageCatch=function(){
     const s=this.shuttle;if(!this.skillsOn||this.phase!=='rally'||!s.live||s.held||s.netHit||s.ctl||!s.crossedNet)return false;
     for(const p of this.players){
-      if(!ready(p,'meida')||s.lastHitter===p.idx||s.x*p.side<.2||s.y<.45||this.racketGap(p,s.x,s.y)>1.7||p.buff.prone>0||this.mods(p).fix)continue;
+      const prep=ready(p,'meida');
+      if(!prep||prep.t<=0||prep.warm>0||s.lastHitter===p.idx||s.x*p.side<.2||s.y<.45||this.racketGap(p,s.x,s.y)>1.3||p.buff.prone>0||p.buff.stun>0||this.mods(p).fix)continue;
       const o=this.players[1-p.idx],source={...s},deep=Math.abs(o.x)<3.4;consume(p,'meida');
       Object.assign(s,{vx:clamp((p.x+p.dir*.45-s.x)*1.8,-2.2,2.2),vy:6.4,vz:clamp(((p.z||0)-(s.z||0))*1.8,-2,2),ctl:null});
       this.touchShuttle(p,'lift','假拍接引','meida',.8,true);s.selfToss=p.idx;s.tossSkill='meida';s.crossedNet=false;s.speed=Math.hypot(s.vx,s.vy,s.vz||0);
-      p.swing=null;p.cooldown=0;p.slow=0;p.bufferedShot=null;p.bufferT=0;p.shotQueue3D=null;state(p).follow=2.4;
+      // Preserve recovery and movement slowdown; queued pre-catch strokes must not hit the toss automatically.
+      if(p.swing){p.cooldown=Math.max(p.cooldown,Math.max(0,p.swing.dur-p.swing.t)+(p.swing.hit?C.SW_RECOVER:C.SW_MISS_RECOVER));p.swing=null;}
+      p.bufferedShot=null;p.bufferT=0;p.shotQueue3D=null;state(p).follow=1.6;
       this.mirageFake(p,deep?this.halfOf(o.idx)-.55:1.35,-Math.sign(o.z||1)*2,'clear',source);
       o.fooled=true;o.replan=true;o.cnt.fakeT=this.time;this.rePred();this.proc(p,'meida','假球先行 · 真球亲手回击');return true;
     }return false;
@@ -4963,16 +4979,16 @@
   P.skShuttle=function(...args){if(this.mirageCatch())return true;return old.skShuttle.apply(this,args);};
   P.skStep=function(dt){
     old.skStep.call(this,dt);if(!this.skillsOn||this.phase!=='rally')return;
-    for(const p of this.players){const st=p.cnt.mirage;if(!st)continue;for(const[id,e]of Object.entries(st.ready)){e.t-=dt;if(e.t<=0)delete st.ready[id];}st.flow=Math.max(0,(st.flow||0)-dt);st.follow=Math.max(0,(st.follow||0)-dt);}
+    for(const p of this.players){const st=p.cnt.mirage;if(!st)continue;for(const[id,e]of Object.entries(st.ready)){e.t-=dt;if(e.warm>0)e.warm=Math.max(0,e.warm-dt);if(e.t<=0)delete st.ready[id];}st.flow=Math.max(0,(st.flow||0)-dt);st.follow=following(this,p)?Math.max(0,(st.follow||0)-dt):0;}
     const s=this.shuttle;if(s.mirageMoon&&(!s.live||s.netHit||s.ctl||s.lastHitter!==s.mirageMoon.o))s.mirageMoon=null;
     this.mirageMotion();
   };
   P.skReset=function(first){const carry=this.players.map(p=>p.cnt.mirage);old.skReset.call(this,first);this.shuttle.mirageMoon=null;this.players.forEach((p,i)=>{if(!first&&carry[i])p.cnt.mirage={ready:carry[i].ready,focus:carry[i].focus,turnCd:carry[i].turnCd||0,flow:carry[i].flow||0};});};
-  P.scorePoint=function(...args){const r=old.scorePoint.apply(this,args);this.mirageClear();this.shuttle.mirageMoon=null;for(const p of this.players)if(p.cnt.mirage){delete p.cnt.mirage.heading;p.cnt.mirage.follow=0;}return r;};
+  P.scorePoint=function(...args){const r=old.scorePoint.apply(this,args);this.mirageClear();this.shuttle.mirageMoon=null;for(const p of this.players)if(p.cnt.mirage){delete p.cnt.mirage.heading;delete p.cnt.mirage.runPoint;p.cnt.mirage.follow=0;}return r;};
   const prepared=Y.skillPrepared,recast=Y.skillRecastReady,label=Y.skillRecastText;
   Y.skillPrepared=(m,p,id)=>ids.has(id)?!!ready(p,id)||id==='shuizhong'&&m.shuttle.mirageMoon?.o===p.idx:prepared(m,p,id);
   Y.skillRecastReady=(m,p,id)=>id==='jingxiang'?m.phase==='rally'&&!!ready(p,id):id==='shuizhong'?m.phase==='rally'&&m.shuttle.mirageMoon?.o===p.idx&&m.shuttle.crossedNet:recast(m,p,id);
-  Y.skillRecastText=(m,p,id)=>ids.has(id)?id==='shuizhong'&&m.shuttle.mirageMoon?.o===p.idx?(m.shuttle.crossedNet?'再按变线':'过网后变线'):ready(p,id)?id==='jingxiang'?Y.mirageAimLabel(ready(p,id).aim)+' · 余'+ready(p,id).n+'拍':id==='meida'?'近身假拍待命':'下一拍附水月':null:label(m,p,id);
+  Y.skillRecastText=(m,p,id)=>ids.has(id)?id==='shuizhong'&&m.shuttle.mirageMoon?.o===p.idx?(m.shuttle.crossedNet?'再按变线':'过网后变线'):ready(p,id)?id==='jingxiang'?Y.mirageAimLabel(ready(p,id).aim)+' · 余'+ready(p,id).n+'拍':id==='meida'?(ready(p,id).warm>0?'假拍准备中':'近身假拍待命'):'下一拍附水月':null:label(m,p,id);
   const preview=Y.skillPreview;
   Y.skillPreview=function(m,p,id,v){if(id==='jingxiang'){const aim=P.mirageAim.call(m,p,v?.manual?v.x:0),x=p.dir*(aim.depth>0?1.35:aim.depth<0?m.halfOf(1-p.idx)-.55:3.35);return{mark:{x,y:.03},line:[[p.x,p.y+1.4],[x,.03]],label:'真球 · '+Y.mirageAimLabel(aim),good:true};}return preview(m,p,id,v);};
   const pack=Y.skPack,unpack=Y.skUnpack,copy=v=>v?JSON.parse(JSON.stringify(v)):null;

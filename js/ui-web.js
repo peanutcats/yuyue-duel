@@ -41,7 +41,7 @@
     const next=Y.STAGES.find(s=>!P.storyStars(s.id)) || Y.STAGES[Y.STAGES.length-1];
     $('homeChapter').textContent=next.chapter.title;
     $('homeProgress').textContent=done ? `${done} / ${Y.STAGES.length} 节 · 继续故事 →` : '从一间穿线铺开始 →';
-    $('menuVenue').textContent='羽跃对决 · WEB / 1.33';
+    $('menuVenue').textContent='羽跃对决 · WEB / 1.33.1';
   }
   function renderBattle() {
     $('battleLoadout').innerHTML=`<span class="eyebrow">当前出战</span><b>${esc(Y.charName(P.sel.char))} <small>${skillNames(P.sel.char)}</small></b><p>${A.settings.courtMode.toUpperCase()} · ${A.settings.target} 分制 · ${levels[state.level]}难度</p>`;
